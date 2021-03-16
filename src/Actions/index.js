@@ -1,27 +1,34 @@
-export const createSession = (sessionInstance) => {
+export const createAmcatSession = (Amcat) => {
   return {
-    type: "CREATE_SESSION",
-    payload: sessionInstance,
+    type: "CREATE_AMCAT_SESSION",
+    payload: Amcat,
   };
 };
 
-export const deleteSession = () => {
+export const deleteAmcatSession = () => {
   return {
-    type: "DELETE_SESSION",
+    type: "DELETE_AMCAT_SESSION",
   };
 };
 
-export const selectIndex = (index) => {
+export const selectAmcatIndex = (index) => {
   return {
-    type: "SELECT_INDEX",
+    type: "SELECT_AMCAT_INDEX",
     payload: index,
   };
 };
 
-export const setIndices = (indices) => {
+export const setAmcatIndices = (indices) => {
   return {
-    type: "SET_INDICES",
+    type: "SET_AMCAT_INDICES",
     payload: indices,
+  };
+};
+
+export const selectArticle = (article) => {
+  return {
+    type: "SELECT_ARTICLE",
+    payload: article,
   };
 };
 

@@ -1,19 +1,23 @@
 import React from "react";
 import { Grid } from "semantic-ui-react";
 
-import SelectIndex from "./SelectIndex";
+import AmcatIndexSelector from "./AmcatIndexSelector";
+import ArticleTable from "./ArticleTable";
 import QueryForm from "./QueryForm";
 
 const Query = () => {
   return (
     <Grid style={{ marginTop: "3em" }}>
       <Grid.Column floated="left" width={5}>
-        <SelectIndex />
+        <AmcatIndexSelector type="table" />
       </Grid.Column>
       <Grid.Column width={10}>
-        {/* <ManageIndex session={session} index={index} /> */}
-        {/* <CreateDocument /> */}
-        <QueryForm />
+        <Grid.Row>
+          <QueryForm />
+        </Grid.Row>
+        <Grid.Row>
+          <ArticleTable />
+        </Grid.Row>
       </Grid.Column>
     </Grid>
   );

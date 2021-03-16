@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { createSession } from "../Actions";
+import { createAmcatSession } from "../Actions";
 
-import newSession from "../apis/amcat";
+import newAmcatSession from "../apis/amcat";
 import { useHistory } from "react-router-dom";
 import {
   Button,
@@ -28,8 +28,8 @@ const LoginForm = ({ items }) => {
   const submitForm = async () => {
     setStatus("waiting");
     try {
-      const session = await newSession(host, email, password);
-      dispatch(createSession(session));
+      const amcat = await newAmcatSession(host, email, password);
+      dispatch(createAmcatSession(amcat));
       setStatus("success");
       history.push(items[0].path);
     } catch (e) {

@@ -1,13 +1,13 @@
 import Axios from "axios";
 
-export default async function newSession(host, email, password) {
+export default async function newAmcatSession(host, email, password) {
   const response = await Axios.get(`${host}/auth/token/`, {
     auth: { username: email, password: password },
   });
-  return new Session(host, email, response.data.token);
+  return new Amcat(host, email, response.data.token);
 }
 
-class Session {
+class Amcat {
   constructor(host, email, token) {
     this.host = host;
     this.email = email;

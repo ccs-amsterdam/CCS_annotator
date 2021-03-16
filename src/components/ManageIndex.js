@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Container } from "semantic-ui-react";
 
-const ManageIndex = ({ session, selectedRow }) => {
+const ManageIndex = ({ amcat, selectedRow }) => {
   const [indexMeta, setIndexMeta] = useState(null);
   const [indexFields, setIndexFields] = useState(null);
 
   useEffect(() => {
-    if (selectedRow && session) {
-      session.getIndex(selectedRow.name).then((res) => {
+    if (selectedRow && amcat) {
+      amcat.getIndex(selectedRow.name).then((res) => {
         setIndexMeta(res.data);
       });
-      session.getFields(selectedRow.name).then((res) => {
+      amcat.getFields(selectedRow.name).then((res) => {
         console.log(res.data);
         setIndexFields(res.data);
       });
@@ -18,7 +18,7 @@ const ManageIndex = ({ session, selectedRow }) => {
       setIndexMeta(null);
       setIndexFields(null);
     }
-  }, [session, selectedRow]);
+  }, [amcat, selectedRow]);
 
   return (
     <Container>

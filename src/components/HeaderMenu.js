@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { deleteSession } from "../Actions";
+import { deleteAmcatSession } from "../Actions";
 import { Menu, Button, Header, Icon, Modal } from "semantic-ui-react";
 import { Link, withRouter, useLocation } from "react-router-dom";
 
 const HeaderMenu = ({ items }) => {
-  const session = useSelector((state) => state.session);
+  const amcat = useSelector((state) => state.amcat);
   const location = useLocation();
 
   const menuItems = items.map((item, index) => {
@@ -16,7 +16,7 @@ const HeaderMenu = ({ items }) => {
         as={Link}
         to={item.path}
         header={index === 0}
-        disabled={!session}
+        disabled={!amcat}
         active={item.path === location.pathname}
       >
         {item.label}
@@ -35,11 +35,11 @@ const HeaderMenu = ({ items }) => {
 };
 
 const LogoutModal = () => {
-  const session = useSelector((state) => state.session);
+  const amcat = useSelector((state) => state.amcat);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
 
-  if (!session) return null;
+  if (!amcat) return null;
 
   return (
     <Modal
@@ -49,7 +49,7 @@ const LogoutModal = () => {
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
     >
-      <Header icon="power off" content={`Logout from ${session.host}`} />
+      <Header icon="power off" content={`Logout from ${amcat.host}`} />
       <Modal.Content>
         <p>Do you really want to logout?</p>
       </Modal.Content>
@@ -65,7 +65,7 @@ const LogoutModal = () => {
         <Button
           color="green"
           onClick={() => {
-            dispatch(deleteSession());
+            dispatch(deleteAmcatSession());
             setOpen(false);
           }}
         >

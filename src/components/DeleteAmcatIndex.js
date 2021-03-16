@@ -1,27 +1,28 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectIndex, setIndices } from "../Actions";
+import { selectAmcatIndex, setAmcatIndices } from "../Actions";
 import { Button, Header, Icon, Modal, Dimmer, Loader } from "semantic-ui-react";
 
-const DeleteIndexModal = () => {
-  const session = useSelector((state) => state.session);
-  const index = useSelector((state) => state.index);
+const DeleteAmcatIndex = () => {
+  const amcat = useSelector((state) => state.amcat);
+  const amcatIndex = useSelector((state) => state.amcatIndex);
   const dispatch = useDispatch();
 
   const [status, setStatus] = useState("inactive");
 
   const onSubmit = (event) => {
     setStatus("pending");
-    session
-      .deleteIndex(index.name)
+    console.log(amcatIndex);
+    amcat
+      .deleteIndex(amcatIndex.name)
       .then((res) => {
         // maybe check for 201 before celebrating
         console.log(res.status);
 
-        if (session) {
-          session.getIndices().then((res) => {
-            dispatch(selectIndex(null));
-            dispatch(setIndices(res.data));
+        if (amcat) {
+          amcat.getIndices().then((res) => {
+            dispatch(selectAmcatIndex(null));
+            dispatch(setAmcatIndices(res.data));
           });
         }
         setStatus("inactive");
@@ -33,7 +34,7 @@ const DeleteIndexModal = () => {
       });
   };
 
-  if (!index) return null;
+  if (!amcatIndex) return null;
 
   return (
     <Modal
@@ -51,14 +52,14 @@ const DeleteIndexModal = () => {
         setStatus("awaiting input");
       }}
     >
-      <Header icon="trash" content={`Delete Index ${index.name}`} />
+      <Header icon="trash" content={`Delete Index ${amcatIndex.name}`} />
       <Modal.Content>
         <p>Do you really want to delete this Index?</p>
       </Modal.Content>
       <Modal.Actions>
         {status === "error" ? (
           <div>
-            Could not create index for a reason not yet covered in the error
+            Could not delete index for a reason not yet covered in the error
             handling...
           </div>
         ) : null}
@@ -81,4 +82,4 @@ const DeleteIndexModal = () => {
   );
 };
 
-export default DeleteIndexModal;
+export default DeleteAmcatIndex;

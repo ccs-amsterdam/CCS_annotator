@@ -6,31 +6,39 @@ import SemanticDatepicker from "react-semantic-ui-datepickers";
 import "react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css";
 
 const CreateDocument = () => {
-  const session = useSelector((state) => state.session);
-  const index = useSelector((state) => state.index);
+  const amcat = useSelector((state) => state.amcat);
+  const amcatIndex = useSelector((state) => state.amcatIndex);
 
-  const [indexFields, setIndexFields] = useState(null);
-  const [fieldValues, setFieldValues] = useState(null);
+  const [amcatIndexFields, setAmcatIndexFields] = useState(null);
+  const [fieldValues, setFieldValues] = useState({});
 
   useEffect(() => {}, [fieldValues]);
 
   useEffect(() => {
-    if (index && session) {
-      session.getFields(index.name).then((res) => {
-        setIndexFields(res.data);
+    if (amcatIndex && amcat) {
+      amcat.getFields(amcatIndex.name).then((res) => {
+        setAmcatIndexFields(res.data);
       });
     } else {
-      setIndexFields(null);
+      setAmcatIndexFields(null);
     }
-  }, [session, index]);
+  }, [amcat, amcatIndex]);
 
   const onCreate = () => {
-    session
-      .createDocuments(index.name, [fieldValues])
+    let submitData = { ...fieldValues };
+
+    for (const key of Object.keys(submitData)) {
+      if (key === "date" || /_date$/.test(key)) {
+        submitData[key] = submitData[key].toISOString();
+      }
+    }
+
+    amcat
+      .createDocuments(amcatIndex.name, [fieldValues])
       .then((res) => {
         // maybe check for 201 before celebrating
         console.log(res.status);
-        setFieldValues(null);
+        setFieldValues({});
       })
       .catch((e) => {
         console.log(e);
@@ -40,11 +48,11 @@ const CreateDocument = () => {
   return (
     <Form>
       <DocumentForms
-        fields={indexFields}
+        fields={amcatIndexFields}
         fieldValues={fieldValues}
         setFieldValues={setFieldValues}
       />
-      {!index ? null : (
+      {!amcatIndex ? null : (
         <Button primary onClick={onCreate}>
           Create document
         </Button>
@@ -60,20 +68,13 @@ const DocumentForms = function ({ fields, fieldValues, setFieldValues }) {
     setFieldValues(newFieldValues);
   };
 
-  const onDatePick = (key, value) => {
-    try {
-      onSubmit(key, value.toISOString());
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
   if (!fields) return null;
 
   return Object.keys(fields).map((key) => {
     if (fields[key] === "text") {
       return (
         <Form.TextArea
+          value={fieldValues[key] ? fieldValues[key] : ""}
           onChange={(e, d) => onSubmit(key, d.value)}
           label={key}
         />
@@ -83,7 +84,8 @@ const DocumentForms = function ({ fields, fieldValues, setFieldValues }) {
       return (
         <SemanticDatepicker
           label={key}
-          onChange={(e, d) => onDatePick(key, d.value)}
+          value={fieldValues[key] ? fieldValues[key] : ""}
+          onChange={(e, d) => onSubmit(key, d.value)}
         />
       );
     }
@@ -91,8 +93,10 @@ const DocumentForms = function ({ fields, fieldValues, setFieldValues }) {
       return (
         <Form.Field>
           <label>{key}</label>
-
-          <input onChange={(e) => onSubmit(key, e.target.value)} />
+          <input
+            value={fieldValues[key] ? fieldValues[key] : ""}
+            onChange={(e) => onSubmit(key, e.target.value)}
+          />
         </Form.Field>
       );
     }

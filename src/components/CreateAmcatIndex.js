@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectIndex, setIndices } from "../Actions";
+import { selectAmcatIndex, setAmcatIndices } from "../Actions";
 import {
   Header,
   Button,
@@ -20,50 +20,50 @@ const guestRoles = [
   { key: 40, value: "ADMIN", text: "Admin" },
 ];
 
-const CreateIndexModal = () => {
-  const session = useSelector((state) => state.session);
-  const indices = useSelector((state) => state.indices);
+const CreateAmcatIndex = () => {
+  const amcat = useSelector((state) => state.amcat);
+  const amcatIndices = useSelector((state) => state.amcatIndices);
   const dispatch = useDispatch();
 
   const [status, setStatus] = useState("inactive");
-  const [indexName, setIndexName] = useState("");
+  const [amcatIndexName, setAmcatIndexName] = useState("");
   const [guestRole, setGuestRole] = useState("NONE");
   const [nameError, setNameError] = useState(null);
 
   useEffect(() => {
-    if (indexName.match(/[ "*|<>/?,A-Z]/)) {
-      const invalid = indexName.match(/[ "*|<>/?]/gi);
+    if (amcatIndexName.match(/[ "*|<>/?,A-Z]/)) {
+      const invalid = amcatIndexName.match(/[ "*|<>/?]/gi);
       let uniqueInvalid = [...new Set(invalid)].map((c) =>
         c === " " ? "space" : c
       );
-      if (indexName.match(/[A-Z]/)) uniqueInvalid.push("UPPERCASE");
+      if (amcatIndexName.match(/[A-Z]/)) uniqueInvalid.push("UPPERCASE");
       setNameError(`Illegal symbols: ${uniqueInvalid.join(" ")}`);
     } else {
       setNameError(null);
     }
-  }, [indexName]);
+  }, [amcatIndexName]);
 
   const onSubmit = (event) => {
     event.preventDefault();
 
-    setIndexName(indexName.trim());
-    console.log(indexName);
-    if (indices.some((o) => o.name === indexName)) {
+    setAmcatIndexName(amcatIndexName.trim());
+    console.log(amcatIndexName);
+    if (amcatIndices.some((o) => o.name === amcatIndexName)) {
       setNameError("This Index name already exists");
       return;
     }
 
     setStatus("pending");
-    session
-      .createIndex(indexName, guestRole)
+    amcat
+      .createIndex(amcatIndexName, guestRole)
       .then((res) => {
         // maybe check for 201 before celebrating
         console.log(res.status);
 
-        if (session) {
-          session.getIndices().then((res) => {
-            dispatch(selectIndex(null));
-            dispatch(setIndices(res.data));
+        if (amcat) {
+          amcat.getIndices().then((res) => {
+            dispatch(selectAmcatIndex(null));
+            dispatch(setAmcatIndices(res.data));
           });
         }
 
@@ -76,7 +76,7 @@ const CreateIndexModal = () => {
       });
   };
 
-  if (!indices) return null;
+  if (!amcatIndices) return null;
 
   return (
     <Modal
@@ -91,7 +91,7 @@ const CreateIndexModal = () => {
       open={status !== "inactive"}
       onClose={() => setStatus("inactive")}
       onOpen={() => {
-        setIndexName("");
+        setAmcatIndexName("");
         setGuestRole("NONE");
         setStatus("awaiting input");
       }}
@@ -106,10 +106,10 @@ const CreateIndexModal = () => {
             required
             type="text"
             error={nameError ? nameError : null}
-            value={indexName}
+            value={amcatIndexName}
             onChange={(e, d) => {
               setStatus("awaiting input");
-              setIndexName(d.value);
+              setAmcatIndexName(d.value);
             }}
             placeholder="Enter name"
           />
@@ -149,4 +149,4 @@ const CreateIndexModal = () => {
   );
 };
 
-export default CreateIndexModal;
+export default CreateAmcatIndex;
