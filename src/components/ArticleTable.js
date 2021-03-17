@@ -9,8 +9,6 @@ const articleTableColumns = [
   { Header: "Title", accessor: "title", headerClass: "eight wide" },
 ];
 
-//const data = [{ id: 777, date: "2010-01-01", title: "James Bond on Ice" }];
-
 const ArticleTable = () => {
   const amcatIndex = useSelector((state) => state.amcatIndex);
   const article = useSelector((state) => state.article);

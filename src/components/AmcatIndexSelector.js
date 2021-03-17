@@ -16,15 +16,15 @@ const AmcatIndexSelector = ({ type = "table" }) => {
   const [selectedAmcatIndex, setSelectedAmcatIndex] = useState(amcatIndex);
 
   useEffect(() => {
+    dispatch(selectAmcatIndex(selectedAmcatIndex));
+  }, [selectedAmcatIndex, dispatch]);
+
+  useEffect(() => {
     if (amcat && amcatIndices.length === 0)
       amcat.getIndices().then((res) => {
         dispatch(setAmcatIndices(res.data));
       });
   }, []);
-
-  useEffect(() => {
-    dispatch(selectAmcatIndex(selectedAmcatIndex));
-  }, [selectedAmcatIndex, dispatch]);
 
   if (type === "table") {
     const tableColumns = [
@@ -36,7 +36,7 @@ const AmcatIndexSelector = ({ type = "table" }) => {
     ];
 
     return (
-      <Container selectAmcatIndex>
+      <Container>
         <Button.Group widths="2">
           <CreateAmcatIndex />
           <DeleteAmcatIndex />
@@ -44,7 +44,7 @@ const AmcatIndexSelector = ({ type = "table" }) => {
         <SelectionTable
           columns={tableColumns}
           data={amcatIndices}
-          selectedAmcatIndex={selectedAmcatIndex}
+          selectedRow={selectedAmcatIndex}
           setSelectedRow={setSelectedAmcatIndex}
           defaultSize={15}
         />

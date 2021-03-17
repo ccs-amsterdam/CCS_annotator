@@ -74,6 +74,7 @@ const DocumentForms = function ({ fields, fieldValues, setFieldValues }) {
     if (fields[key] === "text") {
       return (
         <Form.TextArea
+          key={key}
           value={fieldValues[key] ? fieldValues[key] : ""}
           onChange={(e, d) => onSubmit(key, d.value)}
           label={key}
@@ -83,6 +84,7 @@ const DocumentForms = function ({ fields, fieldValues, setFieldValues }) {
     if (fields[key] === "date") {
       return (
         <SemanticDatepicker
+          key={key}
           label={key}
           value={fieldValues[key] ? fieldValues[key] : ""}
           onChange={(e, d) => onSubmit(key, d.value)}
@@ -91,7 +93,7 @@ const DocumentForms = function ({ fields, fieldValues, setFieldValues }) {
     }
     if (fields[key] === "keyword") {
       return (
-        <Form.Field>
+        <Form.Field key={key}>
           <label>{key}</label>
           <input
             value={fieldValues[key] ? fieldValues[key] : ""}

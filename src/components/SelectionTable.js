@@ -29,29 +29,6 @@ import {
 // Note that headerClass is custom, and enables setting the header cell class,
 // which is used in semantic ui to specify the width (one wide, ten wide, etc).
 
-const GlobalFilter = ({
-  preGlobalFilteredRows,
-  globalFilter,
-  setGlobalFilter,
-}) => {
-  const count = preGlobalFilteredRows && preGlobalFilteredRows.length;
-
-  return (
-    <span>
-      <input
-        value={globalFilter || ""}
-        onChange={(e) => {
-          setGlobalFilter(e.target.value || undefined); // Set undefined to remove the filter entirely
-        }}
-        placeholder={`Search ${count} records...`}
-        style={{
-          border: "0",
-        }}
-      />
-    </span>
-  );
-};
-
 const SelectionTable = ({
   columns,
   data,
@@ -87,12 +64,38 @@ const SelectionTable = ({
   );
 
   useEffect(() => {
+    console.log("------------");
+    console.log(activeRow);
+    console.log(selectedRow);
     if (selectedRow) {
       setActiveRow(selectedRow.ROW_ID);
     } else {
       setActiveRow(null);
     }
   }, [selectedRow]);
+
+  const GlobalFilter = ({
+    preGlobalFilteredRows,
+    globalFilter,
+    setGlobalFilter,
+  }) => {
+    const count = preGlobalFilteredRows && preGlobalFilteredRows.length;
+
+    return (
+      <span>
+        <input
+          value={globalFilter || ""}
+          onChange={(e) => {
+            setGlobalFilter(e.target.value || undefined); // Set undefined to remove the filter entirely
+          }}
+          placeholder={`Search ${count} records...`}
+          style={{
+            border: "0",
+          }}
+        />
+      </span>
+    );
+  };
 
   const onRowSelect = (row) => {
     if (activeRow && activeRow === row.id) {
@@ -151,7 +154,7 @@ const SelectionTable = ({
         setGlobalFilter={setGlobalFilter}
       />
 
-      <Table striped fixed {...getTableProps()}>
+      <Table striped fixed singleLine {...getTableProps()}>
         <TableHeader>
           {headerGroups.map((headerGroup) => (
             <TableRow {...headerGroup.getHeaderGroupProps()}>
@@ -187,7 +190,6 @@ const SelectionTable = ({
             content: <Icon name="ellipsis horizontal" />,
             icon: true,
           }}
-          showPreviousAndNextNav="true"
           activePage={pageIndex + 1}
           totalPages={pageCount}
           onPageChange={(event, data) => {
