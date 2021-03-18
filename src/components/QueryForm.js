@@ -18,7 +18,6 @@ const QueryForm = () => {
     amcat
       .getQuery(amcatIndex.name, query, fields, "2m", 100, {})
       .then((res) => {
-        console.log(res.data.results);
         dispatch(setArticles(res.data.results));
       })
       .catch((e) => {

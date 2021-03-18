@@ -38,3 +38,17 @@ export const setArticles = (articles) => {
     payload: articles,
   };
 };
+
+export const addSpanAnnotation = (spanAnnotation) => {
+  return {
+    type: "ADD_SPAN_ANNOTATION",
+    payload: spanAnnotation,
+  };
+};
+
+export const rmSpanAnnotation = (spanAnnotation) => {
+  return {
+    type: "RM_SPAN_ANNOTATION",
+    payload: spanAnnotation,
+  };
+};

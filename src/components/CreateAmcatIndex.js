@@ -47,7 +47,6 @@ const CreateAmcatIndex = () => {
     event.preventDefault();
 
     setAmcatIndexName(amcatIndexName.trim());
-    console.log(amcatIndexName);
     if (amcatIndices.some((o) => o.name === amcatIndexName)) {
       setNameError("This Index name already exists");
       return;
@@ -58,7 +57,6 @@ const CreateAmcatIndex = () => {
       .createIndex(amcatIndexName, guestRole)
       .then((res) => {
         // maybe check for 201 before celebrating
-        console.log(res.status);
 
         if (amcat) {
           amcat.getIndices().then((res) => {

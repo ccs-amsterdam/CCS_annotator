@@ -38,8 +38,6 @@ class Amcat {
     params["per_page"] = per_page;
     if (fields) params["fields"] = fields.join(",");
     if (q) params["q"] = q;
-    console.log("tets");
-    console.log(params);
     return this.api.get(`/index/${index}/query`, { params });
   }
 
@@ -47,7 +45,6 @@ class Amcat {
   createIndex(name, guestRole = "NONE") {
     const body = { name: name };
     if (guestRole !== "NONE") body.guest_role = guestRole;
-    console.log(body);
     return this.api.post(`/index/`, body);
   }
   createDocuments(name, documentList) {

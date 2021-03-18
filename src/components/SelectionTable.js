@@ -64,9 +64,6 @@ const SelectionTable = ({
   );
 
   useEffect(() => {
-    console.log("------------");
-    console.log(activeRow);
-    console.log(selectedRow);
     if (selectedRow) {
       setActiveRow(selectedRow.ROW_ID);
     } else {
@@ -154,7 +151,7 @@ const SelectionTable = ({
         setGlobalFilter={setGlobalFilter}
       />
 
-      <Table striped fixed singleLine {...getTableProps()}>
+      <Table striped fixed singleLine selectable {...getTableProps()}>
         <TableHeader>
           {headerGroups.map((headerGroup) => (
             <TableRow {...headerGroup.getHeaderGroupProps()}>

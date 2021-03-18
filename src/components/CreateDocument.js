@@ -37,7 +37,6 @@ const CreateDocument = () => {
       .createDocuments(amcatIndex.name, [fieldValues])
       .then((res) => {
         // maybe check for 201 before celebrating
-        console.log(res.status);
         setFieldValues({});
       })
       .catch((e) => {

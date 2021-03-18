@@ -47,12 +47,24 @@ const article = (state = [], action) => {
   }
 };
 
+const spanAnnotations = (state = [], action) => {
+  switch (action.type) {
+    case "ADD_SPAN_ANNOTATION":
+      return [...state, action.payload];
+    case "RM_SPAN_ANNOTATION":
+      return state.filter((o) => o.offset !== action.payload.offset);
+    default:
+      return state;
+  }
+};
+
 const rootReducer = combineReducers({
   amcat,
   amcatIndex,
   amcatIndices,
   article,
   articles,
+  spanAnnotations,
 });
 
 export default rootReducer;

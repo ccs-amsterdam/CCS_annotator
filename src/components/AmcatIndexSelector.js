@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useDebugValue } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Button, Container } from "semantic-ui-react";
+import { Button, Container, Dropdown } from "semantic-ui-react";
 import { selectAmcatIndex, setAmcatIndices } from "../Actions";
 
 import SelectionTable from "./SelectionTable";
@@ -49,6 +49,33 @@ const AmcatIndexSelector = ({ type = "table" }) => {
           defaultSize={15}
         />
       </Container>
+    );
+  }
+
+  if (type === "dropdown") {
+    const asDropdownItems = (indices) => {
+      return indices.map((index) => {
+        return { key: index.name, text: index.name, value: index.name };
+      });
+    };
+
+    const onDropdownSelect = (value) => {
+      if (value) {
+        const i = amcatIndices.findIndex((row) => row.name === value);
+        setSelectedAmcatIndex({ ...amcatIndices[i], ROW_ID: i.toString() });
+      } else {
+        setSelectedAmcatIndex(null);
+      }
+    };
+
+    return (
+      <Dropdown
+        clearable
+        selection
+        options={asDropdownItems(amcatIndices)}
+        value={amcatIndex ? amcatIndex.name : null}
+        onChange={(e, d) => onDropdownSelect(d.value)}
+      />
     );
   }
 

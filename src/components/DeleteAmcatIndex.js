@@ -12,12 +12,10 @@ const DeleteAmcatIndex = () => {
 
   const onSubmit = (event) => {
     setStatus("pending");
-    console.log(amcatIndex);
     amcat
       .deleteIndex(amcatIndex.name)
       .then((res) => {
         // maybe check for 201 before celebrating
-        console.log(res.status);
 
         if (amcat) {
           amcat.getIndices().then((res) => {
