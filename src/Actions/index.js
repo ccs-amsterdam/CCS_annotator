@@ -39,16 +39,15 @@ export const setArticles = (articles) => {
   };
 };
 
-export const addSpanAnnotation = (spanAnnotation) => {
+export const toggleAnnotations = (spanAnnotation) => {
   return {
-    type: "ADD_SPAN_ANNOTATION",
+    type: "TOGGLE_ANNOTATIONS",
     payload: spanAnnotation,
   };
 };
 
-export const rmSpanAnnotation = (spanAnnotation) => {
+export const clearSpanAnnotations = () => {
   return {
-    type: "RM_SPAN_ANNOTATION",
-    payload: spanAnnotation,
+    type: "CLEAR_SPAN_ANNOTATIONS",
   };
 };

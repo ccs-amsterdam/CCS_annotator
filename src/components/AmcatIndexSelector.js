@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useDebugValue } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Container, Dropdown } from "semantic-ui-react";
 import { selectAmcatIndex, setAmcatIndices } from "../Actions";
@@ -20,11 +20,13 @@ const AmcatIndexSelector = ({ type = "table" }) => {
   }, [selectedAmcatIndex, dispatch]);
 
   useEffect(() => {
-    if (amcat && amcatIndices.length === 0)
+    if (amcat && amcatIndices === null) {
+      console.log(amcatIndices);
       amcat.getIndices().then((res) => {
         dispatch(setAmcatIndices(res.data));
       });
-  }, []);
+    }
+  }, [amcat, amcatIndices, dispatch]);
 
   if (type === "table") {
     const tableColumns = [
@@ -43,7 +45,7 @@ const AmcatIndexSelector = ({ type = "table" }) => {
         </Button.Group>
         <SelectionTable
           columns={tableColumns}
-          data={amcatIndices}
+          data={amcatIndices ? amcatIndices : []}
           selectedRow={selectedAmcatIndex}
           setSelectedRow={setSelectedAmcatIndex}
           defaultSize={15}
@@ -60,7 +62,7 @@ const AmcatIndexSelector = ({ type = "table" }) => {
     };
 
     const onDropdownSelect = (value) => {
-      if (value) {
+      if (value && amcatIndices !== null) {
         const i = amcatIndices.findIndex((row) => row.name === value);
         setSelectedAmcatIndex({ ...amcatIndices[i], ROW_ID: i.toString() });
       } else {

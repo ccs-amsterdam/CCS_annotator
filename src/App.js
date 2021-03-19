@@ -20,7 +20,13 @@ const items = [
 const App = () => {
   const createNavigation = (items) => {
     return items.map((item) => {
-      return <AuthRoute path={item.path} Component={item.Component} />;
+      return (
+        <AuthRoute
+          key={item.path}
+          path={item.path}
+          Component={item.Component}
+        />
+      );
     });
   };
 

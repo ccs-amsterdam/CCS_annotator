@@ -20,7 +20,7 @@ const amcatIndex = (state = null, action) => {
   }
 };
 
-const amcatIndices = (state = [], action) => {
+const amcatIndices = (state = null, action) => {
   switch (action.type) {
     case "SET_AMCAT_INDICES":
       return action.payload;
@@ -47,12 +47,43 @@ const article = (state = [], action) => {
   }
 };
 
-const spanAnnotations = (state = [], action) => {
+const rmAnnotations = (annotations, a) => {
+  annotations[a.index] = annotations[a.index].filter((v) => v !== a.group);
+  if (annotations[a.index].length === 0) annotations[a.index] = undefined;
+  return annotations;
+};
+
+const toggleAnnotations = (annotations, annList, multiple = false) => {
+  for (let key in annList) {
+    let a = annList[key];
+    if (annotations[a.index]) {
+      if (multiple) {
+        if (annotations[a.index].includes(a.group)) {
+          annotations = rmAnnotations(annotations, a);
+        } else {
+          annotations[a.index].push(a.group);
+        }
+      } else {
+        if (annotations[a.index].includes(a.group)) {
+          annotations[a.index] = undefined;
+        } else {
+          annotations[a.index] = a;
+        }
+      }
+    } else {
+      annotations[a.index] = [a.group];
+    }
+  }
+  console.log(annotations);
+  return annotations;
+};
+
+const spanAnnotations = (state = {}, action) => {
   switch (action.type) {
-    case "ADD_SPAN_ANNOTATION":
-      return [...state, action.payload];
-    case "RM_SPAN_ANNOTATION":
-      return state.filter((o) => o.offset !== action.payload.offset);
+    case "TOGGLE_ANNOTATIONS":
+      return toggleAnnotations({ ...state }, action.payload);
+    case "CLEAR_SPAN_ANNOTATIONS":
+      return {};
     default:
       return state;
   }
