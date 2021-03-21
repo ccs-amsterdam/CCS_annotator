@@ -11,6 +11,7 @@
     "compromise": "^13.10.3",
     "compromise-paragraphs": "0.0.5",
     "compromise-syllables": "0.0.6",
+    "randomcolor": "^0.6.2",
     "react": "^17.0.1",
     "react-beautiful-dnd": "^13.0.0",
     "react-dom": "^17.0.1",

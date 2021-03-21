@@ -39,6 +39,13 @@ export const setArticles = (articles) => {
   };
 };
 
+export const setTokenIndices = (tokenIndices) => {
+  return {
+    type: "SET_TOKEN_INDICES",
+    payload: tokenIndices,
+  };
+};
+
 export const toggleAnnotations = (spanAnnotation) => {
   return {
     type: "TOGGLE_ANNOTATIONS",
@@ -49,5 +56,19 @@ export const toggleAnnotations = (spanAnnotation) => {
 export const clearSpanAnnotations = () => {
   return {
     type: "CLEAR_SPAN_ANNOTATIONS",
+  };
+};
+
+export const setCodes = (codes) => {
+  return {
+    type: "SET_CODES",
+    payload: codes,
+  };
+};
+
+export const setCode = (codes) => {
+  return {
+    type: "SET_CODE",
+    payload: codes,
   };
 };

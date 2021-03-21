@@ -6,7 +6,9 @@ import { toggleAnnotations } from "../Actions";
 import Tokens from "./Tokens";
 
 const AnnotationText = ({ text }) => {
-  const spanAnnotations = useSelector((props) => props.spanAnnotations);
+  const tokenIndices = useSelector((state) => state.tokenIndices);
+  const code = useSelector((state) => state.code);
+  const spanAnnotations = useSelector((state) => state.spanAnnotations);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -20,49 +22,29 @@ const AnnotationText = ({ text }) => {
     };
   });
 
-  // create list with clusters to the right
-  // each cluster has a color and label
-  // each cluster item is a span
-  // users can drag spans between clusters
-  // and drag tokens between spans
-  // on merely selecting a token, it will be put under 'unassigned' in grey
-
-  // if possible, transform scroll button so that it can be used to select clusters
-  // or otherwise right click
-
-  // move the onmouseup logic to annotate. keep Tokens clean for setting up the text
-  // also think of how we can get the event functions out of the tokens component.
-  // can we pass the onClick function for tokens as a prop, so taht we can change it for different annotating jobs?
-  // (this should be possible. But maybe we can also do this via redux)
-
-  // const onSelect = () => {
-  //   console.log(token.offset.index);
-  //   if (spanAnnotations.some((e) => e.offset === token.offset)) {
-  //     dispatch(rmSpanAnnotation(token));
-  //   } else {
-  //     dispatch(addSpanAnnotation(token));
-  //   }
-  // };
-
   const leftMouse = (event) => {
     const selection = window.getSelection();
 
     if (!(selection.anchorNode && selection.focusNode)) return null;
-    const from = selection.anchorNode.parentElement;
-    const to = selection.focusNode.parentElement;
+    let from = getToken(selection.anchorNode.parentElement);
+    let to = getToken(selection.focusNode.parentElement);
 
-    let from_i = getTokenIndex(from);
-    let to_i = getTokenIndex(to);
-
-    if (!(from_i && to_i)) return null;
+    if (!(from && to)) return null;
     window.getSelection().empty();
 
-    if (from_i > to_i) [from_i, to_i] = [to_i, from_i];
+    if (from.index > to.index) [from, to] = [to, from];
 
     const annotations = [];
-    for (let i = from_i; i <= to_i; i++) {
-      annotations.push({ index: i, group: 1 });
+    for (let i = from.index; i <= to.index; i++) {
+      annotations.push({
+        index: i,
+        group: code,
+        offset: from.offset,
+        length: to.offset + to.length,
+        span: [from.index, to.index],
+      });
     }
+
     dispatch(toggleAnnotations(annotations));
   };
 
@@ -75,11 +57,20 @@ const AnnotationText = ({ text }) => {
   return <Tokens text={text} />;
 };
 
-const getTokenIndex = (e) => {
-  if (e.className === "token") return parseInt(e.getAttribute("tokenIndex"));
+const getTokenAttributes = (tokenNode) => {
+  return {
+    index: parseInt(tokenNode.getAttribute("tokenIndex")),
+    offset: parseInt(tokenNode.getAttribute("tokenOffset")),
+    length: parseInt(tokenNode.getAttribute("tokenOffset")),
+  };
+};
+
+const getToken = (e) => {
+  console.log(e);
+  if (e.className === "token") return getTokenAttributes(e);
   if (e.parentNode) {
     if (e.parentNode.className === "token")
-      return parseInt(e.parentNode.getAttribute("tokenIndex"));
+      return getTokenAttributes(e.parentNode);
   }
   return null;
 };

@@ -3,11 +3,12 @@ import { useSelector } from "react-redux";
 import { Dropdown, Grid } from "semantic-ui-react";
 import AmcatIndexSelector from "./AmcatIndexSelector";
 import AnnotationText from "./AnnotationText";
-import SpanGroups from "./SpanGroups";
+import CodeSelector from "./CodeSelector";
 
 const Annotate = () => {
   const amcat = useSelector((state) => state.amcat);
   const amcatIndex = useSelector((state) => state.amcatIndex);
+  const [code, setCode] = useState("");
   const [text, setText] = useState(null);
   const [articleList, setArticleList] = useState([]);
 
@@ -27,7 +28,11 @@ const Annotate = () => {
 
   const getArticleOptions = (articles) => {
     const items = articles.map((article, i) => {
-      return { key: i, text: article.title, value: article.text };
+      return {
+        key: i,
+        text: article.title,
+        value: article.title + ".\n\n" + article.text,
+      };
     });
     return items;
   };
@@ -50,7 +55,7 @@ const Annotate = () => {
             <AnnotationText text={text ? text : null} />
           </Grid.Column>
           <Grid.Column width={4}>
-            <SpanGroups />
+            <CodeSelector />
           </Grid.Column>
         </Grid.Row>
       </Grid>

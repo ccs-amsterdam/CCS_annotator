@@ -47,34 +47,56 @@ const article = (state = [], action) => {
   }
 };
 
-const rmAnnotations = (annotations, a) => {
-  annotations[a.index] = annotations[a.index].filter((v) => v !== a.group);
-  if (annotations[a.index].length === 0) annotations[a.index] = undefined;
-  return annotations;
+const tokenIndices = (state = null, action) => {
+  switch (action.type) {
+    case "SET_TOKEN_INDICES":
+      return action.payload;
+    default:
+      return state;
+  }
 };
 
-const toggleAnnotations = (annotations, annList, multiple = false) => {
+// separately store the annotation in a more universal format and
+// a format that is fast to use in the app. Now store universal format in state
+// but in time figure out how to use indexedDb.
+
+const toggleAnnotations = (annotations, annList) => {
+  console.log("what the fuck js");
+  console.log(annotations);
+  console.log(annList);
   for (let key in annList) {
     let a = annList[key];
+
+    // if group in annotations, remove it
     if (annotations[a.index]) {
-      if (multiple) {
-        if (annotations[a.index].includes(a.group)) {
-          annotations = rmAnnotations(annotations, a);
-        } else {
-          annotations[a.index].push(a.group);
+      if (annotations[a.index][a.group]) {
+        const span = annotations[a.index][a.group].span;
+        for (let i = span[0]; i <= span[1]; i++) {
+          if (annotations[i]) {
+            if (annotations[i][a.group]) {
+              delete annotations[i][a.group];
+              if (Object.keys(annotations[i]).length === 0) {
+                delete annotations[i];
+              }
+            }
+          }
         }
-      } else {
-        if (annotations[a.index].includes(a.group)) {
-          annotations[a.index] = undefined;
-        } else {
-          annotations[a.index] = a;
-        }
+        // if selection was one token (which is probably a click),
+        // just remove the annotation. But if it was a multi-token selection,
+        // we do add the new selection
+        if (a.span[0] === a.span[1]) continue;
       }
-    } else {
-      annotations[a.index] = [a.group];
     }
+    // if not, add it
+    if (!annotations[a.index]) annotations[a.index] = {};
+    annotations[a.index][a.group] = {
+      index: a.index,
+      span: [a.span[0], a.span[1]],
+      offset: a.offset,
+      length: a.length,
+    };
   }
-  console.log(annotations);
+
   return annotations;
 };
 
@@ -89,13 +111,49 @@ const spanAnnotations = (state = {}, action) => {
   }
 };
 
+const testCodes = [
+  {
+    key: "Mark Rutte",
+    text: "Mark Rutte",
+    value: "Mark Rutte",
+    color: "#40a31f",
+  },
+  {
+    key: "Sigrid Kaag",
+    text: "Sigrid Kaag",
+    value: "Sigrid Kaag",
+    color: "#f2db5c",
+  },
+];
+
+const codes = (state = testCodes, action) => {
+  switch (action.type) {
+    case "SET_CODES":
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
+const code = (state = null, action) => {
+  switch (action.type) {
+    case "SET_CODE":
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
 const rootReducer = combineReducers({
   amcat,
   amcatIndex,
   amcatIndices,
   article,
   articles,
+  tokenIndices,
   spanAnnotations,
+  codes,
+  code,
 });
 
 export default rootReducer;

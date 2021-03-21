@@ -3,6 +3,9 @@ import ReactDOM from "react-dom";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Button, Container, Icon } from "semantic-ui-react";
 
+// Based on: https://codesandbox.io/s/-w5szl?file=/src/index.js
+// not used for now, but might implement in time in 'code manager'
+
 // fake data generator
 const getItems = (count, offset = 0) =>
   Array.from({ length: count }, (v, k) => k).map((k) => ({

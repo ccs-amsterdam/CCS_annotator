@@ -1,0 +1,10 @@
+.TextCodeBubble {
+  border: solid;
+  border-width: 1px;
+  font-weight: bold;
+  border-radius: 7px;
+  padding: 1px;
+  opacity: 0.7;
+  border-left-width: 1px;
+  border-right-width: 1px;
+}
