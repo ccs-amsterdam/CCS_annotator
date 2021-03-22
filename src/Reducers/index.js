@@ -60,10 +60,7 @@ const tokenIndices = (state = null, action) => {
 // a format that is fast to use in the app. Now store universal format in state
 // but in time figure out how to use indexedDb.
 
-const toggleAnnotations = (annotations, annList) => {
-  console.log("what the fuck js");
-  console.log(annotations);
-  console.log(annList);
+const toggleAnnotations = (annotations, annList, rm) => {
   for (let key in annList) {
     let a = annList[key];
 
@@ -87,14 +84,17 @@ const toggleAnnotations = (annotations, annList) => {
         if (a.span[0] === a.span[1]) continue;
       }
     }
+
     // if not, add it
-    if (!annotations[a.index]) annotations[a.index] = {};
-    annotations[a.index][a.group] = {
-      index: a.index,
-      span: [a.span[0], a.span[1]],
-      offset: a.offset,
-      length: a.length,
-    };
+    if (!rm) {
+      if (!annotations[a.index]) annotations[a.index] = {};
+      annotations[a.index][a.group] = {
+        index: a.index,
+        span: [a.span[0], a.span[1]],
+        offset: a.offset,
+        length: a.length,
+      };
+    }
   }
 
   return annotations;
@@ -103,6 +103,8 @@ const toggleAnnotations = (annotations, annList) => {
 const spanAnnotations = (state = {}, action) => {
   switch (action.type) {
     case "TOGGLE_ANNOTATIONS":
+      return toggleAnnotations({ ...state }, action.payload, false);
+    case "RM_ANNOTATIONS":
       return toggleAnnotations({ ...state }, action.payload);
     case "CLEAR_SPAN_ANNOTATIONS":
       return {};
@@ -135,10 +137,15 @@ const codes = (state = testCodes, action) => {
   }
 };
 
-const code = (state = null, action) => {
+const codeHistory = (state = [], action) => {
   switch (action.type) {
-    case "SET_CODE":
-      return action.payload;
+    case "APPEND_CODE_HISTORY":
+      let newstate = state
+        .filter((v) => v !== action.payload.code)
+        .slice(0, action.payload.n - 1);
+      newstate.unshift(action.payload.code);
+      console.log(newstate);
+      return newstate;
     default:
       return state;
   }
@@ -153,7 +160,7 @@ const rootReducer = combineReducers({
   tokenIndices,
   spanAnnotations,
   codes,
-  code,
+  codeHistory,
 });
 
 export default rootReducer;

@@ -8,7 +8,6 @@ import CodeSelector from "./CodeSelector";
 const Annotate = () => {
   const amcat = useSelector((state) => state.amcat);
   const amcatIndex = useSelector((state) => state.amcatIndex);
-  const [code, setCode] = useState("");
   const [text, setText] = useState(null);
   const [articleList, setArticleList] = useState([]);
 

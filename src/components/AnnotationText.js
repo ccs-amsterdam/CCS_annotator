@@ -6,9 +6,7 @@ import { toggleAnnotations } from "../Actions";
 import Tokens from "./Tokens";
 
 const AnnotationText = ({ text }) => {
-  const tokenIndices = useSelector((state) => state.tokenIndices);
-  const code = useSelector((state) => state.code);
-  const spanAnnotations = useSelector((state) => state.spanAnnotations);
+  const codeHistory = useSelector((state) => state.codeHistory);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -16,9 +14,11 @@ const AnnotationText = ({ text }) => {
   }, [text, dispatch]);
 
   useEffect(() => {
-    document.body.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("click", onClick);
     return () => {
-      document.body.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.addEventListener("click", onClick);
     };
   });
 
@@ -34,23 +34,30 @@ const AnnotationText = ({ text }) => {
 
     if (from.index > to.index) [from, to] = [to, from];
 
+    let defaultValue = codeHistory[0] ? codeHistory[0] : null;
+    if (!event.ctrlKey) defaultValue = "Not yet assigned";
+
     const annotations = [];
     for (let i = from.index; i <= to.index; i++) {
       annotations.push({
         index: i,
-        group: code,
+        group: defaultValue,
         offset: from.offset,
         length: to.offset + to.length,
         span: [from.index, to.index],
       });
     }
-
     dispatch(toggleAnnotations(annotations));
   };
 
   const onMouseUp = (event) => {
-    console.log(event.which);
     if (event.which === 1) leftMouse(event);
+  };
+
+  const onClick = (event) => {
+    //if (event.which === 1)
+    console.log("cliiikck");
+    event.preventDefault();
   };
 
   if (!text) return null;

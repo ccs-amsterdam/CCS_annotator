@@ -77,6 +77,7 @@ const Tokens = ({ text, importSpanAnnotations = [] }) => {
             span: [from_token, to_token],
           });
         }
+        return tokenAnnotations;
       }
     );
     const tokenAnnotations = [].concat.apply([], tokenAnnotationArrays);

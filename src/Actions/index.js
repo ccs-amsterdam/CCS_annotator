@@ -53,6 +53,13 @@ export const toggleAnnotations = (spanAnnotation) => {
   };
 };
 
+export const rmAnnotations = (spanAnnotation) => {
+  return {
+    type: "RM_ANNOTATIONS",
+    payload: spanAnnotation,
+  };
+};
+
 export const clearSpanAnnotations = () => {
   return {
     type: "CLEAR_SPAN_ANNOTATIONS",
@@ -66,9 +73,9 @@ export const setCodes = (codes) => {
   };
 };
 
-export const setCode = (codes) => {
+export const appendCodeHistory = (code, n = 5) => {
   return {
-    type: "SET_CODE",
-    payload: codes,
+    type: "APPEND_CODE_HISTORY",
+    payload: { code: code, n: n },
   };
 };
