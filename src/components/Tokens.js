@@ -8,6 +8,14 @@ import nlp from "compromise";
 import paragraphs from "compromise-paragraphs";
 nlp.extend(paragraphs);
 
+// const getTokenizedLength = (tokenized) => {
+//   return tokenized
+//     .slice(-1)[0]
+//     .sentences.slice(-1)[0]
+//     .slice(-1)[0]
+//     .terms.slice(-1)[0].offset.index;
+// };
+
 const Tokens = ({ text, importSpanAnnotations = [] }) => {
   // It's imporant that the annotations to not pass by this component
   // but are loaded into Token from redux. THis prevents rerendering
@@ -26,7 +34,6 @@ const Tokens = ({ text, importSpanAnnotations = [] }) => {
   };
 
   const createParagraph = (par, par_i) => {
-    console.log("PARSING TEXT: THIS SHOULD ONLY HAPPEN ON OPENING ARTICLE");
     const mapSentences = (par) => {
       return par.sentences.map((sent) => {
         // for some reason there's an other array layer...

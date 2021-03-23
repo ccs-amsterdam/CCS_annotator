@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Button, Dropdown, Popup, Step } from "semantic-ui-react";
+import { Button, Dropdown, Popup, Ref, Step } from "semantic-ui-react";
 import {
   setCodes,
   appendCodeHistory,
@@ -9,16 +9,19 @@ import {
 } from "../Actions";
 import randomColor from "randomcolor";
 
-const CodeSelector = (props) => {
+const CodeSelector = ({ index, children }) => {
   const codes = useSelector((state) => state.codes);
   const codeHistory = useSelector((state) => state.codeHistory);
   const spanAnnotations = useSelector((state) => state.spanAnnotations);
+  const textInputRef = useRef(null);
   const [current, setCurrent] = useState(null);
 
+  // Placeholder: should be managed in state
+  const userAccess = { editable: true };
   const dispatch = useDispatch();
 
   useEffect(() => {
-    let annotation = spanAnnotations[props.index];
+    let annotation = spanAnnotations[index];
     if (annotation && annotation !== undefined) {
       if (Object.keys(annotation).includes("Not yet assigned")) {
         setCurrent("Not yet assigned");
@@ -26,15 +29,18 @@ const CodeSelector = (props) => {
         setCurrent(Object.keys(annotation)[0]);
       }
     }
-  }, [props.index, spanAnnotations]);
+  }, [index, spanAnnotations]);
 
-  // useEffect(() => {
-  //   if (!current || current === "undefined" || current === "null") {
-  //     if (codeHistory.length > 0) {
-  //       updateAnnotations(codeHistory[0]);
-  //     }
-  //   }
-  // }, [current, codeHistory, props.annotation]);
+  const toggleListener = (on) => {
+    if (on) {
+      window.addEventListener("keydown", onKeydown);
+    } else {
+      window.removeEventListener("keydown", onKeydown);
+    }
+  };
+  const onKeydown = (event) => {
+    if (textInputRef.current) textInputRef.current.click();
+  };
 
   const onAddition = (e, d) => {
     dispatch(
@@ -62,7 +68,7 @@ const CodeSelector = (props) => {
   const updateAnnotations = (value) => {
     const key = current;
 
-    let annotation = spanAnnotations[props.index];
+    let annotation = spanAnnotations[index];
     if (!annotation) return null;
 
     let ann = {
@@ -122,7 +128,7 @@ const CodeSelector = (props) => {
   };
 
   const getCurrentOptions = () => {
-    let annotation = spanAnnotations[props.index];
+    let annotation = spanAnnotations[index];
     if (annotation) {
       return Object.keys(annotation)
         .filter((e) => e !== current)
@@ -134,10 +140,13 @@ const CodeSelector = (props) => {
 
   return (
     <Popup
-      trigger={props.children}
+      trigger={children}
+      on="hover"
       flowing
       hoverable
       wide
+      onOpen={() => toggleListener(true)}
+      onClose={() => toggleListener(false)}
       position="top center"
     >
       <div>
@@ -171,15 +180,29 @@ const CodeSelector = (props) => {
               <Step.Title>Set new code</Step.Title>
               <Step.Description>
                 <Button.Group widths="1">{newCodeButtons()}</Button.Group>
-                <Dropdown
-                  options={codes}
-                  placeholder="Search or add new"
-                  search
-                  selection
-                  allowAdditions
-                  onAddItem={onAddition}
-                  onChange={(e, d) => updateAnnotations(d.value)}
-                />
+                &nbsp;&nbsp;
+                <Ref innerRef={textInputRef}>
+                  <Dropdown
+                    options={codes}
+                    placeholder={
+                      userAccess.editable
+                        ? "Search or add new code"
+                        : "Search code"
+                    }
+                    search
+                    selection
+                    allowAdditions={userAccess.editable}
+                    additionPosition={"bottom"}
+                    onAddItem={onAddition}
+                    fullTextSearch={true}
+                    showOnFocus={false}
+                    selectOnNavigation={false}
+                    minCharacters={"1"}
+                    autoComplete={"on"}
+                    searchInput={{ autoFocus: false }}
+                    onChange={(e, d) => updateAnnotations(d.value)}
+                  />
+                </Ref>
               </Step.Description>
             </Step.Content>
           </Step>

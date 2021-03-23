@@ -144,7 +144,6 @@ const codeHistory = (state = [], action) => {
         .filter((v) => v !== action.payload.code)
         .slice(0, action.payload.n - 1);
       newstate.unshift(action.payload.code);
-      console.log(newstate);
       return newstate;
     default:
       return state;

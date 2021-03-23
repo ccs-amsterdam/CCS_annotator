@@ -15,14 +15,25 @@ const AnnotationText = ({ text }) => {
 
   useEffect(() => {
     window.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("click", onClick);
     return () => {
       window.removeEventListener("mouseup", onMouseUp);
-      window.addEventListener("click", onClick);
     };
   });
 
-  const leftMouse = (event) => {
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  });
+
+  const onKeyDown = (event) => {
+    console.log(event.key); // maybe integrate key navigation
+  };
+
+  const onMouseUp = (event) => {
+    if (event.which !== 1) return null;
+
     const selection = window.getSelection();
 
     if (!(selection.anchorNode && selection.focusNode)) return null;
@@ -48,16 +59,6 @@ const AnnotationText = ({ text }) => {
       });
     }
     dispatch(toggleAnnotations(annotations));
-  };
-
-  const onMouseUp = (event) => {
-    if (event.which === 1) leftMouse(event);
-  };
-
-  const onClick = (event) => {
-    //if (event.which === 1)
-    console.log("cliiikck");
-    event.preventDefault();
   };
 
   if (!text) return null;

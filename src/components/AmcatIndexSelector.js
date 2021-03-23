@@ -21,7 +21,6 @@ const AmcatIndexSelector = ({ type = "table" }) => {
 
   useEffect(() => {
     if (amcat && amcatIndices === null) {
-      console.log(amcatIndices);
       amcat.getIndices().then((res) => {
         dispatch(setAmcatIndices(res.data));
       });

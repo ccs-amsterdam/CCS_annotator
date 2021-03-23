@@ -4,8 +4,6 @@ import "./style.css";
 import CodeSelector from "./CodeSelector";
 
 const Token = ({ token }) => {
-  console.log("token");
-
   return (
     <span
       className="token"
@@ -19,15 +17,24 @@ const Token = ({ token }) => {
 };
 
 const FancyToken = React.memo(({ token }) => {
-  const spanAnnotations = useSelector((state) => state.spanAnnotations);
+  // If we specifically ask for the annotations for the current token within the
+  // useSelector function, rerender is only triggered if this value has changed
+  const annotations = useSelector(
+    (state) => state.spanAnnotations[token.offset.index]
+  );
   const codes = useSelector((state) => state.codes);
 
+  // This is a trick required to render if at least something within this token's
+  // annotations changed (somehow 'annotations' doesn't trigger this, even though it
+  // does contain all the information)
+  useSelector((state) =>
+    JSON.stringify(state.spanAnnotations[token.offset.index])
+  );
+
   // if there are no annotation codes, our life is easy
-  if (!spanAnnotations[token.offset.index])
-    return <>{token.pre + token.text + token.post}</>;
+  if (!annotations) return <>{token.pre + token.text + token.post}</>;
 
-  // otherwise, it gets a bit messy
-
+  // create solid colors or color gradients
   const getColor = (tokenCode, codes) => {
     const codematch = codes.find((e) => e.value === tokenCode);
     if (codematch) {
@@ -36,9 +43,7 @@ const FancyToken = React.memo(({ token }) => {
       return "lightgrey";
     }
   };
-
-  // create solid colors or color gradients
-  let tokenCodes = Object.keys(spanAnnotations[token.offset.index]);
+  let tokenCodes = Object.keys(annotations);
   let color = null;
   if (tokenCodes.length === 1) {
     color = getColor(tokenCodes[0], codes);
@@ -48,16 +53,16 @@ const FancyToken = React.memo(({ token }) => {
   }
 
   // Set specific classes for nice css to show the start/end of codes
-  const allLeft = !Object.values(spanAnnotations[token.offset.index]).some(
+  const allLeft = !Object.values(annotations).some(
     (code) => code.span[0] !== code.index
   );
-  const allRight = !Object.values(spanAnnotations[token.offset.index]).some(
+  const allRight = !Object.values(annotations).some(
     (code) => code.span[1] !== code.index
   );
-  const anyLeft = Object.values(spanAnnotations[token.offset.index]).some(
+  const anyLeft = Object.values(annotations).some(
     (code) => code.span[0] === code.index
   );
-  const anyRight = Object.values(spanAnnotations[token.offset.index]).some(
+  const anyRight = Object.values(annotations).some(
     (code) => code.span[1] === code.index
   );
 
