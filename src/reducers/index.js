@@ -1,56 +1,78 @@
 import { combineReducers } from "redux";
 
-const amcat = (state = null, action) => {
+const db = (state = null, action) => {
   switch (action.type) {
-    case "CREATE_AMCAT_SESSION":
+    case "SET_DB":
       return action.payload;
-    case "DELETE_AMCAT_SESSION":
+    case "RESET_DB":
       return null;
     default:
       return state;
   }
 };
 
-const amcatIndex = (state = null, action) => {
+const dropbox = (state = null, action) => {
   switch (action.type) {
-    case "SELECT_AMCAT_INDEX":
+    case "SET_DROPBOX":
+      console.log("set dropbox");
       return action.payload;
+    case "RESET_DB":
+      return null;
     default:
       return state;
   }
 };
 
-const amcatIndices = (state = null, action) => {
+const codingjob = (state = null, action) => {
   switch (action.type) {
-    case "SET_AMCAT_INDICES":
+    case "SELECT_CODINGJOB":
       return action.payload;
+    case "RESET_DB":
+      return null;
     default:
       return state;
   }
 };
 
-const articles = (state = [], action) => {
+const codingjobs = (state = null, action) => {
   switch (action.type) {
-    case "SET_ARTICLES":
+    case "SET_CODINGJOBS":
       return action.payload;
+    case "RESET_DB":
+      return null;
     default:
       return state;
   }
 };
 
-const article = (state = [], action) => {
+const documents = (state = [], action) => {
   switch (action.type) {
-    case "SELECT_ARTICLE":
+    case "SET_DOCUMENTS":
       return action.payload;
+    case "RESET_DB":
+      return [];
     default:
       return state;
   }
 };
 
-const tokenIndices = (state = null, action) => {
+const document = (state = [], action) => {
+  switch (action.type) {
+    case "SELECT_DOCUMENT":
+      return action.payload;
+    case "RESET_DB":
+      return [];
+    default:
+      return state;
+  }
+};
+
+const tokenIndices = (state = [], action) => {
   switch (action.type) {
     case "SET_TOKEN_INDICES":
       return action.payload;
+    case "RESET_DB":
+      return null;
     default:
       return state;
   }
@@ -108,6 +130,8 @@ const spanAnnotations = (state = {}, action) => {
       return toggleAnnotations({ ...state }, action.payload);
     case "CLEAR_SPAN_ANNOTATIONS":
       return {};
+    case "RESET_DB":
+      return {};
     default:
       return state;
   }
@@ -132,6 +156,8 @@ const codes = (state = testCodes, action) => {
   switch (action.type) {
     case "SET_CODES":
       return action.payload;
+    case "RESET_DB":
+      return [];
     default:
       return state;
   }
@@ -145,17 +171,20 @@ const codeHistory = (state = [], action) => {
         .slice(0, action.payload.n - 1);
       newstate.unshift(action.payload.code);
       return newstate;
+    case "RESET_DB":
+      return [];
     default:
       return state;
   }
 };
 
 const rootReducer = combineReducers({
-  amcat,
-  amcatIndex,
-  amcatIndices,
-  article,
-  articles,
+  db,
+  dropbox,
+  codingjob,
+  codingjobs,
+  document,
+  documents,
   tokenIndices,
   spanAnnotations,
   codes,

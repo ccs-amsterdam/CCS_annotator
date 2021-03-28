@@ -7,9 +7,9 @@ const Token = ({ token }) => {
   return (
     <span
       className="token"
-      tokenIndex={token.offset.index}
-      tokenOffset={token.offset.start}
-      tokenLength={token.offset.length}
+      tokenindex={token.offset.index}
+      tokenoffset={token.offset.start}
+      tokenlength={token.offset.length}
     >
       <FancyToken token={token} />
     </span>

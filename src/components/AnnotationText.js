@@ -1,29 +1,46 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { clearSpanAnnotations } from "../Actions";
-import { toggleAnnotations } from "../Actions";
+import { clearSpanAnnotations } from "../actions";
+import { toggleAnnotations } from "../actions";
+import ManageAnnotations from "./ManageAnnotations";
 
 import Tokens from "./Tokens";
 
-const AnnotationText = ({ text }) => {
+const AnnotationText = ({ doc }) => {
   const codeHistory = useSelector((state) => state.codeHistory);
+  const [tokens, setTokens] = useState([]);
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(clearSpanAnnotations());
-  }, [text, dispatch]);
+  }, [doc, dispatch]);
 
-  useEffect(() => {
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  });
+  // USE THIS LATER TO ENABLE DIRECT CODE SELECTION WITH MOUSE
+  // (showing current code next to line)
+  // useEffect(() => {
+  //   window.addEventListener("mousemove", onMouseMove);
+  //   return () => {
+  //     window.removeEventListener("mousemove", onMouseMove);
+  //   };
+  // });
+
+  // const onMouseMove = (event) => {
+  //   if (event.ctrlKey) {
+  //     console.log(event.pageX);
+  //   }
+  // };
 
   useEffect(() => {
     window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
+    };
+  });
+
+  useEffect(() => {
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mouseup", onMouseUp);
     };
   });
 
@@ -54,22 +71,27 @@ const AnnotationText = ({ text }) => {
         index: i,
         group: defaultValue,
         offset: from.offset,
-        length: to.offset + to.length,
+        length: to.offset + to.length - from.offset,
         span: [from.index, to.index],
       });
     }
     dispatch(toggleAnnotations(annotations));
   };
 
-  if (!text) return null;
-  return <Tokens text={text} />;
+  if (!doc) return null;
+  return (
+    <>
+      <Tokens text={doc.text} setTokens={setTokens} />
+      <ManageAnnotations tokens={tokens} doc={doc} />
+    </>
+  );
 };
 
 const getTokenAttributes = (tokenNode) => {
   return {
-    index: parseInt(tokenNode.getAttribute("tokenIndex")),
-    offset: parseInt(tokenNode.getAttribute("tokenOffset")),
-    length: parseInt(tokenNode.getAttribute("tokenOffset")),
+    index: parseInt(tokenNode.getAttribute("tokenindex")),
+    offset: parseInt(tokenNode.getAttribute("tokenoffset")),
+    length: parseInt(tokenNode.getAttribute("tokenlength")),
   };
 };
 

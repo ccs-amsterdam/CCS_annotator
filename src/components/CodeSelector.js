@@ -6,7 +6,7 @@ import {
   appendCodeHistory,
   toggleAnnotations,
   rmAnnotations,
-} from "../Actions";
+} from "../actions";
 import randomColor from "randomcolor";
 
 const CodeSelector = ({ index, children }) => {
@@ -93,7 +93,6 @@ const CodeSelector = ({ index, children }) => {
       newAnnotation.index = i;
       newAnnotations.push(newAnnotation);
     }
-
     dispatch(toggleAnnotations(newAnnotations));
     dispatch(appendCodeHistory(value));
 
@@ -134,7 +133,7 @@ const CodeSelector = ({ index, children }) => {
         .filter((e) => e !== current)
         .map(ddOptions);
     } else {
-      return ddOptions(null);
+      return [ddOptions(null)];
     }
   };
 
@@ -147,17 +146,16 @@ const CodeSelector = ({ index, children }) => {
       wide
       onOpen={() => toggleListener(true)}
       onClose={() => toggleListener(false)}
-      position="top center"
+      position="top left"
     >
       <div>
-        <Step.Group>
+        <Step.Group vertical>
           <Step active>
             <Step.Content>
               <Step.Title>Current code</Step.Title>
               <Step.Description>
                 <Button.Group>
                   <Button
-                    tiny
                     icon="trash"
                     size="mini"
                     onClick={(e, d) => updateAnnotations(current)}
@@ -179,25 +177,25 @@ const CodeSelector = ({ index, children }) => {
             <Step.Content>
               <Step.Title>Set new code</Step.Title>
               <Step.Description>
-                <Button.Group widths="1">{newCodeButtons()}</Button.Group>
+                <Button.Group vertical compact widths="1">
+                  {newCodeButtons()}
+                </Button.Group>
                 &nbsp;&nbsp;
                 <Ref innerRef={textInputRef}>
                   <Dropdown
+                    compact
                     options={codes}
                     placeholder={
-                      userAccess.editable
-                        ? "Search or add new code"
-                        : "Search code"
+                      userAccess.editable ? "Search or create " : "Search "
                     }
+                    widths={1}
                     search
                     selection
                     allowAdditions={userAccess.editable}
                     additionPosition={"bottom"}
                     onAddItem={onAddition}
-                    fullTextSearch={true}
-                    showOnFocus={false}
                     selectOnNavigation={false}
-                    minCharacters={"1"}
+                    minCharacters={0}
                     autoComplete={"on"}
                     searchInput={{ autoFocus: false }}
                     onChange={(e, d) => updateAnnotations(d.value)}

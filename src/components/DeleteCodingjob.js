@@ -1,26 +1,25 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectAmcatIndex, setAmcatIndices } from "../Actions";
+import { selectCodingjob, setCodingjobs } from "../actions";
 import { Button, Header, Icon, Modal, Dimmer, Loader } from "semantic-ui-react";
 
-const DeleteAmcatIndex = () => {
-  const amcat = useSelector((state) => state.amcat);
-  const amcatIndex = useSelector((state) => state.amcatIndex);
+const DeleteCodingjob = () => {
+  const db = useSelector((state) => state.db);
+  const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
 
   const [status, setStatus] = useState("inactive");
 
   const onSubmit = (event) => {
     setStatus("pending");
-    amcat
-      .deleteIndex(amcatIndex.name)
+    db.deleteCodingjob(codingjob)
       .then((res) => {
         // maybe check for 201 before celebrating
 
-        if (amcat) {
-          amcat.getIndices().then((res) => {
-            dispatch(selectAmcatIndex(null));
-            dispatch(setAmcatIndices(res.data));
+        if (db) {
+          db.listCodingjobs().then((res) => {
+            dispatch(selectCodingjob(null));
+            dispatch(setCodingjobs(res));
           });
         }
         setStatus("inactive");
@@ -32,7 +31,7 @@ const DeleteAmcatIndex = () => {
       });
   };
 
-  if (!amcatIndex) return null;
+  if (!codingjob) return null;
 
   return (
     <Modal
@@ -40,7 +39,7 @@ const DeleteAmcatIndex = () => {
       open={status !== "inactive"}
       trigger={
         <Button name="logout">
-          <Icon name="minus" /> Delete Index
+          <Icon name="minus" /> Delete job
         </Button>
       }
       onClose={() => {
@@ -50,20 +49,20 @@ const DeleteAmcatIndex = () => {
         setStatus("awaiting input");
       }}
     >
-      <Header icon="trash" content={`Delete Index ${amcatIndex.name}`} />
+      <Header icon="trash" content={`Delete codingjob ${codingjob.name}`} />
       <Modal.Content>
-        <p>Do you really want to delete this Index?</p>
+        <p>Do you really want to delete this codingjob?</p>
       </Modal.Content>
       <Modal.Actions>
         {status === "error" ? (
           <div>
-            Could not delete index for a reason not yet covered in the error
+            Could not delete codingjob for a reason not yet covered in the error
             handling...
           </div>
         ) : null}
         {status === "pending" ? (
           <Dimmer active inverted>
-            <Loader content="Creating Index" />
+            <Loader content="Creating codingjob" />
           </Dimmer>
         ) : (
           <>
@@ -80,4 +79,4 @@ const DeleteAmcatIndex = () => {
   );
 };
 
-export default DeleteAmcatIndex;
+export default DeleteCodingjob;

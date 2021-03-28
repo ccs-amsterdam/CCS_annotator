@@ -1,11 +1,14 @@
-import React, { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { deleteAmcatSession } from "../Actions";
-import { Menu, Button, Header, Icon, Modal } from "semantic-ui-react";
+import React from "react";
+import { useSelector } from "react-redux";
+import { Menu } from "semantic-ui-react";
 import { Link, withRouter, useLocation } from "react-router-dom";
+import Dropbox from "./Dropbox";
+import Download from "./Download";
+import Reset from "./Reset";
+import Persist from "./Persist";
 
 const HeaderMenu = ({ items }) => {
-  const amcat = useSelector((state) => state.amcat);
+  const db = useSelector((state) => state.db);
   const location = useLocation();
 
   const menuItems = items.map((item, index) => {
@@ -16,7 +19,7 @@ const HeaderMenu = ({ items }) => {
         as={Link}
         to={item.path}
         header={index === 0}
-        disabled={!amcat}
+        disabled={!db}
         active={item.path === location.pathname}
       >
         {item.label}
@@ -25,54 +28,15 @@ const HeaderMenu = ({ items }) => {
   });
 
   return (
-    <Menu color="blue" fixed="top" inverted>
+    <Menu fixed="top" inverted>
       {menuItems}
       <Menu.Menu position="right">
-        <LogoutModal />
+        <Dropbox />
+        <Download />
+        <Persist />
+        <Reset />
       </Menu.Menu>
     </Menu>
-  );
-};
-
-const LogoutModal = () => {
-  const amcat = useSelector((state) => state.amcat);
-  const dispatch = useDispatch();
-  const [open, setOpen] = useState(false);
-
-  if (!amcat) return null;
-
-  return (
-    <Modal
-      closeIcon
-      open={open}
-      trigger={<Menu.Item icon="power off" name="logout" />}
-      onClose={() => setOpen(false)}
-      onOpen={() => setOpen(true)}
-    >
-      <Header icon="power off" content={`Logout from ${amcat.host}`} />
-      <Modal.Content>
-        <p>Do you really want to logout?</p>
-      </Modal.Content>
-      <Modal.Actions>
-        <Button
-          color="red"
-          onClick={() => {
-            setOpen(false);
-          }}
-        >
-          <Icon name="remove" /> No
-        </Button>
-        <Button
-          color="green"
-          onClick={() => {
-            dispatch(deleteAmcatSession());
-            setOpen(false);
-          }}
-        >
-          <Icon name="checkmark" /> Yes
-        </Button>
-      </Modal.Actions>
-    </Modal>
   );
 };
 

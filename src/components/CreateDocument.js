@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Form, Button } from "semantic-ui-react";
 import { useSelector } from "react-redux";
 
@@ -6,23 +6,16 @@ import SemanticDatepicker from "react-semantic-ui-datepickers";
 import "react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css";
 
 const CreateDocument = () => {
-  const amcat = useSelector((state) => state.amcat);
-  const amcatIndex = useSelector((state) => state.amcatIndex);
+  const db = useSelector((state) => state.db);
+  const codingjob = useSelector((state) => state.codingjob);
 
-  const [amcatIndexFields, setAmcatIndexFields] = useState(null);
   const [fieldValues, setFieldValues] = useState({});
 
-  useEffect(() => {}, [fieldValues]);
-
-  useEffect(() => {
-    if (amcatIndex && amcat) {
-      amcat.getFields(amcatIndex.name).then((res) => {
-        setAmcatIndexFields(res.data);
-      });
-    } else {
-      setAmcatIndexFields(null);
-    }
-  }, [amcat, amcatIndex]);
+  const documentFields = {
+    title: "text",
+    text: "text",
+    annotations: "text",
+  };
 
   const onCreate = () => {
     let submitData = { ...fieldValues };
@@ -33,8 +26,7 @@ const CreateDocument = () => {
       }
     }
 
-    amcat
-      .createDocuments(amcatIndex.name, [fieldValues])
+    db.createDocuments(codingjob, [submitData])
       .then((res) => {
         // maybe check for 201 before celebrating
         setFieldValues({});
@@ -44,14 +36,16 @@ const CreateDocument = () => {
       });
   };
 
+  if (!codingjob) return null;
+
   return (
-    <Form>
+    <Form style={{ marginTop: "3em" }}>
       <DocumentForms
-        fields={amcatIndexFields}
+        fields={documentFields}
         fieldValues={fieldValues}
         setFieldValues={setFieldValues}
       />
-      {!amcatIndex ? null : (
+      {!codingjob ? null : (
         <Button primary onClick={onCreate}>
           Create document
         </Button>
@@ -82,12 +76,14 @@ const DocumentForms = function ({ fields, fieldValues, setFieldValues }) {
     }
     if (fields[key] === "date") {
       return (
-        <SemanticDatepicker
-          key={key}
-          label={key}
-          value={fieldValues[key] ? fieldValues[key] : ""}
-          onChange={(e, d) => onSubmit(key, d.value)}
-        />
+        <Form.Field>
+          <SemanticDatepicker
+            key={key}
+            label={key}
+            value={fieldValues[key] ? fieldValues[key] : ""}
+            onChange={(e, d) => onSubmit(key, d.value)}
+          />
+        </Form.Field>
       );
     }
     if (fields[key] === "keyword") {

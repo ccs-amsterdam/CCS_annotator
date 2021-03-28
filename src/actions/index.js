@@ -1,41 +1,48 @@
-export const createAmcatSession = (Amcat) => {
+export const setDB = (db) => {
   return {
-    type: "CREATE_AMCAT_SESSION",
-    payload: Amcat,
+    type: "SET_DB",
+    payload: db,
   };
 };
 
-export const deleteAmcatSession = () => {
+export const resetDB = () => {
   return {
-    type: "DELETE_AMCAT_SESSION",
+    type: "RESET_DB",
   };
 };
 
-export const selectAmcatIndex = (index) => {
+export const setDropbox = (dropbox) => {
   return {
-    type: "SELECT_AMCAT_INDEX",
-    payload: index,
+    type: "SET_DROPBOX",
+    payload: dropbox,
   };
 };
 
-export const setAmcatIndices = (indices) => {
+export const selectCodingjob = (codingjob) => {
   return {
-    type: "SET_AMCAT_INDICES",
-    payload: indices,
+    type: "SELECT_CODINGJOB",
+    payload: codingjob,
   };
 };
 
-export const selectArticle = (article) => {
+export const setCodingjobs = (codingjobs) => {
+  return {
+    type: "SET_CODINGJOBS",
+    payload: codingjobs,
+  };
+};
+
+export const selectDocument = (document) => {
   return {
     type: "SELECT_ARTICLE",
-    payload: article,
+    payload: document,
   };
 };
 
-export const setArticles = (articles) => {
+export const setDocuments = (document) => {
   return {
-    type: "SET_ARTICLES",
-    payload: articles,
+    type: "SET_DOCUMENTS",
+    payload: document,
   };
 };
 

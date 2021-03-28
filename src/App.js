@@ -3,16 +3,17 @@ import { BrowserRouter, Route, Switch } from "react-router-dom";
 import HeaderMenu from "./components/HeaderMenu";
 import { Divider, Container } from "semantic-ui-react";
 
-import AmcatLogin from "./components/AmcatLogin";
-import Query from "./components/Query";
+// login and authenticated route
+import Welcome from "./components/Welcome";
+import AuthRoute from "./components/AuthRoute";
+
+// Main pages. Use below in items to include in header menu
 import Create from "./components/Create";
 import Annotate from "./components/Annotate";
-import AuthRoute from "./components/AuthRoute";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
 const items = [
-  { label: "Query", path: "/query", Component: Query },
   { label: "Create", path: "/create", Component: Create },
   { label: "Annotate", path: "/annotate", Component: Annotate },
 ];
@@ -36,7 +37,7 @@ const App = () => {
       <Divider />
       <Container style={{ marginTop: "3em" }}>
         <Switch>
-          <Route exact path="/" render={() => <AmcatLogin items={items} />} />
+          <Route exact path="/" render={() => <Welcome items={items} />} />
           {createNavigation(items)}
         </Switch>
       </Container>

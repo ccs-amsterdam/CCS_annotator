@@ -1,8 +1,8 @@
 import React from "react";
 import { Grid } from "semantic-ui-react";
 
-import AmcatIndexSelector from "./AmcatIndexSelector";
-import ArticleTable from "./ArticleTable";
+import AmcatIndexSelector from "./CodingjobSelector";
+import ArticleTable from "./DocumentTable";
 import QueryForm from "./QueryForm";
 
 const Query = () => {

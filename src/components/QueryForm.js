@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Form, Container, Button, Icon, Segment } from "semantic-ui-react";
-import { setArticles } from "../Actions";
+import { setArticles } from "../actions";
 
 //const data = [{ id: 777, date: "2010-01-01", title: "James Bond on Ice" }];
 
@@ -18,7 +18,7 @@ const QueryForm = () => {
     amcat
       .getQuery(amcatIndex.name, query, fields, "2m", 100, {})
       .then((res) => {
-        dispatch(setArticles(res.data.results));
+        dispatch(setArticles(res));
       })
       .catch((e) => {
         console.log(e);

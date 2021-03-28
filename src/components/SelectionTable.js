@@ -6,7 +6,6 @@ import {
   useGlobalFilter,
 } from "react-table";
 import {
-  Segment,
   Table,
   TableHeader,
   TableBody,
@@ -99,7 +98,7 @@ const SelectionTable = ({
       setSelectedRow(null);
       setActiveRow(null);
     } else {
-      setSelectedRow({ ...row.values, ROW_ID: row.id });
+      setSelectedRow({ ...data[row.id], ROW_ID: row.id });
       setActiveRow(row.id);
     }
   };
@@ -131,7 +130,7 @@ const SelectionTable = ({
         >
           {row.cells.map((cell) => {
             return (
-              <TableCell {...cell.getCellProps()}>
+              <TableCell title={cell.value} {...cell.getCellProps()}>
                 {cell.render("Cell")}
               </TableCell>
             );
@@ -144,13 +143,12 @@ const SelectionTable = ({
   if (data.length === 0) return null;
 
   return (
-    <Segment style={{ border: "0" }}>
+    <>
       <GlobalFilter
         preGlobalFilteredRows={preGlobalFilteredRows}
         globalFilter={globalFilter}
         setGlobalFilter={setGlobalFilter}
       />
-
       <Table striped fixed singleLine selectable {...getTableProps()}>
         <TableHeader>
           {headerGroups.map((headerGroup) => (
@@ -194,7 +192,7 @@ const SelectionTable = ({
           }}
         />
       </div>
-    </Segment>
+    </>
   );
 };
 
