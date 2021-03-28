@@ -24,7 +24,7 @@ const Annotate = () => {
   }, [db, codingjob]);
 
   const prepareAnnotations = (annotations) => {
-    if (!annotations) return {};
+    if (!annotations || annotations === "") return {};
     const anns = JSON.parse(annotations);
 
     // create an object where the key is an offset, and the

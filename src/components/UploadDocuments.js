@@ -94,10 +94,9 @@ const SubmitForm = ({ data, codingjob, fileRef }) => {
           }
           return obj;
         },
-        { meta: {}, annotations: [] }
+        { meta: {}, annotations: "" }
       );
       datarow.meta = JSON.stringify(datarow.meta, null, 2);
-      console.log(datarow);
       return datarow;
     });
   };
