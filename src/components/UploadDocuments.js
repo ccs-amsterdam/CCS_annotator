@@ -80,7 +80,7 @@ const SubmitForm = ({ data, codingjob, fileRef }) => {
   const csvToJson = (data, titleField, textField, annotationsField) => {
     const keys = data[0].data;
     return data.slice(1).map((row) => {
-      return row.data.reduce(
+      const datarow = row.data.reduce(
         (obj, value, i) => {
           let key = keys[i];
           if (key === titleField) {
@@ -96,6 +96,9 @@ const SubmitForm = ({ data, codingjob, fileRef }) => {
         },
         { meta: {}, annotations: [] }
       );
+      datarow.meta = JSON.stringify(datarow.meta, null, 2);
+      console.log(datarow);
+      return datarow;
     });
   };
 

@@ -41,7 +41,7 @@ const CodingjobSelector = ({ type = "table" }) => {
     }
   }, [db, codingjobs, dispatch]);
 
-  if (!codingjob) return null;
+  //if (!codingjob) return null;
 
   if (type === "table") {
     const tableColumns = [

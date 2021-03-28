@@ -50,7 +50,7 @@ const exportAnnotations = async (db, doc, annotations) => {
   await db.writeValue(
     { doc_id: doc.doc_id },
     "annotations",
-    JSON.stringify(uniqueAnnotations)
+    JSON.stringify(uniqueAnnotations, null, 2)
   );
 };
 

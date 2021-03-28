@@ -62,7 +62,8 @@ export default class AnnotationDB {
       const doc_id = hash([document, codingjob]); // codingjob included for doc_id hash
       if (!ids.has(doc_id)) {
         ids.add(doc_id);
-        if (document.annotations) {
+        if (document.annotations && document.annotations.length > 0) {
+          console.log(document.annotations);
           try {
             JSON.parse(document.annotations);
           } catch (e) {
