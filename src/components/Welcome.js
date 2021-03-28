@@ -5,7 +5,7 @@ import Dexie from "dexie";
 
 import AnnotationDB from "../apis/dexie";
 import { useHistory } from "react-router-dom";
-import { Grid, Button, Header, Image, Segment } from "semantic-ui-react";
+import { Grid, Button, Header, Segment } from "semantic-ui-react";
 import { initStoragePersistence } from "../apis/storemanager";
 
 const Welcome = ({ items }) => {
@@ -14,6 +14,7 @@ const Welcome = ({ items }) => {
 
   const loggin = async () => {
     try {
+      console.log("teeeeeeeeeeeeeeeeeest");
       const db = await new AnnotationDB();
       dispatch(setDB(db));
       await initStoragePersistence();
@@ -35,7 +36,7 @@ const Welcome = ({ items }) => {
       <Grid.Column style={{ maxWidth: 450 }}>
         <Segment style={{ border: 0 }}>
           <Header as="h2" textAlign="center">
-            <Image src="/amcat-logo.svg" /> Welcome to the AmCAT annotator
+            Welcome to the AmCAT annotator
           </Header>
           <p>
             This is the (early development version of the) AmCAT annotator. The

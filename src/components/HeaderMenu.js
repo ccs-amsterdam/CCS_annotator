@@ -7,7 +7,7 @@ import Download from "./Download";
 import Reset from "./Reset";
 import Persist from "./Persist";
 
-const HeaderMenu = ({ items }) => {
+const HeaderMenu = ({ items, homepage }) => {
   const db = useSelector((state) => state.db);
   const location = useLocation();
 
@@ -34,7 +34,7 @@ const HeaderMenu = ({ items }) => {
         <Dropbox />
         <Download />
         <Persist />
-        <Reset />
+        <Reset homepage={homepage} />
       </Menu.Menu>
     </Menu>
   );

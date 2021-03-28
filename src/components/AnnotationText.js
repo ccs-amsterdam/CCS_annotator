@@ -50,6 +50,7 @@ const AnnotationText = ({ doc }) => {
 
   const onMouseUp = (event) => {
     if (event.which !== 1) return null;
+    event.preventDefault();
 
     const selection = window.getSelection();
 

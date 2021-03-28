@@ -6,7 +6,7 @@ import Dexie from "dexie";
 
 import AnnotationDB from "../apis/dexie";
 
-const AuthRoute = ({ Component, ...componentProps }) => {
+const AuthRoute = ({ Component, homepage, ...componentProps }) => {
   const dispatch = useDispatch();
   // the trick for passing on componentProps is basically
   // redundant now that we use Redux, but leaving it intact just in case
@@ -18,7 +18,7 @@ const AuthRoute = ({ Component, ...componentProps }) => {
 
   Dexie.exists("AmCAT_Annotator").then((exists) => {
     loggin();
-    if (!exists) return <Redirect to="/" />;
+    if (!exists) return <Redirect to={homepage} />;
   });
 
   return (

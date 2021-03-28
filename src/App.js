@@ -13,9 +13,10 @@ import Annotate from "./components/Annotate";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
+const homepage = "/amcat4annotator";
 const items = [
-  { label: "Create", path: "/create", Component: Create },
-  { label: "Annotate", path: "/annotate", Component: Annotate },
+  { label: "Create", path: homepage + "/create", Component: Create },
+  { label: "Annotate", path: homepage + "/annotate", Component: Annotate },
 ];
 
 const App = () => {
@@ -25,6 +26,7 @@ const App = () => {
         <AuthRoute
           key={item.path}
           path={item.path}
+          homepage={homepage}
           Component={item.Component}
         />
       );
@@ -33,11 +35,15 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <HeaderMenu items={items} />
+      <HeaderMenu items={items} homepage={homepage} />
       <Divider />
       <Container style={{ marginTop: "3em" }}>
         <Switch>
-          <Route exact path="/" render={() => <Welcome items={items} />} />
+          <Route
+            exact
+            path={homepage}
+            render={() => <Welcome items={items} />}
+          />
           {createNavigation(items)}
         </Switch>
       </Container>

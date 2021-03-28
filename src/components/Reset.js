@@ -4,7 +4,7 @@ import { resetDB } from "../actions";
 import { Menu, Button, Header, Icon, Modal } from "semantic-ui-react";
 import { useHistory } from "react-router-dom";
 
-const Reset = () => {
+const Reset = ({ homepage }) => {
   const db = useSelector((state) => state.db);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
@@ -47,7 +47,7 @@ const Reset = () => {
               .then(() => {
                 dispatch(resetDB());
                 setOpen(false);
-                history.push("/");
+                history.push(homepage);
               })
               .catch((e) => {
                 console.log(e);

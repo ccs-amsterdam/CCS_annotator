@@ -16,19 +16,18 @@ import DropboxSync from "./DropboxSync";
 // PKCE browser authentication for Dropbox:
 // https://github.com/dropbox/dropbox-sdk-js
 
-const clientID = "doge8b5gywmaz6x";
-const host = "http://localhost:3000";
-const route = "/create";
-const redirectURL = host + route;
-
-let dbxAuth = getDropboxAuth(clientID); // this is an ID that doesn't have to be secret
-const DropboxConnect = () => {
+const DropboxConnect = ({ homepage }) => {
   const [open, setOpen] = useState();
   const dropbox = useSelector((state) => state.dropbox);
   const db = useSelector((state) => state.db);
   const [tryRestore, setTryRestore] = useState(true);
   const dispatch = useDispatch();
   const history = useHistory();
+
+  const clientID = "doge8b5gywmaz6x";
+  const route = "/create";
+  const redirectURL = homepage + route;
+  let dbxAuth = getDropboxAuth(clientID); // this is an ID that doesn't have to be secret
 
   // Change this if you're deploying this app on another host
   // You'll need to create your own Dropbox app, where you specify
