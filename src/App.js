@@ -13,6 +13,7 @@ import Annotate from "./components/Annotate";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
+const host = "https://ccs-amsterdam.github.io"; // required for dropbox redirect
 const homepage = "/amcat4annotator";
 const items = [
   { label: "Create", path: homepage + "/create", Component: Create },
@@ -35,7 +36,7 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <HeaderMenu items={items} homepage={homepage} />
+      <HeaderMenu items={items} host={host} homepage={homepage} />
       <Divider />
       <Container style={{ marginTop: "3em" }}>
         <Switch>

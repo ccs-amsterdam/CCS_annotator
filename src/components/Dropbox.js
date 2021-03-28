@@ -16,6 +16,10 @@ import DropboxSync from "./DropboxSync";
 // PKCE browser authentication for Dropbox:
 // https://github.com/dropbox/dropbox-sdk-js
 
+const clientID = "doge8b5gywmaz6x";
+const route = "/create";
+let dbxAuth = getDropboxAuth(clientID); // this is an ID that doesn't have to be secret
+
 const DropboxConnect = ({ homepage }) => {
   const [open, setOpen] = useState();
   const dropbox = useSelector((state) => state.dropbox);
@@ -23,11 +27,6 @@ const DropboxConnect = ({ homepage }) => {
   const [tryRestore, setTryRestore] = useState(true);
   const dispatch = useDispatch();
   const history = useHistory();
-
-  const clientID = "doge8b5gywmaz6x";
-  const route = "/create";
-  const redirectURL = homepage + route;
-  let dbxAuth = getDropboxAuth(clientID); // this is an ID that doesn't have to be secret
 
   // Change this if you're deploying this app on another host
   // You'll need to create your own Dropbox app, where you specify
@@ -67,6 +66,7 @@ const DropboxConnect = ({ homepage }) => {
 
     // check for code in url from dropbox redirect
     const code = getCodeFromUrl();
+    const redirectURL = getRedirectUrl(homepage, route);
     if (code)
       getAuthToken(dbxAuth, code, redirectURL)
         .then(connect)
@@ -74,9 +74,10 @@ const DropboxConnect = ({ homepage }) => {
           history.push(route); // remove code from url
         })
         .catch((e) => console.log(e));
-  }, [dropbox, db, tryRestore, dispatch, history]);
+  }, [dropbox, db, homepage, tryRestore, dispatch, history]);
 
   const startAuthentication = () => {
+    const redirectURL = getRedirectUrl(homepage, route);
     // redirects from dropbox with code in url
     getCodeFromDropbox(dbxAuth, redirectURL);
   };
@@ -115,6 +116,12 @@ const DropboxConnect = ({ homepage }) => {
       </Modal.Actions>
     </Modal>
   );
+};
+
+const getRedirectUrl = (homepage, route) => {
+  const host = window.location.host;
+  if (host === "localhost:3000") return "http://" + host + homepage + route;
+  return "https://" + host + homepage + route;
 };
 
 export default DropboxConnect;
