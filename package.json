@@ -1,6 +1,6 @@
 {
   "name": "amcat4annotator",
-  "homepage": "https://ccs-amsterdam.github.io/amcat4annotator/test/",
+  "homepage": "https://ccs-amsterdam.github.io/amcat4annotator",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
