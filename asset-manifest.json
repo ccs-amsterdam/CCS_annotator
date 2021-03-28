@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/amcat4annotator/static/css/main.75c3c588.chunk.css",
-    "main.js": "/amcat4annotator/static/js/main.95244831.chunk.js",
-    "main.js.map": "/amcat4annotator/static/js/main.95244831.chunk.js.map",
+    "main.js": "/amcat4annotator/static/js/main.7c6632a4.chunk.js",
+    "main.js.map": "/amcat4annotator/static/js/main.7c6632a4.chunk.js.map",
     "runtime-main.js": "/amcat4annotator/static/js/runtime-main.6e1fd0f6.js",
     "runtime-main.js.map": "/amcat4annotator/static/js/runtime-main.6e1fd0f6.js.map",
     "static/css/2.56dc8f99.chunk.css": "/amcat4annotator/static/css/2.56dc8f99.chunk.css",
@@ -19,6 +19,6 @@
     "static/css/2.56dc8f99.chunk.css",
     "static/js/2.a64e2a21.chunk.js",
     "static/css/main.75c3c588.chunk.css",
-    "static/js/main.95244831.chunk.js"
+    "static/js/main.7c6632a4.chunk.js"
   ]
 }
