@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Form, Button } from "semantic-ui-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setDocuments } from "../actions";
 
 import SemanticDatepicker from "react-semantic-ui-datepickers";
 import "react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css";
@@ -8,6 +9,7 @@ import "react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css";
 const CreateDocument = () => {
   const db = useSelector((state) => state.db);
   const codingjob = useSelector((state) => state.codingjob);
+  const dispatch = useDispatch();
 
   const [fieldValues, setFieldValues] = useState({});
 
@@ -17,7 +19,7 @@ const CreateDocument = () => {
     annotations: "text",
   };
 
-  const onCreate = () => {
+  const onCreate = async () => {
     let submitData = { ...fieldValues };
 
     for (const key of Object.keys(submitData)) {
@@ -26,14 +28,14 @@ const CreateDocument = () => {
       }
     }
 
-    db.createDocuments(codingjob, [submitData])
-      .then((res) => {
-        // maybe check for 201 before celebrating
-        setFieldValues({});
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+    try {
+      await db.createDocuments(codingjob, [submitData]);
+      const documents = await db.listDocuments(codingjob);
+      await dispatch(setDocuments(documents));
+      setFieldValues({});
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   if (!codingjob) return null;
