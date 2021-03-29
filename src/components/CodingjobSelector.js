@@ -16,18 +16,25 @@ const CodingjobSelector = ({ type = "table" }) => {
   const [selectedCodingjob, setSelectedCodingjob] = useState(codingjob);
 
   useEffect(() => {
+    console.log("a");
+    console.log(selectedCodingjob);
     dispatch(selectCodingjob(selectedCodingjob));
-  }, [codingjob, selectedCodingjob, dispatch]);
+  }, [selectedCodingjob, dispatch]);
 
   useEffect(() => {
-    if (db && codingjob) {
-      db.listDocuments(codingjob)
-        .then((documents) => {
-          dispatch(setDocuments(documents));
-        })
-        .catch((e) => {
-          console.log(e);
-        });
+    if (db) {
+      if (codingjob) {
+        db.listDocuments(codingjob)
+          .then((documents) => {
+            dispatch(setDocuments(documents));
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+      } else {
+        setSelectedCodingjob(null);
+        dispatch(setDocuments([]));
+      }
     }
   }, [db, codingjob, dispatch]);
 
