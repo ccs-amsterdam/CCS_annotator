@@ -1,5 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
+
 import "./style.css";
 import CodeSelector from "./CodeSelector";
 
@@ -11,17 +12,19 @@ const Token = ({ token }) => {
       tokenoffset={token.offset.start}
       tokenlength={token.offset.length}
     >
-      <FancyToken token={token} />
+      <AnnotatedToken token={token} />
     </span>
   );
 };
 
-const FancyToken = React.memo(({ token }) => {
+const AnnotatedToken = ({ token }) => {
   // If we specifically ask for the annotations for the current token within the
   // useSelector function, rerender is only triggered if this value has changed
   const annotations = useSelector(
     (state) => state.spanAnnotations[token.offset.index]
   );
+  console.log("test");
+  //const selected = useSelector(state => state.selectedToken[token.offset.index])
   const codes = useSelector((state) => state.codes);
 
   // This is a trick required to render if at least something within this token's
@@ -91,6 +94,6 @@ const FancyToken = React.memo(({ token }) => {
       {allRight ? token.post : null}
     </>
   );
-});
+};
 
 export default React.memo(Token);

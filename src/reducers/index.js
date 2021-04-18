@@ -34,12 +34,12 @@ const codingjob = (state = null, action) => {
   }
 };
 
-const codingjobs = (state = null, action) => {
+const codingjobs = (state = [], action) => {
   switch (action.type) {
     case "SET_CODINGJOBS":
       return action.payload;
     case "RESET_DB":
-      return null;
+      return [];
     default:
       return state;
   }
@@ -70,6 +70,17 @@ const document = (state = [], action) => {
 const tokenIndices = (state = [], action) => {
   switch (action.type) {
     case "SET_TOKEN_INDICES":
+      return action.payload;
+    case "RESET_DB":
+      return null;
+    default:
+      return state;
+  }
+};
+
+const selectedToken = (state = {}, action) => {
+  switch (action.type) {
+    case "SET_SELECTED_TOKEN":
       return action.payload;
     case "RESET_DB":
       return null;
@@ -186,6 +197,7 @@ const rootReducer = combineReducers({
   document,
   documents,
   tokenIndices,
+  selectedToken,
   spanAnnotations,
   codes,
   codeHistory,

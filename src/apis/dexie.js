@@ -29,12 +29,13 @@ export default class AnnotationDB {
   }
 
   // CODINGJOBS
-  createCodingjob(name) {
+  async createCodingjob(name) {
     const job_id = hash([name, Date.now().toString()]);
-    return this.idb.codingjobs.add({
+    this.idb.codingjobs.add({
       job_id,
       name,
     });
+    return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
     const documents = await this.listDocuments(codingjob);
@@ -45,11 +46,11 @@ export default class AnnotationDB {
     return this.idb.codingjobs.toArray();
   }
   getCodingjob(codingjob) {
-    return this.idb.codingjobs.get("name").equals(codingjob);
+    return this.idb.codingjobs.get(codingjob.job_id);
   }
 
   // DOCUMENTS
-  async createDocuments(codingjob, documentList) {
+  async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
       await this.idb.documents
         .where("job_id")
@@ -82,11 +83,14 @@ export default class AnnotationDB {
       return result;
     }, []);
 
-    let message = `Created ${
-      documentList.length - duplicates
-    } new documents in codingjob ${codingjob.name}.`;
-    if (duplicates > 0) message = message + ` Ignored ${duplicates} duplicates`;
-    alert(message);
+    if (!silent) {
+      let message = `Created ${
+        documentList.length - duplicates
+      } new documents in codingjob ${codingjob.name}.`;
+      if (duplicates > 0)
+        message = message + ` Ignored ${duplicates} duplicates`;
+      alert(message);
+    }
 
     return this.idb.documents.bulkAdd(preparedDocuments);
   }

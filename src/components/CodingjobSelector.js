@@ -16,7 +16,7 @@ const CodingjobSelector = ({ type = "table" }) => {
   const [selectedCodingjob, setSelectedCodingjob] = useState(codingjob);
 
   useEffect(() => {
-    console.log("a");
+    console.log("----------------");
     console.log(selectedCodingjob);
     dispatch(selectCodingjob(selectedCodingjob));
   }, [selectedCodingjob, dispatch]);
@@ -39,7 +39,7 @@ const CodingjobSelector = ({ type = "table" }) => {
   }, [db, codingjob, dispatch]);
 
   useEffect(() => {
-    if (db && codingjobs === null) {
+    if (db && codingjobs.length === 0) {
       db.listCodingjobs().then((cjs) => {
         // add timestamp and sort cjs by timestamp to show most recent
         dispatch(setCodingjobs(cjs));
@@ -66,7 +66,9 @@ const CodingjobSelector = ({ type = "table" }) => {
           <DeleteCodingjob />
         </Button.Group>
 
-        <Container style={{ marginTop: "30px" }}>
+        <Container
+          style={{ marginTop: "30px", overflow: "auto", width: "800px" }}
+        >
           <SelectionTable
             columns={tableColumns}
             data={codingjobs ? codingjobs : []}
@@ -82,23 +84,26 @@ const CodingjobSelector = ({ type = "table" }) => {
   if (type === "dropdown") {
     const asDropdownItems = (indices) => {
       return indices.map((index) => {
-        return { key: index.name, text: index.name, value: index.name };
+        return { key: index.job_id, text: index.name, value: index.name };
       });
     };
 
     const onDropdownSelect = (value) => {
-      if (value && codingjobs !== null) {
+      if (value && codingjobs.length > 0) {
+        console.log("nee?");
         const i = codingjobs.findIndex((row) => row.name === value);
         setSelectedCodingjob({ ...codingjobs[i], ROW_ID: i.toString() });
       } else {
         setSelectedCodingjob(null);
       }
+      console.log("wtf");
+      console.log(selectedCodingjob);
     };
 
     return (
       <Dropdown
-        clearable
-        selection
+        inline
+        search
         options={asDropdownItems(codingjobs)}
         value={codingjob ? codingjob.name : null}
         onChange={(e, d) => onDropdownSelect(d.value)}

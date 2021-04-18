@@ -24,7 +24,7 @@ const ManageAnnotations = ({ tokens, doc }) => {
   }, [tokens, doc, dispatch]);
 
   useEffect(() => {
-    if (ready) exportAnnotations(db, doc, annotations);
+    if (db && ready) exportAnnotations(db, doc, annotations);
   }, [ready, db, doc, annotations]);
 
   return <div></div>;
@@ -47,6 +47,7 @@ const exportAnnotations = async (db, doc, annotations) => {
     }
     return un_ann;
   }, []);
+
   await db.writeValue(
     { doc_id: doc.doc_id },
     "annotations",

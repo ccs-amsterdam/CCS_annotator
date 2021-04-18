@@ -1,3 +1,15 @@
+span.token:hover {
+  background-color: rgb(61, 61, 61);
+  color: rgb(255, 255, 255);
+  text-decoration: underline overline;
+}
+
+span.token:dragover {
+  background-color: rgb(61, 61, 61);
+  color: rgb(255, 255, 255);
+  text-decoration: underline overline;
+}
+
 .TextCodeBubble {
   border: solid;
   border-width: 1px;

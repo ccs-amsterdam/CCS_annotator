@@ -53,6 +53,13 @@ export const setTokenIndices = (tokenIndices) => {
   };
 };
 
+export const setSelectedToken = (selectedToken) => {
+  return {
+    type: "SET_SELECTED_TOKEN",
+    payload: selectedToken,
+  };
+};
+
 export const toggleAnnotations = (spanAnnotation) => {
   return {
     type: "TOGGLE_ANNOTATIONS",

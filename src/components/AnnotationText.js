@@ -31,27 +31,27 @@ const AnnotationText = ({ doc }) => {
   // };
 
   useEffect(() => {
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
+    return () => {};
   });
 
   useEffect(() => {
     window.addEventListener("mouseup", onMouseUp);
+    //window.addEventListener("touchmove", onTouchMove);
+    window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("mouseup", onMouseUp);
+      //window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("keydown", onKeyDown);
     };
   });
 
   const onKeyDown = (event) => {
-    console.log(event.key); // maybe integrate key navigation
+    //console.log(event.key); // for key navigation
   };
 
   const onMouseUp = (event) => {
     if (event.which !== 1) return null;
     event.preventDefault();
-
     const selection = window.getSelection();
 
     if (!(selection.anchorNode && selection.focusNode)) return null;

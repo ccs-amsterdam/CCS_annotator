@@ -10,7 +10,7 @@ const documentTableColumns = [
   { Header: "meta", accessor: "meta", headerClass: "four wide" },
 ];
 
-const DocumentTable = () => {
+const DocumentTable = ({ width }) => {
   const codingjob = useSelector((state) => state.codingjob);
   const document = useSelector((state) => state.document);
   const documents = useSelector((state) => state.documents);
@@ -30,6 +30,7 @@ const DocumentTable = () => {
       data={documents}
       selectedRow={selectedRow}
       setSelectedRow={setSelectedRow}
+      width={width}
       defaultSize={15}
     />
   );

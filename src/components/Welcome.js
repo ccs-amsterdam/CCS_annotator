@@ -7,15 +7,16 @@ import AnnotationDB from "../apis/dexie";
 import { useHistory } from "react-router-dom";
 import { Grid, Button, Header, Segment } from "semantic-ui-react";
 import { initStoragePersistence } from "../apis/storemanager";
+import demo_articles from "../apis/demodata";
 
 const Welcome = ({ items }) => {
   const dispatch = useDispatch();
   const history = useHistory();
 
-  const loggin = async () => {
+  const loggin = async (addDemo = true) => {
     try {
-      console.log("teeeeeeeeeeeeeeeeeest");
       const db = await new AnnotationDB();
+      if (addDemo) await create_demo_job(db);
       dispatch(setDB(db));
       await initStoragePersistence();
       history.push(items[0].path);
@@ -23,7 +24,7 @@ const Welcome = ({ items }) => {
   };
 
   Dexie.exists("AmCAT_Annotator").then((exists) => {
-    if (exists) loggin();
+    if (exists) loggin(false);
   });
 
   return (
@@ -58,6 +59,15 @@ const Welcome = ({ items }) => {
       </Grid.Column>
     </Grid>
   );
+};
+
+const create_demo_job = async (db) => {
+  try {
+    const job = await db.createCodingjob("Demo codingjob");
+    return await db.createDocuments(job, demo_articles, true);
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 export default Welcome;
