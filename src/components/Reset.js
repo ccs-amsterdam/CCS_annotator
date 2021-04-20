@@ -12,6 +12,17 @@ const Reset = ({ homepage }) => {
 
   if (!db) return null;
 
+  const onClick = async () => {
+    try {
+      await db.deleteDB();
+      dispatch(resetDB());
+      setOpen(false);
+      history.push(homepage);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   return (
     <Modal
       closeIcon
@@ -39,21 +50,7 @@ const Reset = ({ homepage }) => {
         >
           <Icon name="remove" /> No
         </Button>
-        <Button
-          color="green"
-          onClick={() => {
-            console.log(db);
-            db.deleteDB()
-              .then(() => {
-                dispatch(resetDB());
-                setOpen(false);
-                history.push(homepage);
-              })
-              .catch((e) => {
-                console.log(e);
-              });
-          }}
-        >
+        <Button color="green" onClick={onClick}>
           <Icon name="checkmark" /> Yes
         </Button>
       </Modal.Actions>

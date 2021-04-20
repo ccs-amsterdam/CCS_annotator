@@ -10,38 +10,32 @@ import {
   Dimmer,
   Icon,
 } from "semantic-ui-react";
+import AnnotationDB from "../apis/dexie";
 
 const CreateCodingjob = () => {
-  const db = useSelector((state) => state.db);
   const codingjobs = useSelector((state) => state.codingjobs);
   const dispatch = useDispatch();
 
   const [status, setStatus] = useState("inactive");
   const [codingjobName, setCodingjobName] = useState("");
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
 
     setCodingjobName(codingjobName.trim());
     setStatus("pending");
 
-    db.createCodingjob(codingjobName)
-      .then((res) => {
-        // maybe check for 201 before celebrating
-
-        if (db) {
-          db.listCodingjobs().then((res) => {
-            dispatch(selectCodingjob(null));
-            dispatch(setCodingjobs(res));
-          });
-        }
-
-        setStatus("inactive");
-      })
-      .catch((e) => {
-        console.log(e);
-        setStatus("error");
-      });
+    try {
+      const db = new AnnotationDB();
+      await db.createCodingjob(codingjobName);
+      const codingjobs = await db.listCodingjobs();
+      dispatch(selectCodingjob(null));
+      dispatch(setCodingjobs(codingjobs));
+      setStatus("inactive");
+    } catch (e) {
+      console.log(e);
+      setStatus("error");
+    }
   };
 
   if (!codingjobs) return null;

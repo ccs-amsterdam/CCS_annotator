@@ -13,7 +13,7 @@ import Annotate from "./components/Annotate";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
-const host = "https://ccs-amsterdam.github.io"; // required for dropbox redirect
+const host = "https://ccs-amsterdam.github.io";
 const homepage = "/amcat4annotator";
 const items = [
   { label: "Create", path: homepage + "/create", Component: Create },

@@ -11,13 +11,10 @@ const db = (state = null, action) => {
   }
 };
 
-const dropbox = (state = null, action) => {
+const eventsBlocked = (state = false, action) => {
   switch (action.type) {
-    case "SET_DROPBOX":
-      console.log("set dropbox");
+    case "BLOCK_EVENTS":
       return action.payload;
-    case "RESET_DB":
-      return null;
     default:
       return state;
   }
@@ -78,20 +75,59 @@ const tokenIndices = (state = [], action) => {
   }
 };
 
-const selectedToken = (state = {}, action) => {
+const currentToken = (state = 0, action) => {
   switch (action.type) {
-    case "SET_SELECTED_TOKEN":
+    case "SET_CURRENT_TOKEN":
       return action.payload;
     case "RESET_DB":
-      return null;
+      return 0;
     default:
       return state;
   }
 };
 
-// separately store the annotation in a more universal format and
-// a format that is fast to use in the app. Now store universal format in state
-// but in time figure out how to use indexedDb.
+const tokenSelection = (state = [], action) => {
+  // an array of length 2, giving the start and end of the selection
+  switch (action.type) {
+    case "SET_TOKEN_SELECTION":
+      return toggleSelection(state, action.index, action.add);
+    case "CLEAR_TOKEN_SELECTION":
+      return [];
+    case "RESET_DB":
+      return [];
+    default:
+      return state;
+  }
+};
+
+const codeSelectorTrigger = (state = null, action) => {
+  switch (action.type) {
+    case "TRIGGER_CODESELECTOR":
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
+const toggleSelection = (selection, index, add) => {
+  if (!add || selection.length === 0) return [index, index];
+  return [selection[0], index];
+};
+
+const spanAnnotations = (state = {}, action) => {
+  switch (action.type) {
+    case "TOGGLE_ANNOTATIONS":
+      return toggleAnnotations({ ...state }, action.payload, false);
+    case "RM_ANNOTATIONS":
+      return toggleAnnotations({ ...state }, action.payload, true);
+    case "CLEAR_SPAN_ANNOTATIONS":
+      return {};
+    case "RESET_DB":
+      return {};
+    default:
+      return state;
+  }
+};
 
 const toggleAnnotations = (annotations, annList, rm) => {
   for (let key in annList) {
@@ -118,7 +154,6 @@ const toggleAnnotations = (annotations, annList, rm) => {
       }
     }
 
-    // if not, add it
     if (!rm) {
       if (!annotations[a.index]) annotations[a.index] = {};
       annotations[a.index][a.group] = {
@@ -129,23 +164,7 @@ const toggleAnnotations = (annotations, annList, rm) => {
       };
     }
   }
-
   return annotations;
-};
-
-const spanAnnotations = (state = {}, action) => {
-  switch (action.type) {
-    case "TOGGLE_ANNOTATIONS":
-      return toggleAnnotations({ ...state }, action.payload, false);
-    case "RM_ANNOTATIONS":
-      return toggleAnnotations({ ...state }, action.payload);
-    case "CLEAR_SPAN_ANNOTATIONS":
-      return {};
-    case "RESET_DB":
-      return {};
-    default:
-      return state;
-  }
 };
 
 const testCodes = [
@@ -191,13 +210,15 @@ const codeHistory = (state = [], action) => {
 
 const rootReducer = combineReducers({
   db,
-  dropbox,
+  eventsBlocked,
   codingjob,
   codingjobs,
   document,
   documents,
   tokenIndices,
-  selectedToken,
+  currentToken,
+  codeSelectorTrigger,
+  tokenSelection,
   spanAnnotations,
   codes,
   codeHistory,

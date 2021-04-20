@@ -4,7 +4,6 @@ import hash from "object-hash";
 export default class AnnotationDB {
   constructor() {
     this.idb = new Dexie("AmCAT_Annotator");
-    // this.idb.delete();   // for testing: starts with clean db
     this.idb.version(1).stores({
       apis: "api", // unindexed fields: token, refresh_token, expiration_date,
       codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
@@ -64,7 +63,6 @@ export default class AnnotationDB {
       if (!ids.has(doc_id)) {
         ids.add(doc_id);
         if (document.annotations && document.annotations.length > 0) {
-          console.log(document.annotations);
           try {
             JSON.parse(document.annotations);
           } catch (e) {

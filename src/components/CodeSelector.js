@@ -6,10 +6,11 @@ import {
   appendCodeHistory,
   toggleAnnotations,
   rmAnnotations,
+  blockEvents,
 } from "../actions";
 import randomColor from "randomcolor";
 
-const CodeSelector = ({ index, children }) => {
+const CodeSelector = ({ index, children, setOpen }) => {
   const codes = useSelector((state) => state.codes);
   const codeHistory = useSelector((state) => state.codeHistory);
   const spanAnnotations = useSelector((state) => state.spanAnnotations);
@@ -20,7 +21,9 @@ const CodeSelector = ({ index, children }) => {
   const userAccess = { editable: true };
   const dispatch = useDispatch();
 
+  console.log("test");
   useEffect(() => {
+    if (current) return null;
     let annotation = spanAnnotations[index];
     if (annotation && annotation !== undefined) {
       if (Object.keys(annotation).includes("Not yet assigned")) {
@@ -29,15 +32,17 @@ const CodeSelector = ({ index, children }) => {
         setCurrent(Object.keys(annotation)[0]);
       }
     }
-  }, [index, spanAnnotations]);
+  }, [current, index, spanAnnotations]);
 
-  const toggleListener = (on) => {
-    if (on) {
-      window.addEventListener("keydown", onKeydown);
-    } else {
+  useEffect(() => {
+    window.addEventListener("keydown", onKeydown);
+    dispatch(blockEvents(true));
+    return () => {
       window.removeEventListener("keydown", onKeydown);
-    }
-  };
+      dispatch(blockEvents(false));
+    };
+  });
+
   const onKeydown = (event) => {
     if (textInputRef.current) textInputRef.current.click();
   };
@@ -95,6 +100,7 @@ const CodeSelector = ({ index, children }) => {
     }
     dispatch(toggleAnnotations(newAnnotations));
     dispatch(appendCodeHistory(value));
+    setOpen(false);
 
     if (Object.keys(annotation).includes(null)) {
       setCurrent(null);
@@ -140,12 +146,11 @@ const CodeSelector = ({ index, children }) => {
   return (
     <Popup
       trigger={children}
-      on="hover"
       flowing
       hoverable
       wide
-      onOpen={() => toggleListener(true)}
-      onClose={() => toggleListener(false)}
+      open
+      onClose={() => setOpen(false)}
       position="top left"
     >
       <div>

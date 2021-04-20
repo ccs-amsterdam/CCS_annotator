@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Segment, Dropdown, Container } from "semantic-ui-react";
 import { selectCodingjob, setCodingjobs, setDocuments } from "../actions";
+import Dexie from "dexie";
 
 import SelectionTable from "./SelectionTable";
 import CreateCodingjob from "./CreateCodingjob";
 import DeleteCodingjob from "./DeleteCodingjob";
+import AnnotationDB from "../apis/dexie";
 
 const CodingjobSelector = ({ type = "table" }) => {
-  const db = useSelector((state) => state.db);
   const codingjobs = useSelector((state) => state.codingjobs);
   const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
@@ -22,33 +23,19 @@ const CodingjobSelector = ({ type = "table" }) => {
   }, [selectedCodingjob, dispatch]);
 
   useEffect(() => {
-    if (db) {
-      if (codingjob) {
-        db.listDocuments(codingjob)
-          .then((documents) => {
-            dispatch(setDocuments(documents));
-          })
-          .catch((e) => {
-            console.log(e);
-          });
-      } else {
-        setSelectedCodingjob(null);
-        dispatch(setDocuments([]));
-      }
+    if (codingjob) {
+      getJobArticles(codingjob, dispatch);
+    } else {
+      setSelectedCodingjob(null);
+      dispatch(setDocuments([]));
     }
-  }, [db, codingjob, dispatch]);
+  }, [codingjob, dispatch]);
 
   useEffect(() => {
-    if (db && codingjobs.length === 0) {
-      db.listCodingjobs().then((cjs) => {
-        // add timestamp and sort cjs by timestamp to show most recent
-        dispatch(setCodingjobs(cjs));
-        if (cjs.length > 0) setSelectedCodingjob({ ...cjs[0], ROW_ID: "0" });
-      });
+    if (codingjobs.length === 0) {
+      getCodingjobs(dispatch, setSelectedCodingjob);
     }
-  }, [db, codingjobs, dispatch]);
-
-  //if (!codingjob) return null;
+  }, [codingjobs, dispatch]);
 
   if (type === "table") {
     const tableColumns = [
@@ -90,13 +77,11 @@ const CodingjobSelector = ({ type = "table" }) => {
 
     const onDropdownSelect = (value) => {
       if (value && codingjobs.length > 0) {
-        console.log("nee?");
         const i = codingjobs.findIndex((row) => row.name === value);
         setSelectedCodingjob({ ...codingjobs[i], ROW_ID: i.toString() });
       } else {
         setSelectedCodingjob(null);
       }
-      console.log("wtf");
       console.log(selectedCodingjob);
     };
 
@@ -112,6 +97,34 @@ const CodingjobSelector = ({ type = "table" }) => {
   }
 
   return null;
+};
+
+const getCodingjobs = async (dispatch, setSelectedCodingjob) => {
+  // the exists check is super annoying, but if db is included in useEffect, it somehow
+  // rerenders non-stop, and if this check is not here then a new DB will be created immediately
+  // when reset is called.
+  const exists = await Dexie.exists("AmCAT_Annotator");
+  if (!exists) return null;
+  try {
+    const db = new AnnotationDB();
+    const cjs = await db.listCodingjobs();
+    dispatch(setCodingjobs(cjs));
+    if (cjs.length > 0) setSelectedCodingjob({ ...cjs[0], ROW_ID: "0" });
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const getJobArticles = async (codingjob, dispatch) => {
+  const exists = await Dexie.exists("AmCAT_Annotator");
+  if (!exists) return null;
+  try {
+    const db = new AnnotationDB();
+    const documents = await db.listDocuments(codingjob);
+    dispatch(setDocuments(documents));
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 export default CodingjobSelector;

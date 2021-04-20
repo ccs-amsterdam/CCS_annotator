@@ -2,33 +2,29 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCodingjob, setCodingjobs } from "../actions";
 import { Button, Header, Icon, Modal, Dimmer, Loader } from "semantic-ui-react";
+import AnnotationDB from "../apis/dexie";
 
 const DeleteCodingjob = () => {
-  const db = useSelector((state) => state.db);
   const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
 
   const [status, setStatus] = useState("inactive");
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     setStatus("pending");
-    db.deleteCodingjob(codingjob)
-      .then((res) => {
-        // maybe check for 201 before celebrating
+    try {
+      const db = new AnnotationDB();
+      await db.deleteCodingjob(codingjob);
+      const codingjobs = db.listCodingjobs();
 
-        if (db) {
-          db.listCodingjobs().then((res) => {
-            dispatch(selectCodingjob(null));
-            dispatch(setCodingjobs(res));
-          });
-        }
-        setStatus("inactive");
-      })
-      .catch((e) => {
-        console.log(e.message);
-        console.log(e);
-        setStatus("error");
-      });
+      dispatch(selectCodingjob(null));
+      dispatch(setCodingjobs(codingjobs));
+
+      setStatus("inactive");
+    } catch (e) {
+      console.log(e);
+      setStatus("error");
+    }
   };
 
   if (!codingjob) return null;

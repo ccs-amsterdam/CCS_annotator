@@ -1,16 +1,16 @@
-span.token:hover {
+::selection {
   background-color: rgb(61, 61, 61);
   color: rgb(255, 255, 255);
   text-decoration: underline overline;
 }
 
-span.token:dragover {
+span.token.selected {
   background-color: rgb(61, 61, 61);
   color: rgb(255, 255, 255);
   text-decoration: underline overline;
 }
 
-.TextCodeBubble {
+.annotatedToken {
   border: solid;
   border-width: 1px;
   font-weight: bold;
@@ -22,26 +22,26 @@ span.token:dragover {
   border-right: none;
 }
 
-.TextCodeBubble.anyLeft {
+.annotatedToken.anyLeft {
   border-left: dotted;
   border-left-width: 0.3px;
   border-bottom-left-radius: 2px;
 }
 
-.TextCodeBubble.allLeft {
+.annotatedToken.allLeft {
   border-left: solid;
   border-left-width: 1px;
   border-bottom-left-radius: 7px;
   border-top-left-radius: 7px;
 }
 
-.TextCodeBubble.anyRight {
+.annotatedToken.anyRight {
   border-right: dotted;
   border-right-width: 0.3px;
   border-top-right-radius: 2px;
 }
 
-.TextCodeBubble.allRight {
+.annotatedToken.allRight {
   border-right: solid;
   border-right-width: 1px;
   border-bottom-right-radius: 7px;

@@ -11,10 +11,10 @@ export const resetDB = () => {
   };
 };
 
-export const setDropbox = (dropbox) => {
+export const blockEvents = (block) => {
   return {
-    type: "SET_DROPBOX",
-    payload: dropbox,
+    type: "BLOCK_EVENTS",
+    payload: block,
   };
 };
 
@@ -53,10 +53,31 @@ export const setTokenIndices = (tokenIndices) => {
   };
 };
 
-export const setSelectedToken = (selectedToken) => {
+export const setCurrentToken = (index) => {
   return {
-    type: "SET_SELECTED_TOKEN",
-    payload: selectedToken,
+    type: "SET_CURRENT_TOKEN",
+    payload: index,
+  };
+};
+
+export const setTokenSelection = (index, add) => {
+  return {
+    type: "SET_TOKEN_SELECTION",
+    index,
+    add,
+  };
+};
+
+export const clearTokenSelection = () => {
+  return {
+    type: "CLEAR_TOKEN_SELECTION",
+  };
+};
+
+export const triggerCodeselector = (tokenindex) => {
+  return {
+    type: "TRIGGER_CODESELECTOR",
+    payload: tokenindex,
   };
 };
 

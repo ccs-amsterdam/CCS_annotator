@@ -15,7 +15,7 @@ const Welcome = ({ items }) => {
 
   const loggin = async (addDemo = true) => {
     try {
-      const db = await new AnnotationDB();
+      const db = new AnnotationDB();
       if (addDemo) await create_demo_job(db);
       dispatch(setDB(db));
       await initStoragePersistence();
@@ -48,9 +48,7 @@ const Welcome = ({ items }) => {
           <p>
             The annotator stores your codingjobs and annotations on your local
             computer in your browser's IndexedDB. Your data will only actually
-            touch the internet when you synchronize your data. Currently we've
-            implemented syncronization with Dropbox. This way we have nothing to
-            do with your data.
+            touch the internet when you synchronize your data.
           </p>
           <Button primary onClick={loggin}>
             Yes, off course I trust you

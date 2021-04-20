@@ -1,17 +1,16 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
 
 import { Modal, Menu, Header, Button } from "semantic-ui-react";
 import { exportDB } from "dexie-export-import";
 import fileDownload from "js-file-download";
+import AnnotationDB from "../apis/dexie";
 
 const Download = () => {
   const [open, setOpen] = useState(false);
-  const db = useSelector((state) => state.db);
 
   const onDownload = async () => {
     try {
-      console.log(db);
+      const db = new AnnotationDB();
       const blob = await exportDB(db.idb, {
         filter: (table, value, key) =>
           table === "codingjobs" || table === "documents",
@@ -38,7 +37,7 @@ const Download = () => {
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
     >
-      <Header icon="dropbox" content="Download everything" />
+      <Header icon="download" content="Download everything" />
       <Modal.Content>
         <p>Download all data as a single JSON dump</p>
       </Modal.Content>

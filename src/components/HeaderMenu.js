@@ -2,7 +2,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { Menu } from "semantic-ui-react";
 import { Link, withRouter, useLocation } from "react-router-dom";
-//import Dropbox from "./Dropbox";
+
 import Download from "./Download";
 import Reset from "./Reset";
 import Persist from "./Persist";

@@ -51,7 +51,8 @@ const Persist = () => {
         <p>
           If the database is not persistent the app can still be used, but you
           need to be more carefull in making sure that data is regularly backed
-          up, either by manually downloading data or syncing with Dropbox
+          up, either by manually downloading data or syncing with some backend
+          (work in progress).
         </p>
       </Modal.Content>
       <Modal.Actions>

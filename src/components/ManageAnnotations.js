@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleAnnotations } from "../actions";
+import AnnotationDB from "../apis/dexie";
 
 // this is a dummy component to listen for changes in annotations and code
 // and saving them to the indexed db.
 
 const ManageAnnotations = ({ tokens, doc }) => {
-  const db = useSelector((state) => state.db);
   const annotations = useSelector((state) => state.spanAnnotations);
   //const codes = useSelector((state) => state.codes);
   const [ready, setReady] = useState(false);
@@ -17,20 +17,22 @@ const ManageAnnotations = ({ tokens, doc }) => {
   }, [doc]);
 
   useEffect(() => {
-    if (tokens && doc.annotations) {
+    if (tokens.length > 0 && doc.annotations && !ready) {
       matchAnnotations(tokens, doc.annotations, dispatch);
       setReady(true);
     }
-  }, [tokens, doc, dispatch]);
+  }, [ready, tokens, doc, dispatch]);
 
   useEffect(() => {
-    if (db && ready) exportAnnotations(db, doc, annotations);
-  }, [ready, db, doc, annotations]);
+    if (ready) exportAnnotations(doc, annotations);
+  }, [ready, doc, annotations]);
 
   return <div></div>;
 };
 
-const exportAnnotations = async (db, doc, annotations) => {
+const exportAnnotations = async (doc, annotations) => {
+  const db = await new AnnotationDB();
+
   let unique = new Set();
   const uniqueAnnotations = Object.values(annotations).reduce((un_ann, ann) => {
     for (let key of Object.keys(ann)) {
@@ -89,6 +91,7 @@ const findMatches = (
   // store annotation in matchedAnnotations, and remove from trackAnnotations
   for (let i = start; i <= end; i++) {
     if (importedAnnotations[i]) {
+      console.log(importedAnnotations);
       for (let code of importedAnnotations[i].start) {
         trackAnnotations[code] = {
           index: token.offset.index,

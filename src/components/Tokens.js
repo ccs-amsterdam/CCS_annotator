@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container } from "semantic-ui-react";
+import { Container, Segment } from "semantic-ui-react";
 import Token from "./Token";
 
 import nlp from "compromise";
@@ -8,7 +8,7 @@ nlp.extend(paragraphs);
 
 const Tokens = ({ text, setTokens }) => {
   // It's imporant that the annotations to not pass by this component
-  // but are loaded into Token from redux. THis prevents rerendering
+  // but are loaded into Token from redux. This prevents rerendering
   // all the parsing stuff
   const [tokenComponents, setTokenComponents] = useState(null);
 
@@ -20,11 +20,15 @@ const Tokens = ({ text, setTokens }) => {
 
   if (text === null) return null;
 
-  return <Container text>{tokenComponents}</Container>;
+  return (
+    <Container text>
+      <Segment style={{ border: "0" }}>{tokenComponents}</Segment>
+    </Container>
+  );
 };
 
 const prepareTokens = (text) => {
-  let tokens = [];
+  let tokens = []; // make object with
   const tokenized = nlp.tokenize(text).paragraphs().json({ offset: true });
   const paragraphs = tokenized.map((par, par_i) => {
     return createParagraph(par, par_i, tokens);
@@ -36,8 +40,8 @@ const prepareTokens = (text) => {
 const createParagraph = (par, par_i, tokens) => {
   const mapSentences = (par) => {
     return par.sentences.map((sent) => {
-      // for some reason there's an other array layer...
-      // I've only found cases where lenght is 1, but I'll map just in case
+      // for some reason there's an extra array layer between sentences and paragraphs...
+      // I've only found cases where lenght is 1, but I'll map it just in case
       return sent.map((sent2) => {
         return createSentence(sent2, tokens);
       });
@@ -54,8 +58,9 @@ const createParagraph = (par, par_i, tokens) => {
 const createSentence = (sent, tokens) => {
   const mapTokens = (sent) => {
     return sent.terms.map((token) => {
+      token.ref = React.createRef();
       tokens.push(token);
-      return <Token key={token.offset.index} token={token} />;
+      return <Token ref={token.ref} key={token.offset.index} token={token} />;
     });
   };
 

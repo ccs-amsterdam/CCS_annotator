@@ -1,21 +1,34 @@
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 import "./style.css";
 import CodeSelector from "./CodeSelector";
+import { triggerCodeselector } from "../actions";
 
-const Token = ({ token }) => {
+const Token = React.forwardRef(({ token }, ref) => {
+  const selected = useSelector((state) => {
+    if (state.tokenSelection.length === 0) return false;
+
+    let [from, to] = state.tokenSelection;
+    if (from > to) [to, from] = [from, to];
+    return token.offset.index >= from && token.offset.index <= to;
+  });
+
+  let tokenClass = "token";
+  if (selected) tokenClass = tokenClass + " selected";
+
   return (
     <span
-      className="token"
+      ref={ref}
+      className={tokenClass}
       tokenindex={token.offset.index}
-      tokenoffset={token.offset.start}
-      tokenlength={token.offset.length}
+      //tokenoffset={token.offset.start}
+      //tokenlength={token.offset.length}
     >
       <AnnotatedToken token={token} />
     </span>
   );
-};
+});
 
 const AnnotatedToken = ({ token }) => {
   // If we specifically ask for the annotations for the current token within the
@@ -23,16 +36,25 @@ const AnnotatedToken = ({ token }) => {
   const annotations = useSelector(
     (state) => state.spanAnnotations[token.offset.index]
   );
-  console.log("test");
-  //const selected = useSelector(state => state.selectedToken[token.offset.index])
+  const codeSelectorTrigger = useSelector(
+    (state) => state.codeSelectorTrigger === token.offset.index
+  );
   const codes = useSelector((state) => state.codes);
+  const dispatch = useDispatch();
+  const [openCodeSelector, setOpenCodeSelector] = useState(false);
 
   // This is a trick required to render if at least something within this token's
-  // annotations changed (somehow 'annotations' doesn't trigger this, even though it
-  // does contain all the information)
+  // annotations changed (somehow 'annotations' doesn't trigger this)
   useSelector((state) =>
     JSON.stringify(state.spanAnnotations[token.offset.index])
   );
+
+  useEffect(() => {
+    if (codeSelectorTrigger) {
+      setOpenCodeSelector(true);
+      dispatch(triggerCodeselector(null));
+    }
+  }, [codeSelectorTrigger, dispatch]);
 
   // if there are no annotation codes, our life is easy
   if (!annotations) return <>{token.pre + token.text + token.post}</>;
@@ -46,6 +68,27 @@ const AnnotatedToken = ({ token }) => {
       return "lightgrey";
     }
   };
+
+  const tokenSpan = (annotatedTokenClass) => {
+    return (
+      <span
+        className={annotatedTokenClass}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setOpenCodeSelector(true);
+        }}
+        style={{
+          background: color,
+        }}
+      >
+        {allLeft && allRight ? token.text : null}
+        {allLeft && !allRight ? token.text + token.post : null}
+        {allRight && !allLeft ? token.pre + token.text : null}
+        {!allLeft && !allRight ? token.pre + token.text + token.post : null}
+      </span>
+    );
+  };
+
   let tokenCodes = Object.keys(annotations);
   let color = null;
   if (tokenCodes.length === 1) {
@@ -69,28 +112,26 @@ const AnnotatedToken = ({ token }) => {
     (code) => code.span[1] === code.index
   );
 
-  let tokenClass = "TextCodeBubble";
-  if (allLeft) tokenClass = tokenClass + " allLeft";
-  if (anyLeft & !allLeft) tokenClass = tokenClass + " anyLeft";
-  if (allRight) tokenClass = tokenClass + " allRight";
-  if (anyRight & !allRight) tokenClass = tokenClass + " anyRight";
+  let annotatedTokenClass = "annotatedToken";
+  if (allLeft) annotatedTokenClass = annotatedTokenClass + " allLeft";
+  if (anyLeft & !allLeft)
+    annotatedTokenClass = annotatedTokenClass + " anyLeft";
+  if (allRight) annotatedTokenClass = annotatedTokenClass + " allRight";
+  if (anyRight & !allRight)
+    annotatedTokenClass = annotatedTokenClass + " anyRight";
 
+  console.log(openCodeSelector);
   return (
     <>
       {allLeft ? token.pre : null}
-      <CodeSelector index={token.offset.index}>
-        <span
-          className={tokenClass}
-          style={{
-            background: color,
-          }}
-        >
-          {allLeft && allRight ? token.text : null}
-          {allLeft && !allRight ? token.text + token.post : null}
-          {allRight && !allLeft ? token.pre + token.text : null}
-          {!allLeft && !allRight ? token.pre + token.text + token.post : null}
-        </span>
-      </CodeSelector>
+      {openCodeSelector ? (
+        <CodeSelector index={token.offset.index} setOpen={setOpenCodeSelector}>
+          {tokenSpan(annotatedTokenClass)}
+        </CodeSelector>
+      ) : (
+        tokenSpan(annotatedTokenClass)
+      )}
+
       {allRight ? token.post : null}
     </>
   );

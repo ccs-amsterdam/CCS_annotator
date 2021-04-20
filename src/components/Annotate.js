@@ -9,11 +9,9 @@ import {
 
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
-import CodeSelector from "./CodeSelector";
 import AnnotationDB from "../apis/dexie";
 
 const Annotate = () => {
-  const db = useSelector((state) => state.db);
   const codingjob = useSelector((state) => state.codingjob);
   const [doc, setDoc] = useState(null);
   const [documentList, setDocumentList] = useState([]);
@@ -22,14 +20,14 @@ const Annotate = () => {
     getDocuments(codingjob, setDoc, setDocumentList);
   }, [codingjob]);
 
-  const documentSelector = (db, setDoc, documentList) => {
+  const documentSelector = (setDoc, documentList) => {
     const options = dropdownOptions(documentList);
     return (
       <Dropdown
         inline
         search
         onChange={(e, d) => {
-          getDocument(db, setDoc, d.value);
+          getDocument(setDoc, d.value);
         }}
         options={options}
         value={doc ? doc.doc_id : null}
@@ -47,7 +45,7 @@ const Annotate = () => {
             </BreadcrumbSection>
             <Breadcrumb.Divider />
             <BreadcrumbSection link>
-              {documentSelector(db, setDoc, documentList)}
+              {documentSelector(setDoc, documentList)}
             </BreadcrumbSection>
           </Breadcrumb>
         </Grid.Row>
@@ -55,9 +53,7 @@ const Annotate = () => {
           <Grid.Column width={12}>
             <AnnotationText doc={doc ? doc : null} />
           </Grid.Column>
-          <Grid.Column width={4}>
-            <CodeSelector />
-          </Grid.Column>
+          <Grid.Column width={4}></Grid.Column>
         </Grid.Row>
       </Grid>
     </>
@@ -66,7 +62,7 @@ const Annotate = () => {
 
 const getDocuments = async (codingjob, setDoc, setDocumentList) => {
   if (codingjob) {
-    const db = await new AnnotationDB();
+    const db = new AnnotationDB();
     const documents = await db.listDocuments(codingjob);
     setDocumentList(documents);
     if (documents.length > 0) {
@@ -81,7 +77,8 @@ const getDocuments = async (codingjob, setDoc, setDocumentList) => {
   }
 };
 
-const getDocument = async (db, setDoc, doc_id) => {
+const getDocument = async (setDoc, doc_id) => {
+  const db = new AnnotationDB();
   const document = await db.getDocument(doc_id);
   setDoc({
     doc_id: document.doc_id,
