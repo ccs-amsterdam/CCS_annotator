@@ -67,6 +67,7 @@ const AnnotationText = ({ doc }) => {
         return;
       }
       if (arrowkeys.includes(event.key)) {
+        event.preventDefault();
         if (event.repeat) return;
         setMover({
           position: currentToken,
@@ -131,6 +132,7 @@ const AnnotationText = ({ doc }) => {
   const onMouseDown = (event) => {
     // When left button pressed, start new selection
     if (event.which !== 1) return null;
+    event.preventDefault();
     setHoldMouseLeft(true);
     dispatch(clearTokenSelection());
   };
@@ -151,6 +153,7 @@ const AnnotationText = ({ doc }) => {
     const currentNode = storeMouseSelection(event);
     const selection = window.getSelection();
     selection.empty();
+    setHoldMouseLeft(false);
 
     // storeMouseSelection does save position to tokenSelection state, but this isn't
     // yet updated within this scope. This results in single clicks (without mousemove)
@@ -171,11 +174,9 @@ const AnnotationText = ({ doc }) => {
 
   const storeMouseSelection = (event) => {
     // select tokens that the mouse/touch is currently pointing at
-    // (only possible for mousemove and mouseup events)
-    const selection = window.getSelection();
-    if (!selection.focusNode) return null;
-    let currentNode = getToken(tokens, selection.focusNode.parentElement);
+    let currentNode = getToken(tokens, event.originalTarget);
     if (!currentNode) return null;
+
     dispatch(setCurrentToken(currentNode.index));
     dispatch(setTokenSelection(currentNode.index, true));
     return currentNode.index;
@@ -194,7 +195,6 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
   let [from, to] = selection;
   if (from > to) [from, to] = [to, from];
 
-  console.log(tokens[from].ref.current);
   const annotations = [];
   for (let i = from; i <= to; i++) {
     annotations.push({
@@ -227,6 +227,7 @@ const movePosition = (tokens, key, mover, ctrl, dispatch) => {
     dispatch(setCurrentToken(newPosition));
     dispatch(setTokenSelection(newPosition, ctrl));
   }
+  tokens[newPosition].ref.current.scrollIntoView({ block: "center" });
   return newPosition;
 };
 

@@ -91,7 +91,6 @@ const findMatches = (
   // store annotation in matchedAnnotations, and remove from trackAnnotations
   for (let i = start; i <= end; i++) {
     if (importedAnnotations[i]) {
-      console.log(importedAnnotations);
       for (let code of importedAnnotations[i].start) {
         trackAnnotations[code] = {
           index: token.offset.index,

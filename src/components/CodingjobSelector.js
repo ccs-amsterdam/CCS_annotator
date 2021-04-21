@@ -17,8 +17,6 @@ const CodingjobSelector = ({ type = "table" }) => {
   const [selectedCodingjob, setSelectedCodingjob] = useState(codingjob);
 
   useEffect(() => {
-    console.log("----------------");
-    console.log(selectedCodingjob);
     dispatch(selectCodingjob(selectedCodingjob));
   }, [selectedCodingjob, dispatch]);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import "./style.css";
@@ -36,25 +36,15 @@ const AnnotatedToken = ({ token }) => {
   const annotations = useSelector(
     (state) => state.spanAnnotations[token.offset.index]
   );
-  const codeSelectorTrigger = useSelector(
-    (state) => state.codeSelectorTrigger === token.offset.index
-  );
+
   const codes = useSelector((state) => state.codes);
   const dispatch = useDispatch();
-  const [openCodeSelector, setOpenCodeSelector] = useState(false);
 
   // This is a trick required to render if at least something within this token's
   // annotations changed (somehow 'annotations' doesn't trigger this)
   useSelector((state) =>
     JSON.stringify(state.spanAnnotations[token.offset.index])
   );
-
-  useEffect(() => {
-    if (codeSelectorTrigger) {
-      setOpenCodeSelector(true);
-      dispatch(triggerCodeselector(null));
-    }
-  }, [codeSelectorTrigger, dispatch]);
 
   // if there are no annotation codes, our life is easy
   if (!annotations) return <>{token.pre + token.text + token.post}</>;
@@ -75,7 +65,7 @@ const AnnotatedToken = ({ token }) => {
         className={annotatedTokenClass}
         onContextMenu={(e) => {
           e.preventDefault();
-          setOpenCodeSelector(true);
+          dispatch(triggerCodeselector(token.offset.index));
         }}
         style={{
           background: color,
@@ -120,17 +110,13 @@ const AnnotatedToken = ({ token }) => {
   if (anyRight & !allRight)
     annotatedTokenClass = annotatedTokenClass + " anyRight";
 
-  console.log(openCodeSelector);
   return (
     <>
       {allLeft ? token.pre : null}
-      {openCodeSelector ? (
-        <CodeSelector index={token.offset.index} setOpen={setOpenCodeSelector}>
-          {tokenSpan(annotatedTokenClass)}
-        </CodeSelector>
-      ) : (
-        tokenSpan(annotatedTokenClass)
-      )}
+
+      <CodeSelector index={token.offset.index}>
+        {tokenSpan(annotatedTokenClass)}
+      </CodeSelector>
 
       {allRight ? token.post : null}
     </>
