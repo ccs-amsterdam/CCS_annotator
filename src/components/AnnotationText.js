@@ -174,6 +174,7 @@ const AnnotationText = ({ doc }) => {
 
   const storeMouseSelection = (event) => {
     // select tokens that the mouse/touch is currently pointing at
+    console.log(event);
     let currentNode = getToken(tokens, event.originalTarget);
     if (!currentNode) return null;
 
@@ -210,6 +211,7 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
   }
   dispatch(toggleAnnotations(annotations));
   dispatch(clearTokenSelection());
+  dispatch(triggerCodeselector(null));
   dispatch(triggerCodeselector(to));
 };
 
@@ -267,13 +269,20 @@ const getTokenAttributes = (tokens, tokenNode) => {
 };
 
 const getToken = (tokens, e) => {
-  if (e.className === "token" || e.className === "token selected")
-    return getTokenAttributes(tokens, e);
-  if (e.parentNode) {
-    if (e.parentNode.className === "token")
-      return getTokenAttributes(tokens, e.parentNode);
+  try {
+    // sometimes e is Restricted, and I have no clue why,
+    // nor how to check this in a condition. hence the try clause
+    if (e.className === "token" || e.className === "token selected")
+      return getTokenAttributes(tokens, e);
+    if (e.parentNode) {
+      if (e.parentNode.className === "token")
+        return getTokenAttributes(tokens, e.parentNode);
+    }
+    return null;
+  } catch (e) {
+    console.log(e);
+    return null;
   }
-  return null;
 };
 
 export default AnnotationText;

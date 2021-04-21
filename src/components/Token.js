@@ -114,7 +114,7 @@ const AnnotatedToken = ({ token }) => {
     <>
       {allLeft ? token.pre : null}
 
-      <CodeSelector index={token.offset.index}>
+      <CodeSelector index={token.offset.index} annotations={annotations}>
         {tokenSpan(annotatedTokenClass)}
       </CodeSelector>
 

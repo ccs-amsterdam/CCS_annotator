@@ -11,10 +11,9 @@ import {
 } from "../actions";
 import randomColor from "randomcolor";
 
-const CodeSelector = ({ index, children }) => {
+const CodeSelector = ({ index, children, annotations }) => {
   const codes = useSelector((state) => state.codes);
   const codeHistory = useSelector((state) => state.codeHistory);
-  const spanAnnotations = useSelector((state) => state.spanAnnotations[index]);
   const open = useSelector((state) => state.codeSelectorTrigger === index);
 
   const textInputRef = useRef(null);
@@ -24,19 +23,16 @@ const CodeSelector = ({ index, children }) => {
   const userAccess = { editable: true };
   const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   console.log("mount");
-  //   return () => {
-  //     console.log("unmount");
-  //     setOpen(false);
-  //   };
-  // }, [setOpen]);
+  useEffect(() => {
+    setCurrent(null);
+  }, [open, setCurrent]);
 
   useEffect(() => {
+    if (!annotations) return null;
     if (current) return null;
-    if (!spanAnnotations) return null;
 
-    let annotation = spanAnnotations;
+    let annotation = annotations;
+    console.log(annotation);
     if (annotation && annotation !== undefined) {
       if (Object.keys(annotation).includes("Not yet assigned")) {
         setCurrent("Not yet assigned");
@@ -44,7 +40,7 @@ const CodeSelector = ({ index, children }) => {
         setCurrent(Object.keys(annotation)[0]);
       }
     }
-  }, [current, index, spanAnnotations]);
+  }, [current, setCurrent, index, annotations]);
 
   useEffect(() => {
     if (open) {
@@ -101,12 +97,24 @@ const CodeSelector = ({ index, children }) => {
                   <Button
                     icon="trash"
                     size="mini"
-                    onClick={(e, d) => updateAnnotations(current)}
+                    onClick={(e, d) =>
+                      updateAnnotations(
+                        annotations,
+                        current,
+                        d.value,
+                        setCurrent,
+                        dispatch
+                      )
+                    }
                   />
                   <Button style={{ backgroundColor: getColor(current, codes) }}>
                     <Dropdown
                       text={current}
-                      options={getCurrentOptions(spanAnnotations, current)}
+                      options={getCurrentOptions(
+                        annotations,
+                        current,
+                        setCurrent
+                      )}
                       value={current}
                       onChange={(e, d) => setCurrent(d.value)}
                     />
@@ -122,7 +130,7 @@ const CodeSelector = ({ index, children }) => {
               <Step.Description>
                 <Button.Group vertical compact widths="1">
                   {newCodeButtons(
-                    spanAnnotations,
+                    annotations,
                     codeHistory,
                     current,
                     codes,
@@ -148,7 +156,15 @@ const CodeSelector = ({ index, children }) => {
                     minCharacters={0}
                     autoComplete={"on"}
                     searchInput={{ autoFocus: false }}
-                    onChange={(e, d) => updateAnnotations(d.value)}
+                    onChange={(e, d) =>
+                      updateAnnotations(
+                        annotations,
+                        current,
+                        d.value,
+                        setCurrent,
+                        dispatch
+                      )
+                    }
                   />
                 </Ref>
               </Step.Description>
@@ -160,8 +176,12 @@ const CodeSelector = ({ index, children }) => {
   );
 };
 
-const getCurrentOptions = (spanAnnotations, current) => {
-  let annotation = spanAnnotations;
+const getCurrentOptions = (annotations, current, setCurrent) => {
+  let annotation = annotations;
+  // if (!Object.keys(annotation).includes(current)) {
+  //   current = null;
+  //   setCurrent(current);
+  // }
   if (annotation) {
     return Object.keys(annotation)
       .filter((e) => e !== current)
@@ -173,12 +193,13 @@ const getCurrentOptions = (spanAnnotations, current) => {
 
 const ddOptions = (value) => {
   let useValue = value;
+  console.log(value);
   if (!value || value === "null") useValue = "Not yet assigned";
   return { key: useValue, text: useValue, value: useValue };
 };
 
 const newCodeButtons = (
-  spanAnnotations,
+  annotations,
   codeHistory,
   current,
   codes,
@@ -194,7 +215,13 @@ const newCodeButtons = (
           key={code}
           value={code}
           onClick={(e, d) =>
-            updateAnnotations(spanAnnotations, current, d.value, dispatch)
+            updateAnnotations(
+              annotations,
+              current,
+              d.value,
+              setCurrent,
+              dispatch
+            )
           }
         >
           {code}
@@ -204,7 +231,7 @@ const newCodeButtons = (
 };
 
 const updateAnnotations = (
-  spanAnnotations,
+  annotations,
   current,
   value,
   setCurrent,
@@ -212,7 +239,7 @@ const updateAnnotations = (
 ) => {
   const key = current;
 
-  let annotation = spanAnnotations;
+  let annotation = annotations;
   if (!annotation) return null;
 
   let ann = {
@@ -223,7 +250,6 @@ const updateAnnotations = (
     span: annotation[key].span,
   };
 
-  // this is a nasty hack. Sort nice solution out later
   let oldAnnotation = { ...ann };
   oldAnnotation.span = [oldAnnotation.index, oldAnnotation.index];
   dispatch(rmAnnotations([oldAnnotation]));
