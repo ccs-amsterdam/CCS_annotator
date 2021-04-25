@@ -12,7 +12,7 @@ export default class AnnotationDB {
   }
 
   // API TOKENS
-  addToken(api, token) {
+  async addToken(api, token) {
     return this.idb.apis.put({
       api,
       token: token.token,
@@ -20,10 +20,10 @@ export default class AnnotationDB {
       expiration_date: token.expiration_date,
     });
   }
-  deleteToken(api) {
+  async deleteToken(api) {
     return this.idb.apis.delete(api);
   }
-  getToken(api) {
+  async getToken(api) {
     return this.idb.apis.get(api);
   }
 
@@ -41,11 +41,20 @@ export default class AnnotationDB {
     await this.deleteDocuments(documents);
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
-  listCodingjobs() {
-    return this.idb.codingjobs.toArray();
+  async listCodingjobs() {
+    const test = await this.idb.codingjobs.toArray();
+    console.log(test);
+    return test;
   }
-  getCodingjob(codingjob) {
+  async getCodingjob(codingjob) {
     return this.idb.codingjobs.get(codingjob.job_id);
+  }
+  async writeCodebook(codingjob, codebook) {
+    console.log(codingjob);
+    return this.idb.codingjobs
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .modify({ codebook: JSON.stringify(codebook, null, 2) });
   }
 
   // DOCUMENTS
@@ -92,29 +101,40 @@ export default class AnnotationDB {
 
     return this.idb.documents.bulkAdd(preparedDocuments);
   }
-  deleteDocuments(documents) {
+  async deleteDocuments(documents) {
     const documentIds = documents.map((document) => document.doc_id);
     return this.idb.documents.bulkDelete(documentIds);
   }
-  listDocuments(codingjob) {
-    return this.idb.documents
-      .where("job_id")
-      .equals(codingjob.job_id)
-      .toArray();
+  async listDocuments(codingjob) {
+    // uses each to only fetch specific fields from document
+    // saves memory at minor speed penalty
+    function map(coll, mapperFn) {
+      let result = [];
+      let i = 1;
+      return coll
+        .each((row) => result.push({ doc: i++, ...mapperFn(row) }))
+        .then(() => result);
+    }
+    let doclist = this.idb.documents.where("job_id").equals(codingjob.job_id);
+    return map(doclist, (doc) => ({
+      doc_id: doc.doc_id,
+      title: doc.title,
+      annotations: doc.annotations,
+    }));
   }
-  getDocument(doc_id) {
+  async getDocument(doc_id) {
     return this.idb.documents.get(doc_id);
   }
 
-  writeValue(document, field, value) {
+  async writeAnnotations(document, annotations) {
     return this.idb.documents
       .where("doc_id")
       .equals(document.doc_id)
-      .modify({ [field]: value });
+      .modify({ annotations: JSON.stringify(annotations, null, 2) });
   }
 
   // CLEANUP
-  deleteDB() {
+  async deleteDB() {
     return this.idb.delete();
   }
 }

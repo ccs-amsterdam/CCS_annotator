@@ -1,4 +1,5 @@
 import { combineReducers } from "redux";
+import { randomColor } from "randomcolor";
 
 const db = (state = null, action) => {
   switch (action.type) {
@@ -171,25 +172,14 @@ const toggleAnnotations = (annotations, annList, rm) => {
   return annotations;
 };
 
-const testCodes = [
-  {
-    key: "Mark Rutte",
-    text: "Mark Rutte",
-    value: "Mark Rutte",
-    color: "#40a31f",
-  },
-  {
-    key: "Sigrid Kaag",
-    text: "Sigrid Kaag",
-    value: "Sigrid Kaag",
-    color: "#f2db5c",
-  },
-];
-
-const codes = (state = testCodes, action) => {
+const codes = (state = [], action) => {
   switch (action.type) {
     case "SET_CODES":
-      return action.payload;
+      return action.payload.map((code) => {
+        if (!code.color)
+          code.color = randomColor({ seed: code.code, luminosity: "bright" });
+        return code;
+      });
     case "RESET_DB":
       return [];
     default:

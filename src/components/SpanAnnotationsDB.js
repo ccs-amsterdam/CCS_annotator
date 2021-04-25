@@ -6,7 +6,7 @@ import AnnotationDB from "../apis/dexie";
 // this is a dummy component to listen for changes in annotations and code
 // and saving them to the indexed db.
 
-const ManageAnnotations = ({ tokens, doc }) => {
+const SpanAnnotationsDB = ({ doc, tokens }) => {
   const annotations = useSelector((state) => state.spanAnnotations);
   //const codes = useSelector((state) => state.codes);
   const [ready, setReady] = useState(false);
@@ -50,11 +50,7 @@ const exportAnnotations = async (doc, annotations) => {
     return un_ann;
   }, []);
 
-  await db.writeValue(
-    { doc_id: doc.doc_id },
-    "annotations",
-    JSON.stringify(uniqueAnnotations, null, 2)
-  );
+  await db.writeAnnotations({ doc_id: doc.doc_id }, uniqueAnnotations);
 };
 
 const matchAnnotations = (tokens, importedAnnotations, dispatch) => {
@@ -128,4 +124,4 @@ const addAnnotations = (ann, dispatch) => {
   dispatch(toggleAnnotations(newAnnotations));
 };
 
-export default ManageAnnotations;
+export default SpanAnnotationsDB;

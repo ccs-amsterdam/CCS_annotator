@@ -1,4 +1,18 @@
-const demo_articles = [
+export const demo_codebook = [
+  {
+    code: "Mark Rutte",
+    color: "#40a31f",
+  },
+  {
+    code: "Sigrid Kaag",
+    color: "#f2db5c",
+  },
+  {
+    code: "Jesse Klaver",
+  },
+];
+
+export const demo_articles = [
   {
     title: `GL en PvdA hebben goed gesprek met informateur, maar wantrouwen Rutte`,
     text: `PvdA-leider Lilianne Ploumen en GroenLinks-leider Jesse Klaver hadden vrijdag een goed gesprek met informateur Herman Tjeenk Willink, zeiden ze zelf. De twee benadrukten dat, hoewel er inhoudelijke stappen zijn gezet, hun vertrouwen in VVD-leider Mark Rutte nog niet is hersteld.
@@ -53,5 +67,3 @@ Tjeenk Willink heeft namelijk ook de opdracht om te onderzoeken "of en zo ja ond
     De ChristenUnie heeft vijf zetels in de Tweede Kamer. Op het congres werden vier oude Kamerleden uitgezwaaid en trad Ankie van Tatenhove aan als nieuwe partijvoorzitter.`,
   },
 ];
-
-export default demo_articles;

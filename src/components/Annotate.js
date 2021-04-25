@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Breadcrumb,
   BreadcrumbSection,
@@ -10,14 +10,26 @@ import {
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
 import AnnotationDB from "../apis/dexie";
+import { setCodes } from "../actions";
 
 const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
+  const dispatch = useDispatch();
   const [doc, setDoc] = useState(null);
   const [documentList, setDocumentList] = useState([]);
 
   useEffect(() => {
+    if (!codingjob) return null;
     getDocuments(codingjob, setDoc, setDocumentList);
+
+    if (codingjob.codebook) {
+      const cb = JSON.parse(codingjob.codebook);
+      if (cb && cb.length > 0) {
+        dispatch(setCodes(cb));
+      } else {
+        dispatch(setCodes([]));
+      }
+    }
   }, [codingjob]);
 
   const documentSelector = (setDoc, documentList) => {
@@ -49,31 +61,27 @@ const Annotate = () => {
             </BreadcrumbSection>
           </Breadcrumb>
         </Grid.Row>
-        <Grid.Row>
-          <Grid.Column width={12}>
-            <AnnotationText doc={doc ? doc : null} />
-          </Grid.Column>
-          <Grid.Column width={4}></Grid.Column>
-        </Grid.Row>
+
+        <AnnotationText doc={doc ? doc : null} />
       </Grid>
     </>
   );
 };
 
 const getDocuments = async (codingjob, setDoc, setDocumentList) => {
-  if (codingjob) {
-    const db = new AnnotationDB();
-    const documents = await db.listDocuments(codingjob);
-    setDocumentList(documents);
-    if (documents.length > 0) {
-      setDoc({
-        doc_id: documents[0].doc_id,
-        text: documents[0].title + "\n\n" + documents[0].text,
-        annotations: prepareAnnotations(documents[0].annotations),
-      });
-    } else {
-      setDoc(null);
-    }
+  const db = new AnnotationDB();
+  const documents = await db.listDocuments(codingjob);
+  console.log(documents);
+  setDocumentList(documents);
+  if (documents.length > 0) {
+    await getDocument(setDoc, documents[0].doc_id);
+    // setDoc({
+    //   doc_id: documents[0].doc_id,
+    //   text: documents[0].title + "\n\n" + documents[0].text,
+    //   annotations: prepareAnnotations(documents[0].annotations),
+    // });
+  } else {
+    setDoc(null);
   }
 };
 

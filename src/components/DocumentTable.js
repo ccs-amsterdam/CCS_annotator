@@ -4,10 +4,9 @@ import SelectionTable from "./SelectionTable";
 import { selectDocument } from "../actions";
 
 const documentTableColumns = [
+  { Header: "doc", accessor: "doc", headerClass: "one wide" },
   { Header: "title", accessor: "title", headerClass: "six wide" },
-  { Header: "text", accessor: "text", headerClass: "four wide" },
   { Header: "annotations", accessor: "annotations", headerClass: "four wide" },
-  { Header: "meta", accessor: "meta", headerClass: "four wide" },
 ];
 
 const DocumentTable = ({ width }) => {

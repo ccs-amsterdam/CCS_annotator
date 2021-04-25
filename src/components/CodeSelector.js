@@ -90,7 +90,6 @@ const CodeSelector = React.memo(
 
       //if (annotationCodes.length === 1)
       //  selectSpan(annotations, annotationCodes[0], dispatch);
-      console.log(codes);
 
       return (
         <>
@@ -123,7 +122,9 @@ const CodeSelector = React.memo(
           <Ref innerRef={textInputRef}>
             <Dropdown
               placeholder={"Search"}
-              options={codes}
+              options={codes.map((code) => {
+                return { key: code.code, value: code.code, text: code.code };
+              })}
               search
               selection
               selectOnNavigation={false}
@@ -277,16 +278,8 @@ const updateAnnotations = (
   dispatch(triggerCodeselector(null, null));
 };
 
-const getCodes = (codes) => {
-  return codes.map((code) => {
-    code.label = { color: code.color, empty: true, circular: true };
-    console.log(code);
-    return code;
-  });
-};
-
 const getColor = (tokenCode, codes) => {
-  const codematch = codes.find((e) => e.value === tokenCode);
+  const codematch = codes.find((code) => code.code === tokenCode);
   if (codematch) {
     return codematch.color;
   } else {

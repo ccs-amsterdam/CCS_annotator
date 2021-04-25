@@ -49,7 +49,7 @@ const AnnotatedToken = ({ token, selected }) => {
 
   // create solid colors or color gradients
   const getColor = (tokenCode, codes) => {
-    const codematch = codes.find((e) => e.value === tokenCode);
+    const codematch = codes.find((code) => code.code === tokenCode);
     if (codematch) {
       return codematch.color;
     } else {

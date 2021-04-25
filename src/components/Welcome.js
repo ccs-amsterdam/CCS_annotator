@@ -7,7 +7,7 @@ import AnnotationDB from "../apis/dexie";
 import { useHistory } from "react-router-dom";
 import { Grid, Button, Header, Segment } from "semantic-ui-react";
 import { initStoragePersistence } from "../apis/storemanager";
-import demo_articles from "../apis/demodata";
+import { demo_articles, demo_codebook } from "../apis/demodata";
 
 const Welcome = ({ items }) => {
   const dispatch = useDispatch();
@@ -62,7 +62,9 @@ const Welcome = ({ items }) => {
 const create_demo_job = async (db) => {
   try {
     const job = await db.createCodingjob("Demo codingjob");
-    return await db.createDocuments(job, demo_articles, true);
+    await db.createDocuments(job, demo_articles, true);
+    await db.writeCodebook(job, demo_codebook);
+    return null;
   } catch (e) {
     console.log(e);
   }
