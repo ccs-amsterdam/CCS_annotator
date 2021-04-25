@@ -1,13 +1,11 @@
 ::selection {
   background-color: rgb(61, 61, 61);
   color: rgb(255, 255, 255);
-  text-decoration: underline overline;
 }
 
 span.token.selected {
-  background-color: rgb(61, 61, 61);
+  background-color: rgb(61, 61, 61) !important;
   color: rgb(255, 255, 255);
-  text-decoration: underline overline;
 }
 
 .annotatedToken {
@@ -20,6 +18,11 @@ span.token.selected {
   border-right-width: 1px;
   border-left: none;
   border-right: none;
+}
+
+.annotatedToken.selected {
+  background-color: rgb(61, 61, 61) !important;
+  color: rgb(255, 255, 255);
 }
 
 .annotatedToken.anyLeft {

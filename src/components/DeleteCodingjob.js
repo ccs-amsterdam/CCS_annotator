@@ -15,7 +15,7 @@ const DeleteCodingjob = () => {
     try {
       const db = new AnnotationDB();
       await db.deleteCodingjob(codingjob);
-      const codingjobs = db.listCodingjobs();
+      const codingjobs = await db.listCodingjobs();
 
       dispatch(selectCodingjob(null));
       dispatch(setCodingjobs(codingjobs));
@@ -62,7 +62,12 @@ const DeleteCodingjob = () => {
           </Dimmer>
         ) : (
           <>
-            <Button color="red" onClick={onSubmit}>
+            <Button
+              color="red"
+              onClick={() => {
+                setStatus("inactive");
+              }}
+            >
               <Icon name="remove" /> No
             </Button>
             <Button color="green" onClick={onSubmit}>

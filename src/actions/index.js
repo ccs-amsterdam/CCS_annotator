@@ -74,10 +74,11 @@ export const clearTokenSelection = () => {
   };
 };
 
-export const triggerCodeselector = (tokenindex) => {
+export const triggerCodeselector = (from, tokenIndex) => {
   return {
     type: "TRIGGER_CODESELECTOR",
-    payload: tokenindex,
+    from: from,
+    index: tokenIndex,
   };
 };
 

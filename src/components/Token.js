@@ -18,24 +18,22 @@ const Token = React.forwardRef(({ token }, ref) => {
   if (selected) tokenClass = tokenClass + " selected";
 
   return (
-    <span
-      ref={ref}
-      className={tokenClass}
-      tokenindex={token.offset.index}
-      //tokenoffset={token.offset.start}
-      //tokenlength={token.offset.length}
-    >
-      <AnnotatedToken token={token} />
+    <span ref={ref} className={tokenClass} tokenindex={token.offset.index}>
+      <AnnotatedToken token={token} selected={selected} />
     </span>
   );
 });
 
-const AnnotatedToken = ({ token }) => {
+const AnnotatedToken = ({ token, selected }) => {
   // If we specifically ask for the annotations for the current token within the
   // useSelector function, rerender is only triggered if this value has changed
   const annotations = useSelector(
     (state) => state.spanAnnotations[token.offset.index]
   );
+  const csTrigger = useSelector((state) => {
+    if (state.codeSelectorTrigger.index !== token.offset.index) return null;
+    return state.codeSelectorTrigger.from;
+  });
 
   const codes = useSelector((state) => state.codes);
   const dispatch = useDispatch();
@@ -59,17 +57,15 @@ const AnnotatedToken = ({ token }) => {
     }
   };
 
-  const tokenSpan = (annotatedTokenClass) => {
+  const tokenSpan = (annotatedTokenClass, color) => {
     return (
       <span
         className={annotatedTokenClass}
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(triggerCodeselector(token.offset.index));
+          dispatch(triggerCodeselector("right_click", token.offset.index));
         }}
-        style={{
-          background: color,
-        }}
+        style={color ? { background: color } : null}
       >
         {allLeft && allRight ? token.text : null}
         {allLeft && !allRight ? token.text + token.post : null}
@@ -110,13 +106,26 @@ const AnnotatedToken = ({ token }) => {
   if (anyRight & !allRight)
     annotatedTokenClass = annotatedTokenClass + " anyRight";
 
+  if (selected) {
+    color = null;
+    annotatedTokenClass = annotatedTokenClass + " selected";
+  }
+
   return (
     <>
       {allLeft ? token.pre : null}
 
-      <CodeSelector index={token.offset.index} annotations={annotations}>
-        {tokenSpan(annotatedTokenClass)}
-      </CodeSelector>
+      {csTrigger ? (
+        <CodeSelector
+          index={token.offset.index}
+          annotations={annotations}
+          csTrigger={csTrigger}
+        >
+          {tokenSpan(annotatedTokenClass, color)}
+        </CodeSelector>
+      ) : (
+        tokenSpan(annotatedTokenClass, color)
+      )}
 
       {allRight ? token.post : null}
     </>

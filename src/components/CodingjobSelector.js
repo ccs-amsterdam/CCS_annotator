@@ -38,7 +38,7 @@ const CodingjobSelector = ({ type = "table" }) => {
   if (type === "table") {
     const tableColumns = [
       {
-        Header: "Select Index",
+        Header: "Coding job",
         accessor: "name",
         headerClass: "thirteen wide",
       },

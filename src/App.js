@@ -8,7 +8,7 @@ import Welcome from "./components/Welcome";
 import AuthRoute from "./components/AuthRoute";
 
 // Main pages. Use below in items to include in header menu
-import Create from "./components/Create";
+import CodingJobs from "./components/CodingJobs";
 import Annotate from "./components/Annotate";
 
 // Change to add new components to the header
@@ -16,7 +16,11 @@ import Annotate from "./components/Annotate";
 const host = "https://ccs-amsterdam.github.io";
 const homepage = "/amcat4annotator";
 const items = [
-  { label: "Create", path: homepage + "/create", Component: Create },
+  {
+    label: "Coding Jobs",
+    path: homepage + "/codingjobs",
+    Component: CodingJobs,
+  },
   { label: "Annotate", path: homepage + "/annotate", Component: Annotate },
 ];
 

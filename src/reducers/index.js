@@ -68,8 +68,10 @@ const tokenIndices = (state = [], action) => {
   switch (action.type) {
     case "SET_TOKEN_INDICES":
       return action.payload;
+    case "SELECT_DOCUMENT":
+      return [];
     case "RESET_DB":
-      return null;
+      return [];
     default:
       return state;
   }
@@ -79,6 +81,8 @@ const currentToken = (state = 0, action) => {
   switch (action.type) {
     case "SET_CURRENT_TOKEN":
       return action.payload;
+    case "SELECT_DOCUMENT":
+      return 0;
     case "RESET_DB":
       return 0;
     default:
@@ -100,10 +104,10 @@ const tokenSelection = (state = [], action) => {
   }
 };
 
-const codeSelectorTrigger = (state = null, action) => {
+const codeSelectorTrigger = (state = { from: null, index: null }, action) => {
   switch (action.type) {
     case "TRIGGER_CODESELECTOR":
-      return action.payload;
+      return { from: action.from, index: action.index };
     default:
       return state;
   }
@@ -130,8 +134,8 @@ const spanAnnotations = (state = {}, action) => {
 };
 
 const toggleAnnotations = (annotations, annList, rm) => {
-  for (let key in annList) {
-    let a = annList[key];
+  for (let item in annList) {
+    let a = annList[item];
 
     // if group in annotations, remove it
     if (annotations[a.index]) {

@@ -161,7 +161,7 @@ const AnnotationText = ({ doc }) => {
     if (tokenSelection.length > 0) {
       annotationFromSelection(tokens, tokenSelection, dispatch);
     } else {
-      if (currentNode)
+      if (currentNode !== null)
         annotationFromSelection(tokens, [currentNode, currentNode], dispatch);
     }
   };
@@ -174,7 +174,6 @@ const AnnotationText = ({ doc }) => {
 
   const storeMouseSelection = (event) => {
     // select tokens that the mouse/touch is currently pointing at
-    console.log(event);
     let currentNode = getToken(tokens, event.originalTarget);
     if (!currentNode) return null;
 
@@ -211,8 +210,8 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
   }
   dispatch(toggleAnnotations(annotations));
   dispatch(clearTokenSelection());
-  dispatch(triggerCodeselector(null));
-  dispatch(triggerCodeselector(to));
+  dispatch(triggerCodeselector(null, null));
+  dispatch(triggerCodeselector("new_selection", to));
 };
 
 const movePosition = (tokens, key, mover, ctrl, dispatch) => {
@@ -275,7 +274,10 @@ const getToken = (tokens, e) => {
     if (e.className === "token" || e.className === "token selected")
       return getTokenAttributes(tokens, e);
     if (e.parentNode) {
-      if (e.parentNode.className === "token")
+      if (
+        e.parentNode.className === "token" ||
+        e.parentNode.className === "token selected"
+      )
         return getTokenAttributes(tokens, e.parentNode);
     }
     return null;

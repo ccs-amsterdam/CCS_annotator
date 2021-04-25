@@ -1,21 +1,24 @@
 import React, { useState } from "react";
-import { Grid, Menu, Segment } from "semantic-ui-react";
+import { Dropdown, Grid, Menu, Segment } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
 import JobDetails from "./JobDetails";
 import UploadDocuments from "./UploadDocuments";
 import CreateDocument from "./CreateDocument";
+import CodeBook from "./CodeBook";
 
-const Create = () => {
+const CodingJobs = () => {
   const [activeItem, setActiveItem] = useState("details");
 
   const renderSwitch = (activeItem) => {
     switch (activeItem) {
       case "details":
         return <JobDetails />;
-      case "upload":
+      case "codebook":
+        return <CodeBook />;
+      case "upload CSV":
         return <UploadDocuments />;
-      case "create":
+      case "upload Raw":
         return <CreateDocument />;
       default:
         return null;
@@ -35,16 +38,28 @@ const Create = () => {
               active={activeItem === "details"}
               onClick={(e, d) => setActiveItem(d.name)}
             />
+
             <Menu.Item
-              name="upload"
-              active={activeItem === "upload"}
+              name="codebook"
+              active={activeItem === "codebook"}
               onClick={(e, d) => setActiveItem(d.name)}
             />
-            <Menu.Item
-              name="create"
-              active={activeItem === "create"}
-              onClick={(e, d) => setActiveItem(d.name)}
-            />
+            <Dropdown
+              as={Menu.Item}
+              active={activeItem.includes("upload")}
+              text="Upload Documents"
+            >
+              <Dropdown.Menu>
+                <Dropdown.Item
+                  text="CSV"
+                  onClick={(e, d) => setActiveItem("upload CSV")}
+                />
+                <Dropdown.Item
+                  text="Raw"
+                  onClick={(e, d) => setActiveItem("upload Raw")}
+                />
+              </Dropdown.Menu>
+            </Dropdown>
           </Menu>
           {renderSwitch(activeItem)}
         </Segment>
@@ -53,4 +68,4 @@ const Create = () => {
   );
 };
 
-export default Create;
+export default CodingJobs;

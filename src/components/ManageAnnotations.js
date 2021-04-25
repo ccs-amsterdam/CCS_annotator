@@ -70,9 +70,14 @@ const matchAnnotations = (tokens, importedAnnotations, dispatch) => {
     );
   }
 
+  const topCodes = {};
   for (let matchedAnnotation of matchedAnnotations) {
+    if (!topCodes[matchedAnnotation.group])
+      topCodes[matchedAnnotation.group] = 0;
+    topCodes[matchedAnnotation.group]++;
     addAnnotations(matchedAnnotation, dispatch);
   }
+  console.log(topCodes);
 };
 
 const findMatches = (
