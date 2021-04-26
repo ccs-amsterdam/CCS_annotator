@@ -13,7 +13,6 @@ import Annotate from "./components/Annotate";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
-const host = "https://ccs-amsterdam.github.io";
 const homepage = "/amcat4annotator";
 const items = [
   {
@@ -40,7 +39,7 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <HeaderMenu items={items} host={host} homepage={homepage} />
+      <HeaderMenu items={items} homepage={homepage} />
       <Divider />
       <Container style={{ marginTop: "3em" }}>
         <Switch>

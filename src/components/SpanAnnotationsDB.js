@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleAnnotations } from "../actions";
-import AnnotationDB from "../apis/dexie";
+import db from "../apis/dexie";
 
 // this is a dummy component to listen for changes in annotations and code
 // and saving them to the indexed db.
@@ -31,8 +31,6 @@ const SpanAnnotationsDB = ({ doc, tokens }) => {
 };
 
 const exportAnnotations = async (doc, annotations) => {
-  const db = await new AnnotationDB();
-
   let unique = new Set();
   const uniqueAnnotations = Object.values(annotations).reduce((un_ann, ann) => {
     for (let key of Object.keys(ann)) {

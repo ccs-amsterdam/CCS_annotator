@@ -1,16 +1,14 @@
 import React, { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { resetDB } from "../actions";
 import { Menu, Button, Header, Icon, Modal } from "semantic-ui-react";
 import { useHistory } from "react-router-dom";
+import db from "../apis/dexie";
 
 const Reset = ({ homepage }) => {
-  const db = useSelector((state) => state.db);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const history = useHistory();
-
-  if (!db) return null;
 
   const onClick = async () => {
     try {

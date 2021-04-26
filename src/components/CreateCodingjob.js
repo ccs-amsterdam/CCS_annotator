@@ -10,7 +10,7 @@ import {
   Dimmer,
   Icon,
 } from "semantic-ui-react";
-import AnnotationDB from "../apis/dexie";
+import db from "../apis/dexie";
 
 const CreateCodingjob = () => {
   const codingjobs = useSelector((state) => state.codingjobs);
@@ -26,7 +26,6 @@ const CreateCodingjob = () => {
     setStatus("pending");
 
     try {
-      const db = new AnnotationDB();
       await db.createCodingjob(codingjobName);
       const codingjobs = await db.listCodingjobs();
       dispatch(selectCodingjob(null));

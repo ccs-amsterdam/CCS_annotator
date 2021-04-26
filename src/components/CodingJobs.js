@@ -3,8 +3,8 @@ import { Dropdown, Grid, Menu, Segment } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
 import JobDetails from "./JobDetails";
-import UploadDocuments from "./UploadDocuments";
-import CreateDocument from "./CreateDocument";
+import { UploadCsv } from "./UploadDocuments";
+import UploadRaw from "./UploadRaw";
 import CodeBook from "./CodeBook";
 
 const CodingJobs = () => {
@@ -17,9 +17,9 @@ const CodingJobs = () => {
       case "codebook":
         return <CodeBook />;
       case "upload CSV":
-        return <UploadDocuments />;
+        return <UploadCsv />;
       case "upload Raw":
-        return <CreateDocument />;
+        return <UploadRaw />;
       default:
         return null;
     }

@@ -5,9 +5,9 @@ import { setDocuments } from "../actions";
 
 import SemanticDatepicker from "react-semantic-ui-datepickers";
 import "react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css";
-import AnnotationDB from "../apis/dexie";
+import db from "../apis/dexie";
 
-const CreateDocument = () => {
+const UploadRaw = () => {
   const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
 
@@ -29,7 +29,6 @@ const CreateDocument = () => {
     }
 
     try {
-      const db = new AnnotationDB();
       await db.createDocuments(codingjob, [submitData]);
       const documents = await db.listDocuments(codingjob);
       await dispatch(setDocuments(documents));
@@ -104,4 +103,4 @@ const DocumentForms = function ({ fields, fieldValues, setFieldValues }) {
   });
 };
 
-export default CreateDocument;
+export default UploadRaw;

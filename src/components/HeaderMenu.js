@@ -1,14 +1,13 @@
 import React from "react";
-import { useSelector } from "react-redux";
 import { Menu } from "semantic-ui-react";
 import { Link, withRouter, useLocation } from "react-router-dom";
+import db from "../apis/dexie";
 
 import Download from "./Download";
 import Reset from "./Reset";
 import Persist from "./Persist";
 
-const HeaderMenu = ({ items, host, homepage }) => {
-  const db = useSelector((state) => state.db);
+const HeaderMenu = ({ items, homepage }) => {
   const location = useLocation();
 
   const menuItems = items.map((item, index) => {

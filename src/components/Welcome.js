@@ -1,30 +1,28 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-import { setDB } from "../actions";
-import Dexie from "dexie";
+import React, { useEffect } from "react";
 
-import AnnotationDB from "../apis/dexie";
+import db from "../apis/dexie";
 import { useHistory } from "react-router-dom";
 import { Grid, Button, Header, Segment } from "semantic-ui-react";
 import { initStoragePersistence } from "../apis/storemanager";
 import { demo_articles, demo_codebook } from "../apis/demodata";
 
 const Welcome = ({ items }) => {
-  const dispatch = useDispatch();
   const history = useHistory();
 
-  const loggin = async (addDemo = true) => {
+  const loggin = async (addDemo, checkWelcome) => {
+    if (checkWelcome) {
+      if (!(await db.isWelcome())) return null;
+    }
     try {
-      const db = new AnnotationDB();
       if (addDemo) await create_demo_job(db);
-      dispatch(setDB(db));
+      await db.welcome();
       await initStoragePersistence();
       history.push(items[0].path);
     } catch (e) {}
   };
 
-  Dexie.exists("AmCAT_Annotator").then((exists) => {
-    if (exists) loggin(false);
+  useEffect(() => {
+    loggin(false, true);
   });
 
   return (
@@ -50,7 +48,7 @@ const Welcome = ({ items }) => {
             computer in your browser's IndexedDB. Your data will only actually
             touch the internet when you synchronize your data.
           </p>
-          <Button primary onClick={loggin}>
+          <Button primary onClick={() => loggin(true, false)}>
             Yes, off course I trust you
           </Button>
         </Segment>

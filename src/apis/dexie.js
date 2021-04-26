@@ -1,14 +1,24 @@
 import Dexie from "dexie";
 import hash from "object-hash";
 
-export default class AnnotationDB {
+class AnnotationDB {
   constructor() {
     this.idb = new Dexie("AmCAT_Annotator");
     this.idb.version(1).stores({
+      meta: "welcome", // this just serves to keep track of whether db was 'created' via the welcome component
       apis: "api", // unindexed fields: token, refresh_token, expiration_date,
       codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
       documents: "doc_id, job_id", // unindexed fields: title, text, meta, tokens, annotations
     });
+  }
+
+  // META
+  async welcome() {
+    if (!(await this.isWelcome())) this.idb.meta.add({ welcome: 1 });
+    return null;
+  }
+  async isWelcome() {
+    return this.idb.meta.get(1);
   }
 
   // API TOKENS
@@ -43,7 +53,6 @@ export default class AnnotationDB {
   }
   async listCodingjobs() {
     const test = await this.idb.codingjobs.toArray();
-    console.log(test);
     return test;
   }
   async getCodingjob(codingjob) {
@@ -135,6 +144,12 @@ export default class AnnotationDB {
 
   // CLEANUP
   async deleteDB() {
-    return this.idb.delete();
+    await this.idb.meta.clear();
+    await this.idb.apis.clear();
+    await this.idb.codingjobs.clear();
+    await this.idb.documents.clear();
   }
 }
+
+const db = new AnnotationDB();
+export default db;

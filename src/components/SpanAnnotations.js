@@ -8,7 +8,6 @@ import {
   triggerCodeselector,
 } from "../actions";
 import { toggleAnnotations } from "../actions";
-import SpanAnnotationsDB from "./SpanAnnotationsDB";
 
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 

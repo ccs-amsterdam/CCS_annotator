@@ -3,14 +3,13 @@ import React, { useState } from "react";
 import { Modal, Menu, Header, Button } from "semantic-ui-react";
 import { exportDB } from "dexie-export-import";
 import fileDownload from "js-file-download";
-import AnnotationDB from "../apis/dexie";
+import db from "../apis/dexie";
 
 const Download = () => {
   const [open, setOpen] = useState(false);
 
   const onDownload = async () => {
     try {
-      const db = new AnnotationDB();
       const blob = await exportDB(db.idb, {
         filter: (table, value, key) =>
           table === "codingjobs" || table === "documents",

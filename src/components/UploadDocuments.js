@@ -15,8 +15,9 @@ import { useSelector, useDispatch } from "react-redux";
 //import Papa from "papaparse";
 import { CSVReader } from "react-papaparse";
 import { setDocuments } from "../actions";
+import db from "../apis/dexie";
 
-const UploadDocuments = ({ setActive }) => {
+export const UploadCsv = ({ setActive }) => {
   const codingjob = useSelector((state) => state.codingjob);
   const [data, setData] = useState([]);
   const fileRef = useRef();
@@ -50,8 +51,6 @@ const UploadDocuments = ({ setActive }) => {
 };
 
 const SubmitForm = ({ data, codingjob, fileRef }) => {
-  const db = useSelector((state) => state.db);
-
   const [options, setOptions] = useState([]);
   const [titleField, setTitleField] = useState(null);
   const [textField, setTextField] = useState(null);
@@ -211,5 +210,3 @@ const PreviewTable = ({ data }) => {
     </Container>
   );
 };
-
-export default UploadDocuments;

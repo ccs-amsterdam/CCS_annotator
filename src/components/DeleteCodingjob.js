@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCodingjob, setCodingjobs } from "../actions";
 import { Button, Header, Icon, Modal, Dimmer, Loader } from "semantic-ui-react";
-import AnnotationDB from "../apis/dexie";
+import db from "../apis/dexie";
 
 const DeleteCodingjob = () => {
   const codingjob = useSelector((state) => state.codingjob);
@@ -13,7 +13,6 @@ const DeleteCodingjob = () => {
   const onSubmit = async (event) => {
     setStatus("pending");
     try {
-      const db = new AnnotationDB();
       await db.deleteCodingjob(codingjob);
       const codingjobs = await db.listCodingjobs();
 

@@ -7,7 +7,6 @@ import {
   rmAnnotations,
   blockEvents,
   triggerCodeselector,
-  setTokenSelection,
 } from "../actions";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
@@ -169,35 +168,35 @@ const CodeSelector = React.memo(
   }
 );
 
-const selectSpan = (annotations, code, dispatch) => {
-  const span = annotations[code].span;
-  let add = false;
-  for (let index = span[0]; index <= span[1]; index++) {
-    dispatch(setTokenSelection(index, add));
-    add = true;
-  }
-};
+// const selectSpan = (annotations, code, dispatch) => {
+//   const span = annotations[code].span;
+//   let add = false;
+//   for (let index = span[0]; index <= span[1]; index++) {
+//     dispatch(setTokenSelection(index, add));
+//     add = true;
+//   }
+// };
 
-const getCurrentOptions = (annotations, current, setCurrent) => {
-  let annotation = annotations;
-  // if (!Object.keys(annotation).includes(current)) {
-  //   current = null;
-  //   setCurrent(current);
-  // }
-  if (annotation) {
-    return Object.keys(annotation)
-      .filter((e) => e !== current)
-      .map(ddOptions);
-  } else {
-    return [ddOptions(null)];
-  }
-};
+// const getCurrentOptions = (annotations, current, setCurrent) => {
+//   let annotation = annotations;
+//   // if (!Object.keys(annotation).includes(current)) {
+//   //   current = null;
+//   //   setCurrent(current);
+//   // }
+//   if (annotation) {
+//     return Object.keys(annotation)
+//       .filter((e) => e !== current)
+//       .map(ddOptions);
+//   } else {
+//     return [ddOptions(null)];
+//   }
+// };
 
-const ddOptions = (value) => {
-  let useValue = value;
-  if (!value || value === "null") useValue = "Not yet assigned";
-  return { key: useValue, text: useValue, value: useValue };
-};
+// const ddOptions = (value) => {
+//   let useValue = value;
+//   if (!value || value === "null") useValue = "Not yet assigned";
+//   return { key: useValue, text: useValue, value: useValue };
+// };
 
 const newCodeButtons = (
   annotations,

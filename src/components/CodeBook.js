@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Header, TextArea, Form, List } from "semantic-ui-react";
-import randomColor from "randomcolor";
+import { Grid, Header, List } from "semantic-ui-react";
 import { useSelector } from "react-redux";
 
 const CodeBook = () => {
   const codingjob = useSelector((state) => state.codingjob);
   const [codebook, setCodebook] = useState([]);
-  const [type, setType] = useState("span");
 
   useEffect(() => {
     if (!codingjob) return null;
@@ -34,7 +32,5 @@ const listCodes = (codebook) => {
     return <List.Item>{code.code}</List.Item>;
   });
 };
-
-//         color: randomColor({ seed: d.value, luminosity: "bright" }),
 
 export default CodeBook;

@@ -1,10 +1,3 @@
-export const setDB = (db) => {
-  return {
-    type: "SET_DB",
-    payload: db,
-  };
-};
-
 export const resetDB = () => {
   return {
     type: "RESET_DB",

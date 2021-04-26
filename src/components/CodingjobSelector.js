@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Segment, Dropdown, Container } from "semantic-ui-react";
 import { selectCodingjob, setCodingjobs, setDocuments } from "../actions";
-import Dexie from "dexie";
 
 import SelectionTable from "./SelectionTable";
 import CreateCodingjob from "./CreateCodingjob";
 import DeleteCodingjob from "./DeleteCodingjob";
-import AnnotationDB from "../apis/dexie";
+import db from "../apis/dexie";
 
 const CodingjobSelector = ({ type = "table" }) => {
   const codingjobs = useSelector((state) => state.codingjobs);
@@ -101,23 +100,25 @@ const getCodingjobs = async (dispatch, setSelectedCodingjob) => {
   // the exists check is super annoying, but if db is included in useEffect, it somehow
   // rerenders non-stop, and if this check is not here then a new DB will be created immediately
   // when reset is called.
-  const exists = await Dexie.exists("AmCAT_Annotator");
-  if (!exists) return null;
+  //const exists = await Dexie.exists("AmCAT_Annotator");
+  //if (!exists) return null;
+  if (!db.isWelcome()) return null;
   try {
-    const db = new AnnotationDB();
     const cjs = await db.listCodingjobs();
-    dispatch(setCodingjobs(cjs));
-    if (cjs.length > 0) setSelectedCodingjob({ ...cjs[0], ROW_ID: "0" });
+    if (cjs.length > 0) {
+      dispatch(setCodingjobs(cjs));
+      setSelectedCodingjob({ ...cjs[0], ROW_ID: "0" });
+    }
   } catch (e) {
     console.log(e);
   }
 };
 
 const getJobArticles = async (codingjob, dispatch) => {
-  const exists = await Dexie.exists("AmCAT_Annotator");
-  if (!exists) return null;
+  //const exists = await Dexie.exists("AmCAT_Annotator");
+  //if (!exists) return null;
+  if (!db.isWelcome()) return null;
   try {
-    const db = new AnnotationDB();
     const documents = await db.listDocuments(codingjob);
     dispatch(setDocuments(documents));
   } catch (e) {

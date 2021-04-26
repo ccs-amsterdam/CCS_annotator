@@ -9,7 +9,7 @@ import {
 
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
-import AnnotationDB from "../apis/dexie";
+import db from "../apis/dexie";
 import { setCodes } from "../actions";
 
 const Annotate = () => {
@@ -30,10 +30,11 @@ const Annotate = () => {
         dispatch(setCodes([]));
       }
     }
-  }, [codingjob]);
+  }, [codingjob, dispatch]);
 
   const documentSelector = (setDoc, documentList) => {
     const options = dropdownOptions(documentList);
+
     return (
       <Dropdown
         inline
@@ -69,7 +70,6 @@ const Annotate = () => {
 };
 
 const getDocuments = async (codingjob, setDoc, setDocumentList) => {
-  const db = new AnnotationDB();
   const documents = await db.listDocuments(codingjob);
   console.log(documents);
   setDocumentList(documents);
@@ -86,7 +86,6 @@ const getDocuments = async (codingjob, setDoc, setDocumentList) => {
 };
 
 const getDocument = async (setDoc, doc_id) => {
-  const db = new AnnotationDB();
   const document = await db.getDocument(doc_id);
   setDoc({
     doc_id: document.doc_id,
