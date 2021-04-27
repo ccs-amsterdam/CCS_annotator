@@ -13,8 +13,8 @@ const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const CodeSelector = React.memo(
   ({ index, children, annotations, csTrigger }) => {
-    const codes = useSelector((state) => state.codes);
-    const codeHistory = useSelector((state) => state.codeHistory);
+    const codes = useSelector(state => state.codes);
+    const codeHistory = useSelector(state => state.codeHistory);
 
     const textInputRef = useRef(null);
     const [current, setCurrent] = useState(null);
@@ -47,13 +47,13 @@ const CodeSelector = React.memo(
       };
     }, [dispatch]);
 
-    const onKeydown = (event) => {
+    const onKeydown = event => {
       if (!arrowKeys.includes(event.key)) {
         if (textInputRef.current) textInputRef.current.click();
       }
     };
 
-    const createPopupPage = (popupPage) => {
+    const createPopupPage = popupPage => {
       //if (Object.keys(annotations).length === 1) setPopupPage(1);
       const annotationCodes = Object.keys(annotations);
 
@@ -69,7 +69,7 @@ const CodeSelector = React.memo(
           <>
             <h5>Select current code:</h5>
             <Button.Group compact>
-              {annotationCodes.map((code) => {
+              {annotationCodes.map(code => {
                 return (
                   <Button
                     style={{ backgroundColor: getColor(code, codes) }}
@@ -92,7 +92,34 @@ const CodeSelector = React.memo(
 
       return (
         <>
-          <h5>Set new code:</h5>
+          <div>
+            <h5 style={{ display: "inline" }}>Set new code:</h5>
+            <Ref innerRef={textInputRef}>
+              <Dropdown
+                placeholder={"Search"}
+                style={{ marginLeft: "2em", minWidth: "10em" }}
+                options={codes.map(code => {
+                  return { key: code.code, value: code.code, text: code.code };
+                })}
+                search
+                selection
+                selectOnNavigation={false}
+                minCharacters={0}
+                autoComplete={"on"}
+                searchInput={{ autoFocus: false }}
+                onChange={(e, d) =>
+                  updateAnnotations(
+                    annotations,
+                    current,
+                    d.value,
+                    setCurrent,
+                    dispatch
+                  )
+                }
+              />
+            </Ref>
+          </div>
+          <br />
           <Button.Group compact>
             {newCodeButtons(
               annotations,
@@ -118,29 +145,6 @@ const CodeSelector = React.memo(
             />
           </Button.Group>
           &nbsp;&nbsp;
-          <Ref innerRef={textInputRef}>
-            <Dropdown
-              placeholder={"Search"}
-              options={codes.map((code) => {
-                return { key: code.code, value: code.code, text: code.code };
-              })}
-              search
-              selection
-              selectOnNavigation={false}
-              minCharacters={0}
-              autoComplete={"on"}
-              searchInput={{ autoFocus: false }}
-              onChange={(e, d) =>
-                updateAnnotations(
-                  annotations,
-                  current,
-                  d.value,
-                  setCurrent,
-                  dispatch
-                )
-              }
-            />
-          </Ref>
         </>
       );
     };
@@ -207,8 +211,8 @@ const newCodeButtons = (
   dispatch
 ) => {
   return codeHistory
-    .filter((e) => e !== current && e !== "Not yet assigned")
-    .map((code) => {
+    .filter(e => e !== current && e !== "Not yet assigned")
+    .map(code => {
       return (
         <Button
           style={{ backgroundColor: getColor(code, codes) }}
@@ -278,7 +282,7 @@ const updateAnnotations = (
 };
 
 const getColor = (tokenCode, codes) => {
-  const codematch = codes.find((code) => code.code === tokenCode);
+  const codematch = codes.find(code => code.code === tokenCode);
   if (codematch) {
     return codematch.color;
   } else {

@@ -5,7 +5,7 @@ import DocumentTable from "./DocumentTable";
 const JobDetails = () => {
   return (
     <Container style={{ marginTop: "30px", overflow: "auto" }}>
-      <DocumentTable width="800px" />
+      <DocumentTable />
     </Container>
   );
 };

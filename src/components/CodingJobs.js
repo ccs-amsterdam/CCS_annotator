@@ -26,7 +26,7 @@ const CodingJobs = () => {
   };
 
   return (
-    <Grid stackable style={{ marginTop: "3em" }}>
+    <Grid stackable>
       <Grid.Column floated="left" width={5}>
         <CodingjobSelector type="table" />
       </Grid.Column>

@@ -43,7 +43,7 @@ const CreateCodingjob = () => {
     <Modal
       as={Form}
       trigger={
-        <Button>
+        <Button compact>
           <Icon name="plus" />
           Create job
         </Button>

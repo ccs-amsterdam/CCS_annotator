@@ -33,7 +33,7 @@ const DeleteCodingjob = () => {
       closeIcon
       open={status !== "inactive"}
       trigger={
-        <Button name="logout">
+        <Button compact>
           <Icon name="minus" /> Delete job
         </Button>
       }
