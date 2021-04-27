@@ -67,7 +67,7 @@ const CodeSelector = React.memo(
       if (select_first)
         return (
           <>
-            <h5>Current Code:</h5>
+            <h5>Select current code:</h5>
             <Button.Group compact>
               {annotationCodes.map((code) => {
                 return (
@@ -92,7 +92,7 @@ const CodeSelector = React.memo(
 
       return (
         <>
-          <h5>New code:</h5>
+          <h5>Set new code:</h5>
           <Button.Group compact>
             {newCodeButtons(
               annotations,

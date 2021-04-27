@@ -131,6 +131,21 @@ class AnnotationDB {
       annotations: doc.annotations,
     }));
   }
+
+  async getJobDocumentsBatch(codingjob, offset, limit) {
+    if (offset < 0) return null;
+    const documents = await this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id);
+    const ndocs = await documents.count();
+    if (offset > ndocs - 1) return null;
+    return documents.offset(offset).limit(limit).toArray();
+  }
+
+  async getJobDocumentCount(codingjob) {
+    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
+  }
+
   async getDocument(doc_id) {
     return this.idb.documents.get(doc_id);
   }

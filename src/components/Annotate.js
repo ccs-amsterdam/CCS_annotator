@@ -3,8 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Breadcrumb,
   BreadcrumbSection,
+  Button,
   Dropdown,
   Grid,
+  Pagination,
 } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
@@ -16,12 +18,13 @@ const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
   const [doc, setDoc] = useState(null);
-  const [documentList, setDocumentList] = useState([]);
+  const [nDocuments, setNDocuments] = useState(0);
 
   useEffect(() => {
     if (!codingjob) return null;
-    getDocuments(codingjob, setDoc, setDocumentList);
+    //getDocuments(codingjob, setDoc, setDocumentList);
 
+    setupCodingjob(codingjob, setDoc, setNDocuments);
     if (codingjob.codebook) {
       const cb = JSON.parse(codingjob.codebook);
       if (cb && cb.length > 0) {
@@ -32,35 +35,36 @@ const Annotate = () => {
     }
   }, [codingjob, dispatch]);
 
-  const documentSelector = (setDoc, documentList) => {
-    const options = dropdownOptions(documentList);
-
-    return (
-      <Dropdown
-        inline
-        search
-        onChange={(e, d) => {
-          getDocument(setDoc, d.value);
-        }}
-        options={options}
-        value={doc ? doc.doc_id : null}
-      />
-    );
+  const pageChange = (event, data) => {
+    documentSelector(codingjob, data.activePage - 1, setDoc);
   };
 
   return (
     <>
       <Grid>
         <Grid.Row>
-          <Breadcrumb>
-            <BreadcrumbSection link>
-              <CodingjobSelector type="dropdown" />
-            </BreadcrumbSection>
-            <Breadcrumb.Divider />
-            <BreadcrumbSection link>
-              {documentSelector(setDoc, documentList)}
-            </BreadcrumbSection>
-          </Breadcrumb>
+          <Grid.Column width={10}>
+            <Breadcrumb>
+              <BreadcrumbSection link style={{ minWidth: "5em" }}>
+                <CodingjobSelector type="dropdown" />
+              </BreadcrumbSection>
+              <Breadcrumb.Divider />
+              <BreadcrumbSection>{doc ? doc.title : null}</BreadcrumbSection>
+            </Breadcrumb>
+          </Grid.Column>
+          <Grid.Column floated="right" width={1}>
+            <Pagination
+              size={"mini"}
+              firstItem={null}
+              lastItem={null}
+              siblingRange={0}
+              boundaryRange={0}
+              defaultActivePage={1}
+              ellipsisItem={null}
+              totalPages={nDocuments}
+              onPageChange={pageChange}
+            />
+          </Grid.Column>
         </Grid.Row>
 
         <AnnotationText doc={doc ? doc : null} />
@@ -69,17 +73,41 @@ const Annotate = () => {
   );
 };
 
+const setupCodingjob = async (codingjob, setDoc, setNDocuments) => {
+  const n = await db.getJobDocumentCount(codingjob);
+  setNDocuments(n);
+  if (n > 0) {
+    await documentSelector(codingjob, 0, setDoc);
+  } else {
+    setDoc(null);
+  }
+};
+
+const documentSelector = async (codingjob, i, setDoc) => {
+  if (!codingjob) return null;
+  const docs = await db.getJobDocumentsBatch(codingjob, i, 1);
+  if (docs) {
+    console.log(docs[0].annotations);
+    setDoc({
+      doc_id: docs[0].doc_id,
+      title: docs[0].title,
+      text: docs[0].title + "\n\n" + docs[0].text,
+      annotations: prepareAnnotations(docs[0].annotations),
+    });
+  }
+};
+
 const getDocuments = async (codingjob, setDoc, setDocumentList) => {
   const documents = await db.listDocuments(codingjob);
   console.log(documents);
   setDocumentList(documents);
   if (documents.length > 0) {
     await getDocument(setDoc, documents[0].doc_id);
-    // setDoc({
-    //   doc_id: documents[0].doc_id,
-    //   text: documents[0].title + "\n\n" + documents[0].text,
-    //   annotations: prepareAnnotations(documents[0].annotations),
-    // });
+    setDoc({
+      doc_id: documents[0].doc_id,
+      text: documents[0].title + "\n\n" + documents[0].text,
+      annotations: prepareAnnotations(documents[0].annotations),
+    });
   } else {
     setDoc(null);
   }

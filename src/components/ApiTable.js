@@ -1,12 +1,21 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 import { Container, Header, Table } from 'semantic-ui-react';
 import db from '../apis/dexie';
 
 
+const fetchRows = async (db, setData) => {
+  db.
+}
+
 const ApiTable = ({ getPage, pagenr, max_pagenr }) => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const [db, setDB] = useState(null)
+  const [data, setData] = useState([])
+
+
+  useEffect(() => {
+  
+    setData()
+  })
 
   const createHeader = (data) => {
     return data[0].data.map((colname) => {
@@ -18,9 +27,8 @@ const ApiTable = ({ getPage, pagenr, max_pagenr }) => {
     });
   };
 
-  const createRows = (data, n) => {
-    const previewdata = data.slice(0, n + 1);
-    return previewdata.slice(1).map((row) => {
+  const createRows = (data) => {
+    return data.slice(1).map((row) => {
       return <Table.Row>{createRowCells(row.data)}</Table.Row>;
     });
   };
