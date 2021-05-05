@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Segment, Dropdown, Container } from "semantic-ui-react";
-import { selectCodingjob, setCodingjobs, setDocuments } from "../actions";
+import { selectCodingjob, setCodingjobs } from "../actions";
 
 import SelectionTable from "./SelectionTable";
 import CreateCodingjob from "./CreateCodingjob";
@@ -16,16 +16,11 @@ const CodingjobSelector = ({ type = "table" }) => {
   const [selectedCodingjob, setSelectedCodingjob] = useState(codingjob);
 
   useEffect(() => {
-    dispatch(selectCodingjob(selectedCodingjob));
+    setCodingjob(dispatch, selectedCodingjob);
   }, [selectedCodingjob, dispatch]);
 
   useEffect(() => {
-    if (codingjob) {
-      getJobArticles(codingjob, dispatch);
-    } else {
-      setSelectedCodingjob(null);
-      dispatch(setDocuments([]));
-    }
+    if (!codingjob) setSelectedCodingjob(null);
   }, [codingjob, dispatch]);
 
   useEffect(() => {
@@ -96,6 +91,17 @@ const CodingjobSelector = ({ type = "table" }) => {
   return null;
 };
 
+const setCodingjob = async (dispatch, codingjob) => {
+  if (!codingjob) {
+    dispatch(selectCodingjob(null));
+    return;
+  }
+  const ROW_ID = codingjob.ROW_ID;
+  const cj = await db.getCodingjob(codingjob);
+  cj.ROW_ID = ROW_ID;
+  dispatch(selectCodingjob(cj));
+};
+
 const getCodingjobs = async (dispatch, setSelectedCodingjob) => {
   // the exists check is super annoying, but if db is included in useEffect, it somehow
   // rerenders non-stop, and if this check is not here then a new DB will be created immediately
@@ -109,18 +115,6 @@ const getCodingjobs = async (dispatch, setSelectedCodingjob) => {
       dispatch(setCodingjobs(cjs));
       setSelectedCodingjob({ ...cjs[0], ROW_ID: "0" });
     }
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-const getJobArticles = async (codingjob, dispatch) => {
-  //const exists = await Dexie.exists("AmCAT_Annotator");
-  //if (!exists) return null;
-  if (!db.isWelcome()) return null;
-  try {
-    const documents = await db.listDocuments(codingjob);
-    dispatch(setDocuments(documents));
   } catch (e) {
     console.log(e);
   }

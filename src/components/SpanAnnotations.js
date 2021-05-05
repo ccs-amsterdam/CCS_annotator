@@ -59,6 +59,7 @@ const SpanAnnotations = ({ doc, tokens }) => {
       // key presses, and key holding (see onKeyUp)
       if (event.key === "Control" || event.key === "Shift") {
         if (event.repeat) return;
+
         setHoldCtrl(true);
         return;
       }
@@ -75,10 +76,16 @@ const SpanAnnotations = ({ doc, tokens }) => {
       }
 
       if (tokenSelection.length > 0) {
-        const space_enter = event.keyCode === 32 || event.keyCode === 13;
-        if (space_enter) {
+        // space key
+        if (event.keyCode === 32) {
           event.preventDefault();
           annotationFromSelection(tokens, tokenSelection, dispatch);
+        }
+        if (tokenSelection[0] === tokenSelection[1]) {
+          // enter key
+          if (event.keyCode === 13) {
+            dispatch(triggerCodeselector("enter_key", tokenSelection[0]));
+          }
         }
       }
     },

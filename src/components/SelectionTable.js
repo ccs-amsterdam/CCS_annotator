@@ -13,7 +13,6 @@ import {
   TableHeaderCell,
   TableCell,
   Pagination,
-  Dropdown,
   Icon,
 } from "semantic-ui-react";
 
@@ -35,7 +34,6 @@ const SelectionTable = ({
   setSelectedRow,
   width = null,
   defaultSize = 15,
-  sizeSelector = false,
 }) => {
   const [activeRow, setActiveRow] = useState(
     selectedRow ? selectedRow.ROW_ID : null
@@ -48,7 +46,6 @@ const SelectionTable = ({
     page,
     pageCount,
     gotoPage,
-    setPageSize,
     preGlobalFilteredRows,
     setGlobalFilter,
     state: { pageIndex, globalFilter },
@@ -129,8 +126,8 @@ const SelectionTable = ({
         setGlobalFilter={setGlobalFilter}
       />
       <Table
+        compact
         unstackable
-        striped
         fixed
         singleLine
         selectable
@@ -144,44 +141,34 @@ const SelectionTable = ({
           ))}
         </TableHeader>
         <TableBody {...getTableBodyProps()}>{createBody(page)}</TableBody>
+        <Table.Footer>
+          <Table.Row>
+            <Table.HeaderCell colSpan={columns.length}>
+              {data.length > defaultSize ? (
+                <Pagination
+                  floated="right"
+                  style={{ border: "0" }}
+                  size="mini"
+                  firstItem={false}
+                  lastItem={false}
+                  nextItem={false}
+                  prevItem={false}
+                  boundaryRange={1}
+                  ellipsisItem={{
+                    content: <Icon name="ellipsis horizontal" />,
+                    icon: true,
+                  }}
+                  activePage={pageIndex + 1}
+                  totalPages={pageCount}
+                  onPageChange={(event, data) => {
+                    gotoPage(data.activePage - 1);
+                  }}
+                />
+              ) : null}
+            </Table.HeaderCell>
+          </Table.Row>
+        </Table.Footer>
       </Table>
-      {sizeSelector ? (
-        <Dropdown
-          text="show per page"
-          options={[10, 25, 50, 100, 500].map((n) => ({ value: n, text: n }))}
-          onChange={(e, d) => {
-            setPageSize(d.value);
-          }}
-        />
-      ) : null}
-      <div
-        style={{
-          marginTop: "3em",
-          display: "flex",
-          justifyContent: "flex-end",
-        }}
-      >
-        {data.length > defaultSize ? (
-          <Pagination
-            style={{ border: "0" }}
-            size="mini"
-            firstItem={false}
-            lastItem={false}
-            nextItem={false}
-            prevItem={false}
-            boundaryRange={1}
-            ellipsisItem={{
-              content: <Icon name="ellipsis horizontal" />,
-              icon: true,
-            }}
-            activePage={pageIndex + 1}
-            totalPages={pageCount}
-            onPageChange={(event, data) => {
-              gotoPage(data.activePage - 1);
-            }}
-          />
-        ) : null}
-      </div>
     </div>
   );
 };
@@ -191,7 +178,7 @@ const GlobalFilter = ({
   globalFilter,
   setGlobalFilter,
 }) => {
-  const count = preGlobalFilteredRows && preGlobalFilteredRows.length;
+  //const count = preGlobalFilteredRows && preGlobalFilteredRows.length;
 
   return (
     <span>
@@ -200,7 +187,7 @@ const GlobalFilter = ({
         onChange={(e) => {
           setGlobalFilter(e.target.value || undefined); // Set undefined to remove the filter entirely
         }}
-        placeholder={`Search ${count} records...`}
+        placeholder={`Enter search term`}
         style={{
           border: "0",
         }}

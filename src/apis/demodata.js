@@ -1,16 +1,21 @@
-export const demo_codebook = [
-  {
-    code: "Mark Rutte",
-    color: "#40a31f",
+export const demo_codebook = {
+  settings: {
+    canAddCodes: true,
   },
-  {
-    code: "Sigrid Kaag",
-    color: "#f2db5c",
-  },
-  {
-    code: "Jesse Klaver",
-  },
-];
+  codes: [
+    {
+      code: "Mark Rutte",
+      color: "#40a31f",
+    },
+    {
+      code: "Sigrid Kaag",
+      color: "#f2db5c",
+    },
+    {
+      code: "Jesse Klaver",
+    },
+  ],
+};
 
 export const demo_articles = [
   {

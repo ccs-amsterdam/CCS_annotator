@@ -25,17 +25,10 @@ export const setCodingjobs = (codingjobs) => {
   };
 };
 
-export const selectDocument = (document) => {
+export const setCodingjobSettings = (codingjobSettings) => {
   return {
-    type: "SELECT_ARTICLE",
-    payload: document,
-  };
-};
-
-export const setDocuments = (document) => {
-  return {
-    type: "SET_DOCUMENTS",
-    payload: document,
+    type: "SET_CODINGJOB_SETTINGS",
+    payload: codingjobSettings,
   };
 };
 

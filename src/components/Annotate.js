@@ -3,8 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Breadcrumb,
   BreadcrumbSection,
-  Button,
-  Dropdown,
   Grid,
   Pagination,
 } from "semantic-ui-react";
@@ -12,31 +10,36 @@ import {
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
 import db from "../apis/dexie";
-import { setCodes } from "../actions";
+import { setCodes, setCodingjobSettings } from "../actions";
 
 const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
+
   const [doc, setDoc] = useState(null);
   const [nDocuments, setNDocuments] = useState(0);
+  const [activePage, setActivePage] = useState(1);
 
   useEffect(() => {
     if (!codingjob) return null;
-    //getDocuments(codingjob, setDoc, setDocumentList);
-
+    setActivePage(1);
     setupCodingjob(codingjob, setDoc, setNDocuments);
     if (codingjob.codebook) {
       const cb = JSON.parse(codingjob.codebook);
-      if (cb && cb.length > 0) {
-        dispatch(setCodes(cb));
+      if (cb && cb.codes && cb.codes.length > 0) {
+        dispatch(setCodes(cb.codes));
       } else {
         dispatch(setCodes([]));
+      }
+      if (cb && cb.settings) {
+        dispatch(setCodingjobSettings(cb.settings));
       }
     }
   }, [codingjob, dispatch]);
 
   const pageChange = (event, data) => {
     documentSelector(codingjob, data.activePage - 1, setDoc);
+    setActivePage(data.activePage);
   };
 
   return (
@@ -53,23 +56,34 @@ const Annotate = () => {
             </Breadcrumb>
           </Grid.Column>
           <Grid.Column floated="right" width={1}>
-            <Pagination
-              size={"mini"}
-              firstItem={null}
-              lastItem={null}
-              siblingRange={0}
-              boundaryRange={0}
-              defaultActivePage={1}
-              ellipsisItem={null}
-              totalPages={nDocuments}
-              onPageChange={pageChange}
-            />
+            {documentPagination(activePage, nDocuments, pageChange)}
           </Grid.Column>
         </Grid.Row>
-
-        <AnnotationText doc={doc ? doc : null} />
+        <Grid.Row>
+          <AnnotationText doc={doc ? doc : null} />
+        </Grid.Row>
+        <Grid.Row>
+          {documentPagination(activePage, nDocuments, pageChange)}
+        </Grid.Row>
       </Grid>
     </>
+  );
+};
+
+const documentPagination = (activePage, nDocuments, pageChange) => {
+  return (
+    <Pagination
+      activePage={activePage}
+      size={"mini"}
+      firstItem={null}
+      lastItem={null}
+      siblingRange={0}
+      boundaryRange={0}
+      defaultActivePage={1}
+      ellipsisItem={null}
+      totalPages={nDocuments}
+      onPageChange={pageChange}
+    />
   );
 };
 
@@ -77,7 +91,7 @@ const setupCodingjob = async (codingjob, setDoc, setNDocuments) => {
   const n = await db.getJobDocumentCount(codingjob);
   setNDocuments(n);
   if (n > 0) {
-    await documentSelector(codingjob, 0, setDoc);
+    documentSelector(codingjob, 0, setDoc);
   } else {
     setDoc(null);
   }
@@ -87,7 +101,6 @@ const documentSelector = async (codingjob, i, setDoc) => {
   if (!codingjob) return null;
   const docs = await db.getJobDocumentsBatch(codingjob, i, 1);
   if (docs) {
-    console.log(docs[0].annotations);
     setDoc({
       doc_id: docs[0].doc_id,
       title: docs[0].title,
@@ -95,31 +108,6 @@ const documentSelector = async (codingjob, i, setDoc) => {
       annotations: prepareAnnotations(docs[0].annotations),
     });
   }
-};
-
-const getDocuments = async (codingjob, setDoc, setDocumentList) => {
-  const documents = await db.listDocuments(codingjob);
-  console.log(documents);
-  setDocumentList(documents);
-  if (documents.length > 0) {
-    await getDocument(setDoc, documents[0].doc_id);
-    setDoc({
-      doc_id: documents[0].doc_id,
-      text: documents[0].title + "\n\n" + documents[0].text,
-      annotations: prepareAnnotations(documents[0].annotations),
-    });
-  } else {
-    setDoc(null);
-  }
-};
-
-const getDocument = async (setDoc, doc_id) => {
-  const document = await db.getDocument(doc_id);
-  setDoc({
-    doc_id: document.doc_id,
-    text: document.title + "\n\n" + document.text,
-    annotations: prepareAnnotations(document.annotations),
-  });
 };
 
 const prepareAnnotations = (annotations) => {
@@ -138,17 +126,6 @@ const prepareAnnotations = (annotations) => {
     obj[ann.offset + ann.length].end.push(ann.code);
     return obj;
   }, {});
-};
-
-const dropdownOptions = (documentList) => {
-  const items = documentList.map((document, i) => {
-    return {
-      key: i,
-      text: document.title,
-      value: document.doc_id,
-    };
-  });
-  return items;
 };
 
 export default Annotate;

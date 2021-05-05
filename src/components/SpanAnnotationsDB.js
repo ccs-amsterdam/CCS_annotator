@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { toggleAnnotations } from "../actions";
+import { appendCodeHistory, toggleAnnotations } from "../actions";
 import db from "../apis/dexie";
 
 // this is a dummy component to listen for changes in annotations and code
@@ -64,14 +64,20 @@ const matchAnnotations = (tokens, importedAnnotations, dispatch) => {
     );
   }
 
-  const topCodes = {};
+  const codeCounter = {};
   for (let matchedAnnotation of matchedAnnotations) {
-    if (!topCodes[matchedAnnotation.group])
-      topCodes[matchedAnnotation.group] = 0;
-    topCodes[matchedAnnotation.group]++;
+    if (!codeCounter[matchedAnnotation.group])
+      codeCounter[matchedAnnotation.group] = 0;
+    codeCounter[matchedAnnotation.group]++;
     addAnnotations(matchedAnnotation, dispatch);
   }
-  console.log(topCodes);
+
+  let topCodes = Object.keys(codeCounter).sort(function (a, b) {
+    return codeCounter[a] - codeCounter[b];
+  });
+  for (const code of topCodes.slice(-5)) {
+    dispatch(appendCodeHistory(code));
+  }
 };
 
 const findMatches = (

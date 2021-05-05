@@ -47,8 +47,7 @@ class AnnotationDB {
     return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
-    const documents = await this.listDocuments(codingjob);
-    await this.deleteDocuments(documents);
+    await this.idb.documents.where("job_id").equals(codingjob.job_id).delete();
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
   async listCodingjobs() {
@@ -59,11 +58,17 @@ class AnnotationDB {
     return this.idb.codingjobs.get(codingjob.job_id);
   }
   async writeCodebook(codingjob, codebook) {
-    console.log(codingjob);
     return this.idb.codingjobs
       .where("job_id")
       .equals(codingjob.job_id)
       .modify({ codebook: JSON.stringify(codebook, null, 2) });
+  }
+  async writeCodes(codingjob, codes) {
+    const cj = await this.getCodingjob(codingjob);
+    console.log();
+    const codebook = JSON.parse(cj.codebook);
+    codebook.codes = codes;
+    return await this.writeCodebook(codingjob, codebook);
   }
 
   // DOCUMENTS
@@ -113,23 +118,6 @@ class AnnotationDB {
   async deleteDocuments(documents) {
     const documentIds = documents.map((document) => document.doc_id);
     return this.idb.documents.bulkDelete(documentIds);
-  }
-  async listDocuments(codingjob) {
-    // uses each to only fetch specific fields from document
-    // saves memory at minor speed penalty
-    function map(coll, mapperFn) {
-      let result = [];
-      let i = 1;
-      return coll
-        .each((row) => result.push({ doc: i++, ...mapperFn(row) }))
-        .then(() => result);
-    }
-    let doclist = this.idb.documents.where("job_id").equals(codingjob.job_id);
-    return map(doclist, (doc) => ({
-      doc_id: doc.doc_id,
-      title: doc.title,
-      annotations: doc.annotations,
-    }));
   }
 
   async getJobDocumentsBatch(codingjob, offset, limit) {

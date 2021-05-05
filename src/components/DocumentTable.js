@@ -8,26 +8,34 @@ const COLUMNS = ["title", "text", "annotations", "meta"];
 
 const fetchFromDb = async (codingjob, pageSize, setPages, setData) => {
   const n = await db.getJobDocumentCount(codingjob);
-  const newdata = await db.getJobDocumentsBatch(codingjob, 0, pageSize);
   setPages(Math.ceil(n / pageSize));
+  let newdata = [];
+  if (n > 0) newdata = await db.getJobDocumentsBatch(codingjob, 0, pageSize);
+  console.log(newdata);
   setData(newdata);
 };
 
-// function for shortening text if longer than x chars
-// replace value of annotations with n of annotations
+const shortString = (string, n = 20) => {
+  if (!string) return null;
+  if (string.length < n) return string;
+  return string.slice(0, n) + "...";
+};
 
 const DocumentTable = () => {
-  const codingjob = useSelector(state => state.codingjob);
+  const codingjob = useSelector((state) => state.codingjob);
   const [data, setData] = useState([]);
   const [pages, setPages] = useState(1);
 
   useEffect(() => {
-    if (!codingjob) return null;
+    if (!codingjob) {
+      setData([]);
+      return null;
+    }
     fetchFromDb(codingjob, PAGESIZE, setPages, setData);
   }, [codingjob]);
 
-  const createHeaderRow = data => {
-    return COLUMNS.map(colname => {
+  const createHeaderRow = (data) => {
+    return COLUMNS.map((colname) => {
       return (
         <Table.HeaderCell>
           <span title={colname}>{colname}</span>
@@ -36,17 +44,17 @@ const DocumentTable = () => {
     });
   };
 
-  const createBodyRows = data => {
-    return data.map(rowObj => {
+  const createBodyRows = (data) => {
+    return data.map((rowObj) => {
       return <Table.Row>{createRowCells(rowObj)}</Table.Row>;
     });
   };
 
-  const createRowCells = rowObj => {
-    return COLUMNS.map(key => {
+  const createRowCells = (rowObj) => {
+    return COLUMNS.map((key) => {
       return (
         <Table.Cell>
-          <span title={rowObj[key]}>{rowObj[key]}</span>
+          <span title={rowObj[key]}>{shortString(rowObj[key])}</span>
         </Table.Cell>
       );
     });
@@ -63,7 +71,7 @@ const DocumentTable = () => {
 
   return (
     <Container style={{ marginTop: "2em" }}>
-      <Table fixed compact celled singleLine>
+      <Table compact celled singleLine>
         <Table.Header>
           <Table.Row>{createHeaderRow(data)}</Table.Row>
         </Table.Header>

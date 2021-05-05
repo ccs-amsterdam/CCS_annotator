@@ -43,23 +43,12 @@ const codingjobs = (state = [], action) => {
   }
 };
 
-const documents = (state = [], action) => {
+const codingjobSettings = (state = {}, action) => {
   switch (action.type) {
-    case "SET_DOCUMENTS":
+    case "SET_CODINGJOB_SETTINGS":
       return action.payload;
     case "RESET_DB":
-      return [];
-    default:
-      return state;
-  }
-};
-
-const document = (state = [], action) => {
-  switch (action.type) {
-    case "SELECT_DOCUMENT":
-      return action.payload;
-    case "RESET_DB":
-      return [];
+      return {};
     default:
       return state;
   }
@@ -207,8 +196,7 @@ const rootReducer = combineReducers({
   eventsBlocked,
   codingjob,
   codingjobs,
-  document,
-  documents,
+  codingjobSettings,
   tokenIndices,
   currentToken,
   codeSelectorTrigger,

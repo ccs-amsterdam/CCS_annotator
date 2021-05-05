@@ -9,12 +9,11 @@ import {
   Button,
   Icon,
 } from "semantic-ui-react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 
 //import CSVReader from "react-csv-reader";
 //import Papa from "papaparse";
 import { CSVReader } from "react-papaparse";
-import { setDocuments } from "../actions";
 import db from "../apis/dexie";
 
 export const UploadCsv = ({ setActive }) => {
@@ -55,7 +54,6 @@ const SubmitForm = ({ data, codingjob, fileRef }) => {
   const [titleField, setTitleField] = useState(null);
   const [textField, setTextField] = useState(null);
   const [annotationsField, setAnnotationsField] = useState(null);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     if (data.length <= 1) {
@@ -111,8 +109,6 @@ const SubmitForm = ({ data, codingjob, fileRef }) => {
         annotationsField
       );
       await db.createDocuments(codingjob, preparedData);
-      const documents = await db.listDocuments(codingjob);
-      await dispatch(setDocuments(documents));
       fileRef.current.removeFile();
     } catch (e) {
       console.log(e);

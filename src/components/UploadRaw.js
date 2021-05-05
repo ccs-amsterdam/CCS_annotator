@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Form, Button } from "semantic-ui-react";
-import { useSelector, useDispatch } from "react-redux";
-import { setDocuments } from "../actions";
+import { useSelector } from "react-redux";
 
 import SemanticDatepicker from "react-semantic-ui-datepickers";
 import "react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css";
@@ -9,7 +8,6 @@ import db from "../apis/dexie";
 
 const UploadRaw = () => {
   const codingjob = useSelector((state) => state.codingjob);
-  const dispatch = useDispatch();
 
   const [fieldValues, setFieldValues] = useState({});
 
@@ -30,8 +28,6 @@ const UploadRaw = () => {
 
     try {
       await db.createDocuments(codingjob, [submitData]);
-      const documents = await db.listDocuments(codingjob);
-      await dispatch(setDocuments(documents));
       setFieldValues({});
     } catch (e) {
       console.log(e);
