@@ -46,11 +46,17 @@ export const setCurrentToken = (index) => {
   };
 };
 
-export const setTokenSelection = (index, add) => {
+export const toggleTokenSelection = (index, add) => {
+  return {
+    type: "TOGGLE_TOKEN_SELECTION",
+    payload: { index, add },
+  };
+};
+
+export const setTokenSelection = (tokenSelection) => {
   return {
     type: "SET_TOKEN_SELECTION",
-    index,
-    add,
+    payload: tokenSelection,
   };
 };
 
@@ -60,11 +66,12 @@ export const clearTokenSelection = () => {
   };
 };
 
-export const triggerCodeselector = (from, tokenIndex) => {
+export const triggerCodeselector = (from, tokenIndex, code) => {
   return {
     type: "TRIGGER_CODESELECTOR",
     from: from,
     index: tokenIndex,
+    code: code,
   };
 };
 

@@ -3,8 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { appendCodeHistory, toggleAnnotations } from "../actions";
 import db from "../apis/dexie";
 
-// this is a dummy component to listen for changes in annotations and code
-// and saving them to the indexed db.
+// this component generates no content, but manages writing and reading of annotations
 
 const SpanAnnotationsDB = ({ doc, tokens }) => {
   const annotations = useSelector((state) => state.spanAnnotations);

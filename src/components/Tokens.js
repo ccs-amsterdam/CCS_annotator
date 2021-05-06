@@ -22,7 +22,7 @@ const Tokens = ({ text, setTokens }) => {
 
   return (
     <Container text>
-      <Segment style={{ border: "0" }}>{tokenComponents}</Segment>
+      <Segment style={{ width: "95%", border: "0" }}>{tokenComponents}</Segment>
     </Container>
   );
 };

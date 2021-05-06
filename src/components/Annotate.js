@@ -43,30 +43,25 @@ const Annotate = () => {
   };
 
   return (
-    <>
-      <Grid>
-        <Grid.Row>
-          <Grid.Column width={10}>
-            <Breadcrumb>
-              <BreadcrumbSection link style={{ minWidth: "5em" }}>
-                <CodingjobSelector type="dropdown" />
-              </BreadcrumbSection>
-              <Breadcrumb.Divider />
-              <BreadcrumbSection>{doc ? doc.title : null}</BreadcrumbSection>
-            </Breadcrumb>
-          </Grid.Column>
-          <Grid.Column floated="right" width={1}>
-            {documentPagination(activePage, nDocuments, pageChange)}
-          </Grid.Column>
-        </Grid.Row>
-        <Grid.Row>
-          <AnnotationText doc={doc ? doc : null} />
-        </Grid.Row>
-        <Grid.Row>
+    <Grid container columns={2}>
+      <Grid.Row>
+        <Grid.Column width={10}>
+          <Breadcrumb>
+            <BreadcrumbSection link style={{ minWidth: "5em" }}>
+              <CodingjobSelector type="dropdown" />
+            </BreadcrumbSection>
+            <Breadcrumb.Divider />
+            <BreadcrumbSection>{doc ? doc.title : null}</BreadcrumbSection>
+          </Breadcrumb>
+        </Grid.Column>
+        <Grid.Column floated="right" width={1}>
           {documentPagination(activePage, nDocuments, pageChange)}
-        </Grid.Row>
-      </Grid>
-    </>
+        </Grid.Column>
+      </Grid.Row>
+      <Grid.Row>
+        <AnnotationText doc={doc ? doc : null} />
+      </Grid.Row>
+    </Grid>
   );
 };
 

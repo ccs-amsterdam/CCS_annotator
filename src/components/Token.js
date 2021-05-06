@@ -32,9 +32,8 @@ const AnnotatedToken = ({ token, selected }) => {
   );
   const csTrigger = useSelector((state) => {
     if (state.codeSelectorTrigger.index !== token.offset.index) return null;
-    return state.codeSelectorTrigger.from;
+    return state.codeSelectorTrigger;
   });
-
   const codes = useSelector((state) => state.codes);
   const dispatch = useDispatch();
 
@@ -63,7 +62,9 @@ const AnnotatedToken = ({ token, selected }) => {
         className={annotatedTokenClass}
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(triggerCodeselector("right_click", token.offset.index));
+          dispatch(
+            triggerCodeselector("right_click", token.offset.index, null)
+          );
         }}
         style={color ? { background: color } : null}
       >

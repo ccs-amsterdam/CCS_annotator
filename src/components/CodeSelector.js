@@ -21,7 +21,7 @@ const CodeSelector = React.memo(
     const codeHistory = useSelector((state) => state.codeHistory);
 
     const textInputRef = useRef(null);
-    const [current, setCurrent] = useState(null);
+    const [current, setCurrent] = useState(csTrigger.code);
     const [hasOpened, setHasOpened] = useState(false);
     const [popupPage, setPopupPage] = useState(0);
     const [selectedCodeButton, setSelectedCodeButton] = useState(0);
@@ -48,55 +48,64 @@ const CodeSelector = React.memo(
       // main events are either selecting one of the code buttons, for either choosing the old or new code
       // and moving focus to the dropdown/search input on text input
       (event) => {
-        // any arrowkey
-        if (arrowKeys.includes(event.key)) {
-          if (textInputRef?.current?.children[0] === document.activeElement)
+        const focusOnTextInput =
+          textInputRef?.current?.children[0] === document.activeElement;
+
+        // if focus not on textInput, the user can move between buttons with the arrow keys,
+        // and click a button with space or enter
+        if (!focusOnTextInput) {
+          // any arrowkey
+          if (arrowKeys.includes(event.key)) {
+            event.preventDefault();
+            if (textInputRef?.current?.children[0] === document.activeElement)
+              return;
+
+            if (event.key === "ArrowRight") {
+              if (!nButtons) return;
+              if (selectedCodeButton < nButtons - 1)
+                setSelectedCodeButton(selectedCodeButton + 1);
+            }
+
+            if (event.key === "ArrowLeft" && selectedCodeButton > 0) {
+              setSelectedCodeButton(selectedCodeButton - 1);
+            }
             return;
-
-          if (event.key === "ArrowRight") {
-            if (!nButtons) return;
-            if (selectedCodeButton < nButtons - 1)
-              setSelectedCodeButton(selectedCodeButton + 1);
           }
 
-          if (event.key === "ArrowLeft" && selectedCodeButton > 0) {
-            setSelectedCodeButton(selectedCodeButton - 1);
+          // space or enter
+          if (event.keyCode === 32 || event.keyCode === 13) {
+            const showCurrentCodeSelection =
+              popupPage === 0 &&
+              Object.keys(annotations).length > 1 &&
+              csTrigger.from !== "new_selection" &&
+              csTrigger.from !== "menu";
+
+            if (showCurrentCodeSelection) {
+              const codebuttons = Object.keys(annotations);
+              setPopupPage(1);
+              setCurrent(codebuttons[selectedCodeButton]);
+            } else {
+              const codebuttons = codeHistory.filter(
+                (e) => e !== current && e !== "Not yet assigned"
+              );
+
+              let value = current;
+              if (selectedCodeButton < codebuttons.length)
+                value = codebuttons[selectedCodeButton];
+              updateAnnotations(
+                annotations,
+                current,
+                value,
+                setCurrent,
+                dispatch
+              );
+            }
+            return;
           }
-          return;
+
+          // If any other key, move focus to text input
+          if (textInputRef.current) textInputRef.current.click();
         }
-
-        // space or enter
-        if (event.keyCode === 32 || event.keyCode === 13) {
-          const showCurrentCodeSelection =
-            popupPage === 0 &&
-            Object.keys(annotations).length > 1 &&
-            csTrigger !== "new_selection";
-
-          if (showCurrentCodeSelection) {
-            const codebuttons = Object.keys(annotations);
-            setPopupPage(1);
-            setCurrent(codebuttons[selectedCodeButton]);
-          } else {
-            const codebuttons = codeHistory.filter(
-              (e) => e !== current && e !== "Not yet assigned"
-            );
-
-            let value = current;
-            if (selectedCodeButton < codebuttons.length)
-              value = codebuttons[selectedCodeButton];
-            updateAnnotations(
-              annotations,
-              current,
-              value,
-              setCurrent,
-              dispatch
-            );
-          }
-          return;
-        }
-
-        // All previous key catches
-        if (textInputRef.current) textInputRef.current.click();
       },
       [
         annotations,
@@ -126,7 +135,8 @@ const CodeSelector = React.memo(
       const showCurrentCodeSelection =
         popupPage === 0 &&
         annotationCodes.length > 1 &&
-        csTrigger !== "new_selection";
+        csTrigger.from !== "new_selection" &&
+        csTrigger.from !== "menu";
 
       if (showCurrentCodeSelection) {
         return (
@@ -138,7 +148,8 @@ const CodeSelector = React.memo(
                 <Button
                   style={{ backgroundColor: getColor(code, codes) }}
                   compact
-                  size={i === selectedCodeButton ? "medium" : "mini"}
+                  size="mini"
+                  active={i === selectedCodeButton}
                   onMouseOver={() => setSelectedCodeButton(i)}
                   onClick={() => {
                     setPopupPage(1);
@@ -157,11 +168,11 @@ const CodeSelector = React.memo(
       return (
         <>
           <div>
-            <h5 style={{ display: "inline" }}>Set new code:</h5>
+            <h5>Set new code:</h5>
             <Ref innerRef={textInputRef}>
               <Dropdown
                 placeholder={"Search"}
-                style={{ marginLeft: "2em", minWidth: "10em" }}
+                style={{ minWidth: "10em" }}
                 options={codes.map((code) => {
                   return {
                     key: code.code,
@@ -227,7 +238,17 @@ const CodeSelector = React.memo(
         }}
         position="top left"
       >
-        {createPopupPage(popupPage)}
+        <div>
+          <Button
+            floated="right"
+            compact
+            size="mini"
+            icon="delete"
+            onClick={() => dispatch(triggerCodeselector(null))}
+          />
+
+          {createPopupPage(popupPage)}
+        </div>
       </Popup>
     );
   }
@@ -258,7 +279,8 @@ const CodeButtons = ({
           key={code}
           value={code}
           compact
-          size={i === selectedCodeButton ? "medium" : "mini"}
+          size="mini"
+          active={i === selectedCodeButton}
           onMouseOver={() => setSelectedCodeButton(i)}
           onClick={(e, d) => {
             console.log(annotations);
@@ -283,12 +305,12 @@ const CodeButtons = ({
       {newCodeButtons()}
 
       <Button
-        icon="delete"
-        size={
-          selectedCodeButton === codeHistoryValid.length ? "medium" : "mini"
-        }
+        icon="trash"
+        size="mini"
+        floated="right"
+        active={selectedCodeButton === codeHistoryValid.length}
         compact
-        color="red"
+        style={{ backgroundColor: "red", borderColor: "black" }}
         onMouseOver={() => setSelectedCodeButton(codeHistoryValid.length)}
         onClick={(e, d) =>
           updateAnnotations(annotations, current, current, setCurrent, dispatch)
@@ -333,7 +355,7 @@ const updateAnnotations = (
   dispatch(rmAnnotations([oldAnnotation]));
 
   if (value === key) {
-    dispatch(triggerCodeselector(null, null));
+    dispatch(triggerCodeselector(null, null, null));
     return null;
   }
 
@@ -353,7 +375,7 @@ const updateAnnotations = (
     setCurrent(value);
   }
 
-  dispatch(triggerCodeselector(null, null));
+  dispatch(triggerCodeselector(null, null, null));
 };
 
 const getColor = (tokenCode, codes) => {

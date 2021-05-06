@@ -2,16 +2,18 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   clearSpanAnnotations,
-  setTokenSelection,
+  toggleTokenSelection,
   setCurrentToken,
   clearTokenSelection,
   triggerCodeselector,
 } from "../actions";
 import { toggleAnnotations } from "../actions";
 
+// This component generates no content, but manages navigation for span level annotations
+
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const SpanAnnotations = ({ doc, tokens }) => {
+const SpanAnnotationsNavigation = ({ doc, tokens }) => {
   const currentToken = useSelector((state) => state.currentToken);
   const tokenSelection = useSelector((state) => state.tokenSelection);
   const eventsBlocked = useSelector((state) => state.eventsBlocked);
@@ -84,7 +86,7 @@ const SpanAnnotations = ({ doc, tokens }) => {
         if (tokenSelection[0] === tokenSelection[1]) {
           // enter key
           if (event.keyCode === 13) {
-            dispatch(triggerCodeselector("enter_key", tokenSelection[0]));
+            dispatch(triggerCodeselector("enter_key", tokenSelection[0], null));
           }
         }
       }
@@ -134,17 +136,24 @@ const SpanAnnotations = ({ doc, tokens }) => {
 
   const onMouseDown = (event) => {
     // When left button pressed, start new selection
-    if (event.which !== 1) return null;
-    event.preventDefault();
-    setHoldMouseLeft(true);
-    dispatch(clearTokenSelection());
+    if (event.which === 1) {
+      event.preventDefault();
+      setHoldMouseLeft(true);
+      dispatch(clearTokenSelection());
+    }
   };
 
   const onMouseMove = (event) => {
     // When selection started (mousedown), select tokens hovered over
-    if (event.which !== 1) return null;
     if (holdMouseLeft) {
+      if (event.which !== 1) return null;
       storeMouseSelection(event);
+    } else {
+      let currentNode = getToken(tokens, event.originalTarget);
+      if (currentNode) {
+        dispatch(setCurrentToken(currentNode.index));
+        dispatch(toggleTokenSelection(currentNode.index, false));
+      }
     }
   };
 
@@ -157,6 +166,8 @@ const SpanAnnotations = ({ doc, tokens }) => {
     const selection = window.getSelection();
     selection.empty();
     setHoldMouseLeft(false);
+
+    if (!currentNode) return null;
 
     // storeMouseSelection does save position to tokenSelection state, but this isn't
     // yet updated within this scope. This results in single clicks (without mousemove)
@@ -181,7 +192,7 @@ const SpanAnnotations = ({ doc, tokens }) => {
     if (!currentNode) return null;
 
     dispatch(setCurrentToken(currentNode.index));
-    dispatch(setTokenSelection(currentNode.index, true));
+    dispatch(toggleTokenSelection(currentNode.index, true));
     return currentNode.index;
   };
 
@@ -209,8 +220,8 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
   }
   dispatch(toggleAnnotations(annotations));
   dispatch(clearTokenSelection());
-  dispatch(triggerCodeselector(null, null));
-  dispatch(triggerCodeselector("new_selection", to));
+  dispatch(triggerCodeselector(null, null, null));
+  dispatch(triggerCodeselector("new_selection", to, null));
 };
 
 const movePosition = (tokens, key, mover, ctrl, dispatch) => {
@@ -225,9 +236,14 @@ const movePosition = (tokens, key, mover, ctrl, dispatch) => {
 
   if (mover.position !== newPosition) {
     dispatch(setCurrentToken(newPosition));
-    dispatch(setTokenSelection(newPosition, ctrl));
+    dispatch(toggleTokenSelection(newPosition, ctrl));
+
+    const down = key === "ArrowRight" || key === "ArrowDown";
+    console.log(down);
+    tokens[newPosition].ref.current.scrollIntoView(false, {
+      block: down ? "start" : "end",
+    });
   }
-  tokens[newPosition].ref.current.scrollIntoView({ block: "center" });
   return newPosition;
 };
 
@@ -286,4 +302,4 @@ const getToken = (tokens, e) => {
   }
 };
 
-export default SpanAnnotations;
+export default SpanAnnotationsNavigation;

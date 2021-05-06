@@ -83,8 +83,10 @@ const currentToken = (state = 0, action) => {
 const tokenSelection = (state = [], action) => {
   // an array of length 2, giving the start and end of the selection
   switch (action.type) {
+    case "TOGGLE_TOKEN_SELECTION":
+      return toggleSelection(state, action.payload.index, action.payload.add);
     case "SET_TOKEN_SELECTION":
-      return toggleSelection(state, action.index, action.add);
+      return action.payload;
     case "CLEAR_TOKEN_SELECTION":
       return [];
     case "RESET_DB":
@@ -94,10 +96,13 @@ const tokenSelection = (state = [], action) => {
   }
 };
 
-const codeSelectorTrigger = (state = { from: null, index: null }, action) => {
+const codeSelectorTrigger = (
+  state = { from: null, index: null, code: null },
+  action
+) => {
   switch (action.type) {
     case "TRIGGER_CODESELECTOR":
-      return { from: action.from, index: action.index };
+      return { from: action.from, index: action.index, code: action.code };
     default:
       return state;
   }
@@ -166,7 +171,7 @@ const codes = (state = [], action) => {
     case "SET_CODES":
       return action.payload.map((code) => {
         if (!code.color)
-          code.color = randomColor({ seed: code.code, luminosity: "bright" });
+          code.color = randomColor({ seed: code.code, luminosity: "light" });
         return code;
       });
     case "RESET_DB":
