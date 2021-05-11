@@ -27,9 +27,7 @@ const Token = React.forwardRef(({ token }, ref) => {
 const AnnotatedToken = ({ token, selected }) => {
   // If we specifically ask for the annotations for the current token within the
   // useSelector function, rerender is only triggered if this value has changed
-  const annotations = useSelector(
-    (state) => state.spanAnnotations[token.offset.index]
-  );
+  const annotations = useSelector((state) => state.spanAnnotations[token.offset.index]);
   const csTrigger = useSelector((state) => {
     if (state.codeSelectorTrigger.index !== token.offset.index) return null;
     return state.codeSelectorTrigger;
@@ -39,9 +37,7 @@ const AnnotatedToken = ({ token, selected }) => {
 
   // This is a trick required to render if at least something within this token's
   // annotations changed (somehow 'annotations' doesn't trigger this)
-  useSelector((state) =>
-    JSON.stringify(state.spanAnnotations[token.offset.index])
-  );
+  useSelector((state) => JSON.stringify(state.spanAnnotations[token.offset.index]));
 
   // if there are no annotation codes, our life is easy
   if (!annotations) return <>{token.pre + token.text + token.post}</>;
@@ -62,9 +58,7 @@ const AnnotatedToken = ({ token, selected }) => {
         className={annotatedTokenClass}
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(
-            triggerCodeselector("right_click", token.offset.index, null)
-          );
+          dispatch(triggerCodeselector("right_click", token.offset.index, null));
         }}
         style={color ? { background: color } : null}
       >
@@ -86,26 +80,16 @@ const AnnotatedToken = ({ token, selected }) => {
   }
 
   // Set specific classes for nice css to show the start/end of codes
-  const allLeft = !Object.values(annotations).some(
-    (code) => code.span[0] !== code.index
-  );
-  const allRight = !Object.values(annotations).some(
-    (code) => code.span[1] !== code.index
-  );
-  const anyLeft = Object.values(annotations).some(
-    (code) => code.span[0] === code.index
-  );
-  const anyRight = Object.values(annotations).some(
-    (code) => code.span[1] === code.index
-  );
+  const allLeft = !Object.values(annotations).some((code) => code.span[0] !== code.index);
+  const allRight = !Object.values(annotations).some((code) => code.span[1] !== code.index);
+  const anyLeft = Object.values(annotations).some((code) => code.span[0] === code.index);
+  const anyRight = Object.values(annotations).some((code) => code.span[1] === code.index);
 
   let annotatedTokenClass = "annotatedToken";
   if (allLeft) annotatedTokenClass = annotatedTokenClass + " allLeft";
-  if (anyLeft & !allLeft)
-    annotatedTokenClass = annotatedTokenClass + " anyLeft";
+  if (anyLeft & !allLeft) annotatedTokenClass = annotatedTokenClass + " anyLeft";
   if (allRight) annotatedTokenClass = annotatedTokenClass + " allRight";
-  if (anyRight & !allRight)
-    annotatedTokenClass = annotatedTokenClass + " anyRight";
+  if (anyRight & !allRight) annotatedTokenClass = annotatedTokenClass + " anyRight";
 
   if (selected) {
     color = null;
@@ -120,7 +104,8 @@ const AnnotatedToken = ({ token, selected }) => {
         <CodeSelector
           index={token.offset.index}
           annotations={annotations}
-          csTrigger={csTrigger}
+          currentCode={null}
+          newSelection={csTrigger.from === "new_selection"}
         >
           {tokenSpan(annotatedTokenClass, color)}
         </CodeSelector>

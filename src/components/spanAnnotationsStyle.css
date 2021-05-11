@@ -1,0 +1,12 @@
+.codes-tbody {
+  display: block;
+  overflow: auto;
+  height: 27vh;
+}
+
+.codes-thead,
+.codes-tbody .codes-tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}

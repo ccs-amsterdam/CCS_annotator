@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   clearSpanAnnotations,
@@ -18,7 +18,6 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
   const tokenSelection = useSelector((state) => state.tokenSelection);
   const eventsBlocked = useSelector((state) => state.eventsBlocked);
 
-  const [holdMouseLeft, setHoldMouseLeft] = useState(false);
   const [mover, setMover] = useState(null);
   const [holdCtrl, setHoldCtrl] = useState(false);
   const [holdArrow, setHoldArrow] = useState(null);
@@ -30,88 +29,11 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
   }, [doc, dispatch]);
 
   useEffect(() => {
-    window.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("contextmenu", onContextMenu);
-    return () => {
-      window.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("contextmenu", onContextMenu);
-    };
-  });
-
-  // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyUp = useCallback((event) => {
-    // keep track of which buttons are pressed in the state
-    if (event.key === "Control" || event.key === "Shift") {
-      setHoldCtrl(false);
-      return;
-    }
-    if (arrowkeys.includes(event.key)) {
-      setHoldArrow(false);
-      setMover(null);
-    }
-  }, []);
-
-  // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyDown = useCallback(
-    (event) => {
-      // key presses, and key holding (see onKeyUp)
-      if (event.key === "Control" || event.key === "Shift") {
-        if (event.repeat) return;
-
-        setHoldCtrl(true);
-        return;
-      }
-      if (arrowkeys.includes(event.key)) {
-        event.preventDefault();
-        if (event.repeat) return;
-        setMover({
-          position: currentToken,
-          startposition: currentToken,
-          ntokens: tokens.length,
-          counter: 1,
-        });
-        setHoldArrow(event.key);
-      }
-
-      if (tokenSelection.length > 0) {
-        // space key
-        if (event.keyCode === 32) {
-          event.preventDefault();
-          annotationFromSelection(tokens, tokenSelection, dispatch);
-        }
-        if (tokenSelection[0] === tokenSelection[1]) {
-          // enter key
-          if (event.keyCode === 13) {
-            dispatch(triggerCodeselector("enter_key", tokenSelection[0], null));
-          }
-        }
-      }
-    },
-    [currentToken, tokenSelection, tokens, dispatch]
-  );
-
-  // This blocks event listeners when the eventsBlocked state (in redux) is true.
-  // This lets us block the key activities in the text (selecting tokens) when
-  // the CodeSelector popup is open
-  useEffect(() => {
     if (eventsBlocked) {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      setHoldCtrl(false);
       setHoldArrow(false);
-    } else {
-      window.addEventListener("keydown", onKeyDown);
-      window.addEventListener("keyup", onKeyUp);
+      setHoldCtrl(false);
     }
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-    };
-  }, [eventsBlocked, onKeyDown, onKeyUp]);
+  }, [setHoldArrow, setHoldCtrl, eventsBlocked]);
 
   useEffect(() => {
     // When arrow key is held, walk through tokens with increasing speed
@@ -133,6 +55,118 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
       });
     }, delay);
   }, [tokens, mover, holdArrow, holdCtrl, dispatch]);
+
+  if (!doc) return null;
+
+  // this prevents rendering the components that manage the key and mouse events
+  if (eventsBlocked) return null;
+
+  return (
+    <>
+      <KeyEvents
+        tokenSelection={tokenSelection}
+        currentToken={currentToken}
+        tokens={tokens}
+        setMover={setMover}
+        setHoldCtrl={setHoldCtrl}
+        setHoldArrow={setHoldArrow}
+      />
+      <MouseEvents tokenSelection={tokenSelection} tokens={tokens} />
+    </>
+  );
+};
+
+const KeyEvents = ({
+  tokenSelection,
+  currentToken,
+  tokens,
+  setMover,
+  setHoldCtrl,
+  setHoldArrow,
+}) => {
+  const dispatch = useDispatch();
+
+  // This blocks event listeners when the eventsBlocked state (in redux) is true.
+  // This lets us block the key activities in the text (selecting tokens) when
+  // the CodeSelector popup is open
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  });
+
+  // (see useEffect with 'eventsBlocked' for details on useCallback)
+  const onKeyUp = (event) => {
+    // keep track of which buttons are pressed in the state
+    if (event.key === "Control" || event.key === "Shift") {
+      setHoldCtrl(false);
+      return;
+    }
+    if (arrowkeys.includes(event.key)) {
+      setHoldArrow(false);
+      setMover(null);
+    }
+  };
+
+  // (see useEffect with 'eventsBlocked' for details on useCallback)
+  const onKeyDown = (event) => {
+    // key presses, and key holding (see onKeyUp)
+    if (event.key === "Control" || event.key === "Shift") {
+      if (event.repeat) return;
+
+      setHoldCtrl(true);
+      return;
+    }
+    if (arrowkeys.includes(event.key)) {
+      event.preventDefault();
+      if (event.repeat) return;
+      setMover({
+        position: currentToken,
+        startposition: currentToken,
+        ntokens: tokens.length,
+        counter: 1,
+      });
+      setHoldArrow(event.key);
+    }
+
+    if (tokenSelection.length > 0) {
+      // space key
+      if (event.keyCode === 32) {
+        event.preventDefault();
+        annotationFromSelection(tokens, tokenSelection, dispatch);
+      }
+      if (tokenSelection[0] === tokenSelection[1]) {
+        // enter key
+        if (event.keyCode === 13) {
+          dispatch(triggerCodeselector("enter_key", tokenSelection[0], null));
+        }
+      }
+    }
+  };
+
+  return <></>;
+};
+
+const MouseEvents = ({ tokenSelection, tokens }) => {
+  const [holdMouseLeft, setHoldMouseLeft] = useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    window.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("contextmenu", onContextMenu);
+    return () => {
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("contextmenu", onContextMenu);
+    };
+  });
 
   const onMouseDown = (event) => {
     // When left button pressed, start new selection
@@ -196,8 +230,6 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
     return currentNode.index;
   };
 
-  if (!doc) return null;
-
   return <></>;
 };
 
@@ -211,10 +243,7 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
       index: i,
       group: "Not yet assigned",
       offset: tokens[from].offset.start,
-      length:
-        tokens[to].offset.length +
-        tokens[to].offset.start -
-        tokens[from].offset.start,
+      length: tokens[to].offset.length + tokens[to].offset.start - tokens[from].offset.start,
       span: [from, to],
     });
   }
@@ -257,16 +286,19 @@ const moveSentence = (tokens, mover, direction = "up") => {
   if (direction === "up") {
     for (let i = mover.position; i >= 0; i--) {
       next = tokens[i].ref.current.getBoundingClientRect();
-      if (next.y < current.y && next.x < start.x) {
+      if (next.y < current.y && next.x <= start.x) {
         return i;
       }
     }
     return 0;
   }
   if (direction === "down") {
+    let nextsent = null;
     for (let i = mover.position; i < tokens.length; i++) {
       next = tokens[i].ref.current.getBoundingClientRect();
-      if (next.y > current.y && next.x > start.x) return i;
+      if (!nextsent && next.y > current.y) nextsent = next.y;
+      if (nextsent && next.y > nextsent) return i - 1;
+      if (next.y > current.y && next.x >= start.x) return i;
     }
     return tokens.length - 1;
   }
@@ -289,10 +321,7 @@ const getToken = (tokens, e) => {
     if (e.className === "token" || e.className === "token selected")
       return getTokenAttributes(tokens, e);
     if (e.parentNode) {
-      if (
-        e.parentNode.className === "token" ||
-        e.parentNode.className === "token selected"
-      )
+      if (e.parentNode.className === "token" || e.parentNode.className === "token selected")
         return getTokenAttributes(tokens, e.parentNode);
     }
     return null;

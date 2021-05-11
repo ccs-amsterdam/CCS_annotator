@@ -5,14 +5,19 @@ export const demo_codebook = {
   codes: [
     {
       code: "Mark Rutte",
-      color: "#40a31f",
+      type: "Actor",
     },
     {
       code: "Sigrid Kaag",
-      color: "#f2db5c",
+      type: "Actor",
     },
     {
       code: "Jesse Klaver",
+      type: "Actor",
+    },
+    {
+      code: "Climate change",
+      type: "Issue",
     },
   ],
 };

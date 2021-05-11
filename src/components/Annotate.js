@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  Breadcrumb,
-  BreadcrumbSection,
-  Grid,
-  Pagination,
-} from "semantic-ui-react";
+import { Breadcrumb, BreadcrumbSection, Grid, Pagination } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
@@ -115,8 +110,7 @@ const prepareAnnotations = (annotations) => {
   // (matching to tokenindices is needed for speed, to keep coding nice and responsive)
   return anns.reduce((obj, ann) => {
     if (!obj[ann.offset]) obj[ann.offset] = { start: [], end: [] };
-    if (!obj[ann.offset + ann.length])
-      obj[ann.offset + ann.length] = { start: [], end: [] };
+    if (!obj[ann.offset + ann.length]) obj[ann.offset + ann.length] = { start: [], end: [] };
     obj[ann.offset].start.push(ann.code);
     obj[ann.offset + ann.length].end.push(ann.code);
     return obj;

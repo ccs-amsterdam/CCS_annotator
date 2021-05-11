@@ -31,26 +31,27 @@ const CodeBook = () => {
   const spanAnnotationEditor = () => {
     const tableColumns = [
       {
+        Header: "Type",
+        accessor: "type",
+        headerClass: "eight wide",
+      },
+      {
         Header: "Code",
         accessor: "code",
-        headerClass: "thirteen wide",
+        headerClass: "eight wide",
       },
     ];
     return (
       <>
-        <Accordion.Title
-          active={activeIndex === 0}
-          index={0}
-          onClick={handleClick}
-        >
+        <Accordion.Title active={activeIndex === 0} index={0} onClick={handleClick}>
           <Icon name="dropdown" />
 
           <Label color="black" content="Span Annotations"></Label>
         </Accordion.Title>
         <Accordion.Content active={activeIndex === 0}>
           <Grid>
-            <Grid.Column width={11}></Grid.Column>
-            <Grid.Column width={5}>
+            <Grid.Column width={8}></Grid.Column>
+            <Grid.Column width={8}>
               <Header as="h4" textAlign="center">
                 Codes
               </Header>

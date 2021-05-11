@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { Grid } from "semantic-ui-react";
 
-import SpanAnnotationsNavigation from "./SpanAnnotationsNavigation";
-import SpanAnnotationsDB from "./SpanAnnotationsDB";
-
 import Tokens from "./Tokens";
-import SpanAnnotationsMenu from "./SpanAnnotationsMenu";
+import SpanAnnotations from "./spanAnnotations";
+
+const gridStyle = { overflowY: "auto", height: "80vh" };
 
 const AnnotationText = ({ doc }) => {
   const [tokens, setTokens] = useState([]);
@@ -13,21 +12,12 @@ const AnnotationText = ({ doc }) => {
   if (!doc) return null;
   return (
     <Grid container columns={2}>
-      <Grid.Column
-        width={10}
-        style={{ overflowY: "auto", overflowX: "hidden", height: "75vh" }}
-      >
+      <Grid.Column width={8} style={gridStyle}>
         <Tokens text={doc.text} setTokens={setTokens} />
       </Grid.Column>
-      <Grid.Column
-        width={6}
-        style={{ overflowY: "auto", overflowX: "hidden", height: "75vh" }}
-      >
-        <SpanAnnotationsMenu doc={doc} tokens={tokens} />
+      <Grid.Column width={8}>
+        <SpanAnnotations doc={doc} tokens={tokens} />
       </Grid.Column>
-
-      <SpanAnnotationsNavigation doc={doc} tokens={tokens} />
-      <SpanAnnotationsDB doc={doc} tokens={tokens} />
     </Grid>
   );
 };

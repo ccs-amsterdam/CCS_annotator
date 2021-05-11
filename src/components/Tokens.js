@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Segment } from "semantic-ui-react";
+import { Segment } from "semantic-ui-react";
 import Token from "./Token";
 
 import nlp from "compromise";
@@ -20,11 +20,7 @@ const Tokens = ({ text, setTokens }) => {
 
   if (text === null) return null;
 
-  return (
-    <Container text>
-      <Segment style={{ width: "95%", border: "0" }}>{tokenComponents}</Segment>
-    </Container>
-  );
+  return <Segment style={{ border: "0" }}>{tokenComponents}</Segment>;
 };
 
 const prepareTokens = (text) => {

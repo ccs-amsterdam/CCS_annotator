@@ -13,309 +13,277 @@ import db from "../apis/dexie";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const CodeSelector = React.memo(
-  ({ index, children, annotations, csTrigger }) => {
-    const codes = useSelector((state) => state.codes);
-    const codingjob = useSelector((state) => state.codingjob);
-    const settings = useSelector((state) => state.codingjobSettings);
-    const codeHistory = useSelector((state) => state.codeHistory);
+const CodeSelector = React.memo(({ index, children, annotations, currentCode, newSelection }) => {
+  const codingjob = useSelector((state) => state.codingjob);
+  const codes = useSelector((state) => state.codes);
+  const settings = useSelector((state) => state.codingjobSettings);
+  const codeHistory = useSelector((state) => state.codeHistory);
 
-    const textInputRef = useRef(null);
-    const [current, setCurrent] = useState(csTrigger.code);
-    const [hasOpened, setHasOpened] = useState(false);
-    const [popupPage, setPopupPage] = useState(0);
-    const [selectedCodeButton, setSelectedCodeButton] = useState(0);
-    const [nButtons, setNButtons] = useState(Object.keys(annotations).length);
+  const [current, setCurrent] = useState(newSelection ? "Not yet assigned" : currentCode);
+  const [hasOpened, setHasOpened] = useState(false);
 
-    // Placeholder: should be managed in state
-    const dispatch = useDispatch();
-
-    useEffect(() => {
-      if (!annotations) return;
-      if (current) return null;
-
-      if (annotations && annotations !== undefined) {
-        if (Object.keys(annotations).includes("Not yet assigned")) {
-          setCurrent("Not yet assigned");
-        } else {
-          setCurrent(Object.keys(annotations)[0]);
-        }
-      }
-    }, [current, setCurrent, index, annotations]);
-
-    const onKeydown = React.useCallback(
-      // all keydown events
-      // main events are either selecting one of the code buttons, for either choosing the old or new code
-      // and moving focus to the dropdown/search input on text input
-      (event) => {
-        const focusOnTextInput =
-          textInputRef?.current?.children[0] === document.activeElement;
-
-        // if focus not on textInput, the user can move between buttons with the arrow keys,
-        // and click a button with space or enter
-        if (!focusOnTextInput) {
-          // any arrowkey
-          if (arrowKeys.includes(event.key)) {
-            event.preventDefault();
-            if (textInputRef?.current?.children[0] === document.activeElement)
-              return;
-
-            if (event.key === "ArrowRight") {
-              if (!nButtons) return;
-              if (selectedCodeButton < nButtons - 1)
-                setSelectedCodeButton(selectedCodeButton + 1);
-            }
-
-            if (event.key === "ArrowLeft" && selectedCodeButton > 0) {
-              setSelectedCodeButton(selectedCodeButton - 1);
-            }
-            return;
-          }
-
-          // space or enter
-          if (event.keyCode === 32 || event.keyCode === 13) {
-            const showCurrentCodeSelection =
-              popupPage === 0 &&
-              Object.keys(annotations).length > 1 &&
-              csTrigger.from !== "new_selection" &&
-              csTrigger.from !== "menu";
-
-            if (showCurrentCodeSelection) {
-              const codebuttons = Object.keys(annotations);
-              setPopupPage(1);
-              setCurrent(codebuttons[selectedCodeButton]);
-            } else {
-              const codebuttons = codeHistory.filter(
-                (e) => e !== current && e !== "Not yet assigned"
-              );
-
-              let value = current;
-              if (selectedCodeButton < codebuttons.length)
-                value = codebuttons[selectedCodeButton];
-              updateAnnotations(
-                annotations,
-                current,
-                value,
-                setCurrent,
-                dispatch
-              );
-            }
-            return;
-          }
-
-          // If any other key, move focus to text input
-          if (textInputRef.current) textInputRef.current.click();
-        }
-      },
-      [
-        annotations,
-        current,
-        nButtons,
-        popupPage,
-        csTrigger,
-        dispatch,
-        codeHistory,
-        selectedCodeButton,
-      ]
-    );
-
-    useEffect(() => {
-      window.addEventListener("keydown", onKeydown);
-      dispatch(blockEvents(true));
-
-      return () => {
-        window.removeEventListener("keydown", onKeydown);
-        dispatch(blockEvents(false));
-      };
-    }, [onKeydown, dispatch]);
-
-    const createPopupPage = (popupPage) => {
-      const annotationCodes = Object.keys(annotations);
-
-      const showCurrentCodeSelection =
-        popupPage === 0 &&
-        annotationCodes.length > 1 &&
-        csTrigger.from !== "new_selection" &&
-        csTrigger.from !== "menu";
-
-      if (showCurrentCodeSelection) {
-        return (
-          <>
-            <h5>Select current code:</h5>
-
-            {annotationCodes.map((code, i) => {
-              return (
-                <Button
-                  style={{ backgroundColor: getColor(code, codes) }}
-                  compact
-                  size="mini"
-                  active={i === selectedCodeButton}
-                  onMouseOver={() => setSelectedCodeButton(i)}
-                  onClick={() => {
-                    setPopupPage(1);
-                    setCurrent(code);
-                    //selectSpan(annotations, code, dispatch);
-                  }}
-                >
-                  {code}
-                </Button>
-              );
-            })}
-          </>
-        );
-      }
-
-      return (
-        <>
-          <div>
-            <h5>Set new code:</h5>
-            <Ref innerRef={textInputRef}>
-              <Dropdown
-                placeholder={"Search"}
-                style={{ minWidth: "10em" }}
-                options={codes.map((code) => {
-                  return {
-                    key: code.code,
-                    value: code.code,
-                    text: code.code,
-                  };
-                })}
-                search
-                selection
-                selectOnNavigation={false}
-                minCharacters={0}
-                autoComplete={"on"}
-                additionPosition="bottom"
-                allowAdditions={settings.canAddCodes}
-                additionLabel={
-                  <i style={{ color: "red" }}>Create new code: </i>
-                }
-                onAddItem={(e, d) =>
-                  addCode(d.value, codes, codingjob, dispatch)
-                }
-                onChange={(e, d) =>
-                  updateAnnotations(
-                    annotations,
-                    current,
-                    d.value,
-                    setCurrent,
-                    dispatch
-                  )
-                }
-              />
-            </Ref>
-          </div>
-          <br />
-          <CodeButtons
-            annotations={annotations}
-            current={current}
-            codes={codes}
-            setCurrent={setCurrent}
-            codeHistory={codeHistory}
-            selectedCodeButton={selectedCodeButton}
-            setSelectedCodeButton={setSelectedCodeButton}
-            setNButtons={setNButtons}
-          />
-          &nbsp;&nbsp;
-        </>
-      );
-    };
-
-    return (
-      <Popup
-        trigger={children}
-        flowing
-        hoverable
-        wide
-        open
-        mouseLeaveDelay={1000}
-        onOpen={() => setHasOpened(true)}
-        onClose={() => {
-          if (hasOpened && csTrigger)
-            // calling dispatch directly causes a memory leak warning, because it unmounts
-            // the component. The very minor async timeout fixes this.
-            setTimeout(() => dispatch(triggerCodeselector(null)), 10);
-        }}
-        position="top left"
-      >
-        <div>
-          <Button
-            floated="right"
-            compact
-            size="mini"
-            icon="delete"
-            onClick={() => dispatch(triggerCodeselector(null))}
-          />
-
-          {createPopupPage(popupPage)}
-        </div>
-      </Popup>
-    );
-  }
-);
-
-const CodeButtons = ({
-  annotations,
-  current,
-  codes,
-  setCurrent,
-  codeHistory,
-  selectedCodeButton,
-  setSelectedCodeButton,
-  setNButtons,
-}) => {
+  // Placeholder: should be managed in state
   const dispatch = useDispatch();
 
-  const codeHistoryValid = codeHistory.filter(
-    (e) => e !== current && e !== "Not yet assigned"
-  );
-  setNButtons(codeHistoryValid.length + 1); // also the delete button
+  useEffect(() => {
+    dispatch(blockEvents(true));
+    return () => {
+      dispatch(blockEvents(false));
+    };
+  }, [dispatch]);
 
-  const newCodeButtons = () => {
-    return codeHistoryValid.map((code, i) => {
+  const createPopupPage = () => {
+    const annotationCodes = Object.keys(annotations);
+
+    if (current === null) {
       return (
+        <CurrentCodePage annotationCodes={annotationCodes} codes={codes} setCurrent={setCurrent} />
+      );
+    }
+
+    return (
+      <NewCodePage
+        codeHistory={codeHistory}
+        codingjob={codingjob}
+        codes={codes}
+        settings={settings}
+        annotations={annotations}
+        current={current}
+        setCurrent={setCurrent}
+      />
+    );
+  };
+
+  return (
+    <Popup
+      trigger={children}
+      flowing
+      hoverable
+      wide
+      open
+      mouseLeaveDelay={1000}
+      onOpen={() => setHasOpened(true)}
+      onClose={() => {
+        if (hasOpened)
+          // calling dispatch directly causes a memory leak warning, because it unmounts
+          // the component. The very minor async timeout fixes this.
+          setTimeout(() => dispatch(triggerCodeselector(null)), 10);
+      }}
+      position="top left"
+    >
+      <div>
         <Button
-          style={{ backgroundColor: getColor(code, codes) }}
-          key={code}
-          value={code}
+          floated="right"
           compact
           size="mini"
-          active={i === selectedCodeButton}
-          onMouseOver={() => setSelectedCodeButton(i)}
-          onClick={(e, d) => {
-            console.log(annotations);
-            console.log(d.value);
-            updateAnnotations(
-              annotations,
-              current,
-              d.value,
-              setCurrent,
-              dispatch
-            );
-          }}
+          icon="delete"
+          onClick={() => dispatch(triggerCodeselector(null))}
+        />
+
+        {createPopupPage()}
+      </div>
+    </Popup>
+  );
+});
+
+const CurrentCodePage = ({ annotationCodes, codes, setCurrent }) => {
+  const onButtonSelect = (value) => {
+    setCurrent(value);
+  };
+
+  const getOptions = (annotationCodes) => {
+    return annotationCodes.map((code) => ({ label: code, color: getColor(code, codes) }));
+  };
+
+  if (annotationCodes.length === 1) setCurrent(annotationCodes[0]);
+
+  return (
+    <ButtonSelection
+      key={"currentCodePageButtons"}
+      active={true}
+      options={getOptions(annotationCodes)}
+      canDelete={false}
+      callback={onButtonSelect}
+    />
+  );
+};
+
+const NewCodePage = ({
+  codeHistory,
+  codingjob,
+  codes,
+  settings,
+  annotations,
+  current,
+  setCurrent,
+}) => {
+  const textInputRef = useRef(null);
+  const dispatch = useDispatch();
+  const [focusOnButtons, setFocusOnButtons] = useState(true);
+
+  const onKeydown = React.useCallback(
+    (event) => {
+      const focusOnTextInput = textInputRef?.current?.children[0] === document.activeElement;
+      if (!focusOnTextInput) setFocusOnButtons(true);
+
+      console.log(textInputRef.current);
+      if (arrowKeys.includes(event.key)) return null;
+      if (event.keyCode === 32 || event.keyCode === 13) return null;
+      textInputRef.current.click();
+      setFocusOnButtons(false);
+    },
+    [textInputRef]
+  );
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeydown);
+    return () => {
+      window.removeEventListener("keydown", onKeydown);
+    };
+  });
+
+  const onButtonSelect = (value) => {
+    if (value === null) {
+      // value is null means delete, so in that case update annotations with current value (to toggle it off)
+      updateAnnotations(annotations, current, current, setCurrent, dispatch);
+    } else {
+      updateAnnotations(annotations, current, value, setCurrent, dispatch);
+    }
+  };
+
+  const getOptions = (codeHistory) => {
+    return codeHistory.map((code) => ({ label: code, color: getColor(code, codes) }));
+  };
+
+  return (
+    <>
+      <div>
+        <h5>Set new code:</h5>
+        <Ref innerRef={textInputRef}>
+          <Dropdown
+            placeholder={"Search"}
+            style={{ minWidth: "10em" }}
+            options={codes.map((code) => {
+              return {
+                key: code.code,
+                value: code.code,
+                text: code.code,
+              };
+            })}
+            search
+            selection
+            selectOnNavigation={false}
+            minCharacters={0}
+            autoComplete={"on"}
+            additionPosition="bottom"
+            allowAdditions={settings.canAddCodes}
+            additionLabel={<i style={{ color: "red" }}>Create new code: </i>}
+            onAddItem={(e, d) => addCode(d.value, codes, codingjob, dispatch)}
+            onChange={(e, d) =>
+              updateAnnotations(annotations, current, d.value, setCurrent, dispatch)
+            }
+          />
+        </Ref>
+      </div>
+      <br />
+      <ButtonSelection
+        key={"newCodePageButtons"}
+        active={focusOnButtons}
+        options={getOptions(codeHistory)}
+        canDelete={true}
+        callback={onButtonSelect}
+      />
+      &nbsp;&nbsp;
+    </>
+  );
+};
+
+const ButtonSelection = ({ active, options, canDelete, callback }) => {
+  // render buttons for options (an array of objects with keys 'label' and 'color')
+  // On selection perform callback function with the button label as input
+  // if canDelete is TRUE, also contains a delete button, which passes null to callback
+  const [selected, setSelected] = useState(0);
+
+  const onKeydown = React.useCallback(
+    (event) => {
+      const nbuttons = canDelete ? options.length + 1 : options.length;
+
+      // any arrowkey
+      if (arrowKeys.includes(event.key)) {
+        event.preventDefault();
+
+        if (event.key === "ArrowRight") {
+          if (selected < nbuttons - 1) setSelected(selected + 1);
+        }
+
+        if (event.key === "ArrowLeft") {
+          if (selected > 0) setSelected(selected - 1);
+        }
+        return;
+      }
+
+      // space or enter
+      if (event.keyCode === 32 || event.keyCode === 13) {
+        if (selected === options.length) {
+          callback(null); // this means delete button was selected
+        } else {
+          callback(options[selected].label);
+        }
+      }
+    },
+    [selected, callback, options, canDelete]
+  );
+
+  useEffect(() => {
+    if (active) {
+      window.addEventListener("keydown", onKeydown);
+    } else {
+      window.removeEventListener("keydown", onKeydown);
+    }
+    return () => {
+      window.removeEventListener("keydown", onKeydown);
+    };
+  }, [active, onKeydown]);
+
+  const mapButtons = () => {
+    return options.map((option, i) => {
+      return (
+        <Button
+          style={{ backgroundColor: option.color }}
+          key={option.label}
+          value={option.label}
+          compact
+          size="mini"
+          active={i === selected}
+          onMouseOver={() => setSelected(i)}
+          onClick={(e, d) => callback(d.value)}
         >
-          {code}
+          {option.label}
         </Button>
       );
     });
   };
 
-  return (
-    <>
-      {newCodeButtons()}
-
+  const deleteButton = () => {
+    if (!canDelete) return null;
+    return (
       <Button
         icon="trash"
         size="mini"
         floated="right"
-        active={selectedCodeButton === codeHistoryValid.length}
+        active={selected === options.length}
         compact
         style={{ backgroundColor: "red", borderColor: "black" }}
-        onMouseOver={() => setSelectedCodeButton(codeHistoryValid.length)}
-        onClick={(e, d) =>
-          updateAnnotations(annotations, current, current, setCurrent, dispatch)
-        }
+        onMouseOver={() => setSelected(options.length)}
+        onClick={(e, d) => callback(null)}
       />
+    );
+  };
+
+  return (
+    <>
+      {mapButtons()}
+      {deleteButton()}
     </>
   );
 };
@@ -329,32 +297,22 @@ const addCode = (code, codes, codingjob, dispatch) => {
   }
 };
 
-const updateAnnotations = (
-  annotations,
-  current,
-  value,
-  setCurrent,
-  dispatch
-) => {
-  const key = current;
-  let annotation = annotations;
-  if (!annotation) return null;
-
-  console.log(current);
+const updateAnnotations = (annotations, current, value, setCurrent, dispatch) => {
+  if (!annotations) return null;
 
   let ann = {
-    index: annotation[key].index,
-    group: key,
-    offset: annotation[key].offset,
-    length: annotation[key].length,
-    span: annotation[key].span,
+    index: annotations[current].index,
+    group: current,
+    offset: annotations[current].offset,
+    length: annotations[current].length,
+    span: annotations[current].span,
   };
 
   let oldAnnotation = { ...ann };
   oldAnnotation.span = [oldAnnotation.index, oldAnnotation.index];
   dispatch(rmAnnotations([oldAnnotation]));
 
-  if (value === key) {
+  if (value === current) {
     dispatch(triggerCodeselector(null, null, null));
     return null;
   }
@@ -369,7 +327,7 @@ const updateAnnotations = (
   dispatch(toggleAnnotations(newAnnotations));
   dispatch(appendCodeHistory(value));
 
-  if (Object.keys(annotation).includes(null)) {
+  if (Object.keys(annotations).includes(null)) {
     setCurrent(null);
   } else {
     setCurrent(value);

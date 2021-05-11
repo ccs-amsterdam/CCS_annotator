@@ -96,10 +96,7 @@ const tokenSelection = (state = [], action) => {
   }
 };
 
-const codeSelectorTrigger = (
-  state = { from: null, index: null, code: null },
-  action
-) => {
+const codeSelectorTrigger = (state = { from: null, index: null, code: null }, action) => {
   switch (action.type) {
     case "TRIGGER_CODESELECTOR":
       return { from: action.from, index: action.index, code: action.code };
@@ -170,8 +167,7 @@ const codes = (state = [], action) => {
   switch (action.type) {
     case "SET_CODES":
       return action.payload.map((code) => {
-        if (!code.color)
-          code.color = randomColor({ seed: code.code, luminosity: "light" });
+        if (!code.color) code.color = randomColor({ seed: code.code, luminosity: "light" });
         return code;
       });
     case "RESET_DB":
@@ -184,9 +180,7 @@ const codes = (state = [], action) => {
 const codeHistory = (state = [], action) => {
   switch (action.type) {
     case "APPEND_CODE_HISTORY":
-      let newstate = state
-        .filter((v) => v !== action.payload.code)
-        .slice(0, action.payload.n - 1);
+      let newstate = state.filter((v) => v !== action.payload.code).slice(0, action.payload.n - 1);
       newstate.unshift(action.payload.code);
       return newstate;
     case "RESET_DB":
