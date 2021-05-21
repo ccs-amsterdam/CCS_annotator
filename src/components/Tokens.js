@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Segment } from "semantic-ui-react";
+import { Container, Segment } from "semantic-ui-react";
 import Token from "./Token";
 
 import nlp from "compromise";
@@ -20,7 +20,7 @@ const Tokens = ({ text, setTokens }) => {
 
   if (text === null) return null;
 
-  return <Segment style={{ border: "0" }}>{tokenComponents}</Segment>;
+  return <Container textAlign="justified">{tokenComponents}</Container>;
 };
 
 const prepareTokens = (text) => {
@@ -45,7 +45,7 @@ const createParagraph = (par, par_i, tokens) => {
   };
   return (
     // uses span behaving like p, because p is not allowed due to nested div (for Label)
-    <span style={{ marginTop: "1em", display: "table" }} key={par_i}>
+    <span style={{ marginTop: "1em", display: "table", lineHeight: 1.65 }} key={par_i}>
       {par_i === 0 ? <h2>{mapSentences(par)}</h2> : mapSentences(par)}
     </span>
   );

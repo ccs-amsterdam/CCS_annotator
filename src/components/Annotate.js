@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Breadcrumb, BreadcrumbSection, Grid, Pagination } from "semantic-ui-react";
+import { randomColor } from "randomcolor";
 
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
 import db from "../apis/dexie";
-import { setCodes, setCodingjobSettings } from "../actions";
 
 const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
@@ -19,17 +19,6 @@ const Annotate = () => {
     if (!codingjob) return null;
     setActivePage(1);
     setupCodingjob(codingjob, setDoc, setNDocuments);
-    if (codingjob.codebook) {
-      const cb = JSON.parse(codingjob.codebook);
-      if (cb && cb.codes && cb.codes.length > 0) {
-        dispatch(setCodes(cb.codes));
-      } else {
-        dispatch(setCodes([]));
-      }
-      if (cb && cb.settings) {
-        dispatch(setCodingjobSettings(cb.settings));
-      }
-    }
   }, [codingjob, dispatch]);
 
   const pageChange = (event, data) => {
@@ -75,6 +64,31 @@ const documentPagination = (activePage, nDocuments, pageChange) => {
       onPageChange={pageChange}
     />
   );
+};
+
+const getParentTree = (codes, code) => {
+  const parents = [];
+  let parent = codes[code].parent;
+  while (parent) {
+    parents.push(parent);
+    parent = codes[parent].parent;
+  }
+  return parents.reverse();
+};
+
+const prepareCodes = (cb) => {
+  // the payload is an array of objects, but for efficients operations
+  // in the annotator we convert it to an object with the codes as keys
+  const codes = cb.codes.reduce((result, code) => {
+    result[code.code] = code;
+    return result;
+  }, {});
+
+  for (const code of Object.keys(codes)) {
+    if (!codes[code].color) codes[code].color = randomColor({ seed: code, luminosity: "light" });
+    codes[code].tree = getParentTree(codes, code);
+  }
+  return codes;
 };
 
 const setupCodingjob = async (codingjob, setDoc, setNDocuments) => {

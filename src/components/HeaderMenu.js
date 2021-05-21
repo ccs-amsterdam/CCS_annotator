@@ -6,6 +6,7 @@ import db from "../apis/dexie";
 import Download from "./Download";
 import Reset from "./Reset";
 import Persist from "./Persist";
+import CodebookSidebar from "./CodebookSidebar";
 
 const HeaderMenu = ({ items, homepage }) => {
   const location = useLocation();
@@ -30,9 +31,15 @@ const HeaderMenu = ({ items, homepage }) => {
     <Menu fixed="top" inverted>
       {menuItems}
       <Menu.Menu position="right">
-        <Download />
-        <Persist />
-        <Reset homepage={homepage} />
+        {location.pathname.includes("annotate") ? (
+          <CodebookSidebar />
+        ) : (
+          <>
+            <Download />
+            <Persist />
+            <Reset homepage={homepage} />
+          </>
+        )}
       </Menu.Menu>
     </Menu>
   );

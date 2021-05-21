@@ -35,9 +35,9 @@ const DocumentTable = () => {
   }, [codingjob]);
 
   const createHeaderRow = (data) => {
-    return COLUMNS.map((colname) => {
+    return COLUMNS.map((colname, i) => {
       return (
-        <Table.HeaderCell>
+        <Table.HeaderCell key={i}>
           <span title={colname}>{colname}</span>
         </Table.HeaderCell>
       );
@@ -45,15 +45,15 @@ const DocumentTable = () => {
   };
 
   const createBodyRows = (data) => {
-    return data.map((rowObj) => {
-      return <Table.Row>{createRowCells(rowObj)}</Table.Row>;
+    return data.map((rowObj, i) => {
+      return <Table.Row key={i}>{createRowCells(rowObj)}</Table.Row>;
     });
   };
 
   const createRowCells = (rowObj) => {
-    return COLUMNS.map((key) => {
+    return COLUMNS.map((key, i) => {
       return (
-        <Table.Cell>
+        <Table.Cell key={i}>
           <span title={rowObj[key]}>{shortString(rowObj[key])}</span>
         </Table.Cell>
       );

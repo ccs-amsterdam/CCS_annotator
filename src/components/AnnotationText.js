@@ -4,9 +4,9 @@ import { Grid } from "semantic-ui-react";
 import Tokens from "./Tokens";
 import SpanAnnotations from "./spanAnnotations";
 
-const gridStyle = { overflowY: "auto", height: "80vh" };
+const gridStyle = { overflowY: "auto", height: "75vh" };
 
-const AnnotationText = ({ doc }) => {
+const AnnotationText = ({ doc, codeTreeTable }) => {
   const [tokens, setTokens] = useState([]);
 
   if (!doc) return null;

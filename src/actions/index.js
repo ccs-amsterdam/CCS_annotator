@@ -95,16 +95,23 @@ export const clearSpanAnnotations = () => {
   };
 };
 
-export const setCodes = (codes) => {
+export const setCodeMap = (codes) => {
   return {
-    type: "SET_CODES",
+    type: "SET_CODE_MAP",
     payload: codes,
   };
 };
 
-export const appendCodeHistory = (code, n = 5) => {
+export const appendCodeHistory = (code, n = 20) => {
   return {
     type: "APPEND_CODE_HISTORY",
     payload: { code: code, n: n },
+  };
+};
+
+export const setShowSidebar = (show) => {
+  return {
+    type: "SET_SHOW_SIDEBAR",
+    payload: show,
   };
 };

@@ -7,7 +7,6 @@ import db from "../apis/dexie";
 
 const SpanAnnotationsDB = ({ doc, tokens }) => {
   const annotations = useSelector((state) => state.spanAnnotations);
-  //const codes = useSelector((state) => state.codes);
   const [ready, setReady] = useState(false);
   const dispatch = useDispatch();
 
@@ -55,18 +54,12 @@ const matchAnnotations = (tokens, importedAnnotations, dispatch) => {
   let matchedAnnotations = [];
 
   for (let token of tokens) {
-    findMatches(
-      token,
-      importedAnnotations,
-      trackAnnotations,
-      matchedAnnotations
-    );
+    findMatches(token, importedAnnotations, trackAnnotations, matchedAnnotations);
   }
 
   const codeCounter = {};
   for (let matchedAnnotation of matchedAnnotations) {
-    if (!codeCounter[matchedAnnotation.group])
-      codeCounter[matchedAnnotation.group] = 0;
+    if (!codeCounter[matchedAnnotation.group]) codeCounter[matchedAnnotation.group] = 0;
     codeCounter[matchedAnnotation.group]++;
     addAnnotations(matchedAnnotation, dispatch);
   }
@@ -75,16 +68,12 @@ const matchAnnotations = (tokens, importedAnnotations, dispatch) => {
     return codeCounter[a] - codeCounter[b];
   });
   for (const code of topCodes.slice(-5)) {
+    if (code === "UNASSIGNED") continue;
     dispatch(appendCodeHistory(code));
   }
 };
 
-const findMatches = (
-  token,
-  importedAnnotations,
-  trackAnnotations,
-  matchedAnnotations
-) => {
+const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnotations) => {
   const start = token.offset.start;
   const end = token.offset.start + token.offset.length;
 
@@ -107,9 +96,7 @@ const findMatches = (
       for (let code of importedAnnotations[i].end) {
         trackAnnotations[code].span.push(token.offset.index);
         trackAnnotations[code].length =
-          token.offset.start +
-          token.offset.length -
-          trackAnnotations[code].offset;
+          token.offset.start + token.offset.length - trackAnnotations[code].offset;
         matchedAnnotations.push(trackAnnotations[code]);
         delete trackAnnotations[code];
       }

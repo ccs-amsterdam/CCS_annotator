@@ -3,6 +3,26 @@
   color: rgb(255, 255, 255);
 }
 
+.codes-table {
+  border-collapse: collapse;
+}
+
+.codes-tbody {
+  display: block;
+  overflow: auto;
+  margin-left: 1em;
+  margin-top: 1em;
+}
+
+.codes-thead,
+.codes-tbody .codes-tr .codes-td {
+  border: none;
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  padding: 1px;
+}
+
 span.token.selected {
   background-color: rgb(61, 61, 61) !important;
   color: rgb(255, 255, 255);

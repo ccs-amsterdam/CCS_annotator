@@ -3,22 +3,12 @@ export const demo_codebook = {
     canAddCodes: true,
   },
   codes: [
-    {
-      code: "Mark Rutte",
-      type: "Actor",
-    },
-    {
-      code: "Sigrid Kaag",
-      type: "Actor",
-    },
-    {
-      code: "Jesse Klaver",
-      type: "Actor",
-    },
-    {
-      code: "Climate change",
-      type: "Issue",
-    },
+    { code: "Actor", parent: "" },
+    { code: "Issue", parent: "" },
+    { code: "Mark Rutte", parent: "Actor" },
+    { code: "Sigrid Kaag", parent: "Actor" },
+    { code: "Jesse Klaver", parent: "Actor" },
+    { code: "Climate change", parent: "Issue" },
   ],
 };
 

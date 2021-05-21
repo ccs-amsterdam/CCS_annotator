@@ -11,7 +11,8 @@ const Welcome = ({ items }) => {
 
   const loggin = async (addDemo, checkWelcome) => {
     if (checkWelcome) {
-      if (!(await db.isWelcome())) return null;
+      const iswelcome = await db.isWelcome();
+      if (!iswelcome) return null;
     }
     try {
       if (addDemo) await create_demo_job(db);
@@ -26,27 +27,21 @@ const Welcome = ({ items }) => {
   });
 
   return (
-    <Grid
-      inverted
-      textAlign="center"
-      style={{ height: "100vh" }}
-      verticalAlign="middle"
-    >
+    <Grid inverted textAlign="center" style={{ height: "100vh" }} verticalAlign="middle">
       <Grid.Column style={{ maxWidth: 450 }}>
         <Segment style={{ border: 0 }}>
           <Header as="h2" textAlign="center">
             Welcome to the AmCAT annotator
           </Header>
           <p>
-            This is the (early development version of the) AmCAT annotator. The
-            fact that you see this message means that you're either here for the
-            first time, or your local annotation database was reset (by you or
-            your browser).
+            This is the (early development version of the) AmCAT annotator. The fact that you see
+            this message means that you're either here for the first time, or your local annotation
+            database was reset (by you or your browser).
           </p>
           <p>
-            The annotator stores your codingjobs and annotations on your local
-            computer in your browser's IndexedDB. Your data will only actually
-            touch the internet when you synchronize your data.
+            The annotator stores your codingjobs and annotations on your local computer in your
+            browser's IndexedDB. Your data will only actually touch the internet when you
+            synchronize your data.
           </p>
           <Button primary onClick={() => loggin(true, false)}>
             Yes, off course I trust you

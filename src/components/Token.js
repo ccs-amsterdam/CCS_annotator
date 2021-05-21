@@ -32,7 +32,7 @@ const AnnotatedToken = ({ token, selected }) => {
     if (state.codeSelectorTrigger.index !== token.offset.index) return null;
     return state.codeSelectorTrigger;
   });
-  const codes = useSelector((state) => state.codes);
+  const codeMap = useSelector((state) => state.codeMap);
   const dispatch = useDispatch();
 
   // This is a trick required to render if at least something within this token's
@@ -43,10 +43,9 @@ const AnnotatedToken = ({ token, selected }) => {
   if (!annotations) return <>{token.pre + token.text + token.post}</>;
 
   // create solid colors or color gradients
-  const getColor = (tokenCode, codes) => {
-    const codematch = codes.find((code) => code.code === tokenCode);
-    if (codematch) {
-      return codematch.color;
+  const getColor = (tokenCode, codeMap) => {
+    if (codeMap[tokenCode]) {
+      return codeMap[tokenCode].color;
     } else {
       return "lightgrey";
     }
@@ -73,9 +72,9 @@ const AnnotatedToken = ({ token, selected }) => {
   let tokenCodes = Object.keys(annotations);
   let color = null;
   if (tokenCodes.length === 1) {
-    color = getColor(tokenCodes[0], codes);
+    color = getColor(tokenCodes[0], codeMap);
   } else {
-    let colors = tokenCodes.map((code) => getColor(code, codes));
+    let colors = tokenCodes.map((code) => getColor(code, codeMap));
     color = `linear-gradient(${colors.join(", ")})`;
   }
 
@@ -102,9 +101,8 @@ const AnnotatedToken = ({ token, selected }) => {
 
       {csTrigger ? (
         <CodeSelector
-          index={token.offset.index}
           annotations={annotations}
-          currentCode={null}
+          currentCode={csTrigger.code}
           newSelection={csTrigger.from === "new_selection"}
         >
           {tokenSpan(annotatedTokenClass, color)}

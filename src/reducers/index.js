@@ -1,5 +1,4 @@
 import { combineReducers } from "redux";
-import { randomColor } from "randomcolor";
 
 const db = (state = null, action) => {
   switch (action.type) {
@@ -163,15 +162,12 @@ const toggleAnnotations = (annotations, annList, rm) => {
   return annotations;
 };
 
-const codes = (state = [], action) => {
+const codeMap = (state = {}, action) => {
   switch (action.type) {
-    case "SET_CODES":
-      return action.payload.map((code) => {
-        if (!code.color) code.color = randomColor({ seed: code.code, luminosity: "light" });
-        return code;
-      });
+    case "SET_CODE_MAP":
+      return action.payload;
     case "RESET_DB":
-      return [];
+      return {};
     default:
       return state;
   }
@@ -190,6 +186,15 @@ const codeHistory = (state = [], action) => {
   }
 };
 
+const showSidebar = (state = false, action) => {
+  switch (action.type) {
+    case "SET_SHOW_SIDEBAR":
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
 const rootReducer = combineReducers({
   db,
   eventsBlocked,
@@ -201,8 +206,9 @@ const rootReducer = combineReducers({
   codeSelectorTrigger,
   tokenSelection,
   spanAnnotations,
-  codes,
+  codeMap,
   codeHistory,
+  showSidebar,
 });
 
 export default rootReducer;

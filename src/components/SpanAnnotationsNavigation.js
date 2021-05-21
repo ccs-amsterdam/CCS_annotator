@@ -171,7 +171,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
   const onMouseDown = (event) => {
     // When left button pressed, start new selection
     if (event.which === 1) {
-      event.preventDefault();
+      //event.preventDefault();
       setHoldMouseLeft(true);
       dispatch(clearTokenSelection());
     }
@@ -241,7 +241,7 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
   for (let i = from; i <= to; i++) {
     annotations.push({
       index: i,
-      group: "Not yet assigned",
+      group: "UNASSIGNED",
       offset: tokens[from].offset.start,
       length: tokens[to].offset.length + tokens[to].offset.start - tokens[from].offset.start,
       span: [from, to],
@@ -326,7 +326,6 @@ const getToken = (tokens, e) => {
     }
     return null;
   } catch (e) {
-    console.log(e);
     return null;
   }
 };

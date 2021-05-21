@@ -4,7 +4,7 @@ import hash from "object-hash";
 class AnnotationDB {
   constructor() {
     this.idb = new Dexie("AmCAT_Annotator");
-    this.idb.version(1).stores({
+    this.idb.version(2).stores({
       meta: "welcome", // this just serves to keep track of whether db was 'created' via the welcome component
       apis: "api", // unindexed fields: token, refresh_token, expiration_date,
       codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
@@ -65,7 +65,6 @@ class AnnotationDB {
   }
   async writeCodes(codingjob, codes) {
     const cj = await this.getCodingjob(codingjob);
-    console.log();
     const codebook = JSON.parse(cj.codebook);
     codebook.codes = codes;
     return await this.writeCodebook(codingjob, codebook);
@@ -74,10 +73,7 @@ class AnnotationDB {
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
-      await this.idb.documents
-        .where("job_id")
-        .equals(codingjob.job_id)
-        .primaryKeys()
+      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
     );
 
     let duplicates = 0;
@@ -105,11 +101,10 @@ class AnnotationDB {
     }, []);
 
     if (!silent) {
-      let message = `Created ${
-        documentList.length - duplicates
-      } new documents in codingjob ${codingjob.name}.`;
-      if (duplicates > 0)
-        message = message + ` Ignored ${duplicates} duplicates`;
+      let message = `Created ${documentList.length - duplicates} new documents in codingjob ${
+        codingjob.name
+      }.`;
+      if (duplicates > 0) message = message + ` Ignored ${duplicates} duplicates`;
       alert(message);
     }
 
@@ -122,9 +117,7 @@ class AnnotationDB {
 
   async getJobDocumentsBatch(codingjob, offset, limit) {
     if (offset < 0) return null;
-    const documents = await this.idb.documents
-      .where("job_id")
-      .equals(codingjob.job_id);
+    const documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
     const ndocs = await documents.count();
     if (offset > ndocs - 1) return null;
     return documents.offset(offset).limit(limit).toArray();
