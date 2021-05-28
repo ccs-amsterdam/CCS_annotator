@@ -19,7 +19,7 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
   const eventsBlocked = useSelector((state) => state.eventsBlocked);
 
   const [mover, setMover] = useState(null);
-  const [holdCtrl, setHoldCtrl] = useState(false);
+  const [HoldSpace, setHoldSpace] = useState(false);
   const [holdArrow, setHoldArrow] = useState(null);
 
   const dispatch = useDispatch();
@@ -31,18 +31,17 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
   useEffect(() => {
     if (eventsBlocked) {
       setHoldArrow(false);
-      setHoldCtrl(false);
+      setHoldSpace(false);
     }
-  }, [setHoldArrow, setHoldCtrl, eventsBlocked]);
+  }, [setHoldArrow, setHoldSpace, eventsBlocked]);
 
   useEffect(() => {
     // When arrow key is held, walk through tokens with increasing speed
     // this loops itself by updating mover (an object with position information)
     // this is like setIntervall, but allows custom time intervalls,
-    // and we can interject the loop with updated keydowns (currently ctrl for starting selection)
     if (!mover || !holdArrow) return;
 
-    let position = movePosition(tokens, holdArrow, mover, holdCtrl, dispatch);
+    let position = movePosition(tokens, holdArrow, mover, HoldSpace, dispatch);
 
     let delay = Math.max(5, 100 / Math.ceil(mover.counter / 5));
     if (mover.counter === 1) delay = 150;
@@ -54,7 +53,7 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
         counter: mover.counter + 1,
       });
     }, delay);
-  }, [tokens, mover, holdArrow, holdCtrl, dispatch]);
+  }, [tokens, mover, holdArrow, HoldSpace, dispatch]);
 
   if (!doc) return null;
 
@@ -68,7 +67,7 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
         currentToken={currentToken}
         tokens={tokens}
         setMover={setMover}
-        setHoldCtrl={setHoldCtrl}
+        setHoldSpace={setHoldSpace}
         setHoldArrow={setHoldArrow}
       />
       <MouseEvents tokenSelection={tokenSelection} tokens={tokens} />
@@ -81,7 +80,7 @@ const KeyEvents = ({
   currentToken,
   tokens,
   setMover,
-  setHoldCtrl,
+  setHoldSpace,
   setHoldArrow,
 }) => {
   const dispatch = useDispatch();
@@ -102,8 +101,9 @@ const KeyEvents = ({
   // (see useEffect with 'eventsBlocked' for details on useCallback)
   const onKeyUp = (event) => {
     // keep track of which buttons are pressed in the state
-    if (event.key === "Control" || event.key === "Shift") {
-      setHoldCtrl(false);
+    if (event.keyCode === 32 || event.key === "Shift") {
+      setHoldSpace(false);
+      if (tokenSelection.length > 0) annotationFromSelection(tokens, tokenSelection, dispatch);
       return;
     }
     if (arrowkeys.includes(event.key)) {
@@ -115,10 +115,10 @@ const KeyEvents = ({
   // (see useEffect with 'eventsBlocked' for details on useCallback)
   const onKeyDown = (event) => {
     // key presses, and key holding (see onKeyUp)
-    if (event.key === "Control" || event.key === "Shift") {
+    if (event.keyCode === 32 || event.key === "Shift") {
+      event.preventDefault();
       if (event.repeat) return;
-
-      setHoldCtrl(true);
+      setHoldSpace(true);
       return;
     }
     if (arrowkeys.includes(event.key)) {
@@ -134,11 +134,6 @@ const KeyEvents = ({
     }
 
     if (tokenSelection.length > 0) {
-      // space key
-      if (event.keyCode === 32) {
-        event.preventDefault();
-        annotationFromSelection(tokens, tokenSelection, dispatch);
-      }
       if (tokenSelection[0] === tokenSelection[1]) {
         // enter key
         if (event.keyCode === 13) {
@@ -201,7 +196,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     selection.empty();
     setHoldMouseLeft(false);
 
-    if (!currentNode) return null;
+    if (currentNode === null) return null;
 
     // storeMouseSelection does save position to tokenSelection state, but this isn't
     // yet updated within this scope. This results in single clicks (without mousemove)
@@ -209,8 +204,9 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     if (tokenSelection.length > 0) {
       annotationFromSelection(tokens, tokenSelection, dispatch);
     } else {
-      if (currentNode !== null)
+      if (currentNode !== null) {
         annotationFromSelection(tokens, [currentNode, currentNode], dispatch);
+      }
     }
   };
 
@@ -242,8 +238,8 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
     annotations.push({
       index: i,
       group: "UNASSIGNED",
-      offset: tokens[from].offset.start,
-      length: tokens[to].offset.length + tokens[to].offset.start - tokens[from].offset.start,
+      offset: tokens[from].offset,
+      length: tokens[to].length + tokens[to].offset - tokens[from].offset,
       span: [from, to],
     });
   }
@@ -253,7 +249,7 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
   dispatch(triggerCodeselector("new_selection", to, null));
 };
 
-const movePosition = (tokens, key, mover, ctrl, dispatch) => {
+const movePosition = (tokens, key, mover, space, dispatch) => {
   let newPosition = mover.position;
   if (key === "ArrowRight") newPosition++;
   if (key === "ArrowLeft") newPosition--;
@@ -265,7 +261,7 @@ const movePosition = (tokens, key, mover, ctrl, dispatch) => {
 
   if (mover.position !== newPosition) {
     dispatch(setCurrentToken(newPosition));
-    dispatch(toggleTokenSelection(newPosition, ctrl));
+    dispatch(toggleTokenSelection(newPosition, space));
 
     const down = key === "ArrowRight" || key === "ArrowDown";
     console.log(down);
@@ -309,8 +305,8 @@ const getTokenAttributes = (tokens, tokenNode) => {
 
   return {
     index: tokenindex,
-    offset: tokens[tokenindex].offset.start,
-    length: tokens[tokenindex].offset.length,
+    offset: tokens[tokenindex].offset,
+    length: tokens[tokenindex].length,
   };
 };
 

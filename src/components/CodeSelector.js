@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Button, Dropdown, Grid, GridColumn, GridRow, Popup, Ref } from "semantic-ui-react";
+import { Button, Dropdown, Grid, Popup, Ref } from "semantic-ui-react";
 import {
   appendCodeHistory,
   toggleAnnotations,
@@ -151,8 +151,6 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
       return options;
     }, []);
   };
-
-  const color = getColor(current, codeMap);
 
   return (
     <>

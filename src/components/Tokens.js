@@ -1,70 +1,90 @@
 import React, { useEffect, useState } from "react";
-import { Container, Segment } from "semantic-ui-react";
+import { Container } from "semantic-ui-react";
 import Token from "./Token";
+import db from "../apis/dexie";
 
 import nlp from "compromise";
 import paragraphs from "compromise-paragraphs";
+import { parseTokens } from "../util/parseTokens";
 nlp.extend(paragraphs);
 
-const Tokens = ({ text, setTokens }) => {
+const Tokens = ({ doc, setTokens }) => {
   // It's imporant that the annotations to not pass by this component
   // but are loaded into Token from redux. This prevents rerendering
   // all the parsing stuff
   const [tokenComponents, setTokenComponents] = useState(null);
 
   useEffect(() => {
-    const [paragraphs, tokens] = prepareTokens(text);
-    setTokenComponents(paragraphs);
-    setTokens(tokens);
-  }, [text, setTokens]);
+    //const [paragraphs, tokens] = prepareTokens(text);
+    prepareTokens(doc, setTokenComponents, setTokens);
+  }, [doc, setTokens]);
 
-  if (text === null) return null;
+  if (doc === null) return null;
 
   return <Container textAlign="justified">{tokenComponents}</Container>;
 };
 
-const prepareTokens = (text) => {
-  let tokens = []; // make object with
-  const tokenized = nlp.tokenize(text).paragraphs().json({ offset: true });
-  const paragraphs = tokenized.map((par, par_i) => {
-    return createParagraph(par, par_i, tokens);
-  });
-
-  return [paragraphs, tokens];
+const prepareTokens = async (doc, setTokenComponents, setTokens) => {
+  let tokens = doc.tokens;
+  if (tokens) {
+    tokens = JSON.parse(tokens);
+  } else {
+    tokens = parseTokens({ text: doc.text });
+    await db.writeTokens(doc, tokens);
+  }
+  setTokenComponents(renderText(tokens));
+  setTokens(tokens);
 };
 
-const createParagraph = (par, par_i, tokens) => {
-  const mapSentences = (par) => {
-    return par.sentences.map((sent) => {
-      // for some reason there's an extra array layer between sentences and paragraphs...
-      // I've only found cases where lenght is 1, but I'll map it just in case
-      return sent.map((sent2) => {
-        return createSentence(sent2, tokens);
-      });
-    });
-  };
+const renderText = (tokens) => {
+  const text = [];
+  let paragraph = [];
+  let sentence = [];
+  let paragraph_nr = 0;
+  let sentence_nr = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i].paragraph !== paragraph_nr) {
+      paragraph.push(renderSentence(sentence_nr, sentence));
+      text.push(renderParagraph(paragraph_nr, paragraph));
+      paragraph = [];
+      sentence = [];
+      paragraph_nr = tokens[i].paragraph;
+      sentence_nr = tokens[i].sentence;
+    }
+    if (tokens[i].sentence !== sentence_nr) {
+      paragraph.push(renderSentence(sentence_nr, sentence));
+      sentence = [];
+      sentence_nr = tokens[i].sentence;
+    }
+
+    tokens[i].ref = React.createRef();
+    sentence.push(renderToken(tokens[i]));
+  }
+  paragraph.push(renderSentence(sentence_nr, sentence));
+  text.push(renderParagraph(paragraph_nr, paragraph));
+
+  return text;
+};
+
+const renderParagraph = (paragraph_nr, sentences) => {
   return (
     // uses span behaving like p, because p is not allowed due to nested div (for Label)
-    <span style={{ marginTop: "1em", display: "table", lineHeight: 1.65 }} key={par_i}>
-      {par_i === 0 ? <h2>{mapSentences(par)}</h2> : mapSentences(par)}
+    <span style={{ marginTop: "1em", display: "table", lineHeight: 1.65 }} key={paragraph_nr}>
+      {paragraph_nr === 0 ? <h2>{sentences}</h2> : sentences}
     </span>
   );
 };
 
-const createSentence = (sent, tokens) => {
-  const mapTokens = (sent) => {
-    return sent.terms.map((token) => {
-      token.ref = React.createRef();
-      tokens.push(token);
-      return <Token ref={token.ref} key={token.offset.index} token={token} />;
-    });
-  };
-
+const renderSentence = (sentence_nr, tokens) => {
   return (
-    <span className="sentence" key={sent.offset.index}>
-      {mapTokens(sent)}
+    <span className="sentence" key={sentence_nr}>
+      {tokens}
     </span>
   );
+};
+
+const renderToken = (token) => {
+  return <Token ref={token.ref} key={token.index} token={token} />;
 };
 
 export default React.memo(Tokens);

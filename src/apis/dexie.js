@@ -131,6 +131,13 @@ class AnnotationDB {
     return this.idb.documents.get(doc_id);
   }
 
+  async writeTokens(document, tokens) {
+    return this.idb.documents
+      .where("doc_id")
+      .equals(document.doc_id)
+      .modify({ tokens: JSON.stringify(tokens, null, 2) });
+  }
+
   async writeAnnotations(document, annotations) {
     return this.idb.documents
       .where("doc_id")

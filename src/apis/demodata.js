@@ -1,15 +1,42 @@
 export const demo_codebook = {
   settings: {
-    canAddCodes: true,
+    can_edit_codes: false,
   },
   codes: [
-    { code: "Actor", parent: "" },
-    { code: "Issue", parent: "" },
-    { code: "Mark Rutte", parent: "Actor" },
-    { code: "Sigrid Kaag", parent: "Actor" },
-    { code: "Jesse Klaver", parent: "Actor" },
+    { code: "VVD", parent: "Actor" },
+    { code: "D66", parent: "Actor" },
+    { code: "Groenlinks", parent: "Actor" },
+    { code: "Mark Rutte", parent: "VVD" },
+    { code: "Sigrid Kaag", parent: "D66" },
+    { code: "Jesse Klaver", parent: "Groenlinks" },
     { code: "Climate change", parent: "Issue" },
   ],
+  relations: [],
+
+  code_annotations: {
+    coding_unit: "code", // code, relation
+    context_unit: {
+      paragraph_window: [0, 0],
+      sentence_window: [1, 1],
+      word_window: [20, 20],
+    },
+    sampling: {
+      max_per_document: null,
+      random_documents: true,
+      random_order: true,
+    },
+
+    tasks: [
+      {
+        header: "Issue identification",
+        codes_parent: "Issue",
+        instruction: 'Does "[text]" refer to the issue "[code]"?',
+        options: ["yes", "no"],
+      },
+    ],
+  },
+
+  relation_annotations: {},
 };
 
 export const demo_articles = [

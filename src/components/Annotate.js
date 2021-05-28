@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Breadcrumb, BreadcrumbSection, Grid, Pagination } from "semantic-ui-react";
-import { randomColor } from "randomcolor";
+import { Breadcrumb, BreadcrumbSection, Grid, Input, Pagination } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
@@ -14,6 +13,7 @@ const Annotate = () => {
   const [doc, setDoc] = useState(null);
   const [nDocuments, setNDocuments] = useState(0);
   const [activePage, setActivePage] = useState(1);
+  const [delayedActivePage, setDelayedActivePage] = useState(1);
 
   useEffect(() => {
     if (!codingjob) return null;
@@ -21,10 +21,17 @@ const Annotate = () => {
     setupCodingjob(codingjob, setDoc, setNDocuments);
   }, [codingjob, dispatch]);
 
-  const pageChange = (event, data) => {
-    documentSelector(codingjob, data.activePage - 1, setDoc);
-    setActivePage(data.activePage);
-  };
+  useEffect(() => {
+    documentSelector(codingjob, activePage - 1, setDoc);
+    setDelayedActivePage(activePage);
+  }, [codingjob, activePage]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setActivePage(delayedActivePage);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [codingjob, delayedActivePage]);
 
   return (
     <Grid container columns={2}>
@@ -38,8 +45,14 @@ const Annotate = () => {
             <BreadcrumbSection>{doc ? doc.title : null}</BreadcrumbSection>
           </Breadcrumb>
         </Grid.Column>
-        <Grid.Column floated="right" width={1}>
-          {documentPagination(activePage, nDocuments, pageChange)}
+        <Grid.Column align="center" floated="right" width={4}>
+          {documentPagination(
+            activePage,
+            delayedActivePage,
+            nDocuments,
+            setActivePage,
+            setDelayedActivePage
+          )}
         </Grid.Column>
       </Grid.Row>
       <Grid.Row>
@@ -49,47 +62,65 @@ const Annotate = () => {
   );
 };
 
-const documentPagination = (activePage, nDocuments, pageChange) => {
+const documentPagination = (
+  activePage,
+  delayedActivePage,
+  nDocuments,
+  setActivePage,
+  setDelayedActivePage
+) => {
   return (
-    <Pagination
-      activePage={activePage}
-      size={"mini"}
-      firstItem={null}
-      lastItem={null}
-      siblingRange={0}
-      boundaryRange={0}
-      defaultActivePage={1}
-      ellipsisItem={null}
-      totalPages={nDocuments}
-      onPageChange={pageChange}
-    />
+    <>
+      <Grid.Row>
+        <Input
+          min={1}
+          max={nDocuments}
+          onChange={(e, d) => setDelayedActivePage(d.value)}
+          type="range"
+          value={delayedActivePage}
+        />
+      </Grid.Row>
+      <Grid.Row>
+        <Pagination
+          activePage={delayedActivePage}
+          size={"mini"}
+          firstItem={null}
+          lastItem={null}
+          siblingRange={0}
+          boundaryRange={0}
+          ellipsisItem={null}
+          totalPages={nDocuments}
+          onPageChange={(e, d) => setActivePage(d.activePage)}
+        />
+      </Grid.Row>
+    </>
   );
 };
 
-const getParentTree = (codes, code) => {
-  const parents = [];
-  let parent = codes[code].parent;
-  while (parent) {
-    parents.push(parent);
-    parent = codes[parent].parent;
-  }
-  return parents.reverse();
-};
+// const getParentTree = (codes, code) => {
+//   const parents = [];
+//   let parent = codes[code].parent;
+//   while (parent) {
+//     parents.push(parent);
+//     parent = codes[parent].parent;
+//   }
+//   return parents.reverse();
+// };
 
-const prepareCodes = (cb) => {
-  // the payload is an array of objects, but for efficients operations
-  // in the annotator we convert it to an object with the codes as keys
-  const codes = cb.codes.reduce((result, code) => {
-    result[code.code] = code;
-    return result;
-  }, {});
+// const prepareCodes = (cb) => {
+//   // the payload is an array of objects, but for efficients operations
+//   // in the annotator we convert it to an object with the codes as keys
+//   const codes = cb.codes.reduce((result, code) => {
+//     result[code.code] = code;
+//     return result;
+//   }, {});
 
-  for (const code of Object.keys(codes)) {
-    if (!codes[code].color) codes[code].color = randomColor({ seed: code, luminosity: "light" });
-    codes[code].tree = getParentTree(codes, code);
-  }
-  return codes;
-};
+//   for (const code of Object.keys(codes)) {
+//     if (!codes[code].color) codes[code].color = randomColor({ seed: code, luminosity: "light" });
+//     codes[code].tree = getParentTree(codes, code);
+//   }
+//   return codes;
+// };
 
 const setupCodingjob = async (codingjob, setDoc, setNDocuments) => {
   const n = await db.getJobDocumentCount(codingjob);
@@ -105,10 +136,12 @@ const documentSelector = async (codingjob, i, setDoc) => {
   if (!codingjob) return null;
   const docs = await db.getJobDocumentsBatch(codingjob, i, 1);
   if (docs) {
+    const text = docs[0].title + "\n\n" + docs[0].text;
     setDoc({
       doc_id: docs[0].doc_id,
       title: docs[0].title,
-      text: docs[0].title + "\n\n" + docs[0].text,
+      text: text,
+      tokens: docs[0].tokens,
       annotations: prepareAnnotations(docs[0].annotations),
     });
   }

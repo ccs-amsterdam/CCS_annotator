@@ -11,14 +11,14 @@ const Token = React.forwardRef(({ token }, ref) => {
 
     let [from, to] = state.tokenSelection;
     if (from > to) [to, from] = [from, to];
-    return token.offset.index >= from && token.offset.index <= to;
+    return token.index >= from && token.index <= to;
   });
 
   let tokenClass = "token";
   if (selected) tokenClass = tokenClass + " selected";
 
   return (
-    <span ref={ref} className={tokenClass} tokenindex={token.offset.index}>
+    <span ref={ref} className={tokenClass} tokenindex={token.index}>
       <AnnotatedToken token={token} selected={selected} />
     </span>
   );
@@ -27,9 +27,9 @@ const Token = React.forwardRef(({ token }, ref) => {
 const AnnotatedToken = ({ token, selected }) => {
   // If we specifically ask for the annotations for the current token within the
   // useSelector function, rerender is only triggered if this value has changed
-  const annotations = useSelector((state) => state.spanAnnotations[token.offset.index]);
+  const annotations = useSelector((state) => state.spanAnnotations[token.index]);
   const csTrigger = useSelector((state) => {
-    if (state.codeSelectorTrigger.index !== token.offset.index) return null;
+    if (state.codeSelectorTrigger.index !== token.index) return null;
     return state.codeSelectorTrigger;
   });
   const codeMap = useSelector((state) => state.codeMap);
@@ -37,7 +37,7 @@ const AnnotatedToken = ({ token, selected }) => {
 
   // This is a trick required to render if at least something within this token's
   // annotations changed (somehow 'annotations' doesn't trigger this)
-  useSelector((state) => JSON.stringify(state.spanAnnotations[token.offset.index]));
+  useSelector((state) => JSON.stringify(state.spanAnnotations[token.index]));
 
   // if there are no annotation codes, our life is easy
   if (!annotations) return <>{token.pre + token.text + token.post}</>;
@@ -57,7 +57,7 @@ const AnnotatedToken = ({ token, selected }) => {
         className={annotatedTokenClass}
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(triggerCodeselector("right_click", token.offset.index, null));
+          dispatch(triggerCodeselector("right_click", token.index, null));
         }}
         style={color ? { background: color } : null}
       >

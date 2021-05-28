@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Header, Menu, Sidebar } from "semantic-ui-react";
+import { Menu } from "semantic-ui-react";
 import { setShowSidebar } from "../actions";
 
 const CodebookSidebar = () => {
@@ -11,7 +11,7 @@ const CodebookSidebar = () => {
     return () => {
       dispatch(setShowSidebar(false));
     };
-  }, []);
+  }, [dispatch]);
 
   console.log(showSidebar);
   return (

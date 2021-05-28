@@ -13,7 +13,7 @@ const AnnotationText = ({ doc, codeTreeTable }) => {
   return (
     <Grid container columns={2}>
       <Grid.Column width={8} style={gridStyle}>
-        <Tokens text={doc.text} setTokens={setTokens} />
+        <Tokens doc={doc} setTokens={setTokens} />
       </Grid.Column>
       <Grid.Column width={8}>
         <SpanAnnotations doc={doc} tokens={tokens} />

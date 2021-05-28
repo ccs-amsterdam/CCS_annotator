@@ -156,6 +156,8 @@ const toggleAnnotations = (annotations, annList, rm) => {
         span: [a.span[0], a.span[1]],
         offset: a.offset,
         length: a.length,
+        section: a.section,
+        section_offset: a.offset_section,
       };
     }
   }

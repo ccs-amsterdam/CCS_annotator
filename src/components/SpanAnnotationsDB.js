@@ -74,8 +74,8 @@ const matchAnnotations = (tokens, importedAnnotations, dispatch) => {
 };
 
 const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnotations) => {
-  const start = token.offset.start;
-  const end = token.offset.start + token.offset.length;
+  const start = token.offset;
+  const end = token.offset + token.length;
 
   // loop over char offset for token. If a span annotation that
   // starts on this offset is found, initiate a new annotation in trackAnnotations with this
@@ -86,17 +86,16 @@ const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnota
     if (importedAnnotations[i]) {
       for (let code of importedAnnotations[i].start) {
         trackAnnotations[code] = {
-          index: token.offset.index,
+          index: token.index,
           group: code,
           offset: start,
           length: null,
-          span: [token.offset.index],
+          span: [token.index],
         };
       }
       for (let code of importedAnnotations[i].end) {
-        trackAnnotations[code].span.push(token.offset.index);
-        trackAnnotations[code].length =
-          token.offset.start + token.offset.length - trackAnnotations[code].offset;
+        trackAnnotations[code].span.push(token.index);
+        trackAnnotations[code].length = token.offset + token.length - trackAnnotations[code].offset;
         matchedAnnotations.push(trackAnnotations[code]);
         delete trackAnnotations[code];
       }

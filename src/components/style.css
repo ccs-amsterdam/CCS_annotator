@@ -52,9 +52,9 @@ button.active {
 }
 
 .annotatedToken.anyLeft {
-  border-left: dotted;
-  border-left-width: 0.3px;
-  border-bottom-left-radius: 2px;
+  border-left: solid;
+  border-left-width: 0.1px;
+  border-bottom-left-radius: 0px;
 }
 
 .annotatedToken.allLeft {
@@ -65,9 +65,9 @@ button.active {
 }
 
 .annotatedToken.anyRight {
-  border-right: dotted;
-  border-right-width: 0.3px;
-  border-top-right-radius: 2px;
+  border-right: solid;
+  border-right-width: 0.1px;
+  border-top-right-radius: 0px;
 }
 
 .annotatedToken.allRight {

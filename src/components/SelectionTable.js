@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  useTable,
-  useSortBy,
-  usePagination,
-  useGlobalFilter,
-} from "react-table";
+import { useTable, useSortBy, usePagination, useGlobalFilter } from "react-table";
 import {
   Table,
   TableHeader,
@@ -35,9 +30,7 @@ const SelectionTable = ({
   width = null,
   defaultSize = 15,
 }) => {
-  const [activeRow, setActiveRow] = useState(
-    selectedRow ? selectedRow.ROW_ID : null
-  );
+  const [activeRow, setActiveRow] = useState(selectedRow ? selectedRow.ROW_ID : null);
   const {
     getTableProps,
     getTableBodyProps,
@@ -87,9 +80,7 @@ const SelectionTable = ({
           {...column.getHeaderProps(column.getSortByToggleProps())}
         >
           {column.render("Header")}
-          <span>
-            {column.isSorted ? (column.isSortedDesc ? " 🔽" : " 🔼") : ""}
-          </span>
+          <span>{column.isSorted ? (column.isSortedDesc ? " 🔽" : " 🔼") : ""}</span>
         </TableHeaderCell>
       );
     });
@@ -125,19 +116,10 @@ const SelectionTable = ({
         globalFilter={globalFilter}
         setGlobalFilter={setGlobalFilter}
       />
-      <Table
-        compact
-        unstackable
-        fixed
-        singleLine
-        selectable
-        {...getTableProps()}
-      >
+      <Table compact unstackable fixed singleLine selectable {...getTableProps()}>
         <TableHeader>
           {headerGroups.map((headerGroup) => (
-            <TableRow {...headerGroup.getHeaderGroupProps()}>
-              {createHeader(headerGroup)}
-            </TableRow>
+            <TableRow {...headerGroup.getHeaderGroupProps()}>{createHeader(headerGroup)}</TableRow>
           ))}
         </TableHeader>
         <TableBody {...getTableBodyProps()}>{createBody(page)}</TableBody>
@@ -173,11 +155,7 @@ const SelectionTable = ({
   );
 };
 
-const GlobalFilter = ({
-  preGlobalFilteredRows,
-  globalFilter,
-  setGlobalFilter,
-}) => {
+const GlobalFilter = ({ preGlobalFilteredRows, globalFilter, setGlobalFilter }) => {
   //const count = preGlobalFilteredRows && preGlobalFilteredRows.length;
 
   return (

@@ -1,15 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCodingjob, setCodingjobs } from "../actions";
-import {
-  Header,
-  Button,
-  Modal,
-  Form,
-  Loader,
-  Dimmer,
-  Icon,
-} from "semantic-ui-react";
+import { Header, Button, Modal, Form, Loader, Dimmer, Icon } from "semantic-ui-react";
 import db from "../apis/dexie";
 
 const CreateCodingjob = () => {
@@ -43,7 +35,7 @@ const CreateCodingjob = () => {
     <Modal
       as={Form}
       trigger={
-        <Button compact>
+        <Button>
           <Icon name="plus" />
           Create job
         </Button>
@@ -77,8 +69,7 @@ const CreateCodingjob = () => {
       <Modal.Actions>
         {status === "error" ? (
           <div>
-            Could not create codingjob for a reason not yet covered in the error
-            handling...
+            Could not create codingjob for a reason not yet covered in the error handling...
           </div>
         ) : null}
         {status === "pending" ? (

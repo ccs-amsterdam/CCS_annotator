@@ -47,7 +47,7 @@ const App = () => {
       <Divider />
       <Sidebar.Pushable>
         <Sidebar animation="overlay" visible={showSidebar} direction={"right"} width="wide">
-          <CodeTreeTable height="40vh" showColors />
+          <CodeTreeTable height="30vh" showColors />
         </Sidebar>
         <Sidebar.Pusher>
           <Container style={{ marginTop: "3em" }}>
