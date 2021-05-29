@@ -12,9 +12,9 @@ import {
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const CodeSelector = React.memo(({ children, annotations, currentCode, newSelection }) => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const codeMap = useSelector((state) => state.codeMap);
-  const codeHistory = useSelector((state) => state.codeHistory);
+  const codingjob = useSelector(state => state.codingjob);
+  const codeMap = useSelector(state => state.codeMap);
+  const codeHistory = useSelector(state => state.codeHistory);
 
   const [current, setCurrent] = useState(newSelection ? "UNASSIGNED" : currentCode);
   const [hasOpened, setHasOpened] = useState(false);
@@ -79,12 +79,12 @@ const CodeSelector = React.memo(({ children, annotations, currentCode, newSelect
 const CurrentCodePage = ({ annotationCodes, codeMap, setCurrent }) => {
   const dispatch = useDispatch();
 
-  const onButtonSelect = (value) => {
+  const onButtonSelect = value => {
     setCurrent(value);
   };
 
-  const getOptions = (annotationCodes) => {
-    return annotationCodes.map((code) => ({ label: code, color: getColor(code, codeMap) }));
+  const getOptions = annotationCodes => {
+    return annotationCodes.map(code => ({ label: code, color: getColor(code, codeMap) }));
   };
 
   if (annotationCodes.length === 1) setCurrent(annotationCodes[0]);
@@ -115,7 +115,7 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
   const [focusOnButtons, setFocusOnButtons] = useState(true);
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const focusOnTextInput = textInputRef?.current?.children[0] === document.activeElement;
       if (!focusOnTextInput) setFocusOnButtons(true);
 
@@ -135,7 +135,7 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
     };
   });
 
-  const onButtonSelect = (value) => {
+  const onButtonSelect = value => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
       updateAnnotations(annotations, current, current, setCurrent, dispatch);
@@ -218,7 +218,7 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const nbuttons = canDelete ? options.length + 1 : options.length;
 
       // any arrowkey
@@ -308,13 +308,8 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
 const updateAnnotations = (annotations, current, value, setCurrent, dispatch) => {
   if (!annotations) return null;
 
-  let ann = {
-    index: annotations[current].index,
-    group: current,
-    offset: annotations[current].offset,
-    length: annotations[current].length,
-    span: annotations[current].span,
-  };
+  let ann = { ...annotations[current] };
+  ann.group = current;
 
   let oldAnnotation = { ...ann };
   oldAnnotation.span = [oldAnnotation.index, oldAnnotation.index];

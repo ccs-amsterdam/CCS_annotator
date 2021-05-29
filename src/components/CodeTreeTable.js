@@ -23,7 +23,7 @@ const resultRenderer = ({ code, codeTrail }) => (
 );
 
 const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) => {
-  const codingjob = useSelector((state) => state.codingjob);
+  const codingjob = useSelector(state => state.codingjob);
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,6 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
     if (!codingjob) return null;
     if (codingjob.codebook) {
       const cb = JSON.parse(codingjob.codebook);
-      console.log(cb);
       if (cb && cb.codes && cb.codes.length > 0) {
         setCodes(cb.codes);
       } else {
@@ -75,7 +74,7 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
         }
 
         const re = new RegExp(data.value.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
-        const isMatch = (code) => re.test(code.code);
+        const isMatch = code => re.test(code.code);
 
         setLoading(false);
         setResults(codeTreeArray.filter(isMatch));
@@ -97,7 +96,7 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
     };
   }, []);
 
-  const formatCode = (level) => {
+  const formatCode = level => {
     if (level === 0) return { fontWeight: "bold", fontSize: "15px", cursor: "pointer" };
     if (level === 1) return { fontSize: "15px", cursor: "pointer" };
     if (level === 2) return { fontSize: "14px", cursor: "pointer" };
@@ -161,7 +160,7 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
 };
 
 const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings }) => {
-  const codeMap = useSelector((state) => state.codeMap);
+  const codeMap = useSelector(state => state.codeMap);
   const [open, setOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
 
@@ -284,7 +283,7 @@ const AddCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) =>
     };
   }, [dispatch]);
 
-  const addCode = (newCode) => {
+  const addCode = newCode => {
     if (newCode === "") return null;
     if (codeMap[newCode]) return null;
     const updatedCodes = [...codes];
@@ -325,15 +324,15 @@ const RmCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) => 
     };
   }, [dispatch]);
 
-  const rmCode = (keepChildren) => {
-    let updatedCodes = codes.filter((ucode) => ucode.code !== code);
+  const rmCode = keepChildren => {
+    let updatedCodes = codes.filter(ucode => ucode.code !== code);
 
     if (!keepChildren) {
       const children = [];
       getAllChildren(codeMap, code, children);
-      updatedCodes = updatedCodes.filter((ucode) => !children.includes(ucode.code));
+      updatedCodes = updatedCodes.filter(ucode => !children.includes(ucode.code));
     } else {
-      updatedCodes = updatedCodes.map((ucode) => {
+      updatedCodes = updatedCodes.map(ucode => {
         if (codeMap[code].children.includes(ucode.code)) ucode.parent = codeMap[code].parent;
         return ucode;
       });
@@ -389,7 +388,7 @@ const MoveCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) =
       if (newCode === "") return null;
       if (codeMap[newCode]) return null;
     }
-    let updatedCodes = codes.map((ucode) => {
+    let updatedCodes = codes.map(ucode => {
       if (ucode.code === code) {
         ucode.code = newCode;
         ucode.parent = newParent;
@@ -464,12 +463,12 @@ const getAllChildren = (codeMap, code, children) => {
 const getAllParentOptions = (codeMap, code) => {
   const children = [];
   getAllChildren(codeMap, code, children);
-  return Object.keys(codeMap).filter((parent) => !children.includes(parent) && parent !== code);
+  return Object.keys(codeMap).filter(parent => !children.includes(parent) && parent !== code);
 };
 
 const getCodeTreeArray = (codeMap, showColors) => {
   let parents = Object.keys(codeMap).filter(
-    (code) => !codeMap[code].parent || codeMap[code].parent === ""
+    code => !codeMap[code].parent || codeMap[code].parent === ""
   );
   const codeTreeArray = [];
   fillCodeTreeArray(codeMap, parents, codeTreeArray, [], showColors);
@@ -511,7 +510,7 @@ const codeTrailSpan = (code, codeTrail, showColors) => {
   );
 };
 
-const prepareCodeMap = (codes) => {
+const prepareCodeMap = codes => {
   // the payload is an array of objects, but for efficients operations
   // in the annotator we convert it to an object with the codes as keys
   const codeMap = codes.reduce((result, code) => {

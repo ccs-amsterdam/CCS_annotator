@@ -14,9 +14,9 @@ import { toggleAnnotations } from "../actions";
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const SpanAnnotationsNavigation = ({ doc, tokens }) => {
-  const currentToken = useSelector((state) => state.currentToken);
-  const tokenSelection = useSelector((state) => state.tokenSelection);
-  const eventsBlocked = useSelector((state) => state.eventsBlocked);
+  const currentToken = useSelector(state => state.currentToken);
+  const tokenSelection = useSelector(state => state.tokenSelection);
+  const eventsBlocked = useSelector(state => state.eventsBlocked);
 
   const [mover, setMover] = useState(null);
   const [HoldSpace, setHoldSpace] = useState(false);
@@ -99,7 +99,7 @@ const KeyEvents = ({
   });
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyUp = (event) => {
+  const onKeyUp = event => {
     // keep track of which buttons are pressed in the state
     if (event.keyCode === 32 || event.key === "Shift") {
       setHoldSpace(false);
@@ -113,7 +113,7 @@ const KeyEvents = ({
   };
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyDown = (event) => {
+  const onKeyDown = event => {
     // key presses, and key holding (see onKeyUp)
     if (event.keyCode === 32 || event.key === "Shift") {
       event.preventDefault();
@@ -163,7 +163,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     };
   });
 
-  const onMouseDown = (event) => {
+  const onMouseDown = event => {
     // When left button pressed, start new selection
     if (event.which === 1) {
       //event.preventDefault();
@@ -172,7 +172,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     }
   };
 
-  const onMouseMove = (event) => {
+  const onMouseMove = event => {
     // When selection started (mousedown), select tokens hovered over
     if (holdMouseLeft) {
       if (event.which !== 1) return null;
@@ -186,7 +186,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     }
   };
 
-  const onMouseUp = (event) => {
+  const onMouseUp = event => {
     // When left mouse key is released, create the annotation
     // note that in case of a single click, the token has not been selected (this happens on move)
     // so this way a click can still be used to open
@@ -210,13 +210,13 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     }
   };
 
-  const onContextMenu = (event) => {
+  const onContextMenu = event => {
     if (event.button === 2) return null;
     event.preventDefault();
     event.stopPropagation();
   };
 
-  const storeMouseSelection = (event) => {
+  const storeMouseSelection = event => {
     // select tokens that the mouse/touch is currently pointing at
     let currentNode = getToken(tokens, event.originalTarget);
     if (!currentNode) return null;
@@ -238,9 +238,10 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
     annotations.push({
       index: i,
       group: "UNASSIGNED",
-      offset: tokens[from].offset,
       length: tokens[to].length + tokens[to].offset - tokens[from].offset,
       span: [from, to],
+      section: tokens[from].section,
+      offset: tokens[from].offset,
     });
   }
   dispatch(toggleAnnotations(annotations));

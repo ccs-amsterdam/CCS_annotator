@@ -154,10 +154,9 @@ const toggleAnnotations = (annotations, annList, rm) => {
       annotations[a.index][a.group] = {
         index: a.index,
         span: [a.span[0], a.span[1]],
-        offset: a.offset,
         length: a.length,
         section: a.section,
-        section_offset: a.offset_section,
+        offset: a.offset,
       };
     }
   }
@@ -178,7 +177,7 @@ const codeMap = (state = {}, action) => {
 const codeHistory = (state = [], action) => {
   switch (action.type) {
     case "APPEND_CODE_HISTORY":
-      let newstate = state.filter((v) => v !== action.payload.code).slice(0, action.payload.n - 1);
+      let newstate = state.filter(v => v !== action.payload.code).slice(0, action.payload.n - 1);
       newstate.unshift(action.payload.code);
       return newstate;
     case "RESET_DB":

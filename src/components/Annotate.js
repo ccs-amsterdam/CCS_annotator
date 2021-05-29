@@ -7,7 +7,7 @@ import AnnotationText from "./AnnotationText";
 import db from "../apis/dexie";
 
 const Annotate = () => {
-  const codingjob = useSelector((state) => state.codingjob);
+  const codingjob = useSelector(state => state.codingjob);
   const dispatch = useDispatch();
 
   const [doc, setDoc] = useState(null);
@@ -134,34 +134,8 @@ const setupCodingjob = async (codingjob, setDoc, setNDocuments) => {
 
 const documentSelector = async (codingjob, i, setDoc) => {
   if (!codingjob) return null;
-  const docs = await db.getJobDocumentsBatch(codingjob, i, 1);
-  if (docs) {
-    const text = docs[0].title + "\n\n" + docs[0].text;
-    setDoc({
-      doc_id: docs[0].doc_id,
-      title: docs[0].title,
-      text: text,
-      tokens: docs[0].tokens,
-      annotations: prepareAnnotations(docs[0].annotations),
-    });
-  }
-};
-
-const prepareAnnotations = (annotations) => {
-  if (!annotations || annotations === "") return {};
-  const anns = JSON.parse(annotations);
-
-  // create an object where the key is an offset, and the
-  // value is an array that tells which codes start and end there
-  // used in Tokens for matching to token indices
-  // (matching to tokenindices is needed for speed, to keep coding nice and responsive)
-  return anns.reduce((obj, ann) => {
-    if (!obj[ann.offset]) obj[ann.offset] = { start: [], end: [] };
-    if (!obj[ann.offset + ann.length]) obj[ann.offset + ann.length] = { start: [], end: [] };
-    obj[ann.offset].start.push(ann.code);
-    obj[ann.offset + ann.length].end.push(ann.code);
-    return obj;
-  }, {});
+  let doc = await db.getJobDocumentsBatch(codingjob, i, 1);
+  if (doc) setDoc(doc[0]);
 };
 
 export default Annotate;

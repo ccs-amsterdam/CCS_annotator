@@ -3,10 +3,7 @@ import { Container } from "semantic-ui-react";
 import Token from "./Token";
 import db from "../apis/dexie";
 
-import nlp from "compromise";
-import paragraphs from "compromise-paragraphs";
 import { parseTokens } from "../util/parseTokens";
-nlp.extend(paragraphs);
 
 const Tokens = ({ doc, setTokens }) => {
   // It's imporant that the annotations to not pass by this component
@@ -15,7 +12,6 @@ const Tokens = ({ doc, setTokens }) => {
   const [tokenComponents, setTokenComponents] = useState(null);
 
   useEffect(() => {
-    //const [paragraphs, tokens] = prepareTokens(text);
     prepareTokens(doc, setTokenComponents, setTokens);
   }, [doc, setTokens]);
 
@@ -26,17 +22,18 @@ const Tokens = ({ doc, setTokens }) => {
 
 const prepareTokens = async (doc, setTokenComponents, setTokens) => {
   let tokens = doc.tokens;
+
   if (tokens) {
     tokens = JSON.parse(tokens);
   } else {
-    tokens = parseTokens({ text: doc.text });
+    tokens = parseTokens({ title: doc.title, text: doc.text });
     await db.writeTokens(doc, tokens);
   }
   setTokenComponents(renderText(tokens));
   setTokens(tokens);
 };
 
-const renderText = (tokens) => {
+const renderText = tokens => {
   const text = [];
   let paragraph = [];
   let sentence = [];
@@ -83,7 +80,7 @@ const renderSentence = (sentence_nr, tokens) => {
   );
 };
 
-const renderToken = (token) => {
+const renderToken = token => {
   return <Token ref={token.ref} key={token.index} token={token} />;
 };
 
