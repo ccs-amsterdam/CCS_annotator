@@ -4,56 +4,56 @@ export const resetDB = () => {
   };
 };
 
-export const blockEvents = (block) => {
+export const blockEvents = block => {
   return {
     type: "BLOCK_EVENTS",
     payload: block,
   };
 };
 
-export const selectCodingjob = (codingjob) => {
+export const selectCodingjob = codingjob => {
   return {
     type: "SELECT_CODINGJOB",
     payload: codingjob,
   };
 };
 
-export const setCodingjobs = (codingjobs) => {
+export const setCodingjobs = codingjobs => {
   return {
     type: "SET_CODINGJOBS",
     payload: codingjobs,
   };
 };
 
-export const setCodingjobSettings = (codingjobSettings) => {
+export const setCodingjobSettings = codingjobSettings => {
   return {
     type: "SET_CODINGJOB_SETTINGS",
     payload: codingjobSettings,
   };
 };
 
-export const setTokenIndices = (tokenIndices) => {
+export const setTokenIndices = tokenIndices => {
   return {
     type: "SET_TOKEN_INDICES",
     payload: tokenIndices,
   };
 };
 
-export const setCurrentToken = (index) => {
+export const setCurrentToken = index => {
   return {
     type: "SET_CURRENT_TOKEN",
     payload: index,
   };
 };
 
-export const toggleTokenSelection = (index, add) => {
+export const toggleTokenSelection = (tokens, index, add) => {
   return {
     type: "TOGGLE_TOKEN_SELECTION",
-    payload: { index, add },
+    payload: { tokens, index, add },
   };
 };
 
-export const setTokenSelection = (tokenSelection) => {
+export const setTokenSelection = tokenSelection => {
   return {
     type: "SET_TOKEN_SELECTION",
     payload: tokenSelection,
@@ -75,14 +75,14 @@ export const triggerCodeselector = (from, tokenIndex, code) => {
   };
 };
 
-export const toggleAnnotations = (spanAnnotation) => {
+export const toggleAnnotations = spanAnnotation => {
   return {
     type: "TOGGLE_ANNOTATIONS",
     payload: spanAnnotation,
   };
 };
 
-export const rmAnnotations = (spanAnnotation) => {
+export const rmAnnotations = spanAnnotation => {
   return {
     type: "RM_ANNOTATIONS",
     payload: spanAnnotation,
@@ -95,7 +95,7 @@ export const clearSpanAnnotations = () => {
   };
 };
 
-export const setCodeMap = (codes) => {
+export const setCodeMap = codes => {
   return {
     type: "SET_CODE_MAP",
     payload: codes,
@@ -109,7 +109,7 @@ export const appendCodeHistory = (code, n = 20) => {
   };
 };
 
-export const setShowSidebar = (show) => {
+export const setShowSidebar = show => {
   return {
     type: "SET_SHOW_SIDEBAR",
     payload: show,

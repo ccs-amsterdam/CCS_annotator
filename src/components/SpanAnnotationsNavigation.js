@@ -176,12 +176,13 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     // When selection started (mousedown), select tokens hovered over
     if (holdMouseLeft) {
       if (event.which !== 1) return null;
+      window.getSelection().empty();
       storeMouseSelection(event);
     } else {
       let currentNode = getToken(tokens, event.originalTarget);
       if (currentNode) {
         dispatch(setCurrentToken(currentNode.index));
-        dispatch(toggleTokenSelection(currentNode.index, false));
+        dispatch(toggleTokenSelection(tokens, currentNode.index, false));
       }
     }
   };
@@ -192,8 +193,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     // so this way a click can still be used to open
     if (event.which !== 1) return null;
     const currentNode = storeMouseSelection(event);
-    const selection = window.getSelection();
-    selection.empty();
+    window.getSelection().empty();
     setHoldMouseLeft(false);
 
     if (currentNode === null) return null;
@@ -222,7 +222,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     if (!currentNode) return null;
 
     dispatch(setCurrentToken(currentNode.index));
-    dispatch(toggleTokenSelection(currentNode.index, true));
+    dispatch(toggleTokenSelection(tokens, currentNode.index, true));
     return currentNode.index;
   };
 
@@ -234,13 +234,18 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
   if (from > to) [from, to] = [to, from];
 
   const annotations = [];
+  let lastSection = tokens[from].section;
   for (let i = from; i <= to; i++) {
+    if (tokens[i].section !== lastSection) {
+      from = i;
+      lastSection = tokens[i].section;
+    }
     annotations.push({
       index: i,
       group: "UNASSIGNED",
       length: tokens[to].length + tokens[to].offset - tokens[from].offset,
       span: [from, to],
-      section: tokens[from].section,
+      section: tokens[i].section,
       offset: tokens[from].offset,
     });
   }
@@ -260,12 +265,31 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
   if (newPosition > mover.ntokens) newPosition = mover.ntokens;
   if (newPosition < 0) newPosition = 0;
 
+  if (space) {
+    // limit selection to current section
+    if (tokens[mover.position].section !== tokens[newPosition].section) {
+      if (newPosition > mover.position) {
+        for (let i = newPosition; i >= mover.position; i--)
+          if (tokens[i].section === tokens[mover.position].section) {
+            newPosition = i;
+            break;
+          }
+      } else {
+        for (let i = newPosition; i <= mover.position; i++) {
+          if (tokens[i].section === tokens[mover.position].section) {
+            newPosition = i;
+            break;
+          }
+        }
+      }
+    }
+  }
+
   if (mover.position !== newPosition) {
     dispatch(setCurrentToken(newPosition));
-    dispatch(toggleTokenSelection(newPosition, space));
+    dispatch(toggleTokenSelection(tokens, newPosition, space));
 
     const down = key === "ArrowRight" || key === "ArrowDown";
-    console.log(down);
     tokens[newPosition].ref.current.scrollIntoView(false, {
       block: down ? "start" : "end",
     });

@@ -29,31 +29,6 @@ const CodeSelector = React.memo(({ children, annotations, currentCode, newSelect
     };
   }, [dispatch]);
 
-  const createPopupPage = () => {
-    const annotationCodes = Object.keys(annotations);
-
-    if (current === null) {
-      return (
-        <CurrentCodePage
-          annotationCodes={annotationCodes}
-          codeMap={codeMap}
-          setCurrent={setCurrent}
-        />
-      );
-    }
-
-    return (
-      <NewCodePage
-        codeHistory={codeHistory}
-        codingjob={codingjob}
-        codeMap={codeMap}
-        annotations={annotations}
-        current={current}
-        setCurrent={setCurrent}
-      />
-    );
-  };
-
   return (
     <Popup
       trigger={children}
@@ -71,13 +46,27 @@ const CodeSelector = React.memo(({ children, annotations, currentCode, newSelect
       }}
       position="top left"
     >
-      {createPopupPage()}
+      <CurrentCodePage
+        current={current}
+        annotations={annotations}
+        codeMap={codeMap}
+        setCurrent={setCurrent}
+      />
+      <NewCodePage
+        codeHistory={codeHistory}
+        codingjob={codingjob}
+        codeMap={codeMap}
+        annotations={annotations}
+        current={current}
+        setCurrent={setCurrent}
+      />
     </Popup>
   );
 });
 
-const CurrentCodePage = ({ annotationCodes, codeMap, setCurrent }) => {
+const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
   const dispatch = useDispatch();
+  const annotationCodes = Object.keys(annotations);
 
   const onButtonSelect = value => {
     setCurrent(value);
@@ -89,6 +78,7 @@ const CurrentCodePage = ({ annotationCodes, codeMap, setCurrent }) => {
 
   if (annotationCodes.length === 1) setCurrent(annotationCodes[0]);
 
+  if (current) return null;
   return (
     <div>
       <Button
@@ -152,6 +142,7 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
     }, []);
   };
 
+  if (!current) return null;
   return (
     <>
       <Grid>

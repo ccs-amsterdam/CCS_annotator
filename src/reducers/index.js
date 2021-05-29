@@ -83,7 +83,12 @@ const tokenSelection = (state = [], action) => {
   // an array of length 2, giving the start and end of the selection
   switch (action.type) {
     case "TOGGLE_TOKEN_SELECTION":
-      return toggleSelection(state, action.payload.index, action.payload.add);
+      return toggleSelection(
+        state,
+        action.payload.tokens,
+        action.payload.index,
+        action.payload.add
+      );
     case "SET_TOKEN_SELECTION":
       return action.payload;
     case "CLEAR_TOKEN_SELECTION":
@@ -104,9 +109,22 @@ const codeSelectorTrigger = (state = { from: null, index: null, code: null }, ac
   }
 };
 
-const toggleSelection = (selection, index, add) => {
+const toggleSelection = (selection, tokens, index, add) => {
   if (!add || selection.length === 0) return [index, index];
-  return [selection[0], index];
+  //if (selection[1] === index) return selection;
+
+  if (tokens[selection[0]].section === tokens[index].section) return [selection[0], index];
+
+  if (index > selection[0]) {
+    for (let i = index; i >= selection[0]; i--) {
+      if (tokens[selection[0]].section === tokens[i].section) return [selection[0], i];
+    }
+  } else {
+    for (let i = index; i <= selection[0]; i++) {
+      if (tokens[selection[0]].section === tokens[i].section) return [selection[0], i];
+    }
+  }
+  return selection;
 };
 
 const spanAnnotations = (state = {}, action) => {

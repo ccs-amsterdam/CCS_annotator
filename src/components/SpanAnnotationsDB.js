@@ -34,6 +34,7 @@ const exportAnnotations = async (doc, annotations) => {
     for (let key of Object.keys(ann)) {
       const ann_obj = {
         code: key,
+        text: doc[ann[key].section].slice(ann[key].offset, ann[key].offset + ann[key].length),
         section: ann[key].section,
         offset: ann[key].offset,
         length: ann[key].length,
@@ -92,6 +93,7 @@ const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnota
       }
 
       for (let code of importedAnnotations[key].end) {
+        if (!trackAnnotations[code]) continue;
         trackAnnotations[code].span.push(token.index);
         trackAnnotations[code].length = token.offset + token.length - trackAnnotations[code].offset;
         matchedAnnotations.push(trackAnnotations[code]);
