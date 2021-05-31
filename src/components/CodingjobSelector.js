@@ -45,9 +45,7 @@ const CodingjobSelector = ({ type = "table" }) => {
           <DeleteCodingjob />
         </Button.Group>
 
-        <Container
-          style={{ marginTop: "30px", overflow: "auto", width: "800px" }}
-        >
+        <Container style={{ marginTop: "30px", overflow: "auto", width: "800px" }}>
           <SelectionTable
             columns={tableColumns}
             data={codingjobs ? codingjobs : []}
@@ -74,7 +72,6 @@ const CodingjobSelector = ({ type = "table" }) => {
       } else {
         setSelectedCodingjob(null);
       }
-      console.log(selectedCodingjob);
     };
 
     return (

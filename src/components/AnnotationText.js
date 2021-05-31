@@ -6,7 +6,7 @@ import SpanAnnotations from "./spanAnnotations";
 
 const gridStyle = { overflowY: "auto", height: "75vh" };
 
-const AnnotationText = ({ doc, codeTreeTable }) => {
+const AnnotationText = ({ doc }) => {
   const [tokens, setTokens] = useState([]);
 
   if (!doc) return null;

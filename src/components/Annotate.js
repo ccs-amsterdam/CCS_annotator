@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-//import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Breadcrumb, BreadcrumbSection, Grid, Input, Pagination } from "semantic-ui-react";
 
 import axios from "axios";
@@ -15,37 +15,35 @@ const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
 
-  //const location = useLocation();
-  // if location is given, it should point to a codingjob
-  // get the hash of the job and check if its in the indexeddb
-  // if not add, with a field saying that user is not the creator
-  // user will then only see annotation screen (no codingjob item in menubar)
-  // instead show 'time since saved' if there is a db connection
-  // and/or an 'export' button
-  // (maybe start with just saving to amcat on every change to annotations)
-
-  const jobURL =
-    "https://raw.githubusercontent.com/ccs-amsterdam/amcat4annotator/main/demo_data/codingjob.json";
+  const location = useLocation();
 
   const [doc, setDoc] = useState(null);
   const [nDocuments, setNDocuments] = useState(0);
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (jobURL) openExternalJob(jobURL, dispatch);
-  }, [jobURL, dispatch]);
+    if (location.search) {
+      const jobURL = location.search.substring(1);
+      openExternalJob(jobURL, dispatch, setReady);
+    } else {
+      setReady(true);
+    }
+  }, [location, dispatch]);
 
   useEffect(() => {
     if (!codingjob) return null;
+    if (!ready) return null;
     setActivePage(1);
     setupCodingjob(codingjob, setDoc, setNDocuments);
-  }, [codingjob]);
+  }, [codingjob, ready]);
 
   useEffect(() => {
+    if (!ready) return null;
     documentSelector(codingjob, activePage - 1, setDoc);
     setDelayedActivePage(activePage);
-  }, [codingjob, activePage]);
+  }, [codingjob, activePage, ready]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -134,7 +132,7 @@ const documentSelector = async (codingjob, i, setDoc) => {
   if (doc) setDoc(doc[0]);
 };
 
-const openExternalJob = async (jobURL, dispatch) => {
+const openExternalJob = async (jobURL, dispatch, setReady) => {
   const response = await axios.get(jobURL);
   const data = response.data;
   console.log(data);
@@ -149,6 +147,7 @@ const openExternalJob = async (jobURL, dispatch) => {
   const cj = await db.getCodingjob(job);
   dispatch(selectCodingjob(cj));
   dispatch(setCodingjobs(codingjobs));
+  setReady(true);
 };
 
 export default Annotate;

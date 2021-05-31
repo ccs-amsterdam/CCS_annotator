@@ -42,3 +42,37 @@ export const parseTokens = (texts) => {
   }
   return tokens;
 };
+
+export const safeTokens = (tokens) => {
+  console.log(tokens[0]);
+  console.log(tokens[0]["text"]);
+  //const indexFrom1 = tokens[0].offset && tokens[0].offset === 1;
+  let paragraph = 0;
+
+  const requiredFields = ["sentence", "text", "offset", "length"];
+  for (let rf of requiredFields) {
+    if (!tokens[0].text) tokens[0].text = tokens[0].token;
+    if (tokens[0][rf] == null) {
+      alert(`Invalid token data:\n\nimported tokens must have ${rf} field`);
+      return null;
+    }
+  }
+
+  for (let i = 0; i < tokens.length; i++) {
+    if (!tokens[i].text) tokens[i].text = tokens[i].token;
+    if (!tokens[i].pre) tokens[i].pre = "";
+    console.log(tokens[i]);
+    console.log(tokens[i + 1]);
+    if (!tokens[i].post)
+      tokens[i].post =
+        i < tokens.length - 1
+          ? " ".repeat(Math.max(0, tokens[i + 1].offset - tokens[i].offset - tokens[i].length))
+          : " ";
+    if (!tokens[i].paragraph) tokens[i].paragraph = paragraph;
+    if (tokens[i].text.includes("\n") || tokens[i].post.includes("\n")) paragraph++;
+    if (!tokens[i].section) tokens[i].section = "text";
+    tokens[i].index = i;
+  }
+
+  return tokens;
+};
