@@ -44,8 +44,6 @@ export const parseTokens = (texts) => {
 };
 
 export const safeTokens = (tokens) => {
-  console.log(tokens[0]);
-  console.log(tokens[0]["text"]);
   //const indexFrom1 = tokens[0].offset && tokens[0].offset === 1;
   let paragraph = 0;
 
@@ -61,8 +59,7 @@ export const safeTokens = (tokens) => {
   for (let i = 0; i < tokens.length; i++) {
     if (!tokens[i].text) tokens[i].text = tokens[i].token;
     if (!tokens[i].pre) tokens[i].pre = "";
-    console.log(tokens[i]);
-    console.log(tokens[i + 1]);
+
     if (!tokens[i].post)
       tokens[i].post =
         i < tokens.length - 1

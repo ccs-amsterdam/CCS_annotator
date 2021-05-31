@@ -31,7 +31,6 @@ const prepareTokens = async (doc, setTokenComponents, setTokens) => {
   }
   tokens = safeTokens(tokens);
   if (!tokens) return null;
-  console.log(tokens);
   setTokenComponents(renderText(tokens));
   setTokens(tokens);
 };
@@ -45,8 +44,8 @@ const renderText = (tokens) => {
   let section = tokens[0].section;
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i].paragraph !== paragraph_nr) {
-      paragraph.push(renderSentence(sentence_nr, sentence));
-      text.push(renderParagraph(paragraph_nr, paragraph, section));
+      paragraph.push(renderSentence(section + sentence_nr, sentence));
+      text.push(renderParagraph(section + paragraph_nr, paragraph, section));
       paragraph = [];
       sentence = [];
       paragraph_nr = tokens[i].paragraph;
@@ -54,16 +53,17 @@ const renderText = (tokens) => {
       section = tokens[i].section;
     }
     if (tokens[i].sentence !== sentence_nr) {
-      paragraph.push(renderSentence(sentence_nr, sentence));
+      paragraph.push(renderSentence(section + sentence_nr, sentence));
       sentence = [];
       sentence_nr = tokens[i].sentence;
     }
 
+    tokens[i].index = i;
     tokens[i].ref = React.createRef();
     sentence.push(renderToken(tokens[i]));
   }
-  paragraph.push(renderSentence(sentence_nr, sentence));
-  text.push(renderParagraph(paragraph_nr, paragraph, section));
+  paragraph.push(renderSentence(section + sentence_nr, sentence));
+  text.push(renderParagraph(section + paragraph_nr, paragraph, section));
 
   return text;
 };
