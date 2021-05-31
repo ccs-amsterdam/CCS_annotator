@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 //import { useLocation } from "react-router-dom";
 import { Breadcrumb, BreadcrumbSection, Grid, Input, Pagination } from "semantic-ui-react";
+import axios from "axios";
 
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
 import db from "../apis/dexie";
 
 const Annotate = () => {
-  const codingjob = useSelector(state => state.codingjob);
+  const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
 
   //const location = useLocation();
@@ -20,6 +21,9 @@ const Annotate = () => {
   // and/or an 'export' button
   // (maybe start with just saving to amcat on every change to annotations)
 
+  const jobURL =
+    "https://raw.githubusercontent.com/ccs-amsterdam/amcat4annotator/main/demo_data/codingjob.json";
+
   const [doc, setDoc] = useState(null);
   const [nDocuments, setNDocuments] = useState(0);
   const [activePage, setActivePage] = useState(1);
@@ -27,9 +31,10 @@ const Annotate = () => {
 
   useEffect(() => {
     if (!codingjob) return null;
+    if (jobURL) openExternalJob(jobURL);
     setActivePage(1);
     setupCodingjob(codingjob, setDoc, setNDocuments);
-  }, [codingjob, dispatch]);
+  }, [codingjob, jobURL, dispatch]);
 
   useEffect(() => {
     documentSelector(codingjob, activePage - 1, setDoc);
@@ -121,6 +126,12 @@ const documentSelector = async (codingjob, i, setDoc) => {
   if (!codingjob) return null;
   let doc = await db.getJobDocumentsBatch(codingjob, i, 1);
   if (doc) setDoc(doc[0]);
+};
+
+const openExternalJob = async (jobURL) => {
+  console.log(jobURL);
+  const response = await axios.get(jobURL);
+  console.log(JSON.parse(response));
 };
 
 export default Annotate;
