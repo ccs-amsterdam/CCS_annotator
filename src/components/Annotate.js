@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+//import { useLocation } from "react-router-dom";
 import { Breadcrumb, BreadcrumbSection, Grid, Input, Pagination } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
@@ -9,6 +10,15 @@ import db from "../apis/dexie";
 const Annotate = () => {
   const codingjob = useSelector(state => state.codingjob);
   const dispatch = useDispatch();
+
+  //const location = useLocation();
+  // if location is given, it should point to a codingjob
+  // get the hash of the job and check if its in the indexeddb
+  // if not add, with a field saying that user is not the creator
+  // user will then only see annotation screen (no codingjob item in menubar)
+  // instead show 'time since saved' if there is a db connection
+  // and/or an 'export' button
+  // (maybe start with just saving to amcat on every change to annotations)
 
   const [doc, setDoc] = useState(null);
   const [nDocuments, setNDocuments] = useState(0);
@@ -96,31 +106,6 @@ const documentPagination = (
     </>
   );
 };
-
-// const getParentTree = (codes, code) => {
-//   const parents = [];
-//   let parent = codes[code].parent;
-//   while (parent) {
-//     parents.push(parent);
-//     parent = codes[parent].parent;
-//   }
-//   return parents.reverse();
-// };
-
-// const prepareCodes = (cb) => {
-//   // the payload is an array of objects, but for efficients operations
-//   // in the annotator we convert it to an object with the codes as keys
-//   const codes = cb.codes.reduce((result, code) => {
-//     result[code.code] = code;
-//     return result;
-//   }, {});
-
-//   for (const code of Object.keys(codes)) {
-//     if (!codes[code].color) codes[code].color = randomColor({ seed: code, luminosity: "light" });
-//     codes[code].tree = getParentTree(codes, code);
-//   }
-//   return codes;
-// };
 
 const setupCodingjob = async (codingjob, setDoc, setNDocuments) => {
   const n = await db.getJobDocumentCount(codingjob);

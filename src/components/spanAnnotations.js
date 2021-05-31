@@ -29,7 +29,7 @@ const SpanInstructions = () => {
         Span annotations
       </Header>
       <p align="center">Assign codes to words or phrases. A word can have multiple codes.</p>
-      <Table compact>
+      <Table compact size="small">
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell></Table.HeaderCell>
