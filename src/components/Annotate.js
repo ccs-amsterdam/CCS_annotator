@@ -61,7 +61,7 @@ const Annotate = () => {
               <CodingjobSelector type="dropdown" />
             </BreadcrumbSection>
             <Breadcrumb.Divider />
-            <BreadcrumbSection>{doc ? doc.title : null}</BreadcrumbSection>
+            <BreadcrumbSection>{doc?.title ? doc.title : activePage}</BreadcrumbSection>
           </Breadcrumb>
         </Grid.Column>
         <Grid.Column align="center" floated="right" width={4}>

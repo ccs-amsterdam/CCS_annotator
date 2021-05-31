@@ -1,7 +1,7 @@
 {
-  "details": { "name": ["Codingjob with tokens from URL"] },
+  "details": { "name": "Codingjob with tokens from URL", "frozen": true },
   "codebook": {
-    "settings": { "can_edit_codes": [false] },
+    "settings": { "can_edit_codes": false },
     "codes": [
       { "code": "VVD", "parent": "Actor" },
       { "code": "D66", "parent": "Actor" },
@@ -13,7 +13,7 @@
     ],
     "relations": [],
     "code_annotations": {
-      "coding_unit": ["code"],
+      "coding_unit": "code",
       "context_unit": {
         "paragraph_window": [0, 0],
         "sentence_window": [1, 1],
@@ -21,8 +21,8 @@
       },
       "sampling": {
         "max_per_document": {},
-        "random_documents": [true],
-        "random_order": [true]
+        "random_documents": true,
+        "random_order": true
       },
       "tasks": [
         {

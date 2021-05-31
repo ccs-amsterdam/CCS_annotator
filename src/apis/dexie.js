@@ -76,7 +76,6 @@ class AnnotationDB {
       await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
     );
 
-    console.log(documentList);
     let duplicates = 0;
     const preparedDocuments = documentList.reduce((result, document) => {
       const doc_id = hash([document, codingjob]); // codingjob included for doc_id hash
@@ -133,17 +132,14 @@ class AnnotationDB {
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents
-      .where("doc_id")
-      .equals(document.doc_id)
-      .modify({ tokens: JSON.stringify(tokens, null, 2) });
+    return this.idb.documents.where("doc_id").equals(document.doc_id).modify({ tokens: tokens });
   }
 
   async writeAnnotations(document, annotations) {
     return this.idb.documents
       .where("doc_id")
       .equals(document.doc_id)
-      .modify({ annotations: JSON.stringify(annotations, null, 2) });
+      .modify({ annotations: annotations });
   }
 
   // CLEANUP

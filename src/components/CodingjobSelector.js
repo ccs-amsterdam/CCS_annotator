@@ -73,7 +73,7 @@ const CodingjobSelector = ({ type = "table" }) => {
         setSelectedCodingjob(null);
       }
     };
-
+    console.log(codingjob && codingjob.name);
     return (
       <Dropdown
         inline

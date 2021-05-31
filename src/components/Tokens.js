@@ -23,9 +23,7 @@ const Tokens = ({ doc, setTokens }) => {
 const prepareTokens = async (doc, setTokenComponents, setTokens) => {
   let tokens = doc.tokens;
 
-  if (tokens) {
-    tokens = JSON.parse(tokens);
-  } else {
+  if (!tokens) {
     tokens = parseTokens({ title: doc.title, text: doc.text });
     await db.writeTokens(doc, tokens);
   }

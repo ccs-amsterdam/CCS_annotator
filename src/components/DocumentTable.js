@@ -4,21 +4,14 @@ import { Container, Pagination, Table, Icon } from "semantic-ui-react";
 import db from "../apis/dexie";
 
 const PAGESIZE = 10;
-const COLUMNS = ["title", "text", "annotations", "meta"];
+const COLUMNS = ["title", "text", "meta"];
 
 const fetchFromDb = async (codingjob, pageSize, setPages, setData) => {
   const n = await db.getJobDocumentCount(codingjob);
   setPages(Math.ceil(n / pageSize));
   let newdata = [];
   if (n > 0) newdata = await db.getJobDocumentsBatch(codingjob, 0, pageSize);
-  console.log(newdata);
   setData(newdata);
-};
-
-const shortString = (string, n = 20) => {
-  if (!string) return null;
-  if (string.length < n) return string;
-  return string.slice(0, n) + "...";
 };
 
 const DocumentTable = () => {
@@ -52,16 +45,18 @@ const DocumentTable = () => {
 
   const createRowCells = (rowObj) => {
     return COLUMNS.map((key, i) => {
+      let content = rowObj[key];
+      if (key === "text" && !rowObj[key] && rowObj.tokens)
+        content = rowObj.tokens.map((token) => token.token || token.text).join(" ");
       return (
         <Table.Cell key={i}>
-          <span title={rowObj[key]}>{shortString(rowObj[key])}</span>
+          <span title={content}>{content}</span>
         </Table.Cell>
       );
     });
   };
 
   const pageChange = async (event, data) => {
-    console.log(data.activePage);
     const offset = (data.activePage - 1) * PAGESIZE;
     const newdata = await db.getJobDocumentsBatch(codingjob, offset, PAGESIZE);
     setData(newdata);
@@ -71,7 +66,7 @@ const DocumentTable = () => {
 
   return (
     <Container style={{ marginTop: "2em" }}>
-      <Table compact celled singleLine>
+      <Table fixed compact celled singleLine>
         <Table.Header>
           <Table.Row>{createHeaderRow(data)}</Table.Row>
         </Table.Header>

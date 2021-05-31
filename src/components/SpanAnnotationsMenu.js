@@ -7,9 +7,9 @@ import "./spanAnnotationsStyle.css";
 const COLWIDTHS = [4, 2, 2]; // for offset and text
 
 const SpanAnnotationsMenu = ({ doc, tokens }) => {
-  const annotations = useSelector(state => state.spanAnnotations);
+  const annotations = useSelector((state) => state.spanAnnotations);
 
-  if (!tokens) return null;
+  if (!tokens || tokens.length === 0) return null;
 
   return (
     <Table
@@ -40,12 +40,22 @@ const SpanAnnotationsMenu = ({ doc, tokens }) => {
 
 const annotationRows = (tokens, doc, annotations) => {
   const rows = [];
+  let text = null;
+  let token = null;
 
   for (const tokenIndex of Object.keys(annotations)) {
     for (const code of Object.keys(annotations[tokenIndex])) {
-      const token = annotations[tokenIndex][code];
+      token = annotations[tokenIndex][code];
       if (token.index !== token.span[0]) continue;
-      const text = doc[token.section].slice(token.offset, token.offset + token.length);
+
+      const annotationTokens = tokens.slice(token.span[0], token.span[1] + 1);
+      text = annotationTokens
+        .map((at, i) => {
+          const pre = i > 0 ? at.pre : "";
+          const post = i < annotationTokens.length - 1 ? at.post : "";
+          return pre + at.text + post;
+        })
+        .join("");
 
       const row = (
         <AnnotationRow
@@ -63,8 +73,8 @@ const annotationRows = (tokens, doc, annotations) => {
 };
 
 const AnnotationRow = ({ tokens, token, code, text }) => {
-  const codeMap = useSelector(state => state.codeMap);
-  const infocus = useSelector(state => {
+  const codeMap = useSelector((state) => state.codeMap);
+  const infocus = useSelector((state) => {
     return state.currentToken >= token.span[0] && state.currentToken <= token.span[1];
   });
 

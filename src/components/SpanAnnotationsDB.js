@@ -6,7 +6,7 @@ import db from "../apis/dexie";
 // this component generates no content, but manages writing and reading of annotations
 
 const SpanAnnotationsDB = ({ doc, tokens }) => {
-  const annotations = useSelector(state => state.spanAnnotations);
+  const annotations = useSelector((state) => state.spanAnnotations);
   const [ready, setReady] = useState(false);
   const dispatch = useDispatch();
 
@@ -22,28 +22,33 @@ const SpanAnnotationsDB = ({ doc, tokens }) => {
   }, [ready, tokens, doc, dispatch]);
 
   useEffect(() => {
-    if (ready) exportAnnotations(doc, annotations);
-  }, [ready, doc, annotations]);
+    if (ready) exportAnnotations(doc, annotations, tokens);
+  }, [ready, doc, tokens, annotations]);
 
   return <div></div>;
 };
 
-const exportAnnotations = async (doc, annotations) => {
-  let unique = new Set();
+const exportAnnotations = async (doc, annotations, tokens) => {
   const uniqueAnnotations = Object.values(annotations).reduce((un_ann, ann) => {
     for (let key of Object.keys(ann)) {
+      if (ann[key].index !== ann[key].span[0]) continue;
+      const annotationTokens = tokens.slice(ann[key].span[0], ann[key].span[1] + 1);
+      const text = annotationTokens
+        .map((at, i) => {
+          const pre = i > 0 ? at.pre : "";
+          const post = i < annotationTokens.length - 1 ? at.post : "";
+          return pre + at.text + post;
+        })
+        .join("");
       const ann_obj = {
         code: key,
-        text: doc[ann[key].section].slice(ann[key].offset, ann[key].offset + ann[key].length),
+        text: text,
         section: ann[key].section,
         offset: ann[key].offset,
+        index: ann[key].index,
         length: ann[key].length,
       };
-      const json = JSON.stringify(ann_obj);
-      if (!unique.has(json)) {
-        unique.add(json);
-        un_ann.push(ann_obj);
-      }
+      un_ann.push(ann_obj);
     }
     return un_ann;
   }, []);
@@ -67,7 +72,7 @@ const matchAnnotations = (tokens, annotations, dispatch) => {
     addAnnotations(matchedAnnotation, dispatch);
   }
 
-  let topCodes = Object.keys(codeCounter).sort(function(a, b) {
+  let topCodes = Object.keys(codeCounter).sort(function (a, b) {
     return codeCounter[a] - codeCounter[b];
   });
   for (const code of topCodes.slice(-5)) {
@@ -103,9 +108,8 @@ const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnota
   }
 };
 
-const prepareAnnotations = annotations => {
+const prepareAnnotations = (annotations) => {
   if (!annotations || annotations === "") return {};
-  const anns = JSON.parse(annotations);
 
   // create an object where the key is a section+offset, and the
   // value is an array that tells which codes start and end there
@@ -113,7 +117,7 @@ const prepareAnnotations = annotations => {
   // (switching to tokenindices keeps the annotation nice and fast. in time
   //  we might also move the internal storage to tokenindices instead of
   //  converting back and fro spans, but for now it helps ensure they're aligned)
-  return anns.reduce((obj, ann) => {
+  return annotations.reduce((obj, ann) => {
     const startKey = `${ann.section}-${ann.offset}`;
     const endKey = `${ann.section}-${ann.offset + ann.length}`;
     if (!obj[startKey]) obj[startKey] = { start: [], end: [] };
