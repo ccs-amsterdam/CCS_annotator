@@ -76,6 +76,7 @@ class AnnotationDB {
       await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
     );
 
+    console.log(documentList);
     let duplicates = 0;
     const preparedDocuments = documentList.reduce((result, document) => {
       const doc_id = hash([document, codingjob]); // codingjob included for doc_id hash
