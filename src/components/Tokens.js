@@ -66,7 +66,6 @@ const renderText = (tokens) => {
 };
 
 const renderParagraph = (paragraph_nr, sentences, section) => {
-  console.log(section);
   return (
     // uses span behaving like p, because p is not allowed due to nested div (for Label)
     <span style={{ marginTop: "1em", display: "table", lineHeight: 1.65 }} key={paragraph_nr}>

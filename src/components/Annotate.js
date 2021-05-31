@@ -9,6 +9,7 @@ import hash from "object-hash";
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
 import db from "../apis/dexie";
+import { selectCodingjob, setCodingjobs } from "../actions";
 
 const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
@@ -32,11 +33,14 @@ const Annotate = () => {
   const [delayedActivePage, setDelayedActivePage] = useState(1);
 
   useEffect(() => {
+    if (jobURL) openExternalJob(jobURL, dispatch);
+  }, [jobURL, dispatch]);
+
+  useEffect(() => {
     if (!codingjob) return null;
-    if (jobURL) openExternalJob(jobURL);
     setActivePage(1);
     setupCodingjob(codingjob, setDoc, setNDocuments);
-  }, [codingjob, jobURL, dispatch]);
+  }, [codingjob]);
 
   useEffect(() => {
     documentSelector(codingjob, activePage - 1, setDoc);
@@ -130,13 +134,21 @@ const documentSelector = async (codingjob, i, setDoc) => {
   if (doc) setDoc(doc[0]);
 };
 
-const openExternalJob = async (jobURL) => {
-  // console.log(jobURL);
-  // const response = await axios.get(jobURL);
-  // console.log(response.data);
-  // const job = await db.createCodingjob("Demo codingjob");
-  // await db.createDocuments(job, demo_articles, true);
-  // await db.writeCodebook(job, demo_codebook);
+const openExternalJob = async (jobURL, dispatch) => {
+  const response = await axios.get(jobURL);
+  const data = response.data;
+  console.log(data);
+  const job = { name: data.details.name, job_id: hash(data) };
+  let hasjob = await db.getCodingjob(job);
+  if (!hasjob) {
+    await db.createCodingjob(data.details.name, hash(data));
+    await db.createDocuments(job, data.documents, true);
+    await db.writeCodebook(job, data.codebook);
+  }
+  const codingjobs = await db.listCodingjobs();
+  const cj = await db.getCodingjob(job);
+  dispatch(selectCodingjob(cj));
+  dispatch(setCodingjobs(codingjobs));
 };
 
 export default Annotate;
