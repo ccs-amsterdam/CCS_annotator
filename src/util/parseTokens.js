@@ -2,7 +2,7 @@ import nlp from "compromise";
 import paragraphs from "compromise-paragraphs";
 nlp.extend(paragraphs);
 
-export const parseTokens = texts => {
+export const parseTokens = (texts) => {
   // map to single array.
   // for some reason there's an extra array layer between sents and pars...
   // I've only found cases where lenght is 1, but I'll map it just in case
@@ -15,10 +15,7 @@ export const parseTokens = texts => {
   let text = null;
   for (let section of Object.keys(texts)) {
     text = texts[section];
-    t = nlp
-      .tokenize(text)
-      .paragraphs()
-      .json({ offset: true });
+    t = nlp.tokenize(text).paragraphs().json({ offset: true });
     for (let par = 0; par < t.length; par++) {
       for (let sent = 0; sent < t[par].sentences.length; sent++) {
         for (let sent2 = 0; sent2 < t[par].sentences[sent].length; sent2++) {

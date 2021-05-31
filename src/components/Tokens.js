@@ -33,20 +33,22 @@ const prepareTokens = async (doc, setTokenComponents, setTokens) => {
   setTokens(tokens);
 };
 
-const renderText = tokens => {
+const renderText = (tokens) => {
   const text = [];
   let paragraph = [];
   let sentence = [];
   let paragraph_nr = 0;
   let sentence_nr = 0;
+  let section = tokens[0].section;
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i].paragraph !== paragraph_nr) {
       paragraph.push(renderSentence(sentence_nr, sentence));
-      text.push(renderParagraph(paragraph_nr, paragraph));
+      text.push(renderParagraph(paragraph_nr, paragraph, section));
       paragraph = [];
       sentence = [];
       paragraph_nr = tokens[i].paragraph;
       sentence_nr = tokens[i].sentence;
+      section = tokens[i].section;
     }
     if (tokens[i].sentence !== sentence_nr) {
       paragraph.push(renderSentence(sentence_nr, sentence));
@@ -58,16 +60,17 @@ const renderText = tokens => {
     sentence.push(renderToken(tokens[i]));
   }
   paragraph.push(renderSentence(sentence_nr, sentence));
-  text.push(renderParagraph(paragraph_nr, paragraph));
+  text.push(renderParagraph(paragraph_nr, paragraph, section));
 
   return text;
 };
 
-const renderParagraph = (paragraph_nr, sentences) => {
+const renderParagraph = (paragraph_nr, sentences, section) => {
+  console.log(section);
   return (
     // uses span behaving like p, because p is not allowed due to nested div (for Label)
     <span style={{ marginTop: "1em", display: "table", lineHeight: 1.65 }} key={paragraph_nr}>
-      {paragraph_nr === 0 ? <h2>{sentences}</h2> : sentences}
+      {section === "title" ? <h2>{sentences}</h2> : sentences}
     </span>
   );
 };
@@ -80,7 +83,7 @@ const renderSentence = (sentence_nr, tokens) => {
   );
 };
 
-const renderToken = token => {
+const renderToken = (token) => {
   return <Token ref={token.ref} key={token.index} token={token} />;
 };
 
