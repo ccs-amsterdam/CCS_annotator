@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 //import { useLocation } from "react-router-dom";
 import { Breadcrumb, BreadcrumbSection, Grid, Input, Pagination } from "semantic-ui-react";
+
 import axios from "axios";
+import hash from "object-hash";
 
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationText from "./AnnotationText";
@@ -129,9 +131,12 @@ const documentSelector = async (codingjob, i, setDoc) => {
 };
 
 const openExternalJob = async (jobURL) => {
-  console.log(jobURL);
-  const response = await axios.get(jobURL);
-  console.log(JSON.parse(response));
+  // console.log(jobURL);
+  // const response = await axios.get(jobURL);
+  // console.log(response.data);
+  // const job = await db.createCodingjob("Demo codingjob");
+  // await db.createDocuments(job, demo_articles, true);
+  // await db.writeCodebook(job, demo_codebook);
 };
 
 export default Annotate;

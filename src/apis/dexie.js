@@ -38,8 +38,8 @@ class AnnotationDB {
   }
 
   // CODINGJOBS
-  async createCodingjob(name) {
-    const job_id = hash([name, Date.now().toString()]);
+  async createCodingjob(name, job_id = null) {
+    if (!job_id) job_id = hash([name, Date.now().toString()]);
     this.idb.codingjobs.add({
       job_id,
       name,
