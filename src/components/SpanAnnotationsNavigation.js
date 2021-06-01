@@ -14,9 +14,9 @@ import { toggleAnnotations } from "../actions";
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const SpanAnnotationsNavigation = ({ doc, tokens }) => {
-  const currentToken = useSelector(state => state.currentToken);
-  const tokenSelection = useSelector(state => state.tokenSelection);
-  const eventsBlocked = useSelector(state => state.eventsBlocked);
+  const currentToken = useSelector((state) => state.currentToken);
+  const tokenSelection = useSelector((state) => state.tokenSelection);
+  const eventsBlocked = useSelector((state) => state.eventsBlocked);
 
   const [mover, setMover] = useState(null);
   const [HoldSpace, setHoldSpace] = useState(false);
@@ -99,7 +99,7 @@ const KeyEvents = ({
   });
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyUp = event => {
+  const onKeyUp = (event) => {
     // keep track of which buttons are pressed in the state
     if (event.keyCode === 32 || event.key === "Shift") {
       setHoldSpace(false);
@@ -113,7 +113,7 @@ const KeyEvents = ({
   };
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyDown = event => {
+  const onKeyDown = (event) => {
     // key presses, and key holding (see onKeyUp)
     if (event.keyCode === 32 || event.key === "Shift") {
       event.preventDefault();
@@ -163,23 +163,24 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     };
   });
 
-  const onMouseDown = event => {
+  const onMouseDown = (event) => {
     // When left button pressed, start new selection
     if (event.which === 1) {
-      //event.preventDefault();
+      event.preventDefault();
+      console.log(event);
       setHoldMouseLeft(true);
       dispatch(clearTokenSelection());
     }
   };
 
-  const onMouseMove = event => {
+  const onMouseMove = (event) => {
     // When selection started (mousedown), select tokens hovered over
     if (holdMouseLeft) {
       if (event.which !== 1) return null;
       window.getSelection().empty();
       storeMouseSelection(event);
     } else {
-      let currentNode = getToken(tokens, event.originalTarget);
+      let currentNode = getToken(tokens, event);
       if (currentNode) {
         dispatch(setCurrentToken(currentNode.index));
         dispatch(toggleTokenSelection(tokens, currentNode.index, false));
@@ -187,7 +188,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     }
   };
 
-  const onMouseUp = event => {
+  const onMouseUp = (event) => {
     // When left mouse key is released, create the annotation
     // note that in case of a single click, the token has not been selected (this happens on move)
     // so this way a click can still be used to open
@@ -210,15 +211,15 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     }
   };
 
-  const onContextMenu = event => {
+  const onContextMenu = (event) => {
     if (event.button === 2) return null;
     event.preventDefault();
     event.stopPropagation();
   };
 
-  const storeMouseSelection = event => {
+  const storeMouseSelection = (event) => {
     // select tokens that the mouse/touch is currently pointing at
-    let currentNode = getToken(tokens, event.originalTarget);
+    let currentNode = getToken(tokens, event);
     if (!currentNode) return null;
 
     dispatch(setCurrentToken(currentNode.index));
@@ -339,12 +340,21 @@ const getToken = (tokens, e) => {
   try {
     // sometimes e is Restricted, and I have no clue why,
     // nor how to check this in a condition. hence the try clause
-    if (e.className === "token" || e.className === "token selected")
-      return getTokenAttributes(tokens, e);
-    if (e.parentNode) {
-      if (e.parentNode.className === "token" || e.parentNode.className === "token selected")
-        return getTokenAttributes(tokens, e.parentNode);
+    if (e.originalTarget) {
+      if (e.originalTarget.className === "token" || e.originalTarget.className === "token selected")
+        return getTokenAttributes(tokens, e.originalTarget);
+      if (e.originalTarget.parentNode) {
+        if (
+          e.originalTarget.parentNode.className === "token" ||
+          e.originalTarget.parentNode.className === "token selected"
+        )
+          return getTokenAttributes(tokens, e.originalTarget.parentNode);
+      }
     }
+    if (e.path[0].className === "token" || e.path[0].className === "token selected") {
+      return getTokenAttributes(tokens, e.path[0]);
+    }
+
     return null;
   } catch (e) {
     return null;
