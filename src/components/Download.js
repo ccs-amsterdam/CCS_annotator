@@ -11,8 +11,7 @@ const Download = () => {
   const onDownload = async () => {
     try {
       const blob = await exportDB(db.idb, {
-        filter: (table, value, key) =>
-          table === "codingjobs" || table === "documents",
+        filter: (table, value, key) => table === "codingjobs" || table === "documents",
         prettyJson: true,
         progressCallback,
       });
@@ -26,13 +25,7 @@ const Download = () => {
     <Modal
       closeIcon
       open={open}
-      trigger={
-        <Menu.Item
-          icon="download"
-          name="Download"
-          style={{ color: "lightgreen" }}
-        />
-      }
+      trigger={<Menu.Item icon="download" name="Download" style={{ color: "lightgreen" }} />}
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
     >

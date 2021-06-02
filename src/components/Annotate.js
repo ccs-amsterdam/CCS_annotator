@@ -135,7 +135,6 @@ const documentSelector = async (codingjob, i, setDoc) => {
 const openExternalJob = async (jobURL, dispatch, setReady) => {
   const response = await axios.get(jobURL);
   const data = response.data;
-  console.log(data);
   const job = { name: data.details.name, job_id: hash(data) };
   let hasjob = await db.getCodingjob(job);
   if (!hasjob) {

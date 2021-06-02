@@ -65,7 +65,7 @@ class AnnotationDB {
   }
   async writeCodes(codingjob, codes) {
     const cj = await this.getCodingjob(codingjob);
-    const codebook = JSON.parse(cj.codebook);
+    const codebook = cj.codebook ? JSON.parse(cj.codebook) : {};
     codebook.codes = codes;
     return await this.writeCodebook(codingjob, codebook);
   }

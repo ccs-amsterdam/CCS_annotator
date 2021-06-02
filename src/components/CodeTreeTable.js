@@ -167,52 +167,25 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
 };
 
 const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings }) => {
-  const codeMap = useSelector((state) => state.codeMap);
   const [open, setOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
 
   const buttonContent = () => {
     return (
-      <>
-        Edit
-        <ButtonGroup size="tiny">
-          <Button
-            icon="plus"
-            compact
-            size="mini"
-            style={{
-              paddingLeft: "5px",
-              paddingRight: "0px",
-              backgroundColor: "white",
-            }}
-            onClick={addCodePopup}
-          />
-          <Button
-            icon="minus"
-            compact
-            size="mini"
-            style={{ paddingLeft: "0px", paddingRight: "0px", backgroundColor: "white" }}
-            onClick={rmCodePopup}
-          />
-          <Button
-            icon="shuffle"
-            compact
-            size="mini"
-            style={{ paddingLeft: "0px", paddingRight: "0px", backgroundColor: "white" }}
-            onClick={moveCodePopup}
-          />
-        </ButtonGroup>
-      </>
+      <ButtonGroup>
+        <Button icon="plus" compact size="mini" onClick={() => addCodePopup(false)} />
+        <Button icon="minus" compact size="mini" onClick={rmCodePopup} />
+        <Button icon="shuffle" compact size="mini" onClick={moveCodePopup} />
+      </ButtonGroup>
     );
   };
 
-  const addCodePopup = () => {
+  const addCodePopup = (root) => {
     setPopupContent(
       <AddCodePopup
         codingjob={codingjob}
-        code={code.code}
+        code={root ? "" : code.code}
         codes={codes}
-        codeMap={codeMap}
         setOpen={setOpen}
         setCodes={setCodes}
       />
@@ -225,7 +198,6 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
         codingjob={codingjob}
         code={code.code}
         codes={codes}
-        codeMap={codeMap}
         setOpen={setOpen}
         setCodes={setCodes}
       />
@@ -233,14 +205,11 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
   };
 
   const moveCodePopup = () => {
-    console.log(code.code);
-    console.log(code);
     setPopupContent(
       <MoveCodePopup
         codingjob={codingjob}
         code={code.code}
         codes={codes}
-        codeMap={codeMap}
         setOpen={setOpen}
         setCodes={setCodes}
       />
@@ -256,7 +225,7 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
       flowing
       hoverable
       wide
-      position="left center"
+      position="center"
       onClose={() => {
         setPopupContent(buttonContent());
         setOpen(false);
@@ -264,14 +233,28 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
       open={open}
       mouseLeaveDelay={10000000} // just don't use mouse leave
       trigger={
-        <span
-          onClick={() => {
-            setPopupContent(buttonContent);
-            setOpen(true);
-          }}
-        >
-          {children}
-        </span>
+        code === "" ? (
+          <Button
+            onClick={() => {
+              addCodePopup(true);
+              setOpen(true);
+            }}
+            style={{ marginTop: "1em" }}
+            compact
+            size="mini"
+          >
+            Create new root
+          </Button>
+        ) : (
+          <span
+            onClick={() => {
+              setPopupContent(buttonContent);
+              setOpen(true);
+            }}
+          >
+            {children}
+          </span>
+        )
       }
     >
       {popupContent}{" "}
@@ -279,7 +262,8 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
   );
 };
 
-const AddCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) => {
+const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
+  const codeMap = useSelector((state) => state.codeMap);
   const dispatch = useDispatch();
   const [textInput, setTextInput] = useState("");
 
@@ -303,7 +287,7 @@ const AddCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) =>
   return (
     <div>
       <p>
-        Add code under <b>{code}</b>
+        Add code under <b>{code === "" ? "Root" : code}</b>
         <Button floated="right" compact size="mini" icon="delete" onClick={() => setOpen(false)} />
       </p>
       <Form onSubmit={() => addCode(textInput)}>
@@ -321,7 +305,8 @@ const AddCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) =>
   );
 };
 
-const RmCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) => {
+const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
+  const codeMap = useSelector((state) => state.codeMap);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -376,7 +361,8 @@ const RmCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) => 
   );
 };
 
-const MoveCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) => {
+const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
+  const codeMap = useSelector((state) => state.codeMap);
   const dispatch = useDispatch();
   const [newParent, setNewParent] = useState(codeMap[code].parent);
   const [textInput, setTextInput] = useState(code);
@@ -445,7 +431,6 @@ const MoveCodePopup = ({ codingjob, code, codes, codeMap, setOpen, setCodes }) =
           <Input
             autoFocus
             onChange={(e, d) => {
-              console.log(d.value);
               setTextInput(d.value);
             }}
             value={textInput}

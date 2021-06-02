@@ -1,7 +1,7 @@
 {
   "details": { "name": "Codingjob from URL" },
   "codebook": {
-    "settings": { "can_edit_codes": [false] },
+    "settings": { "can_edit_codes": true },
     "codes": [
       { "code": "VVD", "parent": "Actor" },
       { "code": "D66", "parent": "Actor" },

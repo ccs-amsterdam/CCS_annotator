@@ -13,7 +13,6 @@ const CodebookSidebar = () => {
     };
   }, [dispatch]);
 
-  console.log(showSidebar);
   return (
     <Menu.Item
       name={`${showSidebar ? "Hide" : "Show"} codebook`}

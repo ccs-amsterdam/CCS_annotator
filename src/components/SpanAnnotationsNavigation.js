@@ -166,8 +166,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
   const onMouseDown = (event) => {
     // When left button pressed, start new selection
     if (event.which === 1) {
-      event.preventDefault();
-      console.log(event);
+      //event.preventDefault();
       setHoldMouseLeft(true);
       dispatch(clearTokenSelection());
     }
