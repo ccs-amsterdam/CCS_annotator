@@ -24,7 +24,7 @@ const prepareTokens = async (doc, setTokenComponents, setTokens) => {
   let tokens = doc.tokens;
 
   if (!tokens) {
-    tokens = parseTokens({ title: doc.title, text: doc.text });
+    tokens = parseTokens(doc.text_fields);
     await db.writeTokens(doc, tokens);
   }
   if (!tokens) return null;

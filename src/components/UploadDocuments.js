@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Container, Header, Table, Grid, Select, Form, Button, Icon } from "semantic-ui-react";
+import { Container, Header, Table, Grid, Form, Button, Icon, Dropdown } from "semantic-ui-react";
 import { useSelector } from "react-redux";
 
 //import CSVReader from "react-csv-reader";
@@ -8,51 +8,89 @@ import { CSVReader } from "react-papaparse";
 import db from "../apis/dexie";
 
 export const UploadTextsCsv = ({ setActive }) => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const [data, setData] = useState([]);
-  const fileRef = useRef();
-
   const columns = {
-    title: { required: true, defaults: ["title"] },
-    text: { required: true, defaults: ["text", "body"] },
-    texting: { required: true, defaults: ["text", "body"] },
-    textings: { required: true, defaults: ["text", "body"] },
-    text1: { required: true, defaults: ["text", "body"] },
-    texting1: { required: true, defaults: ["text", "body"] },
-    textings1: { required: true, defaults: ["text", "body"] },
-    annotations: { required: true, defaults: ["annotations"] },
+    document_id: { required: true, multiple: false, defaults: ["doc_id", "document_id"] },
+    annotations_json: { required: false, multiple: false, defaults: ["annotations_json"] },
+    text_fields: {
+      required: true,
+      multiple: true,
+      defaults: ["title", "headline", "body", "message", "text"],
+    },
   };
+  return <UploadCsv type="texts" columns={columns} setActive={setActive} />;
+};
 
-  if (!codingjob) return null;
+const renderTextForms = (columns, options, fields, setFields) => {
   return (
-    <Container className="five wide">
-      <CSVReader
-        ref={fileRef}
-        onFileLoad={(data) => setData(data)}
-        addRemoveButton
-        onRemoveFile={() => setData([])}
-      >
-        <span>Click or drag to upload</span>
-      </CSVReader>
-      <SubmitForm data={data} codingjob={codingjob} fileRef={fileRef} columns={columns} />
-      <PreviewTable data={data} />
-    </Container>
+    <>
+      <Form.Group widths="equal">
+        {renderForm("document id", "document_id", columns, options, fields, setFields)}
+        {renderForm("annotations (json)", "annotations_json", columns, options, fields, setFields)}
+      </Form.Group>
+      <Form.Group widths="equal">
+        {renderForm("text fields", "text_fields", columns, options, fields, setFields)}
+      </Form.Group>
+    </>
   );
 };
 
 export const UploadTokensCsv = ({ setActive }) => {
+  const columns = {
+    document_id: { required: true, multiple: false, defaults: ["doc_id", "document_id"] },
+    token: { required: true, multiple: false, defaults: ["token", "text"] },
+    sentence: {
+      required: false,
+      multiple: false,
+      defaults: ["sentence", "sentence_nr", "sentence_id"],
+    },
+    paragraph: {
+      required: false,
+      multiple: false,
+      defaults: ["paragraph", "paragraph_nr", "paragraph_id"],
+    },
+    offset: { required: false, int: true, multiple: false, defaults: ["offset", "start"] },
+    end: { required: false, int: true, multiple: false, defaults: ["end"] },
+    post: { required: false, multiple: false, defaults: ["post", "space"] },
+    section: { required: false, multiple: false, defaults: ["section"] },
+    annotations: { required: false, multiple: true, defaults: ["annotation"] },
+  };
+  return <UploadCsv type="tokens" columns={columns} setActive={setActive} />;
+};
+
+const renderTokenForms = (columns, options, fields, setFields) => {
+  return (
+    <>
+      <Form.Group widths="equal">
+        {renderForm("document id", "document_id", columns, options, fields, setFields)}
+        {renderForm("token", "token", columns, options, fields, setFields)}
+        {renderForm("paragraph", "paragraph", columns, options, fields, setFields)}
+        {renderForm("sentence", "sentence", columns, options, fields, setFields)}
+      </Form.Group>
+      <Form.Group widths="equal">
+        {renderForm("start / offset", "offset", columns, options, fields, setFields)}
+        {renderForm("end", "end", columns, options, fields, setFields)}
+        {renderForm("space / post", "post", columns, options, fields, setFields)}
+        {renderForm("section (title, text..)", "section", columns, options, fields, setFields)}
+      </Form.Group>
+      <Form.Group widths="equal">
+        {renderForm("annotation columns", "annotations", columns, options, fields, setFields, true)}
+      </Form.Group>
+    </>
+  );
+};
+
+const UploadCsv = ({ type = "text", columns, setActive }) => {
   const codingjob = useSelector((state) => state.codingjob);
   const [data, setData] = useState([]);
   const fileRef = useRef();
 
-  if (!codingjob) return null;
   return (
-    <Grid stackable style={{ marginTop: "4.3em" }}>
-      <Grid.Row>
-        <Grid.Column floated="right" width={4}>
-          {" "}
+    <Container>
+      <Grid>
+        <Grid.Column width={5}>
           <CSVReader
             ref={fileRef}
+            nodrag
             onFileLoad={(data) => setData(data)}
             addRemoveButton
             onRemoveFile={() => setData([])}
@@ -60,22 +98,25 @@ export const UploadTokensCsv = ({ setActive }) => {
             <span>Click to upload</span>
           </CSVReader>
         </Grid.Column>
-        <Grid.Column floated="right" width={10}>
-          <SubmitForm data={data} codingjob={codingjob} fileRef={fileRef} />
+        <Grid.Column floated="right" width={11}>
+          <SubmitForm
+            type={type}
+            data={data}
+            codingjob={codingjob}
+            fileRef={fileRef}
+            columns={columns}
+          />
         </Grid.Column>
-      </Grid.Row>
-      <Grid.Row>
-        <Grid.Column>
-          <PreviewTable data={data} />
-        </Grid.Column>
-      </Grid.Row>
-    </Grid>
+      </Grid>
+      <PreviewTable data={data} />
+    </Container>
   );
 };
 
-const SubmitForm = ({ data, codingjob, fileRef, columns }) => {
+const SubmitForm = ({ type, data, codingjob, fileRef, columns }) => {
   const [options, setOptions] = useState([]);
   const [fields, setFields] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (data.length <= 1) {
@@ -92,9 +133,13 @@ const SubmitForm = ({ data, codingjob, fileRef, columns }) => {
 
     let newfields = {};
     for (let col of Object.keys(columns)) {
-      newfields[col] = null;
+      newfields[col] = columns[col].multiple ? [] : null;
       for (let def of columns[col].defaults) {
-        if (data[0].data.includes(def)) newfields[col] = def;
+        if (data[0].data.includes(def)) {
+          if (columns[col].multiple) {
+            newfields[col].push(def);
+          } else newfields[col] = def;
+        }
       }
     }
     setFields(newfields);
@@ -102,86 +147,78 @@ const SubmitForm = ({ data, codingjob, fileRef, columns }) => {
 
   const csvToJson = (data, fields) => {
     const keys = data[0].data;
-    return data.slice(1).map((row) => {
-      const datarow = row.data.reduce(
-        (obj, value, i) => {
-          let key = keys[i];
-          obj.original[key] = value; // keep original names and values (for exporting afterwards)
 
-          for (let col of Object.keys(fields)) {
-            if (fields[col] === key) {
-              obj[col] = value;
-              break;
-            }
+    // first get indices from header row
+    // more efficient than lookup for each row
+    const fieldIndices = { ...fields };
+    for (let field of Object.keys(fields)) {
+      if (columns[field].multiple) {
+        fieldIndices[field] = {};
+        for (let subfield of fields[field]) {
+          fieldIndices[field][subfield] = keys.findIndex((k) => k === subfield);
+        }
+      } else {
+        fieldIndices[field] = keys.findIndex((k) => k === fields[field]);
+      }
+    }
+
+    return data.slice(1).map((row) => {
+      const datarow = { original: row.data };
+
+      for (let field of Object.keys(fields)) {
+        if (columns[field].multiple) {
+          datarow[field] = [];
+          for (let subfield of fields[field]) {
+            const fieldindex = fieldIndices[field][subfield];
+            if (fieldindex < 0) continue;
+            let v = row.data[fieldindex];
+            if (columns[field].int) v = parseInt(v);
+            datarow[field].push({ name: keys[fieldindex], value: v });
           }
-          return obj;
-        },
-        { original: {}, annotations: "" }
-      );
+        } else {
+          const fieldindex = fieldIndices[field];
+          if (fieldindex < 0) continue;
+          let v = row.data[fieldindex];
+          datarow[field] = columns[field].int ? parseInt(v) : v;
+        }
+      }
       return datarow;
     });
   };
 
   const uploadData = async () => {
     try {
-      const preparedData = csvToJson(data, fields);
+      setLoading(true);
+      let preparedData = csvToJson(data, fields);
+      if (type === "tokens") preparedData = tokensToDocumentList(preparedData);
       await db.createDocuments(codingjob, preparedData);
       fileRef.current.removeFile();
+      //dispatch(selectCodingjob(codingjob));
+      setLoading(false);
     } catch (e) {
-      console.log(e);
+      setLoading(false);
     }
-  };
-
-  const renderForms = () => {
-    const keys = Object.keys(columns);
-
-    const forms = [];
-    let formgroup = [];
-
-    for (let i = 0; i < keys.length; i++) {
-      const column = keys[i];
-      const ff = (
-        <Form.Field
-          control={Select}
-          clearable
-          required={columns[column].required}
-          placeholder={column}
-          options={options}
-          value={fields[column]}
-          onChange={(e, d) => {
-            const newfields = { ...fields };
-            newfields[column] = d.value;
-            setFields(newfields);
-          }}
-        />
-      );
-
-      if (i % 3 === 0) {
-        forms.push(formgroup);
-        formgroup = [];
-      } else {
-        formgroup.push(ff);
-      }
-    }
-    if (formgroup.length > 0) forms.push(formgroup);
-
-    return forms.map((formgroup) => <Form.Group widths="equal">{formgroup}</Form.Group>);
   };
 
   const allDone = () => {
     for (let col of Object.keys(columns)) {
-      if (columns[col].required && !fields[col]) return false;
+      if (columns[col].multiple) {
+        if (columns[col].required && fields[col].length === 0) return false;
+      } else {
+        if (columns[col].required && !fields[col]) return false;
+      }
     }
     return true;
   };
 
-  if (data.length <= 1) return null;
+  //if (data.length <= 1) return null;
 
   return (
     <>
-      <Form>
-        {renderForms()}
-        <Form.Group widths="equal">
+      <Form loading={loading}>
+        {type === "texts" ? renderTextForms(columns, options, fields, setFields) : null}
+        {type === "tokens" ? renderTokenForms(columns, options, fields, setFields) : null}
+        <Form.Group>
           <Form.Field control={Button} onClick={uploadData} disabled={!allDone()}>
             <Icon name="upload" />
             Upload
@@ -189,6 +226,40 @@ const SubmitForm = ({ data, codingjob, fileRef, columns }) => {
         </Form.Group>
       </Form>
     </>
+  );
+};
+
+const tokensToDocumentList = (data) => {
+  const documents = [];
+  let tokens = [data[0]];
+  for (let i = 1; i < data.length; i++) {
+    if (data[i].document_id !== data[i - 1].document_id) {
+      documents.push({ document_id: data[i - 1].document_id, tokens });
+      tokens = [];
+    }
+    tokens.push(data[i]);
+  }
+  return documents;
+};
+
+const renderForm = (label, column, columns, options, fields, setFields) => {
+  return (
+    <Form.Field
+      control={Dropdown}
+      clearable
+      selection
+      multiple={columns[column].multiple ? true : false}
+      label={label}
+      required={columns[column].required}
+      options={options}
+      value={fields[column]}
+      onChange={(e, d) => {
+        const newfields = { ...fields };
+        newfields[column] = d.value;
+        setFields(newfields);
+      }}
+      style={{ minWidth: "3em" }}
+    />
   );
 };
 

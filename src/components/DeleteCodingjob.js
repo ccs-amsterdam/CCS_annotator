@@ -51,13 +51,12 @@ const DeleteCodingjob = () => {
       <Modal.Actions>
         {status === "error" ? (
           <div>
-            Could not delete codingjob for a reason not yet covered in the error
-            handling...
+            Could not delete codingjob for a reason not yet covered in the error handling...
           </div>
         ) : null}
         {status === "pending" ? (
           <Dimmer active inverted>
-            <Loader content="Creating codingjob" />
+            <Loader content="Deleting codingjob" />
           </Dimmer>
         ) : (
           <>

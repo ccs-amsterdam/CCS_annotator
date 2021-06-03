@@ -73,7 +73,7 @@ const CodingjobSelector = ({ type = "table" }) => {
         setSelectedCodingjob(null);
       }
     };
-    console.log(codingjob && codingjob.name);
+
     return (
       <Dropdown
         inline
@@ -95,8 +95,10 @@ const setCodingjob = async (dispatch, codingjob) => {
   }
   const ROW_ID = codingjob.ROW_ID;
   const cj = await db.getCodingjob(codingjob);
-  cj.ROW_ID = ROW_ID;
-  dispatch(selectCodingjob(cj));
+  if (cj) {
+    cj.ROW_ID = ROW_ID;
+    dispatch(selectCodingjob(cj));
+  }
 };
 
 const getCodingjobs = async (dispatch, setSelectedCodingjob) => {

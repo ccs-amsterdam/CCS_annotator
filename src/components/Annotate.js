@@ -61,7 +61,7 @@ const Annotate = () => {
               <CodingjobSelector type="dropdown" />
             </BreadcrumbSection>
             <Breadcrumb.Divider />
-            <BreadcrumbSection>{doc?.title ? doc.title : activePage}</BreadcrumbSection>
+            <BreadcrumbSection>{doc?.document_id ? doc.document_id : activePage}</BreadcrumbSection>
           </Breadcrumb>
         </Grid.Column>
         <Grid.Column align="center" floated="right" width={4}>
@@ -135,9 +135,9 @@ const documentSelector = async (codingjob, i, setDoc) => {
 const openExternalJob = async (jobURL, dispatch, setReady) => {
   const response = await axios.get(jobURL);
   const data = response.data;
-  const job = { name: data.details.name, job_id: hash(data) };
-  let hasjob = await db.getCodingjob(job);
-  if (!hasjob) {
+  let job = { name: data.details.name, job_id: hash(data) };
+  job = await db.getCodingjob(job);
+  if (!job) {
     await db.createCodingjob(data.details.name, hash(data));
     await db.createDocuments(job, data.documents, true);
     await db.writeCodebook(job, data.codebook);

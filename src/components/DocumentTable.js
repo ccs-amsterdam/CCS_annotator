@@ -4,31 +4,24 @@ import { Container, Pagination, Table, Icon } from "semantic-ui-react";
 import db from "../apis/dexie";
 
 const PAGESIZE = 10;
-const COLUMNS = ["title", "text", "meta"];
-
-const fetchFromDb = async (codingjob, pageSize, setPages, setData) => {
-  const n = await db.getJobDocumentCount(codingjob);
-  setPages(Math.ceil(n / pageSize));
-  let newdata = [];
-  if (n > 0) newdata = await db.getJobDocumentsBatch(codingjob, 0, pageSize);
-  setData(newdata);
-};
 
 const DocumentTable = () => {
   const codingjob = useSelector((state) => state.codingjob);
   const [data, setData] = useState([]);
   const [pages, setPages] = useState(1);
+  const [columns, setColumns] = useState([]);
 
   useEffect(() => {
     if (!codingjob) {
       setData([]);
+      setColumns([]);
       return null;
     }
-    fetchFromDb(codingjob, PAGESIZE, setPages, setData);
+    fetchFromDb(codingjob, PAGESIZE, setPages, setData, setColumns);
   }, [codingjob]);
 
-  const createHeaderRow = (data) => {
-    return COLUMNS.map((colname, i) => {
+  const createHeaderRow = (data, columns) => {
+    return columns.map((colname, i) => {
       return (
         <Table.HeaderCell key={i}>
           <span title={colname}>{colname}</span>
@@ -43,11 +36,28 @@ const DocumentTable = () => {
     });
   };
 
+  const tokensToText = (tokens, section) => {
+    return tokens.reduce((text, token) => {
+      if (token.section === section) text = text + token.pre + token.token + token.post;
+      return text;
+    }, "");
+  };
+
   const createRowCells = (rowObj) => {
-    return COLUMNS.map((key, i) => {
-      let content = rowObj[key];
-      if (key === "text" && !rowObj[key] && rowObj.tokens)
-        content = rowObj.tokens.map((token) => token.token || token.text).join(" ");
+    return columns.map((key, i) => {
+      let content = null;
+      if (key === "document_id") {
+        content = rowObj.document_id;
+      } else {
+        if (rowObj.text_fields) {
+          content = rowObj.text_fields.find((tf) => tf.name === key);
+          if (content) content = content.value;
+        }
+        if (!content && !rowObj.text_fields && rowObj.tokens) {
+          content = tokensToText(rowObj.tokens, key);
+        }
+      }
+
       return (
         <Table.Cell key={i}>
           <span title={content}>{content}</span>
@@ -60,6 +70,7 @@ const DocumentTable = () => {
     const offset = (data.activePage - 1) * PAGESIZE;
     const newdata = await db.getJobDocumentsBatch(codingjob, offset, PAGESIZE);
     setData(newdata);
+    setColumns(getColumns(newdata));
   };
 
   if (data.length < 1) return null;
@@ -68,12 +79,12 @@ const DocumentTable = () => {
     <Container style={{ marginTop: "2em" }}>
       <Table fixed compact celled singleLine>
         <Table.Header>
-          <Table.Row>{createHeaderRow(data)}</Table.Row>
+          <Table.Row>{createHeaderRow(data, columns)}</Table.Row>
         </Table.Header>
         <Table.Body>{createBodyRows(data)}</Table.Body>
         <Table.Footer>
           <Table.Row>
-            <Table.HeaderCell colSpan={COLUMNS.length}>
+            <Table.HeaderCell colSpan={columns.length}>
               {pages > 1 ? (
                 <Pagination
                   floated="right"
@@ -109,6 +120,31 @@ const DocumentTable = () => {
       </Table>
     </Container>
   );
+};
+
+const fetchFromDb = async (codingjob, pageSize, setPages, setData, setColumns) => {
+  const n = await db.getJobDocumentCount(codingjob);
+  setPages(Math.ceil(n / pageSize));
+  let newdata = [];
+  if (n > 0) newdata = await db.getJobDocumentsBatch(codingjob, 0, pageSize);
+
+  setData(newdata);
+  setColumns(getColumns(newdata));
+};
+
+const getColumns = (newdata) => {
+  let newcolumns = [];
+  if (newdata.length > 0) {
+    newcolumns = newdata.reduce((s, row) => {
+      if (row.text_fields) {
+        for (let tf of row.text_fields) s.add(tf.name);
+      } else {
+        for (let i = 0; i < row.tokens.length; i++) s.add(row.tokens[i].section);
+      }
+      return s;
+    }, new Set());
+  }
+  return ["document_id", ...newcolumns];
 };
 
 export default DocumentTable;

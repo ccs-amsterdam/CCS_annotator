@@ -1,6 +1,6 @@
 import Dexie from "dexie";
 import hash from "object-hash";
-import { importTokens } from "../util/tokens.js";
+import { importTokens, importTokenAnnotations } from "../util/tokens.js";
 
 class AnnotationDB {
   constructor() {
@@ -59,15 +59,40 @@ class AnnotationDB {
     return this.idb.codingjobs.get(codingjob.job_id);
   }
   async writeCodebook(codingjob, codebook) {
+    console.log("writing to db");
     return this.idb.codingjobs
       .where("job_id")
       .equals(codingjob.job_id)
       .modify({ codebook: JSON.stringify(codebook, null, 2) });
   }
-  async writeCodes(codingjob, codes) {
+  async writeCodes(codingjob, codes, append = false) {
     const cj = await this.getCodingjob(codingjob);
     const codebook = cj.codebook ? JSON.parse(cj.codebook) : {};
-    codebook.codes = codes;
+
+    if (!append) {
+      codebook.codes = codes;
+    } else {
+      if (!codebook.codes) codebook.codes = [];
+      const codeMap = codebook.codes.reduce((obj, code, i) => {
+        obj[code.code] = { parent: code.parent, index: i };
+        return obj;
+      }, {});
+      const parentMap = codebook.codes.reduce((obj, code, i) => {
+        obj[code.parent] = true;
+        return obj;
+      }, {});
+      for (let code of codes) {
+        if (codeMap[code.code]) {
+          if (code.parent === codeMap[code.code].parent) continue;
+          const newcode = safeNewCode(code.code + " (" + code.parent + ")", codeMap, parentMap, 2);
+          codebook.codes[codeMap[code].index].code = newcode;
+          codebook.codes.push({ code: newcode, parent: code.parent });
+        } else {
+          const newcode = safeNewCode(code.code, codeMap, parentMap, 2);
+          codebook.codes.push({ code: newcode, parent: code.parent });
+        }
+      }
+    }
     return await this.writeCodebook(codingjob, codebook);
   }
 
@@ -78,6 +103,7 @@ class AnnotationDB {
     );
 
     let duplicates = 0;
+    let codes = {};
     const preparedDocuments = documentList.reduce((result, document) => {
       const doc_id = hash([document, codingjob]); // codingjob included for doc_id hash
       if (!ids.has(doc_id)) {
@@ -92,6 +118,7 @@ class AnnotationDB {
         }
         if (document.tokens) {
           document.tokens = importTokens(document.tokens);
+          document.annotations = importTokenAnnotations(document.tokens, codes); // also fills codes
         }
         result.push({
           doc_id: doc_id,
@@ -111,6 +138,13 @@ class AnnotationDB {
       if (duplicates > 0) message = message + ` Ignored ${duplicates} duplicates`;
       alert(message);
     }
+
+    console.log(codes);
+    codes = Object.keys(codes).reduce((a, code) => {
+      for (let parent of codes[code]) a.push({ code, parent });
+      return a;
+    }, []);
+    this.writeCodes(codingjob, codes, true);
 
     return this.idb.documents.bulkAdd(preparedDocuments);
   }
@@ -154,6 +188,14 @@ class AnnotationDB {
     await this.idb.documents.clear();
   }
 }
+
+const safeNewCode = (code, codeMap, parentMap, i) => {
+  // for preventing overlapping code names
+  if (!codeMap[code] && !parentMap[code]) return code;
+  if (i > 2) code = code.slice(0, code.length - code.toString().length);
+  code += " " + i;
+  safeNewCode(code, codeMap, i + 1);
+};
 
 const db = new AnnotationDB();
 export default db;

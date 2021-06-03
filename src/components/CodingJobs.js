@@ -6,8 +6,10 @@ import JobDetails from "./JobDetails";
 import { UploadTextsCsv, UploadTokensCsv } from "./UploadDocuments";
 import UploadRaw from "./UploadRaw";
 import CodeBook from "./CodeBook";
+import { useSelector } from "react-redux";
 
 const CodingJobs = () => {
+  const codingjob = useSelector((state) => state.codingjob);
   const [activeItem, setActiveItem] = useState("details");
 
   const renderSwitch = (activeItem) => {
@@ -60,7 +62,13 @@ const CodingJobs = () => {
               </Dropdown.Menu>
             </Dropdown>
           </Menu>
-          {renderSwitch(activeItem)}
+          {!codingjob ? (
+            <div style={{ height: "20em" }}>
+              <i>No codingjob selected</i>
+            </div>
+          ) : (
+            renderSwitch(activeItem)
+          )}
         </Segment>
       </Grid.Column>
     </Grid>

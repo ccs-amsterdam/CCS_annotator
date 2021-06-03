@@ -41,8 +41,15 @@ export const demo_codebook = {
 
 export const demo_articles = [
   {
-    title: `GL en PvdA hebben goed gesprek met informateur, maar wantrouwen Rutte`,
-    text: `PvdA-leider Lilianne Ploumen en GroenLinks-leider Jesse Klaver hadden vrijdag een goed gesprek met informateur Herman Tjeenk Willink, zeiden ze zelf. De twee benadrukten dat, hoewel er inhoudelijke stappen zijn gezet, hun vertrouwen in VVD-leider Mark Rutte nog niet is hersteld.
+    document_id: "Some document ID",
+    text_fields: [
+      {
+        name: "title",
+        value: `GL en PvdA hebben goed gesprek met informateur, maar wantrouwen Rutte`,
+      },
+      {
+        name: "text",
+        value: `PvdA-leider Lilianne Ploumen en GroenLinks-leider Jesse Klaver hadden vrijdag een goed gesprek met informateur Herman Tjeenk Willink, zeiden ze zelf. De twee benadrukten dat, hoewel er inhoudelijke stappen zijn gezet, hun vertrouwen in VVD-leider Mark Rutte nog niet is hersteld.
 
     Informateur Willink zette zich vrijdag aan zijn taak. Eerste punt op de agenda zijn gesprekken met de lijsttrekkers van de acht grootste partijen.
     
@@ -75,10 +82,19 @@ Tjeenk Willink suggereerde woensdag op een persconferentie dat hij Rutte niet pe
 De conclusie dat Rutte geen belemmering vormt voor de formatie, kan hij niet voor zijn rekening nemen, luidt een schriftelijke verklaring.
 
 Tjeenk Willink heeft namelijk ook de opdracht om te onderzoeken "of en zo ja onder welke voorwaarden er voldoende vertrouwen tussen partijen bestaat of weer kan ontstaan".`,
+      },
+    ],
   },
   {
-    title: `CU-leider Segers vindt dat uitspraak over Rutte te veel op de man was gespeeld`,
-    text: `Partijleider Gert-Jan Segers van de ChristenUnie (CU) vindt dat hij te veel op de man heeft gespeeld door coalitiedeelname uit te sluiten als VVD-leider Mark Rutte opnieuw premier zou worden. Terugblikkend zegt hij dat het niet om één persoon moet gaan, maar om "een ongezonde politieke cultuur en een genadeloze overheid". Daar moet volgens hem verandering in komen, zo zei hij zaterdag tijdens een congres van de partij.
+    document_id: "Another document ID",
+    text_fields: [
+      {
+        name: "title",
+        value: `CU-leider Segers vindt dat uitspraak over Rutte te veel op de man was gespeeld`,
+      },
+      {
+        name: "text",
+        value: `Partijleider Gert-Jan Segers van de ChristenUnie (CU) vindt dat hij te veel op de man heeft gespeeld door coalitiedeelname uit te sluiten als VVD-leider Mark Rutte opnieuw premier zou worden. Terugblikkend zegt hij dat het niet om één persoon moet gaan, maar om "een ongezonde politieke cultuur en een genadeloze overheid". Daar moet volgens hem verandering in komen, zo zei hij zaterdag tijdens een congres van de partij.
 
     
     Segers deed zijn uitspraak over Rutte na het debat over de notitie "functie elders" voor CDA-Kamerlid Pieter Omtzigt. Binnen de CU is verdeeldheid ontstaan over het besluit van de fractie, erkent Segers.
@@ -92,5 +108,7 @@ Tjeenk Willink heeft namelijk ook de opdracht om te onderzoeken "of en zo ja ond
     
     
     De ChristenUnie heeft vijf zetels in de Tweede Kamer. Op het congres werden vier oude Kamerleden uitgezwaaid en trad Ankie van Tatenhove aan als nieuwe partijvoorzitter.`,
+      },
+    ],
   },
 ];

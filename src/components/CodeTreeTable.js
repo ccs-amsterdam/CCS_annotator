@@ -12,7 +12,7 @@ import {
 } from "semantic-ui-react";
 import { randomColor } from "randomcolor";
 import { useDispatch, useSelector } from "react-redux";
-import { blockEvents, setCodeMap } from "../actions";
+import { blockEvents, selectCodingjob, setCodeMap } from "../actions";
 import db from "../apis/dexie";
 
 const resultRenderer = ({ code, codeTrail }) => (
@@ -38,20 +38,7 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
 
   useEffect(() => {
     if (!codingjob) return null;
-    if (codingjob.codebook) {
-      const cb = JSON.parse(codingjob.codebook);
-      if (cb && cb.codes && cb.codes.length > 0) {
-        setCodes(cb.codes);
-      } else {
-        setCodes([]);
-      }
-      if (cb && cb.settings) {
-        setSettings(cb.settings);
-      }
-    } else {
-      setCodes([]);
-      setSettings(null);
-    }
+    loadCodes(codingjob, setCodes, setSettings);
   }, [codingjob, dispatch]);
 
   useEffect(() => {
@@ -166,13 +153,31 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
   );
 };
 
+const loadCodes = async (codingjob, setCodes, setSettings) => {
+  const cj = await db.getCodingjob(codingjob);
+  if (codingjob.codebook) {
+    const cb = JSON.parse(cj.codebook);
+    if (cb && cb.codes && cb.codes.length > 0) {
+      setCodes(cb.codes);
+    } else {
+      setCodes([]);
+    }
+    if (cb && cb.settings) {
+      setSettings(cb.settings);
+    }
+  } else {
+    setCodes([]);
+    setSettings(null);
+  }
+};
+
 const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings }) => {
   const [open, setOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
 
   const buttonContent = () => {
     return (
-      <ButtonGroup>
+      <ButtonGroup basic>
         <Button icon="plus" compact size="mini" onClick={() => addCodePopup(false)} />
         <Button icon="minus" compact size="mini" onClick={rmCodePopup} />
         <Button icon="shuffle" compact size="mini" onClick={moveCodePopup} />
@@ -225,13 +230,14 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
       flowing
       hoverable
       wide
-      position="center"
+      position="bottom center"
       onClose={() => {
         setPopupContent(buttonContent());
         setOpen(false);
       }}
       open={open}
       mouseLeaveDelay={10000000} // just don't use mouse leave
+      style={{ padding: "0px" }}
       trigger={
         code === "" ? (
           <Button
@@ -281,11 +287,12 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     updatedCodes.push({ code: newCode, parent: code });
     db.writeCodes(codingjob, updatedCodes);
     setCodes(updatedCodes);
+    //dispatch(selectCodingjob(codingjob));
     setOpen(false);
   };
 
   return (
-    <div>
+    <div style={{ margin: "1em" }}>
       <p>
         Add code under <b>{code === "" ? "Root" : code}</b>
         <Button floated="right" compact size="mini" icon="delete" onClick={() => setOpen(false)} />
@@ -332,11 +339,12 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 
     db.writeCodes(codingjob, updatedCodes);
     setCodes(updatedCodes);
+    dispatch(selectCodingjob(codingjob));
     setOpen(false);
   };
 
   return (
-    <div>
+    <div style={{ margin: "1em" }}>
       <p>
         Delete <b>{code}</b>?
       </p>
@@ -394,11 +402,12 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 
     db.writeCodes(codingjob, updatedCodes);
     setCodes(updatedCodes);
+    dispatch(selectCodingjob(codingjob));
     setOpen(false);
   };
 
   return (
-    <div>
+    <div style={{ margin: "1em" }}>
       <p>
         Change parent and/or label
         <Button floated="right" compact size="mini" icon="delete" onClick={() => setOpen(false)} />
@@ -524,7 +533,6 @@ const prepareCodeMap = (codes) => {
 
     if (codeMap[codeMap[code].parent]) codeMap[codeMap[code].parent].children.push(code);
   }
-
   return codeMap;
 };
 

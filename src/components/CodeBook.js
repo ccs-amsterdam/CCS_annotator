@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Grid, Header } from "semantic-ui-react";
 import { useSelector } from "react-redux";
 
@@ -6,19 +6,6 @@ import CodeTreeTable from "./CodeTreeTable";
 
 const CodeBook = () => {
   const codingjob = useSelector((state) => state.codingjob);
-  //const [codes, setCodes] = useState([]);
-
-  useEffect(() => {
-    if (!codingjob) return null;
-    if (!codingjob.codebook) {
-      //setCodes([]);
-      return null;
-    }
-    const cb = JSON.parse(codingjob.codebook);
-    if (cb && cb.codes) {
-      //setCodes(cb.codes);
-    }
-  }, [codingjob]);
 
   if (!codingjob) return null;
 
