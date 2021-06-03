@@ -47,7 +47,7 @@ const AnnotatedToken = ({ token, selected }) => {
     if (codeMap[tokenCode]) {
       return codeMap[tokenCode].color;
     } else {
-      return "lightgrey";
+      return "white";
     }
   };
 

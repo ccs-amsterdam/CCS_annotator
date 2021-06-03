@@ -3,7 +3,7 @@ import { Container } from "semantic-ui-react";
 import Token from "./Token";
 import db from "../apis/dexie";
 
-import { parseTokens, safeTokens } from "../util/prepareTokens";
+import { parseTokens } from "../util/tokens";
 
 const Tokens = ({ doc, setTokens }) => {
   // It's imporant that the annotations to not pass by this component
@@ -27,7 +27,6 @@ const prepareTokens = async (doc, setTokenComponents, setTokens) => {
     tokens = parseTokens({ title: doc.title, text: doc.text });
     await db.writeTokens(doc, tokens);
   }
-  tokens = safeTokens(tokens);
   if (!tokens) return null;
   setTokenComponents(renderText(tokens));
   setTokens(tokens);

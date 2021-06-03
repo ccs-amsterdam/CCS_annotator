@@ -12,9 +12,9 @@ import {
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const CodeSelector = React.memo(({ children, annotations, currentCode, newSelection }) => {
-  const codingjob = useSelector(state => state.codingjob);
-  const codeMap = useSelector(state => state.codeMap);
-  const codeHistory = useSelector(state => state.codeHistory);
+  const codingjob = useSelector((state) => state.codingjob);
+  const codeMap = useSelector((state) => state.codeMap);
+  const codeHistory = useSelector((state) => state.codeHistory);
 
   const [current, setCurrent] = useState(newSelection ? "UNASSIGNED" : currentCode);
   const [hasOpened, setHasOpened] = useState(false);
@@ -39,41 +39,77 @@ const CodeSelector = React.memo(({ children, annotations, currentCode, newSelect
       mouseLeaveDelay={10000000} // just don't use mouse leave
       onOpen={() => setHasOpened(true)}
       onClose={() => {
-        if (hasOpened)
+        if (hasOpened) {
+          if (current === "UNASSIGNED")
+            updateAnnotations(annotations, current, current, setCurrent, dispatch);
           // calling dispatch directly causes a memory leak warning, because it unmounts
           // the component. The very minor async timeout fixes this.
           setTimeout(() => dispatch(triggerCodeselector(null)), 10);
+        }
       }}
       position="top left"
+      style={{ padding: "0px" }}
     >
-      <CurrentCodePage
-        current={current}
-        annotations={annotations}
-        codeMap={codeMap}
-        setCurrent={setCurrent}
-      />
-      <NewCodePage
-        codeHistory={codeHistory}
-        codingjob={codingjob}
-        codeMap={codeMap}
-        annotations={annotations}
-        current={current}
-        setCurrent={setCurrent}
-      />
+      <div
+        style={{
+          minWidth: "12em",
+          textAlign: "center",
+          height: "1.9em",
+          background: "lightgrey",
+          border: "1px solid",
+        }}
+      >
+        {!current ? (
+          <b>Edit which code?</b>
+        ) : current === "UNASSIGNED" ? (
+          <b>Create new code</b>
+        ) : (
+          <>
+            Edit <b>{current}</b>
+          </>
+        )}
+        <Button
+          compact
+          floated="right"
+          icon="delete"
+          size="mini"
+          style={{ background: "#80808000", margin: "0px" }}
+          onClick={() => {
+            if (current === "UNASSIGNED")
+              updateAnnotations(annotations, current, current, setCurrent, dispatch);
+            dispatch(triggerCodeselector(null));
+          }}
+        />
+      </div>
+      <div style={{ margin: "1em", border: "0px" }}>
+        <CurrentCodePage
+          current={current}
+          annotations={annotations}
+          codeMap={codeMap}
+          setCurrent={setCurrent}
+        />
+        <NewCodePage
+          codeHistory={codeHistory}
+          codingjob={codingjob}
+          codeMap={codeMap}
+          annotations={annotations}
+          current={current}
+          setCurrent={setCurrent}
+        />
+      </div>
     </Popup>
   );
 });
 
 const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
-  const dispatch = useDispatch();
   const annotationCodes = Object.keys(annotations);
 
-  const onButtonSelect = value => {
+  const onButtonSelect = (value) => {
     setCurrent(value);
   };
 
-  const getOptions = annotationCodes => {
-    return annotationCodes.map(code => ({ label: code, color: getColor(code, codeMap) }));
+  const getOptions = (annotationCodes) => {
+    return annotationCodes.map((code) => ({ label: code, color: getColor(code, codeMap) }));
   };
 
   if (annotationCodes.length === 1) setCurrent(annotationCodes[0]);
@@ -81,13 +117,6 @@ const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
   if (current) return null;
   return (
     <div>
-      <Button
-        floated="right"
-        compact
-        size="mini"
-        icon="delete"
-        onClick={() => dispatch(triggerCodeselector(null))}
-      />
       <ButtonSelection
         key={"currentCodePageButtons"}
         active={true}
@@ -105,7 +134,7 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
   const [focusOnButtons, setFocusOnButtons] = useState(true);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const focusOnTextInput = textInputRef?.current?.children[0] === document.activeElement;
       if (!focusOnTextInput) setFocusOnButtons(true);
 
@@ -125,7 +154,7 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
     };
   });
 
-  const onButtonSelect = value => {
+  const onButtonSelect = (value) => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
       updateAnnotations(annotations, current, current, setCurrent, dispatch);
@@ -143,22 +172,33 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
   };
 
   if (!current) return null;
+  console.log(codeMap);
   return (
     <>
       <Grid>
-        <Grid.Column width={13} floated="right">
+        <Grid.Column width={13} floated="left">
           <Ref innerRef={textInputRef}>
             <Dropdown
               fluid
-              placeholder={current}
-              style={{ minWidth: "10em" }}
+              placeholder={"<type to search>"}
+              style={{ minWidth: "12em" }}
               options={Object.keys(codeMap).reduce((options, code) => {
-                if (!annotations[code])
+                if (!annotations[code]) {
+                  let tree = codeMap[code].tree.join(" - ");
+                  if (tree === "") tree = "Root";
                   options.push({
                     key: code,
                     value: code,
-                    text: code,
+                    text: code + " " + tree,
+                    content: (
+                      <>
+                        {code}
+                        <br />
+                        <span style={{ color: "grey" }}>{tree}</span>
+                      </>
+                    ),
                   });
+                }
                 return options;
               }, [])}
               open={!focusOnButtons}
@@ -179,14 +219,6 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
               }}
             />
           </Ref>
-        </Grid.Column>
-        <Grid.Column floated="right" width={3}>
-          <Button
-            floated="right"
-            size="mini"
-            icon="delete"
-            onClick={() => dispatch(triggerCodeselector(null))}
-          />
         </Grid.Column>
       </Grid>
       <br />
@@ -209,7 +241,7 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const nbuttons = canDelete ? options.length + 1 : options.length;
 
       // any arrowkey
@@ -289,10 +321,10 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
   };
 
   return (
-    <>
+    <span>
       {mapButtons()}
       {deleteButton()}
-    </>
+    </span>
   );
 };
 

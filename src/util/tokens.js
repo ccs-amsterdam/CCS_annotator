@@ -43,28 +43,51 @@ export const parseTokens = (texts) => {
   return tokens;
 };
 
-export const safeTokens = (tokens) => {
+export const importTokens = (tokens) => {
   //const indexFrom1 = tokens[0].offset && tokens[0].offset === 1;
   let paragraph = 0;
 
-  const requiredFields = ["sentence", "text", "offset", "length"];
-  for (let rf of requiredFields) {
-    if (!tokens[0].text) tokens[0].text = tokens[0].token;
-    if (tokens[0][rf] == null) {
-      alert(`Invalid token data:\n\nimported tokens must have ${rf} field`);
+  let offset = 0;
+  let totalLength = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    if (!tokens[i].text) {
+      if (tokens[i].token) {
+        tokens[i].text = tokens[i].token;
+      } else {
+        alert("Invalid token data:\n\nimported tokens must have 'text' or 'token' field");
+        return null;
+      }
+    }
+    if (!tokens[i].offset && tokens[i].start) tokens[i].offset = tokens[i].start;
+    if (!tokens[i].length) tokens[i].length = tokens[i].text.length;
+
+    if (!tokens[i].pre) tokens[i].pre = "";
+    if (!tokens[i].post && tokens[i].space) tokens[i].post = tokens[i].space;
+    if (!tokens[i].post && tokens[i].offset && tokens[i].length) {
+      tokens[i].post =
+        i < tokens[i].length - 1
+          ? " ".repeat(Math.max(0, tokens[i + 1].offset - tokens[i].offset - tokens[i].length))
+          : "";
+    } else {
+      tokens[i].post = " ";
+    }
+
+    totalLength = tokens[i].length + tokens[i].pre.length + tokens[i].post.length;
+
+    if (!tokens[i].offset) {
+      tokens[i].offset = offset;
+      offset = offset + totalLength;
+    }
+
+    if (i < tokens.length - 1 && tokens[i + 1].offset < tokens[i].offset + totalLength) {
+      alert(
+        `Invalid token position data. The length of ${
+          tokens[i].pre + tokens[i].text + tokens[i].post
+        } exeeds the offset/start position of the next token`
+      );
       return null;
     }
-  }
 
-  for (let i = 0; i < tokens.length; i++) {
-    if (!tokens[i].text) tokens[i].text = tokens[i].token;
-    if (!tokens[i].pre) tokens[i].pre = "";
-
-    if (!tokens[i].post)
-      tokens[i].post =
-        i < tokens.length - 1
-          ? " ".repeat(Math.max(0, tokens[i + 1].offset - tokens[i].offset - tokens[i].length))
-          : " ";
     if (!tokens[i].paragraph) tokens[i].paragraph = paragraph;
     if (tokens[i].text.includes("\n") || tokens[i].post.includes("\n")) paragraph++;
     if (!tokens[i].section) tokens[i].section = "text";

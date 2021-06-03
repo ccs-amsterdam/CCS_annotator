@@ -98,7 +98,7 @@ const AnnotationRow = ({ tokens, token, code, text }) => {
     if (codeMap[annotationCode]) {
       return codeMap[annotationCode].color;
     } else {
-      return "lightgrey";
+      return "white";
     }
   };
   const color = getColor(code, codeMap);

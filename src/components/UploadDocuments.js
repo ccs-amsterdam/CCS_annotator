@@ -1,14 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import {
-  Container,
-  Header,
-  Table,
-  Grid,
-  Select,
-  Form,
-  Button,
-  Icon,
-} from "semantic-ui-react";
+import { Container, Header, Table, Grid, Select, Form, Button, Icon } from "semantic-ui-react";
 import { useSelector } from "react-redux";
 
 //import CSVReader from "react-csv-reader";
@@ -16,7 +7,40 @@ import { useSelector } from "react-redux";
 import { CSVReader } from "react-papaparse";
 import db from "../apis/dexie";
 
-export const UploadCsv = ({ setActive }) => {
+export const UploadTextsCsv = ({ setActive }) => {
+  const codingjob = useSelector((state) => state.codingjob);
+  const [data, setData] = useState([]);
+  const fileRef = useRef();
+
+  const columns = {
+    title: { required: true, defaults: ["title"] },
+    text: { required: true, defaults: ["text", "body"] },
+    texting: { required: true, defaults: ["text", "body"] },
+    textings: { required: true, defaults: ["text", "body"] },
+    text1: { required: true, defaults: ["text", "body"] },
+    texting1: { required: true, defaults: ["text", "body"] },
+    textings1: { required: true, defaults: ["text", "body"] },
+    annotations: { required: true, defaults: ["annotations"] },
+  };
+
+  if (!codingjob) return null;
+  return (
+    <Container className="five wide">
+      <CSVReader
+        ref={fileRef}
+        onFileLoad={(data) => setData(data)}
+        addRemoveButton
+        onRemoveFile={() => setData([])}
+      >
+        <span>Click or drag to upload</span>
+      </CSVReader>
+      <SubmitForm data={data} codingjob={codingjob} fileRef={fileRef} columns={columns} />
+      <PreviewTable data={data} />
+    </Container>
+  );
+};
+
+export const UploadTokensCsv = ({ setActive }) => {
   const codingjob = useSelector((state) => state.codingjob);
   const [data, setData] = useState([]);
   const fileRef = useRef();
@@ -49,17 +73,13 @@ export const UploadCsv = ({ setActive }) => {
   );
 };
 
-const SubmitForm = ({ data, codingjob, fileRef }) => {
+const SubmitForm = ({ data, codingjob, fileRef, columns }) => {
   const [options, setOptions] = useState([]);
-  const [titleField, setTitleField] = useState(null);
-  const [textField, setTextField] = useState(null);
-  const [annotationsField, setAnnotationsField] = useState(null);
+  const [fields, setFields] = useState({});
 
   useEffect(() => {
     if (data.length <= 1) {
-      setTitleField(null);
-      setTextField(null);
-      setAnnotationsField(null);
+      setFields({});
       setOptions([]);
       return;
     }
@@ -69,45 +89,42 @@ const SubmitForm = ({ data, codingjob, fileRef }) => {
         return { key: colname, value: colname, text: colname };
       })
     );
-    setTitleField(data[0].data.includes("title") ? "title" : null);
-    setTextField(data[0].data.includes("text") ? "text" : null);
-    setAnnotationsField(
-      data[0].data.includes("annotations") ? "annotations" : null
-    );
-  }, [data]);
 
-  const csvToJson = (data, titleField, textField, annotationsField) => {
+    let newfields = {};
+    for (let col of Object.keys(columns)) {
+      newfields[col] = null;
+      for (let def of columns[col].defaults) {
+        if (data[0].data.includes(def)) newfields[col] = def;
+      }
+    }
+    setFields(newfields);
+  }, [data, columns]);
+
+  const csvToJson = (data, fields) => {
     const keys = data[0].data;
     return data.slice(1).map((row) => {
       const datarow = row.data.reduce(
         (obj, value, i) => {
           let key = keys[i];
-          if (key === titleField) {
-            obj["title"] = value;
-          } else if (key === textField) {
-            obj["text"] = value;
-          } else if (key === annotationsField) {
-            obj["annotations"] = value;
-          } else {
-            obj["meta"][key] = value;
+          obj.original[key] = value; // keep original names and values (for exporting afterwards)
+
+          for (let col of Object.keys(fields)) {
+            if (fields[col] === key) {
+              obj[col] = value;
+              break;
+            }
           }
           return obj;
         },
-        { meta: {}, annotations: "" }
+        { original: {}, annotations: "" }
       );
-      datarow.meta = JSON.stringify(datarow.meta, null, 2);
       return datarow;
     });
   };
 
   const uploadData = async () => {
     try {
-      const preparedData = csvToJson(
-        data,
-        titleField,
-        textField,
-        annotationsField
-      );
+      const preparedData = csvToJson(data, fields);
       await db.createDocuments(codingjob, preparedData);
       fileRef.current.removeFile();
     } catch (e) {
@@ -115,42 +132,57 @@ const SubmitForm = ({ data, codingjob, fileRef }) => {
     }
   };
 
+  const renderForms = () => {
+    const keys = Object.keys(columns);
+
+    const forms = [];
+    let formgroup = [];
+
+    for (let i = 0; i < keys.length; i++) {
+      const column = keys[i];
+      const ff = (
+        <Form.Field
+          control={Select}
+          clearable
+          required={columns[column].required}
+          placeholder={column}
+          options={options}
+          value={fields[column]}
+          onChange={(e, d) => {
+            const newfields = { ...fields };
+            newfields[column] = d.value;
+            setFields(newfields);
+          }}
+        />
+      );
+
+      if (i % 3 === 0) {
+        forms.push(formgroup);
+        formgroup = [];
+      } else {
+        formgroup.push(ff);
+      }
+    }
+    if (formgroup.length > 0) forms.push(formgroup);
+
+    return forms.map((formgroup) => <Form.Group widths="equal">{formgroup}</Form.Group>);
+  };
+
+  const allDone = () => {
+    for (let col of Object.keys(columns)) {
+      if (columns[col].required && !fields[col]) return false;
+    }
+    return true;
+  };
+
   if (data.length <= 1) return null;
 
   return (
     <>
       <Form>
-        <Form.Group>
-          <Form.Field
-            control={Select}
-            placeholder="title column"
-            options={options}
-            value={titleField}
-            onChange={(e, d) => setTitleField(d.value)}
-          />
-          <Form.Field
-            control={Select}
-            placeholder="text column"
-            options={options}
-            value={textField}
-            onChange={(e, d) => setTextField(d.value)}
-          />
-        </Form.Group>
-        <Form.Group>
-          <Form.Field
-            control={Select}
-            clearable
-            placeholder="annotations (optional)"
-            options={options}
-            value={annotationsField}
-            onChange={(e, d) => setAnnotationsField(d.value)}
-          />
-          <Form.Field
-            control={Button}
-            fluid
-            onClick={uploadData}
-            disabled={!titleField || !textField}
-          >
+        {renderForms()}
+        <Form.Group widths="equal">
+          <Form.Field control={Button} onClick={uploadData} disabled={!allDone()}>
             <Icon name="upload" />
             Upload
           </Form.Field>
@@ -200,9 +232,7 @@ const PreviewTable = ({ data }) => {
         </Table.Header>
         <Table.Body>{createRows(data, n)}</Table.Body>
       </Table>
-      {data.length > n ? (
-        <Header align="center">{data.length - 1 - n} more rows</Header>
-      ) : null}
+      {data.length > n ? <Header align="center">{data.length - 1 - n} more rows</Header> : null}
     </Container>
   );
 };

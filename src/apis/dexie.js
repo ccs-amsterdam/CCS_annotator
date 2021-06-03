@@ -1,5 +1,6 @@
 import Dexie from "dexie";
 import hash from "object-hash";
+import { importTokens } from "../util/tokens.js";
 
 class AnnotationDB {
   constructor() {
@@ -88,6 +89,9 @@ class AnnotationDB {
             alert("Annotations field contains invalid JSON");
             throw new Error("JSON parse error");
           }
+        }
+        if (document.tokens) {
+          document.tokens = importTokens(document.tokens);
         }
         result.push({
           doc_id: doc_id,

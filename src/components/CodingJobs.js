@@ -3,7 +3,7 @@ import { Dropdown, Grid, Menu, Segment } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
 import JobDetails from "./JobDetails";
-import { UploadCsv } from "./UploadDocuments";
+import { UploadTextsCsv, UploadTokensCsv } from "./UploadDocuments";
 import UploadRaw from "./UploadRaw";
 import CodeBook from "./CodeBook";
 
@@ -16,8 +16,10 @@ const CodingJobs = () => {
         return <JobDetails />;
       case "codebook":
         return <CodeBook />;
-      case "upload CSV":
-        return <UploadCsv />;
+      case "upload texts CSV":
+        return <UploadTextsCsv />;
+      case "upload tokens CSV":
+        return <UploadTokensCsv />;
       case "upload Raw":
         return <UploadRaw />;
       default:
@@ -44,20 +46,17 @@ const CodingJobs = () => {
               active={activeItem === "codebook"}
               onClick={(e, d) => setActiveItem(d.name)}
             />
-            <Dropdown
-              as={Menu.Item}
-              active={activeItem.includes("upload")}
-              text="Upload Documents"
-            >
+            <Dropdown as={Menu.Item} active={activeItem.includes("upload")} text="Upload Documents">
               <Dropdown.Menu>
                 <Dropdown.Item
-                  text="CSV"
-                  onClick={(e, d) => setActiveItem("upload CSV")}
+                  text="upload texts CSV"
+                  onClick={(e, d) => setActiveItem("upload texts CSV")}
                 />
                 <Dropdown.Item
-                  text="Raw"
-                  onClick={(e, d) => setActiveItem("upload Raw")}
+                  text="upload tokens CSV"
+                  onClick={(e, d) => setActiveItem("upload tokens CSV")}
                 />
+                <Dropdown.Item text="Raw" onClick={(e, d) => setActiveItem("upload Raw")} />
               </Dropdown.Menu>
             </Dropdown>
           </Menu>
