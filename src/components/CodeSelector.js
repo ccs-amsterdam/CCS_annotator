@@ -8,6 +8,7 @@ import {
   blockEvents,
   triggerCodeselector,
 } from "../actions";
+import { getColor } from "../util/tokenDesign";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
@@ -359,14 +360,6 @@ const updateAnnotations = (annotations, current, value, setCurrent, dispatch) =>
   // }
 
   dispatch(triggerCodeselector(null, null, null));
-};
-
-const getColor = (tokenCode, codeMap) => {
-  if (codeMap[tokenCode]) {
-    return codeMap[tokenCode].color;
-  } else {
-    return "lightgrey";
-  }
 };
 
 export default CodeSelector;

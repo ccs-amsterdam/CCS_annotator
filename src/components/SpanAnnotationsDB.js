@@ -5,28 +5,28 @@ import db from "../apis/dexie";
 
 // this component generates no content, but manages writing and reading of annotations
 
-const SpanAnnotationsDB = ({ doc, tokens }) => {
+const SpanAnnotationsDB = ({ doc }) => {
   let annotations = useSelector((state) => state.spanAnnotations);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (doc.writable) exportAnnotations(doc, annotations, tokens);
-  }, [doc, tokens, annotations]);
+    if (doc.writable) exportAnnotations(doc, annotations);
+  }, [doc, annotations]);
 
   useEffect(() => {
-    if (doc.writable || tokens.length === 0) return;
-    matchAnnotations(tokens, doc.annotations, dispatch);
+    if (doc.writable || doc.tokens.length === 0) return;
+    matchAnnotations(doc, dispatch);
     doc.writable = true; // this ensures that each new doc first does the matching step
-  }, [doc, tokens, dispatch]);
+  }, [doc, dispatch]);
 
   return <div></div>;
 };
 
-const exportAnnotations = async (doc, annotations, tokens) => {
+const exportAnnotations = async (doc, annotations) => {
   const uniqueAnnotations = Object.values(annotations).reduce((un_ann, ann) => {
     for (let key of Object.keys(ann)) {
       if (ann[key].index !== ann[key].span[0]) continue;
-      const annotationTokens = tokens.slice(ann[key].span[0], ann[key].span[1] + 1);
+      const annotationTokens = doc.tokens.slice(ann[key].span[0], ann[key].span[1] + 1);
       const text = annotationTokens
         .map((at, i) => {
           const pre = i > 0 ? at.pre : "";
@@ -50,14 +50,14 @@ const exportAnnotations = async (doc, annotations, tokens) => {
   await db.writeAnnotations({ doc_id: doc.doc_id }, uniqueAnnotations);
 };
 
-const matchAnnotations = (tokens, annotations, dispatch) => {
+const matchAnnotations = (doc, dispatch) => {
   console.log("matching annotations");
-  console.log(annotations);
-  const importedAnnotations = prepareAnnotations(annotations);
+  console.log(doc.annotations);
+  const importedAnnotations = prepareAnnotations(doc.annotations);
   let trackAnnotations = {};
   let matchedAnnotations = [];
 
-  for (let token of tokens) {
+  for (let token of doc.tokens) {
     findMatches(token, importedAnnotations, trackAnnotations, matchedAnnotations);
   }
 

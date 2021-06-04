@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Ref, Table } from "semantic-ui-react";
 import { triggerCodeselector } from "../actions";
+import { getColor } from "../util/tokenDesign";
 import "./spanAnnotationsStyle.css";
 
 const COLWIDTHS = [4, 2, 2]; // for offset and text
@@ -84,7 +85,7 @@ const AnnotationRow = ({ tokens, token, code, text }) => {
       if (ref.current) {
         ref.current.style.backgroundColor = "grey";
         ref.current.scrollIntoView(false, {
-          block: "start",
+          block: "nearest",
         });
       }
     } else {
@@ -92,13 +93,6 @@ const AnnotationRow = ({ tokens, token, code, text }) => {
     }
   }, [infocus]);
 
-  const getColor = (annotationCode, codeMap) => {
-    if (codeMap[annotationCode]) {
-      return codeMap[annotationCode].color;
-    } else {
-      return "white";
-    }
-  };
   const color = getColor(code, codeMap);
 
   return (
@@ -106,7 +100,7 @@ const AnnotationRow = ({ tokens, token, code, text }) => {
       <Table.Row
         className="annotations-tr"
         onClick={() => {
-          tokens[token.index].ref.current.scrollIntoView(false);
+          tokens[token.index].ref.current.scrollIntoView(false, { block: "center" });
           dispatch(triggerCodeselector(null, null, null));
           dispatch(triggerCodeselector("menu", token.index, code));
         }}

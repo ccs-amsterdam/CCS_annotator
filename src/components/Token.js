@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import "./style.css";
 import CodeSelector from "./CodeSelector";
 import { triggerCodeselector } from "../actions";
+import { getColor } from "../util/tokenDesign";
 
 const Token = React.forwardRef(({ token }, ref) => {
   const selected = useSelector((state) => {
@@ -41,15 +42,6 @@ const AnnotatedToken = ({ token, selected }) => {
 
   // if there are no annotation codes, our life is easy
   if (!annotations) return <>{token.pre + token.text + token.post}</>;
-
-  // create solid colors or color gradients
-  const getColor = (tokenCode, codeMap) => {
-    if (codeMap[tokenCode]) {
-      return codeMap[tokenCode].color;
-    } else {
-      return "white";
-    }
-  };
 
   const tokenSpan = (annotatedTokenClass, color) => {
     return (

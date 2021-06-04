@@ -22,7 +22,7 @@ const resultRenderer = ({ code, codeTrail }) => (
   </div>
 );
 
-const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) => {
+const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) => {
   const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
 
@@ -34,6 +34,7 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
   const [settings, setSettings] = useState(null);
   const [activeRow, setActiveRow] = useState(-1);
   const [codes, setCodes] = useState([]);
+  const [changeColor, setChangeColor] = useState(null);
   const ref = React.useRef();
 
   useEffect(() => {
@@ -52,6 +53,15 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
     setCodeTreeArray(cta);
     dispatch(setCodeMap(codeMap));
   }, [codes, showColors, dispatch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (changeColor)
+        changeCodeColor(codingjob, changeColor.code, changeColor.color, codes, setCodes);
+      setChangeColor(null);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [codingjob, codes, setCodes, changeColor, setChangeColor]);
 
   const timeoutRef = React.useRef();
   const handleSearchChange = React.useCallback(
@@ -131,6 +141,22 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
             return (
               <Table.Row className="codes-tr" active={i === activeRow} key={i}>
                 <Table.Cell className="codes-td">
+                  {code.code ? (
+                    <Button
+                      as={"Input"}
+                      style={{
+                        marginLeft: `${1.5 * code.level}em`,
+                        marginRight: "0.8em",
+                        padding: "0",
+                        width: "1em",
+                        height: "1em",
+                        color: code.color ? code.color : "white",
+                      }}
+                      onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
+                      type="color"
+                      value={code.color}
+                    />
+                  ) : null}
                   <EditCodePopup
                     codingjob={codingjob}
                     code={code}
@@ -139,7 +165,6 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
                     settings={settings}
                   >
                     <span ref={i === activeRow ? ref : null} style={formatCode(code.level)}>
-                      {code.codeTrailSpan}
                       {code.code}
                     </span>
                   </EditCodePopup>
@@ -151,6 +176,15 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
       </Table>
     </>
   );
+};
+
+const changeCodeColor = async (codingjob, code, color, codes, setCodes) => {
+  let updatedCodes = codes.map((ucode) => {
+    if (ucode.code === code) ucode.color = color;
+    return ucode;
+  });
+  await db.writeCodes(codingjob, updatedCodes);
+  setCodes(updatedCodes);
 };
 
 const loadCodes = async (codingjob, setCodes, setSettings) => {
@@ -483,6 +517,7 @@ const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColor
       code: code,
       codeTrail: codeTrail,
       level: codeTrail.length,
+      color: randomColor({ seed: code, luminosity: "light" }),
       codeTrailSpan: codeTrailSpan(code, codeTrail, showColors),
     });
 

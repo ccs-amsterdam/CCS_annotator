@@ -7,20 +7,20 @@ import SpanAnnotationsMenu from "./SpanAnnotationsMenu";
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
-const SpanAnnotations = ({ tokens }) => {
+const SpanAnnotations = ({ doc }) => {
   // note that tokens is actually an object with doc included: {doc, tokens}
   // passing the states separately caused race issues
-  if (!tokens.tokens) return null;
+  if (!doc.tokens) return null;
   return (
     <>
       <Grid.Row style={gridStyleTop}>
-        <SpanAnnotationsMenu tokens={tokens.tokens} />
+        <SpanAnnotationsMenu tokens={doc.tokens} />
       </Grid.Row>
       <Grid.Row style={gridStyleBottom}>
         <SpanInstructions />
       </Grid.Row>
-      <SpanAnnotationsNavigation tokens={tokens.tokens} />
-      <SpanAnnotationsDB doc={tokens.doc} tokens={tokens.tokens} />
+      <SpanAnnotationsNavigation tokens={doc.tokens} />
+      <SpanAnnotationsDB doc={doc} />
     </>
   );
 };

@@ -51,14 +51,13 @@ const CodingJobs = () => {
             <Dropdown as={Menu.Item} active={activeItem.includes("upload")} text="Upload Documents">
               <Dropdown.Menu>
                 <Dropdown.Item
-                  text="upload texts CSV"
+                  text="Texts CSV"
                   onClick={(e, d) => setActiveItem("upload texts CSV")}
                 />
                 <Dropdown.Item
-                  text="upload tokens CSV"
+                  text="Tokens CSV"
                   onClick={(e, d) => setActiveItem("upload tokens CSV")}
                 />
-                <Dropdown.Item text="Raw" onClick={(e, d) => setActiveItem("upload Raw")} />
               </Dropdown.Menu>
             </Dropdown>
           </Menu>

@@ -296,14 +296,21 @@ const PreviewTable = ({ data }) => {
   if (data.length <= 1) return null;
 
   return (
-    <Container style={{ marginTop: "2em" }}>
-      <Table fixed singleLine basic="very">
+    <div
+      style={{
+        marginTop: "3em",
+        overflow: "auto",
+        width: "85vh",
+        border: "solid 1px",
+      }}
+    >
+      <Table singleline style={{ display: "block", width: "100%", border: "solid 0px" }}>
         <Table.Header>
           <Table.Row>{createHeader(data)}</Table.Row>
         </Table.Header>
         <Table.Body>{createRows(data, n)}</Table.Body>
       </Table>
       {data.length > n ? <Header align="center">{data.length - 1 - n} more rows</Header> : null}
-    </Container>
+    </div>
   );
 };
