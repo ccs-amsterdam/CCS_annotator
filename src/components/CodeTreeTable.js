@@ -12,7 +12,7 @@ import {
 } from "semantic-ui-react";
 import { randomColor } from "randomcolor";
 import { useDispatch, useSelector } from "react-redux";
-import { blockEvents, selectCodingjob, setCodeMap } from "../actions";
+import { blockEvents, setCodeMap } from "../actions";
 import db from "../apis/dexie";
 
 const resultRenderer = ({ code, codeTrail }) => (
@@ -155,7 +155,7 @@ const CodeTreeTable = ({ showColors = false, typeDelay = 0, height = "30vh" }) =
 
 const loadCodes = async (codingjob, setCodes, setSettings) => {
   const cj = await db.getCodingjob(codingjob);
-  if (codingjob.codebook) {
+  if (cj.codebook) {
     const cb = JSON.parse(cj.codebook);
     if (cb && cb.codes && cb.codes.length > 0) {
       setCodes(cb.codes);
@@ -280,14 +280,13 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     };
   }, [dispatch]);
 
-  const addCode = (newCode) => {
+  const addCode = async (newCode) => {
     if (newCode === "") return null;
     if (codeMap[newCode]) return null;
     const updatedCodes = [...codes];
     updatedCodes.push({ code: newCode, parent: code });
-    db.writeCodes(codingjob, updatedCodes);
+    await db.writeCodes(codingjob, updatedCodes);
     setCodes(updatedCodes);
-    //dispatch(selectCodingjob(codingjob));
     setOpen(false);
   };
 
@@ -323,7 +322,7 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     };
   }, [dispatch]);
 
-  const rmCode = (keepChildren) => {
+  const rmCode = async (keepChildren) => {
     let updatedCodes = codes.filter((ucode) => ucode.code !== code);
 
     if (!keepChildren) {
@@ -337,9 +336,8 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
       });
     }
 
-    db.writeCodes(codingjob, updatedCodes);
+    await db.writeCodes(codingjob, updatedCodes);
     setCodes(updatedCodes);
-    dispatch(selectCodingjob(codingjob));
     setOpen(false);
   };
 
@@ -384,7 +382,7 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     };
   }, [dispatch]);
 
-  const mvCode = (newCode, newParent) => {
+  const mvCode = async (newCode, newParent) => {
     if (newCode !== code) {
       if (newCode === "") return null;
       if (codeMap[newCode]) return null;
@@ -400,9 +398,9 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
       return ucode;
     });
 
-    db.writeCodes(codingjob, updatedCodes);
+    await db.writeCodes(codingjob, updatedCodes);
+    await db.renameAnnotations(codingjob, code, newCode);
     setCodes(updatedCodes);
-    dispatch(selectCodingjob(codingjob));
     setOpen(false);
   };
 

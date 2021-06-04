@@ -13,6 +13,7 @@ import { selectCodingjob, setCodingjobs } from "../actions";
 
 const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
+  const codeMap = useSelector((state) => state.codeMap);
   const dispatch = useDispatch();
 
   const location = useLocation();
@@ -36,14 +37,14 @@ const Annotate = () => {
     if (!codingjob) return null;
     if (!ready) return null;
     setActivePage(1);
-    setupCodingjob(codingjob, setDoc, setNDocuments);
-  }, [codingjob, ready]);
+    setupCodingjob(codingjob, setDoc, setNDocuments, dispatch);
+  }, [codingjob, ready, dispatch]);
 
   useEffect(() => {
     if (!ready) return null;
-    documentSelector(codingjob, activePage - 1, setDoc);
+    documentSelector(codingjob, activePage - 1, setDoc, hash(codeMap), dispatch);
     setDelayedActivePage(activePage);
-  }, [codingjob, activePage, ready]);
+  }, [codingjob, activePage, codeMap, ready, dispatch]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -116,19 +117,21 @@ const documentPagination = (
   );
 };
 
-const setupCodingjob = async (codingjob, setDoc, setNDocuments) => {
+const setupCodingjob = async (codingjob, setDoc, setNDocuments, dispatch) => {
   const n = await db.getJobDocumentCount(codingjob);
   setNDocuments(n);
   if (n > 0) {
-    documentSelector(codingjob, 0, setDoc);
+    documentSelector(codingjob, 0, setDoc, "", dispatch);
   } else {
     setDoc(null);
   }
 };
 
-const documentSelector = async (codingjob, i, setDoc) => {
+const documentSelector = async (codingjob, i, setDoc, codeMapHash, dispatch) => {
   if (!codingjob) return null;
   let doc = await db.getJobDocumentsBatch(codingjob, i, 1);
+  doc[0].codeMapHash = codeMapHash;
+  doc[0].writable = false;
   if (doc) setDoc(doc[0]);
 };
 

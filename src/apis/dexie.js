@@ -65,6 +65,7 @@ class AnnotationDB {
       .equals(codingjob.job_id)
       .modify({ codebook: JSON.stringify(codebook, null, 2) });
   }
+
   async writeCodes(codingjob, codes, append = false) {
     const cj = await this.getCodingjob(codingjob);
     const codebook = cj.codebook ? JSON.parse(cj.codebook) : {};
@@ -139,7 +140,6 @@ class AnnotationDB {
       alert(message);
     }
 
-    console.log(codes);
     codes = Object.keys(codes).reduce((a, code) => {
       for (let parent of codes[code]) a.push({ code, parent });
       return a;
@@ -148,6 +148,7 @@ class AnnotationDB {
 
     return this.idb.documents.bulkAdd(preparedDocuments);
   }
+
   async deleteDocuments(documents) {
     const documentIds = documents.map((document) => document.doc_id);
     return this.idb.documents.bulkDelete(documentIds);
@@ -174,10 +175,26 @@ class AnnotationDB {
   }
 
   async writeAnnotations(document, annotations) {
+    console.log("writing annotations");
+    console.log(document);
+    console.log(annotations);
     return this.idb.documents
       .where("doc_id")
       .equals(document.doc_id)
       .modify({ annotations: annotations });
+  }
+  async renameAnnotations(codingjob, oldCode, newCode) {
+    let ids = new Set(
+      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+    );
+    for (let id of ids) {
+      let doc = await this.getDocument(id);
+      let annotations = doc.annotations.map((annotation) => {
+        if (annotation.code === oldCode) annotation.code = newCode;
+        return annotation;
+      });
+      await this.writeAnnotations(doc, annotations);
+    }
   }
 
   // CLEANUP

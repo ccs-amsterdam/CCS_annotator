@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  clearSpanAnnotations,
   toggleTokenSelection,
   setCurrentToken,
   clearTokenSelection,
@@ -13,7 +12,7 @@ import { toggleAnnotations } from "../actions";
 
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const SpanAnnotationsNavigation = ({ doc, tokens }) => {
+const SpanAnnotationsNavigation = ({ tokens }) => {
   const currentToken = useSelector((state) => state.currentToken);
   const tokenSelection = useSelector((state) => state.tokenSelection);
   const eventsBlocked = useSelector((state) => state.eventsBlocked);
@@ -23,10 +22,6 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
   const [holdArrow, setHoldArrow] = useState(null);
 
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(clearSpanAnnotations());
-  }, [doc, dispatch]);
 
   useEffect(() => {
     if (eventsBlocked) {
@@ -55,7 +50,7 @@ const SpanAnnotationsNavigation = ({ doc, tokens }) => {
     }, delay);
   }, [tokens, mover, holdArrow, HoldSpace, dispatch]);
 
-  if (!doc) return null;
+  if (!tokens) return null;
 
   // this prevents rendering the components that manage the key and mouse events
   if (eventsBlocked) return null;

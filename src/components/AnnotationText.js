@@ -7,7 +7,7 @@ import SpanAnnotations from "./spanAnnotations";
 const gridStyle = { overflowY: "auto", height: "75vh" };
 
 const AnnotationText = ({ doc }) => {
-  const [tokens, setTokens] = useState([]);
+  const [tokens, setTokens] = useState({});
 
   if (!doc) return null;
   return (
@@ -16,7 +16,7 @@ const AnnotationText = ({ doc }) => {
         <Tokens doc={doc} setTokens={setTokens} />
       </Grid.Column>
       <Grid.Column width={8}>
-        <SpanAnnotations doc={doc} tokens={tokens} />
+        <SpanAnnotations tokens={tokens} />
       </Grid.Column>
     </Grid>
   );

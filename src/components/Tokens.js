@@ -29,7 +29,7 @@ const prepareTokens = async (doc, setTokenComponents, setTokens) => {
   }
   if (!tokens) return null;
   setTokenComponents(renderText(tokens));
-  setTokens(tokens);
+  setTokens({ doc, tokens });
 };
 
 const renderText = (tokens) => {

@@ -6,7 +6,7 @@ import "./spanAnnotationsStyle.css";
 
 const COLWIDTHS = [4, 2, 2]; // for offset and text
 
-const SpanAnnotationsMenu = ({ doc, tokens }) => {
+const SpanAnnotationsMenu = ({ tokens }) => {
   const annotations = useSelector((state) => state.spanAnnotations);
 
   if (!tokens || tokens.length === 0) return null;
@@ -31,14 +31,12 @@ const SpanAnnotationsMenu = ({ doc, tokens }) => {
           <Table.HeaderCell>Text</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
-      <Table.Body className="annotations-tbody">
-        {annotationRows(tokens, doc, annotations)}
-      </Table.Body>
+      <Table.Body className="annotations-tbody">{annotationRows(tokens, annotations)}</Table.Body>
     </Table>
   );
 };
 
-const annotationRows = (tokens, doc, annotations) => {
+const annotationRows = (tokens, annotations) => {
   const rows = [];
   let text = null;
   let token = null;

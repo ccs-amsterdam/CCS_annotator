@@ -1,29 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { appendCodeHistory, toggleAnnotations } from "../actions";
+import { appendCodeHistory, resetCodeHistory, setAnnotations } from "../actions";
 import db from "../apis/dexie";
 
 // this component generates no content, but manages writing and reading of annotations
 
 const SpanAnnotationsDB = ({ doc, tokens }) => {
-  const annotations = useSelector((state) => state.spanAnnotations);
-  const [ready, setReady] = useState(false);
+  let annotations = useSelector((state) => state.spanAnnotations);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    setReady(false);
-  }, [doc]);
+    if (doc.writable) exportAnnotations(doc, annotations, tokens);
+  }, [doc, tokens, annotations]);
 
   useEffect(() => {
-    if (tokens.length > 0 && !ready) {
-      if (doc.annotations) matchAnnotations(tokens, doc.annotations, dispatch);
-      setReady(true);
-    }
-  }, [ready, tokens, doc, dispatch]);
-
-  useEffect(() => {
-    if (ready) exportAnnotations(doc, annotations, tokens);
-  }, [ready, doc, tokens, annotations]);
+    if (doc.writable || tokens.length === 0) return;
+    matchAnnotations(tokens, doc.annotations, dispatch);
+    doc.writable = true; // this ensures that each new doc first does the matching step
+  }, [doc, tokens, dispatch]);
 
   return <div></div>;
 };
@@ -57,6 +51,8 @@ const exportAnnotations = async (doc, annotations, tokens) => {
 };
 
 const matchAnnotations = (tokens, annotations, dispatch) => {
+  console.log("matching annotations");
+  console.log(annotations);
   const importedAnnotations = prepareAnnotations(annotations);
   let trackAnnotations = {};
   let matchedAnnotations = [];
@@ -66,15 +62,18 @@ const matchAnnotations = (tokens, annotations, dispatch) => {
   }
 
   const codeCounter = {};
+  const annArray = [];
   for (let matchedAnnotation of matchedAnnotations) {
     if (!codeCounter[matchedAnnotation.group]) codeCounter[matchedAnnotation.group] = 0;
     codeCounter[matchedAnnotation.group]++;
-    addAnnotations(matchedAnnotation, dispatch);
+    annArray.push(matchedAnnotation);
   }
+  addAnnotations(annArray, dispatch);
 
   let topCodes = Object.keys(codeCounter).sort(function (a, b) {
     return codeCounter[a] - codeCounter[b];
   });
+  dispatch(resetCodeHistory());
   for (const code of topCodes.slice(-5)) {
     if (code === "UNASSIGNED") continue;
     dispatch(appendCodeHistory(code));
@@ -128,14 +127,17 @@ const prepareAnnotations = (annotations) => {
   }, {});
 };
 
-const addAnnotations = (ann, dispatch) => {
+const addAnnotations = (annArray, dispatch) => {
   let newAnnotations = [];
-  for (let i = ann.span[0]; i <= ann.span[1]; i++) {
-    let newAnnotation = { ...ann };
-    newAnnotation.index = i;
-    newAnnotations.push(newAnnotation);
+  for (let ann of annArray) {
+    for (let i = ann.span[0]; i <= ann.span[1]; i++) {
+      let newAnnotation = { ...ann };
+      newAnnotation.index = i;
+      newAnnotations.push(newAnnotation);
+    }
   }
-  dispatch(toggleAnnotations(newAnnotations));
+
+  dispatch(setAnnotations(newAnnotations));
 };
 
 export default SpanAnnotationsDB;

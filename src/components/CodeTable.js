@@ -37,7 +37,6 @@ const CodeBook = () => {
 
 const CodeTreeTable = ({ codeTree }) => {
   if (!codeTree) return null;
-  console.log(codeTree);
   return (
     <Table basic="very" compact>
       <Table.Body>{codeTreeTableBody(codeTree)}</Table.Body>

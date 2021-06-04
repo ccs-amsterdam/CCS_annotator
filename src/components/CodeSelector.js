@@ -172,7 +172,6 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
   };
 
   if (!current) return null;
-  console.log(codeMap);
   return (
     <>
       <Grid>

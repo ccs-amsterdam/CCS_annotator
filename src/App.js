@@ -46,8 +46,14 @@ const App = () => {
       <HeaderMenu items={items} homepage={homepage} />
       <Divider />
       <Sidebar.Pushable>
-        <Sidebar animation="overlay" visible={showSidebar} direction={"right"} width="wide">
-          <CodeTreeTable height="30vh" showColors />
+        <Sidebar
+          animation="overlay"
+          visible={showSidebar}
+          direction={"right"}
+          width="wide"
+          style={{ backgroundColor: "white" }}
+        >
+          <CodeTreeTable height="80vh" showColors />
         </Sidebar>
         <Sidebar.Pusher>
           <Container style={{ marginTop: "3em" }}>

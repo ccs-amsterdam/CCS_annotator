@@ -129,6 +129,8 @@ const toggleSelection = (selection, tokens, index, add) => {
 
 const spanAnnotations = (state = {}, action) => {
   switch (action.type) {
+    case "SET_ANNOTATIONS":
+      return toggleAnnotations({}, action.payload, false);
     case "TOGGLE_ANNOTATIONS":
       return toggleAnnotations({ ...state }, action.payload, false);
     case "RM_ANNOTATIONS":
@@ -194,8 +196,10 @@ const codeMap = (state = {}, action) => {
 
 const codeHistory = (state = [], action) => {
   switch (action.type) {
+    case "RESET_CODE_HISTORY":
+      return [];
     case "APPEND_CODE_HISTORY":
-      let newstate = state.filter(v => v !== action.payload.code).slice(0, action.payload.n - 1);
+      let newstate = state.filter((v) => v !== action.payload.code).slice(0, action.payload.n - 1);
       newstate.unshift(action.payload.code);
       return newstate;
     case "RESET_DB":
