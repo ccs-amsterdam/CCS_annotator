@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Grid } from "semantic-ui-react";
 
 import Tokens from "./Tokens";
@@ -7,25 +7,21 @@ import SpanAnnotations from "./spanAnnotations";
 const gridStyle = { overflowY: "auto", height: "75vh" };
 
 const AnnotationText = ({ doc }) => {
+  const [tokenizedDoc, setTokenizedDoc] = useState(null);
   if (!doc) return null;
 
-  // Note that <Tokens> also adds overwrites doc.tokens with the
-  // prepared tokens (and included Refs)
+  // <Tokens> both renders the tokens and copies to the doc to a new state
+  // that also contains references to the tokens
   return (
     <Grid container columns={2}>
       <Grid.Column width={8} style={gridStyle}>
-        <Tokens doc={doc} />
+        <Tokens doc={doc} setTokenizedDoc={setTokenizedDoc} />
       </Grid.Column>
       <Grid.Column width={8}>
-        <SpanAnnotations doc={doc} />
+        <SpanAnnotations doc={tokenizedDoc} />
       </Grid.Column>
     </Grid>
   );
 };
 
 export default AnnotationText;
-
-// title is optional. If empty, just show text nr in breadcrumb
-// annotations can be document, paragraph, sentence or token level
-// these are stored in separate keys in the annotations
-// For paragraph, sentence and token level, the specific texts are also exported with the annotations

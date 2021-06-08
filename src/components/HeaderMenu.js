@@ -3,7 +3,7 @@ import { Menu } from "semantic-ui-react";
 import { Link, withRouter, useLocation } from "react-router-dom";
 import db from "../apis/dexie";
 
-import Download from "./Download";
+import ExportCodingjob from "./ExportCodingjob";
 import Reset from "./Reset";
 import Persist from "./Persist";
 import CodebookSidebar from "./CodebookSidebar";
@@ -31,11 +31,11 @@ const HeaderMenu = ({ items, homepage }) => {
     <Menu fixed="top" inverted>
       {menuItems}
       <Menu.Menu position="right">
+        <ExportCodingjob />
         {location.pathname.includes("annotate") ? (
           <CodebookSidebar />
         ) : (
           <>
-            <Download />
             <Persist />
             <Reset homepage={homepage} />
           </>

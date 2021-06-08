@@ -129,7 +129,7 @@ const setupCodingjob = async (codingjob, setDoc, setNDocuments, dispatch) => {
 
 const documentSelector = async (codingjob, i, setDoc, codeMapHash, dispatch) => {
   if (!codingjob) return null;
-  let doc = await db.getJobDocumentsBatch(codingjob, i, 1);
+  let doc = await db.getJobDocuments(codingjob, i, 1);
   doc[0].codeMapHash = codeMapHash;
   doc[0].writable = false;
   if (doc) setDoc(doc[0]);

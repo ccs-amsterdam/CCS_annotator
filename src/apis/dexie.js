@@ -63,12 +63,12 @@ class AnnotationDB {
     return this.idb.codingjobs
       .where("job_id")
       .equals(codingjob.job_id)
-      .modify({ codebook: JSON.stringify(codebook, null, 2) });
+      .modify({ codebook: codebook });
   }
 
   async writeCodes(codingjob, codes, append = false) {
     const cj = await this.getCodingjob(codingjob);
-    const codebook = cj.codebook ? JSON.parse(cj.codebook) : {};
+    const codebook = cj.codebook ? cj.codebook : {};
 
     if (!append) {
       codebook.codes = codes;
@@ -154,12 +154,13 @@ class AnnotationDB {
     return this.idb.documents.bulkDelete(documentIds);
   }
 
-  async getJobDocumentsBatch(codingjob, offset, limit) {
-    if (offset < 0) return null;
-    const documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
+  async getJobDocuments(codingjob, offset, limit) {
+    if (offset !== null && offset < 0) return null;
+    let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
     const ndocs = await documents.count();
-    if (offset > ndocs - 1) return null;
-    return documents.offset(offset).limit(limit).toArray();
+    if (offset !== null && offset > ndocs - 1) return null;
+    if (limit !== null) documents = documents.offset(offset).limit(limit);
+    return documents.toArray();
   }
 
   async getJobDocumentCount(codingjob) {
@@ -175,9 +176,6 @@ class AnnotationDB {
   }
 
   async writeAnnotations(document, annotations) {
-    console.log("writing annotations");
-    console.log(document);
-    console.log(annotations);
     return this.idb.documents
       .where("doc_id")
       .equals(document.doc_id)

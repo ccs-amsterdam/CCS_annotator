@@ -51,8 +51,6 @@ const exportAnnotations = async (doc, annotations) => {
 };
 
 const matchAnnotations = (doc, dispatch) => {
-  console.log("matching annotations");
-  console.log(doc.annotations);
   const importedAnnotations = prepareAnnotations(doc.annotations);
   let trackAnnotations = {};
   let matchedAnnotations = [];

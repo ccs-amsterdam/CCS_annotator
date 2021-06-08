@@ -10,7 +10,6 @@ import db from "../apis/dexie";
 export const UploadTextsCsv = ({ setActive }) => {
   const columns = {
     document_id: { required: true, multiple: false, defaults: ["doc_id", "document_id"] },
-    annotations_json: { required: false, multiple: false, defaults: ["annotations_json"] },
     text_fields: {
       required: true,
       multiple: true,
@@ -25,10 +24,15 @@ const renderTextForms = (columns, options, fields, setFields) => {
     <>
       <Form.Group widths="equal">
         {renderForm("document id", "document_id", columns, options, fields, setFields)}
-        {renderForm("annotations (json)", "annotations_json", columns, options, fields, setFields)}
-      </Form.Group>
-      <Form.Group widths="equal">
-        {renderForm("text fields", "text_fields", columns, options, fields, setFields)}
+
+        {renderForm(
+          "text fields (can be multiple)",
+          "text_fields",
+          columns,
+          options,
+          fields,
+          setFields
+        )}
       </Form.Group>
     </>
   );
@@ -38,21 +42,13 @@ export const UploadTokensCsv = ({ setActive }) => {
   const columns = {
     document_id: { required: true, multiple: false, defaults: ["doc_id", "document_id"] },
     token: { required: true, multiple: false, defaults: ["token", "text"] },
-    sentence: {
-      required: false,
-      multiple: false,
-      defaults: ["sentence", "sentence_nr", "sentence_id"],
-    },
-    paragraph: {
-      required: false,
-      multiple: false,
-      defaults: ["paragraph", "paragraph_nr", "paragraph_id"],
-    },
+    sentence: { required: false, multiple: false, defaults: ["sentence", "sentence_id"] },
+    paragraph: { required: false, multiple: false, defaults: ["paragraph", "paragraph_id"] },
     offset: { required: false, int: true, multiple: false, defaults: ["offset", "start"] },
     end: { required: false, int: true, multiple: false, defaults: ["end"] },
     post: { required: false, multiple: false, defaults: ["post", "space"] },
     section: { required: false, multiple: false, defaults: ["section"] },
-    annotations: { required: false, multiple: true, defaults: ["annotation"] },
+    annotations: { required: false, multiple: true, defaults: [] },
   };
   return <UploadCsv type="tokens" columns={columns} setActive={setActive} />;
 };

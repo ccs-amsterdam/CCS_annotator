@@ -5,22 +5,22 @@ import db from "../apis/dexie";
 
 import { parseTokens } from "../util/tokens";
 
-const Tokens = ({ doc }) => {
+const Tokens = ({ doc, setTokenizedDoc }) => {
   // It's imporant that the annotations to not pass by this component
   // but are loaded into Token from redux. This prevents rerendering
   // all the parsing stuff
   const [tokenComponents, setTokenComponents] = useState(null);
 
   useEffect(() => {
-    prepareTokens(doc, setTokenComponents);
-  }, [doc]);
+    prepareTokens(doc, setTokenComponents, setTokenizedDoc);
+  }, [doc, setTokenizedDoc]);
 
   if (doc === null) return null;
 
   return <Container textAlign="justified">{tokenComponents}</Container>;
 };
 
-const prepareTokens = async (doc, setTokenComponents) => {
+const prepareTokens = async (doc, setTokenComponents, setTokenizedDoc) => {
   let tokens = doc.tokens;
 
   if (!tokens) {
@@ -30,6 +30,7 @@ const prepareTokens = async (doc, setTokenComponents) => {
   if (!tokens) return null;
   setTokenComponents(renderText(tokens));
   doc.tokens = tokens;
+  setTokenizedDoc(doc);
 };
 
 const renderText = (tokens) => {

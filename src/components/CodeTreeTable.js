@@ -37,6 +37,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
   const [changeColor, setChangeColor] = useState(null);
   const ref = React.useRef();
 
+
   useEffect(() => {
     if (!codingjob) return null;
     loadCodes(codingjob, setCodes, setSettings);
@@ -190,7 +191,7 @@ const changeCodeColor = async (codingjob, code, color, codes, setCodes) => {
 const loadCodes = async (codingjob, setCodes, setSettings) => {
   const cj = await db.getCodingjob(codingjob);
   if (cj.codebook) {
-    const cb = JSON.parse(cj.codebook);
+    const cb = cj.codebook;
     if (cb && cb.codes && cb.codes.length > 0) {
       setCodes(cb.codes);
     } else {

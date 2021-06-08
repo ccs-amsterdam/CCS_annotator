@@ -13,7 +13,7 @@ const CodeBook = () => {
       setCodeTree([]);
       return null;
     }
-    const cb = JSON.parse(codingjob.codebook);
+    const cb = codingjob.codebook;
     if (cb && cb.codes) {
       setCodeTree(codelistToTree(cb.codes));
     }

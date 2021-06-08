@@ -103,6 +103,7 @@ export const importTokens = (tokens) => {
 export const importTokenAnnotations = (tokens, codes) => {
   let annotations = [];
   let codeTracker = {};
+  let section = tokens[0].section;
   for (let i = 0; i < tokens.length; i++) {
     if (!tokens[i].annotations) {
       for (let annotation of Object.values(codeTracker)) annotations.push(annotation);
@@ -131,7 +132,7 @@ export const importTokenAnnotations = (tokens, codes) => {
           section: tokens[i].section,
           length: tokens[i].length,
         };
-      if (codeTracker[annotation.name].group === annotation.value) {
+      if (codeTracker[annotation.name].code === annotation.value) {
         codeTracker[annotation.name].length =
           tokens[i].offset + tokens[i].length - codeTracker[annotation.name].offset;
         codeTracker[annotation.name].text += prevTokenPost + tokens[i].pre + tokens[i].post;
@@ -139,12 +140,15 @@ export const importTokenAnnotations = (tokens, codes) => {
     }
 
     for (let key of Object.keys(codeTracker)) {
+      console.log(codeTracker);
+      console.log(annotationDict);
+      console.log(key);
       if (annotationDict[key] == null) {
         annotations.push(...codeTracker[key]);
         codeTracker[key] = null;
         continue;
       }
-      if (annotationDict[key] !== codeTracker[key]) {
+      if (annotationDict[key] !== codeTracker[key].code) {
         annotations.push(codeTracker[key]);
         codeTracker[key] = {
           index: i,
@@ -156,7 +160,15 @@ export const importTokenAnnotations = (tokens, codes) => {
         };
       }
     }
+
+    if (i < tokens.length - 1 && tokens[i + 1].section !== section) {
+      for (let annotation of Object.values(codeTracker)) annotations.push(annotation);
+      codeTracker = {};
+      section = tokens[i].section;
+      continue;
+    }
   }
+  for (let annotation of Object.values(codeTracker)) annotations.push(annotation);
 
   return annotations;
 };

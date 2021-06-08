@@ -10,7 +10,8 @@ const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 const SpanAnnotations = ({ doc }) => {
   // note that tokens is actually an object with doc included: {doc, tokens}
   // passing the states separately caused race issues
-  if (!doc.tokens) return null;
+  if (doc === null) return null;
+
   return (
     <>
       <Grid.Row style={gridStyleTop}>

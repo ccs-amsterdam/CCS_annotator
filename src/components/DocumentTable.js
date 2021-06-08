@@ -68,7 +68,7 @@ const DocumentTable = () => {
 
   const pageChange = async (event, data) => {
     const offset = (data.activePage - 1) * PAGESIZE;
-    const newdata = await db.getJobDocumentsBatch(codingjob, offset, PAGESIZE);
+    const newdata = await db.getJobDocuments(codingjob, offset, PAGESIZE);
     setData(newdata);
     setColumns(getColumns(newdata));
   };
@@ -126,7 +126,7 @@ const fetchFromDb = async (codingjob, pageSize, setPages, setData, setColumns) =
   const n = await db.getJobDocumentCount(codingjob);
   setPages(Math.ceil(n / pageSize));
   let newdata = [];
-  if (n > 0) newdata = await db.getJobDocumentsBatch(codingjob, 0, pageSize);
+  if (n > 0) newdata = await db.getJobDocuments(codingjob, 0, pageSize);
 
   setData(newdata);
   setColumns(getColumns(newdata));
