@@ -6,7 +6,7 @@ import db from "../apis/dexie";
 // this component generates no content, but manages writing and reading of annotations
 
 const SpanAnnotationsDB = ({ doc }) => {
-  let annotations = useSelector((state) => state.spanAnnotations);
+  let annotations = useSelector(state => state.spanAnnotations);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -39,8 +39,10 @@ const exportAnnotations = async (doc, annotations) => {
         text: text,
         section: ann[key].section,
         offset: ann[key].offset,
-        index: ann[key].index,
         length: ann[key].length,
+        index: ann[key].index,
+        ngram: ann[key].span[1] - ann[key].span[0] + 1,
+        custom: ann[key].custom,
       };
       un_ann.push(ann_obj);
     }
@@ -68,7 +70,7 @@ const matchAnnotations = (doc, dispatch) => {
   }
   addAnnotations(annArray, dispatch);
 
-  let topCodes = Object.keys(codeCounter).sort(function (a, b) {
+  let topCodes = Object.keys(codeCounter).sort(function(a, b) {
     return codeCounter[a] - codeCounter[b];
   });
   dispatch(resetCodeHistory());
@@ -86,12 +88,13 @@ const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnota
     const key = `${token.section}-${i}`;
 
     if (importedAnnotations[key]) {
-      for (let code of importedAnnotations[key].start) {
-        trackAnnotations[code] = { ...token };
-        trackAnnotations[code].group = code;
-        trackAnnotations[code].offset = start;
-        trackAnnotations[code].length = null;
-        trackAnnotations[code].span = [token.index];
+      for (let annotation of importedAnnotations[key].start) {
+        trackAnnotations[annotation.code] = { ...token };
+        trackAnnotations[annotation.code].group = annotation.code;
+        trackAnnotations[annotation.code].custom = annotation.custom;
+        trackAnnotations[annotation.code].offset = start;
+        trackAnnotations[annotation.code].length = null;
+        trackAnnotations[annotation.code].span = [token.index];
       }
 
       for (let code of importedAnnotations[key].end) {
@@ -105,7 +108,7 @@ const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnota
   }
 };
 
-const prepareAnnotations = (annotations) => {
+const prepareAnnotations = annotations => {
   if (!annotations || annotations === "") return {};
 
   // create an object where the key is a section+offset, and the
@@ -119,8 +122,8 @@ const prepareAnnotations = (annotations) => {
     const endKey = `${ann.section}-${ann.offset + ann.length}`;
     if (!obj[startKey]) obj[startKey] = { start: [], end: [] };
     if (!obj[endKey]) obj[endKey] = { start: [], end: [] };
-    obj[startKey].start.push(ann.code);
-    obj[endKey].end.push(ann.code);
+    obj[startKey].start.push(ann); // for the starting point the full annotation is given, so that we have all the information
+    obj[endKey].end.push(ann.code); // for the ending point we just need to know the code to close the annotation off
     return obj;
   }, {});
 };

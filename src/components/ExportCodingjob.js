@@ -6,7 +6,7 @@ import db from "../apis/dexie";
 import { useSelector } from "react-redux";
 
 const ExportCodingjob = () => {
-  const codingjob = useSelector((state) => state.codingjob);
+  const codingjob = useSelector(state => state.codingjob);
   const [open, setOpen] = useState(false);
 
   const downloadCodingjob = async () => {
@@ -27,16 +27,22 @@ const ExportCodingjob = () => {
   };
 
   // const downloadAnnotations = async (withDocuments, withTokens) => {
-  // just give everything. Either as a JSON, CSV, or ZIP with CSV (for multiple)
+  //   //just give everything. Either as a JSON, CSV, or ZIP with CSV (for multiple)
   //   try {
   //     const documents = await db.getJobDocuments(codingjob, null, null);
 
-  //     const annotations = documents.map((doc) => {
-  //       const obj = { annotations: doc.annotations };   // add index_span. Add doc_id
+  //     const annotations = documents.map(doc => {
+  //       const obj = { annotations: doc.annotations }; // add index_span. Add doc_id
   //       if (withDocuments) obj.documents = doc.original;
-  //       if (withTokens) obj.tokens = doc.tokens    // get original tokens, and then add annotation_index"
+  //       if (withTokens)
+  //         obj.tokens = doc.tokens.map(token => {
+  //           // get original tokens, and then add annotation_index"
+  //           const originalToken = { ...token.original, annotation_index: token.index };
+  //           if (!Object.keys(originalToken).includes("offset")) originalToken.offset = token.offset;
+  //           return originalToken;
+  //         });
   //     });
-  //     also give option to download zip folder of csv files: https://stuk.github.io/jszip/
+  //     //also give option to download zip folder of csv files: https://stuk.github.io/jszip/
   //     const obj = {
   //       details: { name: codingjob.name },
   //       codebook: codingjob.codebook,
@@ -64,10 +70,10 @@ const ExportCodingjob = () => {
       <Modal.Content>
         <p>Download Codingjob</p>
         <Button primary onClick={downloadCodingjob}>
-          Download
+          Download Codingjob
         </Button>
         <Button primary onClick={downloadCodingjob}>
-          Download
+          Download Annotations
         </Button>
       </Modal.Content>
       <Modal.Actions></Modal.Actions>
