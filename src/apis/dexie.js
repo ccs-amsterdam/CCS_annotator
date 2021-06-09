@@ -1,6 +1,7 @@
 import Dexie from "dexie";
 import hash from "object-hash";
-import { importTokens, importTokenAnnotations } from "../util/tokens.js";
+import { importTokens, importTokenAnnotations, parseTokens } from "../util/tokens";
+import { importSpanAnnotations } from "../util/annotations";
 
 class AnnotationDB {
   constructor() {
@@ -109,18 +110,30 @@ class AnnotationDB {
       const doc_id = hash([document, codingjob]); // codingjob included for doc_id hash
       if (!ids.has(doc_id)) {
         ids.add(doc_id);
-        if (document.annotations && document.annotations.length > 0) {
-          try {
-            JSON.parse(document.annotations);
-          } catch (e) {
-            alert("Annotations field contains invalid JSON");
-            throw new Error("JSON parse error");
-          }
-        }
+
         if (document.tokens) {
           document.tokens = importTokens(document.tokens);
-          document.annotations = importTokenAnnotations(document.tokens, codes); // also fills codes
+        } else {
+          document.tokens = parseTokens(document.text_fields);
         }
+
+        if (document.annotations && document.annotations.length > 0) {
+          try {
+            document.annotations = importSpanAnnotations({}, JSON.parse(document.annotations));
+          } catch (e) {
+            alert("Annotations field could not be imported");
+            throw new Error("JSON parse error");
+          }
+        } else document.annotations = {};
+
+        const tokenAnnotations = importTokenAnnotations(document.tokens, codes); // also fills codes
+        if (tokenAnnotations.length > 0)
+          document.annotations = importSpanAnnotations(
+            document.annotations,
+            tokenAnnotations,
+            document.tokens
+          );
+
         result.push({
           doc_id: doc_id,
           job_id: codingjob.job_id,
@@ -132,6 +145,8 @@ class AnnotationDB {
       return result;
     }, []);
 
+    console.log("test");
+    console.log(preparedDocuments);
     if (!silent) {
       let message = `Created ${documentList.length - duplicates} new documents in codingjob ${
         codingjob.name

@@ -14,7 +14,6 @@ import { randomColor } from "randomcolor";
 import { useDispatch, useSelector } from "react-redux";
 import { blockEvents, setCodeMap } from "../actions";
 import db from "../apis/dexie";
-import { getColor } from "../util/tokenDesign";
 
 const resultRenderer = ({ code, codeTrail }) => (
   <div key="content" className="content">

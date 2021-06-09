@@ -6,7 +6,7 @@ import CodeSelector from "./CodeSelector";
 import { triggerCodeselector } from "../actions";
 import { getColor } from "../util/tokenDesign";
 
-const Token = React.forwardRef(({ token }, ref) => {
+const Token = React.forwardRef(({ token, highlight }, ref) => {
   const selected = useSelector((state) => {
     if (state.tokenSelection.length === 0) return false;
 
@@ -17,6 +17,7 @@ const Token = React.forwardRef(({ token }, ref) => {
 
   let tokenClass = "token";
   if (selected) tokenClass = tokenClass + " selected";
+  if (highlight) tokenClass = tokenClass + " highlighted";
 
   return (
     <span ref={ref} className={tokenClass} tokenindex={token.index}>

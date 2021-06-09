@@ -101,6 +101,7 @@ export const importTokens = (tokens) => {
 };
 
 export const importTokenAnnotations = (tokens, codes) => {
+  if (tokens.length === 0) return [];
   let annotations = [];
   let codeTracker = {};
   let section = tokens[0].section;
@@ -140,9 +141,6 @@ export const importTokenAnnotations = (tokens, codes) => {
     }
 
     for (let key of Object.keys(codeTracker)) {
-      console.log(codeTracker);
-      console.log(annotationDict);
-      console.log(key);
       if (annotationDict[key] == null) {
         annotations.push(...codeTracker[key]);
         codeTracker[key] = null;

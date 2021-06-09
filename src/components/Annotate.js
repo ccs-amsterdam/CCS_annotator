@@ -30,7 +30,7 @@ const Annotate = () => {
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
   const [ready, setReady] = useState(false);
-  const [modes, setModes] = useState(["Edit", "Code"]);
+  const [modes, setModes] = useState(["Edit", "Code"]); // make this a setting in codebook
   const [selectedMode, setSelectedMode] = useState("Edit");
   const [jobDetails, setJobDetails] = useState({});
 
@@ -48,7 +48,7 @@ const Annotate = () => {
     if (!ready) return null;
     setActivePage(1);
     setupCodingjob(codingjob, setDoc, setJobDetails);
-  }, [codingjob, ready, setModes, setSelectedMode]);
+  }, [codingjob, ready, setDoc, setSelectedMode]);
 
   useEffect(() => {
     if (!ready) return null;
@@ -151,7 +151,16 @@ const setupCodingjob = async (codingjob, setDoc, setJobDetails) => {
     setDoc(null);
   }
 
-  const annotations = await db.getJobAnnotations(codingjob);
+  let annotations = await db.getJobAnnotations(codingjob);
+  annotations = annotations.reduce((array, annotation, docIndex) => {
+    for (let i of Object.keys(annotation)) {
+      for (let group of Object.keys(annotation[i])) {
+        array.push({ docIndex, group, index: i, ...annotation[i][group] });
+      }
+    }
+    return array;
+  }, []);
+  console.log(annotations);
   //console.log(ann);
 };
 

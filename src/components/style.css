@@ -29,19 +29,20 @@ span.token.selected {
   border-color: black;
 }
 
+span.token.highlighted {
+  background-color: rgb(241, 239, 103) !important;
+  color: rgb(0, 0, 0);
+  border-color: black;
+}
+
 button.active {
   height: "120%";
   border: solid !important;
 }
 
-.token {
-  padding: 1px;
-}
-
 .annotatedToken {
   border: solid;
   border-width: 1px;
-  opacity: 0.7;
   border-left-width: 1px;
   border-right-width: 1px;
   border-left: none;

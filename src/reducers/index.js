@@ -1,4 +1,5 @@
 import { combineReducers } from "redux";
+import { toggleAnnotations } from "../util/annotations";
 
 const db = (state = null, action) => {
   switch (action.type) {
@@ -130,7 +131,7 @@ const toggleSelection = (selection, tokens, index, add) => {
 const spanAnnotations = (state = {}, action) => {
   switch (action.type) {
     case "SET_ANNOTATIONS":
-      return toggleAnnotations({}, action.payload, false);
+      return action.payload;
     case "TOGGLE_ANNOTATIONS":
       return toggleAnnotations({ ...state }, action.payload, false);
     case "RM_ANNOTATIONS":
@@ -142,45 +143,6 @@ const spanAnnotations = (state = {}, action) => {
     default:
       return state;
   }
-};
-
-const toggleAnnotations = (annotations, annList, rm) => {
-  for (let item in annList) {
-    let a = annList[item];
-
-    // if group in annotations, remove it
-    if (annotations[a.index]) {
-      if (annotations[a.index][a.group]) {
-        const span = annotations[a.index][a.group].span;
-        for (let i = span[0]; i <= span[1]; i++) {
-          if (annotations[i]) {
-            if (annotations[i][a.group]) {
-              delete annotations[i][a.group];
-              if (Object.keys(annotations[i]).length === 0) {
-                delete annotations[i];
-              }
-            }
-          }
-        }
-        // if selection was one token (which is probably a click),
-        // just remove the annotation. But if it was a multi-token selection,
-        // we do add the new selection
-        if (a.span[0] === a.span[1]) continue;
-      }
-    }
-
-    if (!rm) {
-      if (!annotations[a.index]) annotations[a.index] = {};
-      annotations[a.index][a.group] = {
-        index: a.index,
-        span: [a.span[0], a.span[1]],
-        length: a.length,
-        section: a.section,
-        offset: a.offset,
-      };
-    }
-  }
-  return annotations;
 };
 
 const codeMap = (state = {}, action) => {
