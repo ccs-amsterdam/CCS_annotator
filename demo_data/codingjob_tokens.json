@@ -11,6 +11,7 @@
       { "code": "Jesse Klaver", "parent": "Groenlinks" },
       { "code": "Climate change", "parent": "Issue" }
     ],
+    
     "relations": [],
     "code_annotations": {
       "coding_unit": ["code"],

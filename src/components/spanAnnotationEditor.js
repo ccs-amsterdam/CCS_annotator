@@ -7,7 +7,7 @@ import SpanAnnotationsMenu from "./SpanAnnotationsMenu";
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
-const SpanAnnotations = ({ doc }) => {
+const SpanAnnotationEditor = ({ doc }) => {
   // note that tokens is actually an object with doc included: {doc, tokens}
   // passing the states separately caused race issues
   if (doc === null) return null;
@@ -104,4 +104,4 @@ const SpanInstructions = () => {
   );
 };
 
-export default SpanAnnotations;
+export default SpanAnnotationEditor;

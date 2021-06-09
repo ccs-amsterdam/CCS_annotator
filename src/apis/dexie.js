@@ -163,6 +163,19 @@ class AnnotationDB {
     return documents.toArray();
   }
 
+  async getJobAnnotations(codingjob) {
+    let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
+    const annotations = [];
+    await documents.each((e) => {
+      if (e.annotations) {
+        annotations.push(e.annotations);
+      } else {
+        annotations.push({});
+      }
+    });
+    return annotations;
+  }
+
   async getJobDocumentCount(codingjob) {
     return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
   }

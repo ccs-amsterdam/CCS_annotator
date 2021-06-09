@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import { Breadcrumb, BreadcrumbSection, Grid, Input, Pagination } from "semantic-ui-react";
+import {
+  Breadcrumb,
+  BreadcrumbSection,
+  ButtonGroup,
+  Button,
+  Grid,
+  Input,
+  Pagination,
+} from "semantic-ui-react";
 
 import axios from "axios";
 import hash from "object-hash";
 
 import CodingjobSelector from "./CodingjobSelector";
-import AnnotationText from "./AnnotationText";
+import AnnotationForm from "./AnnotationForm";
 import db from "../apis/dexie";
 import { selectCodingjob, setCodingjobs } from "../actions";
 
@@ -19,10 +27,12 @@ const Annotate = () => {
   const location = useLocation();
 
   const [doc, setDoc] = useState(null);
-  const [nDocuments, setNDocuments] = useState(0);
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
   const [ready, setReady] = useState(false);
+  const [modes, setModes] = useState(["Edit", "Code"]);
+  const [selectedMode, setSelectedMode] = useState("Edit");
+  const [jobDetails, setJobDetails] = useState({});
 
   useEffect(() => {
     if (location.search) {
@@ -37,14 +47,14 @@ const Annotate = () => {
     if (!codingjob) return null;
     if (!ready) return null;
     setActivePage(1);
-    setupCodingjob(codingjob, setDoc, setNDocuments, dispatch);
-  }, [codingjob, ready, dispatch]);
+    setupCodingjob(codingjob, setDoc, setJobDetails);
+  }, [codingjob, ready, setModes, setSelectedMode]);
 
   useEffect(() => {
     if (!ready) return null;
-    documentSelector(codingjob, activePage - 1, setDoc, hash(codeMap), dispatch);
+    documentSelector(codingjob, activePage - 1, setDoc, hash(codeMap));
     setDelayedActivePage(activePage);
-  }, [codingjob, activePage, codeMap, ready, dispatch]);
+  }, [codingjob, activePage, selectedMode, codeMap, ready]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -56,7 +66,7 @@ const Annotate = () => {
   return (
     <Grid container columns={2}>
       <Grid.Row>
-        <Grid.Column width={10}>
+        <Grid.Column width={4}>
           <Breadcrumb>
             <BreadcrumbSection link style={{ minWidth: "5em" }}>
               <CodingjobSelector type="dropdown" />
@@ -66,17 +76,31 @@ const Annotate = () => {
           </Breadcrumb>
         </Grid.Column>
         <Grid.Column align="center" floated="right" width={4}>
-          {documentPagination(
-            activePage,
-            delayedActivePage,
-            nDocuments,
-            setActivePage,
-            setDelayedActivePage
-          )}
+          <ButtonGroup compact basic>
+            {modes.length > 1
+              ? modes.map((mode) => (
+                  <Button active={mode === selectedMode} onClick={(e, d) => setSelectedMode(mode)}>
+                    {mode}
+                  </Button>
+                ))
+              : null}
+          </ButtonGroup>
+        </Grid.Column>
+        <Grid.Column align="center" floated="right" width={4}>
+          {selectedMode === "Edit"
+            ? documentPagination(
+                activePage,
+                delayedActivePage,
+                jobDetails,
+                setActivePage,
+                setDelayedActivePage,
+                selectedMode
+              )
+            : null}
         </Grid.Column>
       </Grid.Row>
       <Grid.Row>
-        <AnnotationText doc={doc ? doc : null} />
+        <AnnotationForm doc={doc ? doc : null} codingjob={codingjob} mode={selectedMode} />
       </Grid.Row>
     </Grid>
   );
@@ -85,7 +109,7 @@ const Annotate = () => {
 const documentPagination = (
   activePage,
   delayedActivePage,
-  nDocuments,
+  jobDetails,
   setActivePage,
   setDelayedActivePage
 ) => {
@@ -94,7 +118,7 @@ const documentPagination = (
       <Grid.Row>
         <Input
           min={1}
-          max={nDocuments}
+          max={jobDetails.nDocs}
           onChange={(e, d) => setDelayedActivePage(d.value)}
           type="range"
           value={delayedActivePage}
@@ -109,7 +133,7 @@ const documentPagination = (
           siblingRange={0}
           boundaryRange={0}
           ellipsisItem={null}
-          totalPages={nDocuments}
+          totalPages={jobDetails.nDocs}
           onPageChange={(e, d) => setActivePage(d.activePage)}
         />
       </Grid.Row>
@@ -117,17 +141,21 @@ const documentPagination = (
   );
 };
 
-const setupCodingjob = async (codingjob, setDoc, setNDocuments, dispatch) => {
+const setupCodingjob = async (codingjob, setDoc, setJobDetails) => {
   const n = await db.getJobDocumentCount(codingjob);
-  setNDocuments(n);
+
+  setJobDetails({ nDocs: n });
   if (n > 0) {
-    documentSelector(codingjob, 0, setDoc, "", dispatch);
+    documentSelector(codingjob, 0, setDoc, "");
   } else {
     setDoc(null);
   }
+
+  const annotations = await db.getJobAnnotations(codingjob);
+  //console.log(ann);
 };
 
-const documentSelector = async (codingjob, i, setDoc, codeMapHash, dispatch) => {
+const documentSelector = async (codingjob, i, setDoc, codeMapHash) => {
   if (!codingjob) return null;
   let doc = await db.getJobDocuments(codingjob, i, 1);
   doc[0].codeMapHash = codeMapHash;

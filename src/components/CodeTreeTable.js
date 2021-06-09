@@ -14,6 +14,7 @@ import { randomColor } from "randomcolor";
 import { useDispatch, useSelector } from "react-redux";
 import { blockEvents, setCodeMap } from "../actions";
 import db from "../apis/dexie";
+import { getColor } from "../util/tokenDesign";
 
 const resultRenderer = ({ code, codeTrail }) => (
   <div key="content" className="content">
@@ -36,7 +37,6 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
   const [codes, setCodes] = useState([]);
   const [changeColor, setChangeColor] = useState(null);
   const ref = React.useRef();
-
 
   useEffect(() => {
     if (!codingjob) return null;
@@ -518,31 +518,15 @@ const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColor
       code: code,
       codeTrail: codeTrail,
       level: codeTrail.length,
-      color: randomColor({ seed: code, luminosity: "light" }),
-      codeTrailSpan: codeTrailSpan(code, codeTrail, showColors),
+      color: codeMap[code].color
+        ? codeMap[code].color
+        : randomColor({ seed: code, luminosity: "light" }),
     });
 
     if (codeMap[code].children) {
       fillCodeTreeArray(codeMap, codeMap[code].children, codeTreeArray, newcodeTrail, showColors);
     }
   }
-};
-
-const codeTrailSpan = (code, codeTrail, showColors) => {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        marginLeft: `${1 * codeTrail.length}em`,
-        marginRight: "0.5em",
-        height: "0.7em",
-        width: "0.7em",
-        borderRadius: "50%",
-        background: showColors ? randomColor({ seed: code, luminosity: "light" }) : "grey",
-        border: "1px solid black",
-      }}
-    ></span>
-  );
 };
 
 const prepareCodeMap = (codes) => {
@@ -563,6 +547,7 @@ const prepareCodeMap = (codes) => {
   for (const code of Object.keys(codeMap)) {
     if (!codeMap[code].color)
       codeMap[code].color = randomColor({ seed: code, luminosity: "light" });
+
     codeMap[code].tree = getParentTree(codeMap, code);
 
     if (codeMap[codeMap[code].parent]) codeMap[codeMap[code].parent].children.push(code);

@@ -6,7 +6,7 @@ import db from "../apis/dexie";
 // this component generates no content, but manages writing and reading of annotations
 
 const SpanAnnotationsDB = ({ doc }) => {
-  let annotations = useSelector(state => state.spanAnnotations);
+  let annotations = useSelector((state) => state.spanAnnotations);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const exportAnnotations = async (doc, annotations) => {
         length: ann[key].length,
         index: ann[key].index,
         ngram: ann[key].span[1] - ann[key].span[0] + 1,
-        custom: ann[key].custom,
+        coding: ann[key].coding,
       };
       un_ann.push(ann_obj);
     }
@@ -70,7 +70,7 @@ const matchAnnotations = (doc, dispatch) => {
   }
   addAnnotations(annArray, dispatch);
 
-  let topCodes = Object.keys(codeCounter).sort(function(a, b) {
+  let topCodes = Object.keys(codeCounter).sort(function (a, b) {
     return codeCounter[a] - codeCounter[b];
   });
   dispatch(resetCodeHistory());
@@ -83,21 +83,23 @@ const matchAnnotations = (doc, dispatch) => {
 const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnotations) => {
   const start = token.offset;
   const end = token.offset + token.length;
+  if (!importedAnnotations[token.section]) return;
+  const sectionAnnotations = importedAnnotations[token.section];
 
   for (let i = start; i <= end; i++) {
-    const key = `${token.section}-${i}`;
+    //const key = `${token.section}-${i}`;
 
-    if (importedAnnotations[key]) {
-      for (let annotation of importedAnnotations[key].start) {
+    if (sectionAnnotations[i]) {
+      for (let annotation of sectionAnnotations[i].start) {
         trackAnnotations[annotation.code] = { ...token };
         trackAnnotations[annotation.code].group = annotation.code;
-        trackAnnotations[annotation.code].custom = annotation.custom;
+        trackAnnotations[annotation.code].coding = annotation.coding;
         trackAnnotations[annotation.code].offset = start;
         trackAnnotations[annotation.code].length = null;
         trackAnnotations[annotation.code].span = [token.index];
       }
 
-      for (let code of importedAnnotations[key].end) {
+      for (let code of sectionAnnotations[i].end) {
         if (!trackAnnotations[code]) continue;
         trackAnnotations[code].span.push(token.index);
         trackAnnotations[code].length = token.offset + token.length - trackAnnotations[code].offset;
@@ -108,7 +110,7 @@ const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnota
   }
 };
 
-const prepareAnnotations = annotations => {
+const prepareAnnotations = (annotations) => {
   if (!annotations || annotations === "") return {};
 
   // create an object where the key is a section+offset, and the
@@ -118,12 +120,12 @@ const prepareAnnotations = annotations => {
   //  we might also move the internal storage to tokenindices instead of
   //  converting back and fro spans, but for now it helps ensure they're aligned)
   return annotations.reduce((obj, ann) => {
-    const startKey = `${ann.section}-${ann.offset}`;
-    const endKey = `${ann.section}-${ann.offset + ann.length}`;
-    if (!obj[startKey]) obj[startKey] = { start: [], end: [] };
-    if (!obj[endKey]) obj[endKey] = { start: [], end: [] };
-    obj[startKey].start.push(ann); // for the starting point the full annotation is given, so that we have all the information
-    obj[endKey].end.push(ann.code); // for the ending point we just need to know the code to close the annotation off
+    if (!obj[ann.section]) obj[ann.section] = {};
+    if (!obj[ann.section][ann.offset]) obj[ann.section][ann.offset] = { start: [], end: [] };
+    if (!obj[ann.section][ann.offset + ann.length])
+      obj[ann.section][ann.offset + ann.length] = { start: [], end: [] };
+    obj[ann.section][ann.offset].start.push(ann); // for the starting point the full annotation is given, so that we have all the information
+    obj[ann.section][ann.offset + ann.length].end.push(ann.code); // for the ending point we just need to know the code to close the annotation off
     return obj;
   }, {});
 };

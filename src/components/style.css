@@ -34,11 +34,13 @@ button.active {
   border: solid !important;
 }
 
+.token {
+  padding: 1px;
+}
+
 .annotatedToken {
   border: solid;
   border-width: 1px;
-  font-weight: bold;
-  padding: 1px;
   opacity: 0.7;
   border-left-width: 1px;
   border-right-width: 1px;
