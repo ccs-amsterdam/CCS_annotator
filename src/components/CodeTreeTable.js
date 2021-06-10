@@ -101,10 +101,10 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
   }, []);
 
   const formatCode = (level) => {
-    if (level === 0) return { fontWeight: "bold", fontSize: "15px", cursor: "pointer" };
-    if (level === 1) return { fontSize: "15px", cursor: "pointer" };
-    if (level === 2) return { fontSize: "14px", cursor: "pointer" };
-    return { fontSize: "13px", cursor: "pointer" };
+    if (level === 0) return { fontWeight: "bold", fontSize: "12px", cursor: "pointer" };
+    if (level === 1) return { fontSize: "10px", cursor: "pointer" };
+    if (level === 2) return { fontSize: "9px", cursor: "pointer" };
+    return { fontSize: "8px", cursor: "pointer" };
   };
 
   return (
@@ -146,7 +146,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
                       as={"Input"}
                       style={{
                         marginLeft: `${1.5 * code.level}em`,
-                        marginRight: "0.8em",
+                        marginRight: "0.4em",
                         padding: "0",
                         width: "1em",
                         height: "1em",

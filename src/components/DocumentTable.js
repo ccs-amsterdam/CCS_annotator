@@ -77,7 +77,7 @@ const DocumentTable = () => {
 
   return (
     <Container style={{ marginTop: "2em" }}>
-      <Table fixed compact celled singleLine>
+      <Table definition fixed compact singleLine size="small" style={{ fontSize: "10px" }}>
         <Table.Header>
           <Table.Row>{createHeaderRow(data, columns)}</Table.Row>
         </Table.Header>

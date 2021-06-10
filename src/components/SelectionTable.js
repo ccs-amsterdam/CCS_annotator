@@ -116,7 +116,16 @@ const SelectionTable = ({
         globalFilter={globalFilter}
         setGlobalFilter={setGlobalFilter}
       />
-      <Table compact unstackable fixed singleLine selectable {...getTableProps()}>
+      <Table
+        compact
+        unstackable
+        fixed
+        singleLine
+        selectable
+        {...getTableProps()}
+        size="small"
+        style={{ fontSize: "10px" }}
+      >
         <TableHeader>
           {headerGroups.map((headerGroup) => (
             <TableRow {...headerGroup.getHeaderGroupProps()}>{createHeader(headerGroup)}</TableRow>

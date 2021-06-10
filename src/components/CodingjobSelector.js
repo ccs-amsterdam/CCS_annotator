@@ -40,7 +40,7 @@ const CodingjobSelector = ({ type = "table" }) => {
 
     return (
       <Segment style={{ border: "0" }}>
-        <Button.Group widths="2">
+        <Button.Group widths="2" size="mini">
           <CreateCodingjob />
           <DeleteCodingjob />
         </Button.Group>

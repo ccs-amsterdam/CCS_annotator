@@ -64,9 +64,9 @@ const Annotate = () => {
   }, [codingjob, delayedActivePage]);
 
   return (
-    <Grid container columns={2}>
+    <Grid stackable container columns={2}>
       <Grid.Row>
-        <Grid.Column width={4}>
+        <Grid.Column width={6}>
           <Breadcrumb>
             <BreadcrumbSection link style={{ minWidth: "5em" }}>
               <CodingjobSelector type="dropdown" />
@@ -75,7 +75,7 @@ const Annotate = () => {
             <BreadcrumbSection>{doc?.document_id ? doc.document_id : activePage}</BreadcrumbSection>
           </Breadcrumb>
         </Grid.Column>
-        <Grid.Column align="center" floated="right" width={4}>
+        <Grid.Column align="center" floated="right" width={2}>
           <ButtonGroup compact basic>
             {modes.length > 1
               ? modes.map((mode) => (
@@ -86,7 +86,7 @@ const Annotate = () => {
               : null}
           </ButtonGroup>
         </Grid.Column>
-        <Grid.Column align="center" floated="right" width={4}>
+        <Grid.Column align="center" floated="right" width={5}>
           {selectedMode === "Edit"
             ? documentPagination(
                 activePage,
@@ -114,17 +114,13 @@ const documentPagination = (
   setDelayedActivePage
 ) => {
   return (
-    <>
-      <Grid.Row>
-        <Input
-          min={1}
-          max={jobDetails.nDocs}
-          onChange={(e, d) => setDelayedActivePage(d.value)}
-          type="range"
-          value={delayedActivePage}
-        />
-      </Grid.Row>
-      <Grid.Row>
+    <Input
+      min={1}
+      max={jobDetails.nDocs}
+      onChange={(e, d) => setDelayedActivePage(d.value)}
+      type="range"
+      labelPosition="left"
+      label={
         <Pagination
           activePage={delayedActivePage}
           size={"mini"}
@@ -135,9 +131,11 @@ const documentPagination = (
           ellipsisItem={null}
           totalPages={jobDetails.nDocs}
           onPageChange={(e, d) => setActivePage(d.activePage)}
+          style={{ fontSize: "9px", border: "none", boxShadow: "none" }}
         />
-      </Grid.Row>
-    </>
+      }
+      value={delayedActivePage}
+    />
   );
 };
 

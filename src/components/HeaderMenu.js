@@ -1,5 +1,5 @@
 import React from "react";
-import { Menu } from "semantic-ui-react";
+import { Menu, Sidebar } from "semantic-ui-react";
 import { Link, withRouter, useLocation } from "react-router-dom";
 import db from "../apis/dexie";
 
@@ -8,7 +8,7 @@ import Reset from "./Reset";
 import Persist from "./Persist";
 import CodebookSidebar from "./CodebookSidebar";
 
-const HeaderMenu = ({ items, homepage }) => {
+const HeaderMenu = ({ items, homepage, children }) => {
   const location = useLocation();
 
   const menuItems = items.map((item, index) => {
@@ -28,20 +28,23 @@ const HeaderMenu = ({ items, homepage }) => {
   });
 
   return (
-    <Menu fixed="top" inverted>
-      {menuItems}
-      <Menu.Menu position="right">
-        <ExportCodingjob />
-        {location.pathname.includes("annotate") ? (
-          <CodebookSidebar />
-        ) : (
-          <>
-            <Persist />
-            <Reset homepage={homepage} />
-          </>
-        )}
-      </Menu.Menu>
-    </Menu>
+    <Sidebar.Pushable>
+      <Sidebar as={Menu} inverted animation="push" visible={true} direction={"top"} size="mini">
+        {menuItems}
+        <Menu.Menu position="right">
+          <ExportCodingjob />
+          {location.pathname.includes("annotate") ? (
+            <CodebookSidebar />
+          ) : (
+            <>
+              <Persist />
+              <Reset homepage={homepage} />
+            </>
+          )}
+        </Menu.Menu>
+      </Sidebar>
+      <Sidebar.Pusher>{children}</Sidebar.Pusher>
+    </Sidebar.Pushable>
   );
 };
 

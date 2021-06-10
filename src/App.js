@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import HeaderMenu from "./components/HeaderMenu";
-import { Divider, Container, Sidebar } from "semantic-ui-react";
+import { Container, Sidebar } from "semantic-ui-react";
 
 // login and authenticated route
 import Welcome from "./components/Welcome";
@@ -43,27 +43,27 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <HeaderMenu items={items} homepage={homepage} />
-      <Divider />
-      <Sidebar.Pushable>
-        <Sidebar
-          animation="overlay"
-          visible={showSidebar}
-          direction={"right"}
-          width="wide"
-          style={{ backgroundColor: "white" }}
-        >
-          <CodeTreeTable height="80vh" showColors />
-        </Sidebar>
-        <Sidebar.Pusher>
-          <Container style={{ marginTop: "3em" }}>
-            <Switch>
-              <Route exact path={homepage} render={() => <Welcome items={items} />} />
-              {createNavigation(items)}
-            </Switch>
-          </Container>
-        </Sidebar.Pusher>
-      </Sidebar.Pushable>
+      <HeaderMenu items={items} homepage={homepage}>
+        <Sidebar.Pushable>
+          <Sidebar
+            animation="overlay"
+            visible={showSidebar}
+            direction={"right"}
+            width="wide"
+            style={{ backgroundColor: "white" }}
+          >
+            <CodeTreeTable showColors />
+          </Sidebar>
+          <Sidebar.Pusher>
+            <Container style={{ marginTop: "1em" }}>
+              <Switch>
+                <Route exact path={homepage} render={() => <Welcome items={items} />} />
+                {createNavigation(items)}
+              </Switch>
+            </Container>
+          </Sidebar.Pusher>
+        </Sidebar.Pushable>
+      </HeaderMenu>
     </BrowserRouter>
   );
 };

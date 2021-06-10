@@ -35,8 +35,8 @@ const CodingJobs = () => {
         <CodingjobSelector type="table" />
       </Grid.Column>
       <Grid.Column width={11}>
-        <Segment style={{ border: 0 }}>
-          <Menu pointing secondary>
+        <Segment style={{ border: 0, minHeight: "80vh" }}>
+          <Menu pointing secondary size="mini">
             <Menu.Item
               name="details"
               active={activeItem === "details"}

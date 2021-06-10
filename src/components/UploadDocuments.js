@@ -246,7 +246,7 @@ const renderForm = (label, column, columns, options, fields, setFields) => {
       clearable
       selection
       multiple={columns[column].multiple ? true : false}
-      label={label}
+      label={{ children: label, style: { fontSize: "10px" } }}
       required={columns[column].required}
       options={options}
       value={fields[column]}
@@ -255,7 +255,7 @@ const renderForm = (label, column, columns, options, fields, setFields) => {
         newfields[column] = d.value;
         setFields(newfields);
       }}
-      style={{ minWidth: "3em" }}
+      style={{ minWidth: "3em", fontSize: "10px" }}
     />
   );
 };
@@ -266,7 +266,7 @@ const PreviewTable = ({ data }) => {
   const createHeader = (data) => {
     return data[0].data.map((colname) => {
       return (
-        <Table.HeaderCell style={{ width: "10em" }}>
+        <Table.HeaderCell style={{ width: "7em" }}>
           <span title={colname}>{colname}</span>
         </Table.HeaderCell>
       );
@@ -301,7 +301,7 @@ const PreviewTable = ({ data }) => {
         border: "solid 1px",
       }}
     >
-      <Table singleLine fixed>
+      <Table singleLine fixed size="small" compact>
         <Table.Header>
           <Table.Row>{createHeader(data)}</Table.Row>
         </Table.Header>
