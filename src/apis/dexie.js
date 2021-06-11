@@ -215,11 +215,15 @@ class AnnotationDB {
     );
     for (let id of ids) {
       let doc = await this.getDocument(id);
-      let annotations = doc.annotations.map((annotation) => {
-        if (annotation.code === oldCode) annotation.code = newCode;
-        return annotation;
-      });
-      await this.writeAnnotations(doc, annotations);
+
+      for (let i of Object.keys(doc.annotations)) {
+        if (doc.annotations[i][oldCode]) {
+          doc.annotations[i][newCode] = doc.annotations[i][oldCode];
+          delete doc.annotations[i][oldCode];
+        }
+      }
+
+      await this.writeAnnotations(doc, doc.annotations);
     }
   }
 

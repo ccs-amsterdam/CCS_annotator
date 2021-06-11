@@ -16,7 +16,6 @@ const AuthRoute = ({ Component, homepage, ...componentProps }) => {
     }
     setLoading(false);
   };
-
   connect();
 
   return (

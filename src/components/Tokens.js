@@ -14,7 +14,11 @@ const Tokens = ({ doc, context, setTokenizedDoc }) => {
 
   if (doc === null) return null;
 
-  return <Container textAlign="justified">{tokenComponents}</Container>;
+  return (
+    <Container style={{ width: "95%" }} textAlign="justified">
+      {tokenComponents}
+    </Container>
+  );
 };
 
 const prepareTokens = async (doc, setTokenComponents, setTokenizedDoc, context) => {

@@ -6,7 +6,7 @@ import SpanAnnotationEditor from "./spanAnnotationEditor";
 
 const gridStyle = {
   Edit: { overflowY: "auto", height: "75vh" },
-  Code: { overflowY: "auto", height: "25vh" },
+  Code: { overflowY: "auto", height: "50vh" },
 };
 
 const AnnotationForm = ({ doc, mode }) => {
@@ -31,7 +31,7 @@ const AnnotationForm = ({ doc, mode }) => {
   // that also contains references to the tokens
   return (
     <Grid container stackable columns={2}>
-      <Grid.Column width={8}>
+      <Grid.Column width={8} style={{ paddingRight: "0em" }}>
         <Grid.Row style={gridStyle[mode]}>
           <Tokens doc={doc} context={context} setTokenizedDoc={setTokenizedDoc} />
         </Grid.Row>

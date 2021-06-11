@@ -77,7 +77,7 @@ const DocumentTable = () => {
 
   return (
     <Container style={{ marginTop: "2em" }}>
-      <Table definition fixed compact singleLine size="small" style={{ fontSize: "10px" }}>
+      <Table selectable fixed compact singleLine size="small" style={{ fontSize: "10px" }}>
         <Table.Header>
           <Table.Row>{createHeaderRow(data, columns)}</Table.Row>
         </Table.Header>
@@ -87,6 +87,7 @@ const DocumentTable = () => {
             <Table.HeaderCell colSpan={columns.length}>
               {pages > 1 ? (
                 <Pagination
+                  size="mini"
                   floated="right"
                   boundaryRange={1}
                   siblingRange={1}
@@ -111,6 +112,7 @@ const DocumentTable = () => {
                   secondary
                   defaultActivePage={1}
                   totalPages={pages}
+                  onClick={() => console.log("wtf")}
                   onPageChange={pageChange}
                 ></Pagination>
               ) : null}

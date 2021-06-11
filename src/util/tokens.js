@@ -114,6 +114,8 @@ export const importTokenAnnotations = (tokens, codes) => {
 
     let annotationDict = {};
     for (let annotation of tokens[i].annotations) {
+      if (annotation.value === "NA") continue; // Should be a checkbox when importing
+
       if (!codes[annotation.value]) {
         codes[annotation.value] = [annotation.name];
       } else {
@@ -139,11 +141,12 @@ export const importTokenAnnotations = (tokens, codes) => {
         codeTracker[annotation.name].text += prevTokenPost + tokens[i].pre + tokens[i].post;
       }
     }
+    ///console.log(codeTracker);
 
     for (let key of Object.keys(codeTracker)) {
       if (annotationDict[key] == null) {
-        annotations.push(...codeTracker[key]);
-        codeTracker[key] = null;
+        annotations.push(codeTracker[key]);
+        delete codeTracker[key];
         continue;
       }
       if (annotationDict[key] !== codeTracker[key].code) {
