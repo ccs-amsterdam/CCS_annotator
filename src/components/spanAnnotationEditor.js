@@ -4,25 +4,31 @@ import SpanAnnotationsDB from "./SpanAnnotationsDB";
 import SpanAnnotationsNavigation from "./SpanAnnotationsNavigation";
 import SpanAnnotationsMenu from "./SpanAnnotationsMenu";
 
+import Tokens from "./Tokens";
+
+const gridStyle = { overflowY: "auto", height: "75vh" };
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
-const SpanAnnotationEditor = ({ doc }) => {
-  // note that tokens is actually an object with doc included: {doc, tokens}
-  // passing the states separately caused race issues
+const SpanAnnotationEditor = ({ children, doc }) => {
   if (doc === null) return null;
 
   return (
-    <>
-      <Grid.Row style={gridStyleTop}>
-        <SpanAnnotationsMenu tokens={doc.tokens} />
-      </Grid.Row>
-      <Grid.Row style={gridStyleBottom}>
-        <SpanInstructions />
-      </Grid.Row>
-      <SpanAnnotationsNavigation tokens={doc.tokens} />
-      <SpanAnnotationsDB doc={doc} />
-    </>
+    <Grid container stackable columns={2}>
+      <Grid.Column width={8} style={{ paddingRight: "0em" }}>
+        <Grid.Row style={gridStyle}>{children}</Grid.Row>
+      </Grid.Column>
+      <Grid.Column width={8}>
+        <Grid.Row style={gridStyleTop}>
+          <SpanAnnotationsMenu tokens={doc.tokens} />
+        </Grid.Row>
+        <Grid.Row style={gridStyleBottom}>
+          <SpanInstructions />
+        </Grid.Row>
+        <SpanAnnotationsNavigation tokens={doc.tokens} />
+        <SpanAnnotationsDB doc={doc} />
+      </Grid.Column>
+    </Grid>
   );
 };
 
@@ -30,7 +36,7 @@ const SpanInstructions = () => {
   return (
     <Container>
       <Header as="h2" align="center">
-        Span annotations
+        Edit span annotations
       </Header>
       <p align="center">Assign codes to words or phrases. A word can have multiple codes.</p>
       <Table compact size="small">

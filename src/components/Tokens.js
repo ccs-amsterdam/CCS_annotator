@@ -2,15 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Container } from "semantic-ui-react";
 import Token from "./Token";
 
-const Tokens = ({ doc, context, setTokenizedDoc }) => {
+const Tokens = ({ doc, item }) => {
   // It's imporant that the annotations to not pass by this component
   // but are loaded into Token from redux. This prevents rerendering
   // all the parsing stuff
   const [tokenComponents, setTokenComponents] = useState(null);
 
   useEffect(() => {
-    prepareTokens(doc, setTokenComponents, setTokenizedDoc, context);
-  }, [doc, setTokenizedDoc, context]);
+    prepareTokens(doc, setTokenComponents, item);
+  }, [doc, item]);
 
   if (doc === null) return null;
 
@@ -21,16 +21,15 @@ const Tokens = ({ doc, context, setTokenizedDoc }) => {
   );
 };
 
-const prepareTokens = async (doc, setTokenComponents, setTokenizedDoc, context) => {
+const prepareTokens = async (doc, setTokenComponents, item) => {
   let tokens = doc.tokens;
 
   if (!tokens) return null;
-  setTokenComponents(renderText(tokens, context));
+  setTokenComponents(renderText(tokens, item));
   doc.tokens = tokens;
-  setTokenizedDoc(doc);
 };
 
-const renderText = (tokens, context) => {
+const renderText = (tokens, item) => {
   const text = [];
   let paragraph = [];
   let sentence = [];
@@ -38,19 +37,32 @@ const renderText = (tokens, context) => {
   let sentence_nr = tokens[0].sentence;
   let section = tokens[0].section;
 
+  let paragraphContext = [0, tokens[tokens.length - 1].paragraph];
+  let sentenceContext = [0, tokens[tokens.length - 1].sentence];
   let tokenContext = [0, tokens.length - 1];
-  let sentenceContext = [tokens[0].sentence, tokens[tokens.length - 1].sentence];
 
-  if (context.span) {
-    if (context.token_window) {
-      tokenContext[0] = context.span[0] - context.token_window[0];
-      tokenContext[1] = context.span[1] + context.token_window[1];
-    }
-    if (context.sentence_window) {
-      sentenceContext[0] = tokens[context.span[0]].sentence - context.sentence_window[0];
-      sentenceContext[1] = tokens[context.span[1]].sentence + context.sentence_window[1];
-    }
+  if (item.parIndex != null && item.parIndex !== null) {
+    paragraphContext = [item.parIndex, item.parIndex];
   }
+  if (item.sentIndex != null && item.sentIndex !== null) {
+    sentenceContext = [item.sentIndex, item.sentIndex];
+  }
+  if (item.annotationIndex != null && item.annotationIndex !== null) {
+    tokenContext = [item.annotationIndex[0], item.annotationIndex[1]];
+  }
+
+  console.log(paragraphContext);
+
+  // if (context.span) {
+  //   if (context.token_window) {
+  //     tokenContext[0] = context.span[0] - context.token_window[0];
+  //     tokenContext[1] = context.span[1] + context.token_window[1];
+  //   }
+  //   if (context.sentence_window) {
+  //     sentenceContext[0] = tokens[context.span[0]].sentence - context.sentence_window[0];
+  //     sentenceContext[1] = tokens[context.span[1]].sentence + context.sentence_window[1];
+  //   }
+  // }
 
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i].paragraph !== paragraph_nr) {
@@ -68,14 +80,24 @@ const renderText = (tokens, context) => {
       sentence_nr = tokens[i].sentence;
     }
 
-    if (i < tokenContext[0] || sentence_nr < sentenceContext[0]) continue;
-    if (i > tokenContext[1] || sentence_nr > sentenceContext[1]) break;
+    if (
+      i < tokenContext[0] ||
+      sentence_nr < sentenceContext[0] ||
+      paragraph_nr < paragraphContext[0]
+    )
+      continue;
+    if (
+      i > tokenContext[1] ||
+      sentence_nr > sentenceContext[1] ||
+      paragraph_nr > paragraphContext[1]
+    )
+      break;
 
-    let highlight = context.span && i >= context.span[0] && i < context.span[1];
+    //let highlight = context.span && i >= context.span[0] && i < context.span[1];
 
     tokens[i].index = i;
     tokens[i].ref = React.createRef();
-    sentence.push(renderToken(tokens[i], highlight));
+    sentence.push(renderToken(tokens[i]));
   }
   paragraph.push(renderSentence(section + sentence_nr, sentence));
   text.push(renderParagraph(section + paragraph_nr, paragraph, section));

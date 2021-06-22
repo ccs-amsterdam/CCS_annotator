@@ -1,190 +1,170 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
-import {
-  Breadcrumb,
-  BreadcrumbSection,
-  ButtonGroup,
-  Button,
-  Grid,
-  Input,
-  Pagination,
-} from "semantic-ui-react";
+import { useSelector } from "react-redux";
 
-import axios from "axios";
-import hash from "object-hash";
+import { Breadcrumb, BreadcrumbSection, ButtonGroup, Grid, Dropdown } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
-import AnnotationForm from "./AnnotationForm";
+import AnnotationPage from "./AnnotationPage";
 import db from "../apis/dexie";
-import { selectCodingjob, setCodingjobs } from "../actions";
+import ItemSelector from "./ItemSelector";
 
 const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
-  const codeMap = useSelector((state) => state.codeMap);
-  const dispatch = useDispatch();
 
-  const location = useLocation();
+  const [codingUnit, setCodingUnit] = useState("document");
+  const [contextUnit, setContextUnit] = useState("");
+  const [mode, setMode] = useState("free");
 
-  const [doc, setDoc] = useState(null);
-  const [activePage, setActivePage] = useState(1);
-  const [delayedActivePage, setDelayedActivePage] = useState(1);
-  const [ready, setReady] = useState(false);
-  const [modes, setModes] = useState(["Edit", "Code"]); // make this a setting in codebook
-  const [selectedMode, setSelectedMode] = useState("Edit");
-  const [jobDetails, setJobDetails] = useState({});
-
-  useEffect(() => {
-    if (location.search) {
-      const jobURL = location.search.substring(1);
-      openExternalJob(jobURL, dispatch, setReady);
-    } else {
-      setReady(true);
-    }
-  }, [location, dispatch]);
+  const [jobItems, setJobItems] = useState(null);
+  const [jobItem, setJobItem] = useState(null);
 
   useEffect(() => {
     if (!codingjob) return null;
-    if (!ready) return null;
-    setActivePage(1);
-    setupCodingjob(codingjob, setDoc, setJobDetails);
-  }, [codingjob, ready, setDoc, setSelectedMode]);
+    setupCodingjob(codingjob, codingUnit, setJobItem, setJobItems);
+  }, [codingjob, codingUnit, setJobItem, setJobItems]);
 
-  useEffect(() => {
-    if (!ready) return null;
-    documentSelector(codingjob, activePage - 1, setDoc, hash(codeMap));
-    setDelayedActivePage(activePage);
-  }, [codingjob, activePage, selectedMode, codeMap, ready]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setActivePage(delayedActivePage);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [codingjob, delayedActivePage]);
-
+  console.log(jobItem);
   return (
     <Grid stackable container columns={2}>
       <Grid.Row>
-        <Grid.Column width={6}>
-          <Breadcrumb>
-            <BreadcrumbSection link style={{ minWidth: "5em" }}>
-              <CodingjobSelector type="dropdown" />
-            </BreadcrumbSection>
-            <Breadcrumb.Divider />
-            <BreadcrumbSection>{doc?.document_id ? doc.document_id : activePage}</BreadcrumbSection>
-          </Breadcrumb>
-        </Grid.Column>
-        <Grid.Column align="center" floated="right" width={2}>
-          <ButtonGroup compact basic>
-            {modes.length > 1
-              ? modes.map((mode) => (
-                  <Button active={mode === selectedMode} onClick={(e, d) => setSelectedMode(mode)}>
-                    {mode}
-                  </Button>
-                ))
-              : null}
-          </ButtonGroup>
+        <Grid.Column width={10}>
+          <Grid.Row>
+            <ItemBreadcrumb jobItem={jobItem} />
+          </Grid.Row>
+          <br />
+          <Grid.Row>
+            <ButtonGroup compact basic>
+              <CodingUnitDropdown codingUnit={codingUnit} setCodingUnit={setCodingUnit} />
+              <ModeDropdown mode={mode} setMode={setMode} />
+            </ButtonGroup>
+          </Grid.Row>
         </Grid.Column>
         <Grid.Column align="center" floated="right" width={5}>
-          {selectedMode === "Edit"
-            ? documentPagination(
-                activePage,
-                delayedActivePage,
-                jobDetails,
-                setActivePage,
-                setDelayedActivePage,
-                selectedMode
-              )
-            : null}
+          <ItemSelector items={jobItems} setItem={setJobItem} />
         </Grid.Column>
       </Grid.Row>
       <Grid.Row>
-        <AnnotationForm doc={doc ? doc : null} codingjob={codingjob} mode={selectedMode} />
+        <AnnotationPage codingjob={codingjob} item={jobItem} mode={mode} />
       </Grid.Row>
     </Grid>
   );
 };
 
-const documentPagination = (
-  activePage,
-  delayedActivePage,
-  jobDetails,
-  setActivePage,
-  setDelayedActivePage
-) => {
+const ItemBreadcrumb = ({ jobItem }) => {
+  const paragraph = () => {
+    return (
+      <BreadcrumbSection>
+        <Breadcrumb.Divider />
+        {`paragraph ${jobItem.parIndex + 1}`}
+      </BreadcrumbSection>
+    );
+  };
+  const sentence = () => {
+    return (
+      <BreadcrumbSection>
+        {" "}
+        <Breadcrumb.Divider />
+        {`sentence ${jobItem.sentIndex + 1}`}
+      </BreadcrumbSection>
+    );
+  };
+  const annotation = () => {
+    return (
+      <BreadcrumbSection>
+        <Breadcrumb.Divider />
+        {`token ${jobItem.annotationIndex[0] + 1}-${jobItem.annotationIndex[1] + 1}`}
+      </BreadcrumbSection>
+    );
+  };
+
   return (
-    <Input
-      min={1}
-      max={jobDetails.nDocs}
-      onChange={(e, d) => setDelayedActivePage(d.value)}
-      type="range"
-      labelPosition="left"
-      label={
-        <Pagination
-          activePage={delayedActivePage}
-          size={"mini"}
-          firstItem={null}
-          lastItem={null}
-          siblingRange={0}
-          boundaryRange={0}
-          ellipsisItem={null}
-          totalPages={jobDetails.nDocs}
-          onPageChange={(e, d) => setActivePage(d.activePage)}
-          style={{ fontSize: "9px", border: "none", boxShadow: "none" }}
-        />
-      }
-      value={delayedActivePage}
-    />
+    <Breadcrumb>
+      <BreadcrumbSection link style={{ minWidth: "5em" }}>
+        <CodingjobSelector type="dropdown" />
+      </BreadcrumbSection>
+      <Breadcrumb.Divider />
+      <BreadcrumbSection>
+        {jobItem?.document_id ? jobItem.document_id : jobItem ? jobItem.docIndex + 1 : 0}
+      </BreadcrumbSection>
+      {jobItem && jobItem.parIndex != null ? paragraph() : null}
+      {jobItem && jobItem.sentIndex != null ? sentence : null}
+      {jobItem && jobItem.annotationIndex != null ? annotation() : null}
+    </Breadcrumb>
   );
 };
 
-const setupCodingjob = async (codingjob, setDoc, setJobDetails) => {
-  const n = await db.getJobDocumentCount(codingjob);
-
-  setJobDetails({ nDocs: n });
-  if (n > 0) {
-    documentSelector(codingjob, 0, setDoc, "");
-  } else {
-    setDoc(null);
-  }
-
-  let annotations = await db.getJobAnnotations(codingjob);
-  annotations = annotations.reduce((array, annotation, docIndex) => {
-    for (let i of Object.keys(annotation)) {
-      for (let group of Object.keys(annotation[i])) {
-        array.push({ docIndex, group, index: i, ...annotation[i][group] });
-      }
-    }
-    return array;
-  }, []);
-  console.log(annotations);
-  //console.log(ann);
+const ModeDropdown = ({ mode, setMode }) => {
+  return (
+    <Dropdown text={mode} inline button compact>
+      <Dropdown.Menu>
+        <Dropdown.Header icon="setting" content="Set annotation mode" />
+        <Dropdown.Item onClick={() => setMode("free")}>Free annotation</Dropdown.Item>
+        <Dropdown.Item onClick={() => setMode("code")}>Codebook</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
+  );
 };
 
-const documentSelector = async (codingjob, i, setDoc, codeMapHash) => {
-  if (!codingjob) return null;
-  let doc = await db.getJobDocuments(codingjob, i, 1);
-  doc[0].codeMapHash = codeMapHash;
-  doc[0].writable = false;
-  if (doc) setDoc(doc[0]);
+const CodingUnitDropdown = ({ codingUnit, setCodingUnit }) => {
+  return (
+    <Dropdown text={codingUnit} inline button compact>
+      <Dropdown.Menu>
+        <Dropdown.Header icon="setting" content="Set Coding Unit" />
+        <Dropdown.Item onClick={() => setCodingUnit("document")}>Document</Dropdown.Item>
+        <Dropdown.Item onClick={() => setCodingUnit("paragraph")}>Paragraph</Dropdown.Item>
+        <Dropdown.Item onClick={() => setCodingUnit("sentence")}>Sentence</Dropdown.Item>
+        <Dropdown.Item onClick={() => setCodingUnit("annotation")}>Annotation</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
+  );
 };
 
-const openExternalJob = async (jobURL, dispatch, setReady) => {
-  const response = await axios.get(jobURL);
-  const data = response.data;
-  let job = { name: data.details.name, job_id: hash(data) };
-  job = await db.getCodingjob(job);
-  if (!job) {
-    await db.createCodingjob(data.details.name, hash(data));
-    await db.createDocuments(job, data.documents, true);
-    await db.writeCodebook(job, data.codebook);
+const setupCodingjob = async (codingjob, codingUnit, setJobItem, setJobItems) => {
+  // don't just grab n
+  // loop over documents, and add index + doc_uid to index
+  // for paragraph add for 1:n,
+  // for sentences add for 1:n
+
+  let items = await db.getCodingjobItems(codingjob, codingUnit);
+  // if (codingUnit === "document") {
+  //   const n = await db.getJobDocumentCount(codingjob);
+  //   const docIndex = [...Array(n).keys()];
+  //   items = docIndex.map((docIndex) => ({ docIndex }));
+  // }
+  // if (codingUnit === "paragraph") {
+  // }
+  // if (codingUnit === "sentence") {
+  // }
+  // if (codingUnit === "annotation") {
+  //   let annotations = await db.getJobAnnotations(codingjob);
+  //   items = annotations.reduce((array, annotation, docIndex) => {
+  //     for (let i of Object.keys(annotation)) {
+  //       for (let group of Object.keys(annotation[i])) {
+  //         array.push({ docIndex, group, index: i, ...annotation[i][group] });
+  //       }
+  //     }
+  //     return array;
+  //   }, []);
+  // }
+  console.log(items);
+  setJobItems(items);
+  setJobItem(items[0]);
+};
+
+// from: https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array
+const getRandomSubarray = (arr, size) => {
+  var shuffled = arr.slice(0),
+    i = arr.length,
+    min = i - size,
+    temp,
+    index;
+  while (i-- > min) {
+    index = Math.floor((i + 1) * Math.random());
+    temp = shuffled[index];
+    shuffled[index] = shuffled[i];
+    shuffled[i] = temp;
   }
-  const codingjobs = await db.listCodingjobs();
-  const cj = await db.getCodingjob(job);
-  dispatch(selectCodingjob(cj));
-  dispatch(setCodingjobs(codingjobs));
-  setReady(true);
+  return shuffled.slice(min);
 };
 
 export default Annotate;

@@ -11,7 +11,6 @@ const SpanAnnotationsDB = ({ doc }) => {
 
   useEffect(() => {
     return () => {
-      console.log("unmount");
       doc.writable = false;
       dispatch(clearSpanAnnotations());
     };
@@ -36,7 +35,7 @@ const importAnnotations = (doc, dispatch) => {
 };
 
 const exportAnnotations = (doc, annotations, dispatch) => {
-  db.writeAnnotations({ doc_id: doc.doc_id }, annotations);
+  db.writeAnnotations({ doc_uid: doc.doc_uid }, annotations);
 };
 
 export default SpanAnnotationsDB;

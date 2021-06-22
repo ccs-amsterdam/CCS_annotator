@@ -23,7 +23,7 @@ const DocumentTable = () => {
   const createHeaderRow = (data, columns) => {
     return columns.map((colname, i) => {
       return (
-        <Table.HeaderCell key={i}>
+        <Table.HeaderCell key={i} width={i === 0 ? 3 : null}>
           <span title={colname}>{colname}</span>
         </Table.HeaderCell>
       );

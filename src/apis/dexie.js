@@ -6,11 +6,16 @@ import { importSpanAnnotations } from "../util/annotations";
 class AnnotationDB {
   constructor() {
     this.idb = new Dexie("AmCAT_Annotator");
+
+    // for testing, clean db on refresh
+    //this.idb.delete();
+    //this.idb = new Dexie("AmCAT_Annotator");
+
     this.idb.version(2).stores({
       meta: "welcome", // this just serves to keep track of whether db was 'created' via the welcome component
       apis: "api", // unindexed fields: token, refresh_token, expiration_date,
       codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
-      documents: "doc_id, job_id", // unindexed fields: title, text, meta, tokens, annotations
+      documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
     });
   }
 
@@ -107,15 +112,17 @@ class AnnotationDB {
     let duplicates = 0;
     let codes = {};
     const preparedDocuments = documentList.reduce((result, document) => {
-      const doc_id = hash([document, codingjob]); // codingjob included for doc_id hash
-      if (!ids.has(doc_id)) {
-        ids.add(doc_id);
+      const doc_uid = hash([document, codingjob]); // codingjob included for doc_uid (8nique id) hash
+      if (!ids.has(doc_uid)) {
+        ids.add(doc_uid);
 
         if (document.tokens) {
           document.tokens = importTokens(document.tokens);
         } else {
           document.tokens = parseTokens(document.text_fields);
         }
+        document.n_paragraphs = document.tokens[document.tokens.length - 1].paragraph;
+        document.n_sentences = document.tokens[document.tokens.length - 1].sentence;
 
         if (document.annotations && document.annotations.length > 0) {
           try {
@@ -135,7 +142,7 @@ class AnnotationDB {
           );
 
         result.push({
-          doc_id: doc_id,
+          doc_uid: doc_uid,
           job_id: codingjob.job_id,
           ...document,
         });
@@ -145,8 +152,6 @@ class AnnotationDB {
       return result;
     }, []);
 
-    console.log("test");
-    console.log(preparedDocuments);
     if (!silent) {
       let message = `Created ${documentList.length - duplicates} new documents in codingjob ${
         codingjob.name
@@ -161,11 +166,12 @@ class AnnotationDB {
     }, []);
     this.writeCodes(codingjob, codes, true);
 
+    console.log(preparedDocuments);
     return this.idb.documents.bulkAdd(preparedDocuments);
   }
 
   async deleteDocuments(documents) {
-    const documentIds = documents.map((document) => document.doc_id);
+    const documentIds = documents.map((document) => document.doc_uid);
     return this.idb.documents.bulkDelete(documentIds);
   }
 
@@ -176,6 +182,46 @@ class AnnotationDB {
     if (offset !== null && offset > ndocs - 1) return null;
     if (limit !== null) documents = documents.offset(offset).limit(limit);
     return documents.toArray();
+  }
+
+  async getCodingjobItems(codingjob, codingUnit) {
+    let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
+    const cjIndices = [];
+    let docIndex = 0;
+    await documents.each((e) => {
+      if (codingUnit === "document") cjIndices.push({ document_id: e.document_id, docIndex });
+
+      if (codingUnit === "paragraph") {
+        const paragraphs = e.tokens[e.tokens.length - 1].paragraph;
+        console.log(paragraphs);
+        for (let parIndex = 0; parIndex <= paragraphs; parIndex++)
+          cjIndices.push({ document_id: e.document_id, docIndex, parIndex });
+      }
+
+      if (codingUnit === "sentence") {
+        const sentences = e.tokens[e.tokens.length - 1].sentence;
+        for (let sentIndex = 0; sentIndex <= sentences; sentIndex++)
+          cjIndices.push({ document_id: e.document_id, docIndex, sentIndex });
+      }
+
+      if (codingUnit === "annotation") {
+        if (e.annotations) {
+          for (let i of Object.keys(e.annotations)) {
+            for (let group of Object.keys(e.annotations[i])) {
+              cjIndices.push({
+                document_id: e.document_id,
+                docIndex,
+                annotationIndex: e.annotations[i][group].span,
+                group,
+              });
+            }
+          }
+        }
+      }
+
+      docIndex++;
+    });
+    return cjIndices;
   }
 
   async getJobAnnotations(codingjob) {
@@ -195,18 +241,18 @@ class AnnotationDB {
     return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
   }
 
-  async getDocument(doc_id) {
-    return this.idb.documents.get(doc_id);
+  async getDocument(doc_uid) {
+    return this.idb.documents.get(doc_uid);
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents.where("doc_id").equals(document.doc_id).modify({ tokens: tokens });
+    return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
   }
 
   async writeAnnotations(document, annotations) {
     return this.idb.documents
-      .where("doc_id")
-      .equals(document.doc_id)
+      .where("doc_uid")
+      .equals(document.doc_uid)
       .modify({ annotations: annotations });
   }
   async renameAnnotations(codingjob, oldCode, newCode) {

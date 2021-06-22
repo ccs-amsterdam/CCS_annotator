@@ -47,6 +47,10 @@ export const parseTokens = (text_fields) => {
 export const importTokens = (tokens) => {
   //const indexFrom1 = tokens[0].offset && tokens[0].offset === 1;
   let paragraph = 0;
+  let last_paragraph = tokens[0].paragraph;
+
+  let sentence = 0;
+  let last_sentence = tokens[0].sentence;
 
   let offset = 0;
   let totalLength = 0;
@@ -91,8 +95,35 @@ export const importTokens = (tokens) => {
       return null;
     }
 
-    if (tokens[i].paragraph == null) tokens[i].paragraph = paragraph;
-    if (tokens[i].text.includes("\n") || tokens[i].post.includes("\n")) paragraph++;
+    // ensure sentence counter
+    // currently doesn't actually do sentence boundary detection (if people want that,
+    // they should include sentence in the input)
+    // if sentence exists, still overwrite with new counter to ensure that it adds up
+    // also increment sentence on new paragraph
+    if (tokens[i].sentence == null) {
+      tokens[i].sentence = sentence;
+      if (tokens[i].text.includes("\n") || tokens[i].post.includes("\n")) sentence++;
+    } else {
+      if (tokens[i].paragraph !== last_paragraph || tokens[i].sentence !== last_sentence) {
+        last_sentence = tokens[i].sentence;
+        sentence++;
+      }
+      tokens[i].sentence = sentence;
+    }
+
+    // ensure paragraph counter
+    // if paragraph exists, still overwrite with new counter to ensure that it adds up
+    if (tokens[i].paragraph == null) {
+      tokens[i].paragraph = paragraph;
+      if (tokens[i].text.includes("\n") || tokens[i].post.includes("\n")) paragraph++;
+    } else {
+      if (tokens[i].paragraph !== last_paragraph) {
+        last_paragraph = tokens[i].paragraph;
+        paragraph++;
+      }
+      tokens[i].paragraph = paragraph;
+    }
+
     if (tokens[i].section == null) tokens[i].section = "text";
     tokens[i].index = i;
   }
