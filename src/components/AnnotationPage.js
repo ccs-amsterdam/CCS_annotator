@@ -21,7 +21,7 @@ const AnnotationPage = ({ codingjob, item, mode }) => {
 
   const renderMode = (mode) => {
     switch (mode) {
-      case "free":
+      case "annotate":
         return (
           <SpanAnnotationEditor doc={doc}>
             <Tokens doc={doc} item={item} />

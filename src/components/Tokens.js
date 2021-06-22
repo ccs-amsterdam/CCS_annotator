@@ -51,8 +51,6 @@ const renderText = (tokens, item) => {
     tokenContext = [item.annotationIndex[0], item.annotationIndex[1]];
   }
 
-  console.log(paragraphContext);
-
   // if (context.span) {
   //   if (context.token_window) {
   //     tokenContext[0] = context.span[0] - context.token_window[0];
@@ -66,8 +64,9 @@ const renderText = (tokens, item) => {
 
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i].paragraph !== paragraph_nr) {
-      paragraph.push(renderSentence(section + sentence_nr, sentence));
-      text.push(renderParagraph(section + paragraph_nr, paragraph, section));
+      if (sentence.length > 0) paragraph.push(renderSentence(section + sentence_nr, sentence));
+      if (paragraph.length > 0)
+        text.push(renderParagraph(section + paragraph_nr, paragraph, section));
       paragraph = [];
       sentence = [];
       paragraph_nr = tokens[i].paragraph;
@@ -75,7 +74,7 @@ const renderText = (tokens, item) => {
       section = tokens[i].section;
     }
     if (tokens[i].sentence !== sentence_nr) {
-      paragraph.push(renderSentence(section + sentence_nr, sentence));
+      if (sentence.length > 0) paragraph.push(renderSentence(section + sentence_nr, sentence));
       sentence = [];
       sentence_nr = tokens[i].sentence;
     }
@@ -99,8 +98,8 @@ const renderText = (tokens, item) => {
     tokens[i].ref = React.createRef();
     sentence.push(renderToken(tokens[i]));
   }
-  paragraph.push(renderSentence(section + sentence_nr, sentence));
-  text.push(renderParagraph(section + paragraph_nr, paragraph, section));
+  if (sentence.length > 0) paragraph.push(renderSentence(section + sentence_nr, sentence));
+  if (paragraph.length > 0) text.push(renderParagraph(section + paragraph_nr, paragraph, section));
 
   return text;
 };

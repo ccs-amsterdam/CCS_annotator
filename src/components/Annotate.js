@@ -13,7 +13,7 @@ const Annotate = () => {
 
   const [codingUnit, setCodingUnit] = useState("document");
   const [contextUnit, setContextUnit] = useState("");
-  const [mode, setMode] = useState("free");
+  const [mode, setMode] = useState("annotate");
 
   const [jobItems, setJobItems] = useState(null);
   const [jobItem, setJobItem] = useState(null);
@@ -98,8 +98,8 @@ const ModeDropdown = ({ mode, setMode }) => {
     <Dropdown text={mode} inline button compact>
       <Dropdown.Menu>
         <Dropdown.Header icon="setting" content="Set annotation mode" />
-        <Dropdown.Item onClick={() => setMode("free")}>Free annotation</Dropdown.Item>
-        <Dropdown.Item onClick={() => setMode("code")}>Codebook</Dropdown.Item>
+        <Dropdown.Item onClick={() => setMode("annotate")}>Annotate</Dropdown.Item>
+        <Dropdown.Item onClick={() => setMode("code")}>Code</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );
