@@ -54,7 +54,10 @@ class AnnotationDB {
     return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
-    await this.idb.documents.where("job_id").equals(codingjob.job_id).delete();
+    await this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .delete();
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
   async listCodingjobs() {
@@ -106,7 +109,10 @@ class AnnotationDB {
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
 
     let duplicates = 0;
@@ -121,8 +127,13 @@ class AnnotationDB {
         } else {
           document.tokens = parseTokens(document.text_fields);
         }
-        document.n_paragraphs = document.tokens[document.tokens.length - 1].paragraph;
-        document.n_sentences = document.tokens[document.tokens.length - 1].sentence;
+        if (document.tokens.length > 0) {
+          document.n_paragraphs = document.tokens[document.tokens.length - 1].paragraph;
+          document.n_sentences = document.tokens[document.tokens.length - 1].sentence;
+        } else {
+          document.n_paragraphs = 0;
+          document.n_sentences = 0;
+        }
 
         if (document.annotations && document.annotations.length > 0) {
           try {
@@ -171,7 +182,7 @@ class AnnotationDB {
   }
 
   async deleteDocuments(documents) {
-    const documentIds = documents.map((document) => document.doc_uid);
+    const documentIds = documents.map(document => document.doc_uid);
     return this.idb.documents.bulkDelete(documentIds);
   }
 
@@ -188,7 +199,7 @@ class AnnotationDB {
     let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
     const cjIndices = [];
     let docIndex = 0;
-    await documents.each((e) => {
+    await documents.each(e => {
       if (codingUnit === "document") cjIndices.push({ document_id: e.document_id, docIndex });
 
       if (codingUnit === "paragraph") {
@@ -227,7 +238,7 @@ class AnnotationDB {
   async getJobAnnotations(codingjob) {
     let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
     const annotations = [];
-    await documents.each((e) => {
+    await documents.each(e => {
       if (e.annotations) {
         annotations.push(e.annotations);
       } else {
@@ -238,7 +249,10 @@ class AnnotationDB {
   }
 
   async getJobDocumentCount(codingjob) {
-    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    return this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .count();
   }
 
   async getDocument(doc_uid) {
@@ -246,7 +260,10 @@ class AnnotationDB {
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
+    return this.idb.documents
+      .where("doc_uid")
+      .equals(document.doc_uid)
+      .modify({ tokens: tokens });
   }
 
   async writeAnnotations(document, annotations) {
@@ -257,7 +274,10 @@ class AnnotationDB {
   }
   async renameAnnotations(codingjob, oldCode, newCode) {
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
     for (let id of ids) {
       let doc = await this.getDocument(id);
