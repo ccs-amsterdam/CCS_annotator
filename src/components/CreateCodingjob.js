@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { selectCodingjob, setCodingjobs } from "../actions";
 import { Header, Button, Modal, Form, Loader, Dimmer, Icon } from "semantic-ui-react";
 import db from "../apis/dexie";
 
 const CreateCodingjob = () => {
-  const codingjobs = useSelector((state) => state.codingjobs);
   const dispatch = useDispatch();
 
   const [status, setStatus] = useState("inactive");
@@ -28,8 +27,6 @@ const CreateCodingjob = () => {
       setStatus("error");
     }
   };
-
-  if (!codingjobs) return null;
 
   return (
     <Modal

@@ -5,8 +5,9 @@ import "./style.css";
 import CodeSelector from "./CodeSelector";
 import { triggerCodeselector } from "../actions";
 import { getColor } from "../util/tokenDesign";
+import { List, Popup } from "semantic-ui-react";
 
-const Token = React.forwardRef(({ token }, ref) => {
+const Token = React.forwardRef(({ token, isContext }, ref) => {
   const selected = useSelector((state) => {
     if (state.tokenSelection.length === 0) return false;
 
@@ -17,8 +18,7 @@ const Token = React.forwardRef(({ token }, ref) => {
 
   let tokenClass = "token";
   if (selected) tokenClass = tokenClass + " selected";
-
-  //if (highlight) tokenClass = tokenClass + " highlighted";
+  if (token.isContext) tokenClass = tokenClass + " context";
 
   return (
     <span ref={ref} className={tokenClass} tokenindex={token.index}>
@@ -45,6 +45,9 @@ const AnnotatedToken = ({ token, selected }) => {
   // if there are no annotation codes, our life is easy
   if (!annotations) return <>{token.pre + token.text + token.post}</>;
 
+  // if this is a context token, we can also ignore the fancy stuff
+  if (token.isContext) return <>{token.pre + token.text + token.post}</>;
+
   const tokenSpan = (annotatedTokenClass, color) => {
     return (
       <span
@@ -65,10 +68,11 @@ const AnnotatedToken = ({ token, selected }) => {
 
   let tokenCodes = Object.keys(annotations);
   let color = null;
+  let colors = tokenCodes.map((code) => getColor(code, codeMap));
+
   if (tokenCodes.length === 1) {
-    color = getColor(tokenCodes[0], codeMap);
+    color = colors[0];
   } else {
-    let colors = tokenCodes.map((code) => getColor(code, codeMap));
     color = `linear-gradient(${colors.join(", ")})`;
   }
 
@@ -102,11 +106,25 @@ const AnnotatedToken = ({ token, selected }) => {
           {tokenSpan(annotatedTokenClass, color)}
         </CodeSelector>
       ) : (
-        tokenSpan(annotatedTokenClass, color)
+        <ShowCodeOnHover codes={tokenCodes} colors={colors}>
+          {tokenSpan(annotatedTokenClass, color)}
+        </ShowCodeOnHover>
       )}
 
       {allRight ? token.post : null}
     </>
+  );
+};
+
+const ShowCodeOnHover = ({ codes, colors, children }) => {
+  return (
+    <Popup trigger={children} style={{ padding: "0.3em", paddingBottom: "0.5em" }}>
+      <List>
+        {codes.map((code, i) => (
+          <List.Item style={{ backgroundColor: colors[i], padding: "0.3em" }}>{code}</List.Item>
+        ))}
+      </List>
+    </Popup>
   );
 };
 

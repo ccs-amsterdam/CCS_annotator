@@ -4,8 +4,6 @@ import SpanAnnotationsDB from "./SpanAnnotationsDB";
 import SpanAnnotationsNavigation from "./SpanAnnotationsNavigation";
 import SpanAnnotationsMenu from "./SpanAnnotationsMenu";
 
-import Tokens from "./Tokens";
-
 const gridStyle = { overflowY: "auto", height: "75vh" };
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
@@ -20,7 +18,7 @@ const SpanAnnotationEditor = ({ children, doc }) => {
       </Grid.Column>
       <Grid.Column width={8}>
         <Grid.Row style={gridStyleTop}>
-          <SpanAnnotationsMenu tokens={doc.tokens} />
+          <SpanAnnotationsMenu doc={doc} tokens={doc.tokens} />
         </Grid.Row>
         <Grid.Row style={gridStyleBottom}>
           <SpanInstructions />

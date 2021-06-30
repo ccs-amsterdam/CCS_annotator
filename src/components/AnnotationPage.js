@@ -15,7 +15,7 @@ const AnnotationPage = ({ codingjob, item, mode, contextUnit }) => {
   useEffect(() => {
     if (!codingjob || !item) return null;
     documentSelector(codingjob, item, setDoc, hash(codeMap));
-  }, [codingjob, codeMap, item, setDoc]);
+  }, [codingjob, codeMap, item, mode, setDoc]);
 
   const renderMode = (mode) => {
     switch (mode) {
@@ -42,6 +42,7 @@ const AnnotationPage = ({ codingjob, item, mode, contextUnit }) => {
 
 const documentSelector = async (codingjob, item, setDoc, codeMapHash) => {
   let doc = await db.getJobDocuments(codingjob, item.docIndex, 1);
+  if (!doc) return;
   doc = doc[0]; // getJobDocuments returns array of length 1
   doc.codeMapHash = codeMapHash;
   doc.writable = false;

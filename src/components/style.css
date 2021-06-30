@@ -29,9 +29,8 @@ span.token.selected {
   border-color: black;
 }
 
-span.token.highlighted {
-  background-color: rgb(241, 239, 103) !important;
-  color: rgb(0, 0, 0);
+span.token.context {
+  color: rgb(138, 131, 131);
   border-color: black;
 }
 

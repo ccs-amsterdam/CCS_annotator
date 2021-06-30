@@ -17,8 +17,8 @@ const SpanAnnotationsDB = ({ doc }) => {
   }, [doc, dispatch]);
 
   useEffect(() => {
-    if (doc.writable) exportAnnotations(doc, annotations, dispatch);
-  }, [doc, annotations, dispatch]);
+    if (doc.writable) writeAnnotations(doc, annotations);
+  }, [doc, annotations]);
 
   useEffect(() => {
     if (doc.writable || doc.tokens.length === 0) return;
@@ -34,7 +34,7 @@ const importAnnotations = (doc, dispatch) => {
   doc.writable = true;
 };
 
-const exportAnnotations = (doc, annotations, dispatch) => {
+const writeAnnotations = (doc, annotations) => {
   db.writeAnnotations({ doc_uid: doc.doc_uid }, annotations);
 };
 

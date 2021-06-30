@@ -1,6 +1,5 @@
 import React from "react";
 import { Container, Grid, Header, Segment } from "semantic-ui-react";
-import Tokens from "./Tokens";
 
 const gridStyle = { overflowY: "auto", height: "50vh" };
 const gridStyleTop = { height: "35vh" };

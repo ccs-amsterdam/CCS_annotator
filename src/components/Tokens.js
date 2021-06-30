@@ -9,7 +9,6 @@ const Tokens = ({ doc, item, contextUnit }) => {
   const [tokenComponents, setTokenComponents] = useState(null);
 
   useEffect(() => {
-    console.log(item);
     prepareTokens(doc, setTokenComponents, item, contextUnit);
   }, [doc, item, contextUnit]);
 
@@ -38,47 +37,39 @@ const renderText = (tokens, item, contextUnit) => {
   let sentence_nr = tokens[0].sentence;
   let section = tokens[0].section;
 
-  let paragraphContext = [0, tokens[tokens.length - 1].paragraph];
-  let sentenceContext = [0, tokens[tokens.length - 1].sentence];
+  //let paragraphContext = [0, tokens[tokens.length - 1].paragraph];
+  //let sentenceContext = [0, tokens[tokens.length - 1].sentence];
+  let tokenRange = [0, tokens.length - 1];
   let tokenContext = [0, tokens.length - 1];
 
   if (item.parIndex != null && item.parIndex !== null) {
-    paragraphContext = [item.parIndex, item.parIndex];
+    // if coding unit is paragraph
+    //paragraphContext = [item.parIndex, item.parIndex];
+    tokenRange = getTokenRange(tokens, "paragraph", item.parIndex, item.parIndex);
   }
   if (item.sentIndex != null && item.sentIndex !== null) {
-    sentenceContext = [item.sentIndex, item.sentIndex];
-    const inParagraph = tokens.find((token) => token.sentence === item.sentIndex);
-    paragraphContext = [inParagraph.paragraph, inParagraph.paragraph];
+    tokenRange = getTokenRange(tokens, "sentence", item.sentIndex, item.sentIndex);
+    // if coding unit is sentence
   }
   if (item.annotationIndex != null && item.annotationIndex !== null) {
-    tokenContext = [item.annotationIndex[0], item.annotationIndex[1]];
-    const annotationStart = tokens[item.annotationIndex[0]];
-    const annotationEnd = tokens[item.annotationIndex[1]];
-    paragraphContext = [annotationStart.paragraph, annotationEnd.paragraph];
-    sentenceContext = [annotationStart.sentence, annotationEnd.sentence];
+    // if coding unit is annotation
+    tokenRange = [item.annotationIndex[0], item.annotationIndex[1]];
   }
 
+  if (contextUnit.selected !== "document")
+    tokenContext = getContextRange(tokens, contextUnit, tokenRange);
+
+  // if coding unit is document
   const documentIsUnit =
     item.parIndex == null && item.sentIndex == null && item.annotationIndex == null;
-
-  if (!documentIsUnit && contextUnit !== "document") {
-  }
-  // if (context.span) {
-  //   if (context.token_window) {
-  //     tokenContext[0] = context.span[0] - context.token_window[0];
-  //     tokenContext[1] = context.span[1] + context.token_window[1];
-  //   }
-  //   if (context.sentence_window) {
-  //     sentenceContext[0] = tokens[context.span[0]].sentence - context.sentence_window[0];
-  //     sentenceContext[1] = tokens[context.span[1]].sentence + context.sentence_window[1];
-  //   }
-  // }
 
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i].paragraph !== paragraph_nr) {
       if (sentence.length > 0) paragraph.push(renderSentence(section + sentence_nr, sentence));
       if (paragraph.length > 0)
-        text.push(renderParagraph(section + paragraph_nr, paragraph, section, documentIsUnit));
+        text.push(
+          renderParagraph(section + "_" + paragraph_nr, paragraph, section, documentIsUnit)
+        );
       paragraph = [];
       sentence = [];
       paragraph_nr = tokens[i].paragraph;
@@ -91,22 +82,11 @@ const renderText = (tokens, item, contextUnit) => {
       sentence_nr = tokens[i].sentence;
     }
 
-    if (
-      i < tokenContext[0] ||
-      sentence_nr < sentenceContext[0] ||
-      paragraph_nr < paragraphContext[0]
-    )
-      continue;
-    if (
-      i > tokenContext[1] ||
-      sentence_nr > sentenceContext[1] ||
-      paragraph_nr > paragraphContext[1]
-    )
-      break;
-
-    //let highlight = context.span && i >= context.span[0] && i < context.span[1];
-
     tokens[i].index = i;
+    tokens[i].isContext = i < tokenRange[0] || i > tokenRange[1];
+    if (i < tokenContext[0]) continue;
+    if (i > tokenContext[1]) break;
+
     tokens[i].ref = React.createRef();
     sentence.push(renderToken(tokens[i]));
   }
@@ -116,9 +96,28 @@ const renderText = (tokens, item, contextUnit) => {
   return text;
 };
 
+const getTokenRange = (tokens, field, startValue, endValue) => {
+  const range = [0, tokens.length - 1];
+
+  const start = tokens.find((token) => token[field] === startValue);
+  if (start) range[0] = start.index;
+  const end = tokens.find((token) => token[field] === endValue + 1);
+  if (end) range[1] = end.index - 1;
+
+  return range;
+};
+
+const getContextRange = (tokens, contextUnit, tokenRange) => {
+  const field = contextUnit.selected;
+  let range = [tokens[tokenRange[0]][field], tokens[tokenRange[1]][field]];
+  range[0] = range[0] - contextUnit.range[contextUnit.selected][0];
+  range[1] = range[1] + contextUnit.range[contextUnit.selected][1];
+  return getTokenRange(tokens, field, range[0], range[1]);
+};
+
 const renderParagraph = (paragraph_nr, sentences, section, documentIsUnit) => {
   const fontstyle = (sentences) => {
-    if (!documentIsUnit) return sentences;
+    //if (!documentIsUnit) return sentences;
     if (section === "title") return <h2>{sentences}</h2>;
     return sentences;
   };
@@ -139,8 +138,8 @@ const renderSentence = (sentence_nr, tokens) => {
   );
 };
 
-const renderToken = (token, highlight) => {
-  return <Token ref={token.ref} key={token.index} token={token} highlight={highlight} />;
+const renderToken = (token) => {
+  return <Token ref={token.ref} key={token.index} token={token} />;
 };
 
 export default React.memo(Tokens);

@@ -79,6 +79,7 @@ const CodingjobSelector = ({ type = "table" }) => {
       <Dropdown
         inline
         search
+        placeholder={"codingjob"}
         options={asDropdownItems(codingjobs)}
         value={codingjob ? codingjob.name : null}
         onChange={(e, d) => onDropdownSelect(d.value)}

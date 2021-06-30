@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 import {
   Breadcrumb,
@@ -35,9 +35,16 @@ const Annotate = () => {
     setupCodingjob(codingjob, codingUnit, setJobItem, setJobItems);
   }, [codingjob, codingUnit, setJobItem, setJobItems]);
 
-  console.log(jobItem);
+  if (!codingjob) {
+    return (
+      <Grid stackable container columns={2} style={{ height: "100vh", marginTop: "2em" }}>
+        Select a codingjob: <CodingjobSelector type={"dropdown"} />
+      </Grid>
+    );
+  }
+
   return (
-    <Grid stackable container columns={2}>
+    <Grid stackable container columns={2} style={{ minHeight: "100vh" }}>
       <Grid.Row>
         <Grid.Column width={10}>
           <Grid.Row>
@@ -222,7 +229,7 @@ const ContextUnitRange = ({ contextUnit, setContextUnit }) => {
               type="number"
               style={{ width: "6em" }}
               label={"before"}
-              onChange={(e, d) => onChange(d.value, 0)}
+              onChange={(e, d) => onChange(Number(d.value), 0)}
             />
           </Grid.Column>
           <Grid.Column width={5}>
@@ -233,7 +240,7 @@ const ContextUnitRange = ({ contextUnit, setContextUnit }) => {
               labelPosition="right"
               style={{ width: "6em" }}
               label={"after"}
-              onChange={(e, d) => onChange(d.value, 1)}
+              onChange={(e, d) => onChange(Number(d.value), 1)}
             />
           </Grid.Column>
         </Grid>
@@ -252,19 +259,19 @@ const setupCodingjob = async (codingjob, codingUnit, setJobItem, setJobItems) =>
 };
 
 // from: https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array
-const getRandomSubarray = (arr, size) => {
-  var shuffled = arr.slice(0),
-    i = arr.length,
-    min = i - size,
-    temp,
-    index;
-  while (i-- > min) {
-    index = Math.floor((i + 1) * Math.random());
-    temp = shuffled[index];
-    shuffled[index] = shuffled[i];
-    shuffled[i] = temp;
-  }
-  return shuffled.slice(min);
-};
+// const getRandomSubarray = (arr, size) => {
+//   var shuffled = arr.slice(0),
+//     i = arr.length,
+//     min = i - size,
+//     temp,
+//     index;
+//   while (i-- > min) {
+//     index = Math.floor((i + 1) * Math.random());
+//     temp = shuffled[index];
+//     shuffled[index] = shuffled[i];
+//     shuffled[i] = temp;
+//   }
+//   return shuffled.slice(min);
+// };
 
 export default Annotate;

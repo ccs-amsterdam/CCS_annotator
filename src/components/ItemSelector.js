@@ -48,7 +48,7 @@ const ItemSelector = ({ items, setItem }) => {
           pageItem={
             <Segment style={{ border: "none", boxShadow: "none", padding: 0, leftMargin: "0px" }}>
               <Loader active={loading} content="" />
-              {delayedActivePage}
+              {`${delayedActivePage} / ${items.length}`}
             </Segment>
           }
           size={"mini"}
