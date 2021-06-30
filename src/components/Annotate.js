@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
-import { Breadcrumb, BreadcrumbSection, ButtonGroup, Grid, Dropdown } from "semantic-ui-react";
+import {
+  Breadcrumb,
+  BreadcrumbSection,
+  ButtonGroup,
+  Grid,
+  Dropdown,
+  Popup,
+  Button,
+  Input,
+} from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
 import AnnotationPage from "./AnnotationPage";
@@ -12,7 +21,10 @@ const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
 
   const [codingUnit, setCodingUnit] = useState("document");
-  const [contextUnit, setContextUnit] = useState("");
+  const [contextUnit, setContextUnit] = useState({
+    selected: "document",
+    range: { paragraph: [0, 0], sentence: [0, 0] },
+  });
   const [mode, setMode] = useState("annotate");
 
   const [jobItems, setJobItems] = useState(null);
@@ -35,6 +47,8 @@ const Annotate = () => {
           <Grid.Row>
             <ButtonGroup compact basic>
               <CodingUnitDropdown codingUnit={codingUnit} setCodingUnit={setCodingUnit} />
+              <ContextUnitDropdown contextUnit={contextUnit} setContextUnit={setContextUnit} />
+
               <ModeDropdown mode={mode} setMode={setMode} />
             </ButtonGroup>
           </Grid.Row>
@@ -44,7 +58,12 @@ const Annotate = () => {
         </Grid.Column>
       </Grid.Row>
       <Grid.Row>
-        <AnnotationPage codingjob={codingjob} item={jobItem} mode={mode} />
+        <AnnotationPage
+          codingjob={codingjob}
+          item={jobItem}
+          mode={mode}
+          contextUnit={contextUnit}
+        />
       </Grid.Row>
     </Grid>
   );
@@ -95,21 +114,45 @@ const ItemBreadcrumb = ({ jobItem }) => {
 
 const ModeDropdown = ({ mode, setMode }) => {
   return (
-    <Dropdown text={mode} inline button compact>
+    <Dropdown
+      text={<>{buttonLabel(mode, "Coding mode")}</>}
+      inline
+      button
+      compact
+      style={buttonStyle}
+    >
       <Dropdown.Menu>
-        <Dropdown.Header icon="setting" content="Set annotation mode" />
-        <Dropdown.Item onClick={() => setMode("annotate")}>Annotate</Dropdown.Item>
-        <Dropdown.Item onClick={() => setMode("code")}>Code</Dropdown.Item>
+        <Dropdown.Header icon="setting" content="Annotation mode" />
+        <Dropdown.Item onClick={() => setMode("annotate")}>Free annotation</Dropdown.Item>
+        <Dropdown.Item onClick={() => setMode("code")}>Coding task</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );
 };
 
+const buttonStyle = { paddingTop: 0, font: "Serif", fontStyle: "normal" };
+
+const buttonLabel = (text, type) => {
+  return (
+    <span>
+      <font style={{ fontSize: 9 }}>{type}:</font>
+      <br />
+      {text}
+    </span>
+  );
+};
+
 const CodingUnitDropdown = ({ codingUnit, setCodingUnit }) => {
   return (
-    <Dropdown text={codingUnit} inline button compact>
+    <Dropdown
+      text={<>{buttonLabel(codingUnit, "Coding unit")}</>}
+      inline
+      button
+      compact
+      style={buttonStyle}
+    >
       <Dropdown.Menu>
-        <Dropdown.Header icon="setting" content="Set Coding Unit" />
+        <Dropdown.Header icon="setting" content="Coding Unit" />
         <Dropdown.Item onClick={() => setCodingUnit("document")}>Document</Dropdown.Item>
         <Dropdown.Item onClick={() => setCodingUnit("paragraph")}>Paragraph</Dropdown.Item>
         <Dropdown.Item onClick={() => setCodingUnit("sentence")}>Sentence</Dropdown.Item>
@@ -119,33 +162,90 @@ const CodingUnitDropdown = ({ codingUnit, setCodingUnit }) => {
   );
 };
 
-const setupCodingjob = async (codingjob, codingUnit, setJobItem, setJobItems) => {
-  // don't just grab n
-  // loop over documents, and add index + doc_uid to index
-  // for paragraph add for 1:n,
-  // for sentences add for 1:n
+const ContextUnitDropdown = ({ contextUnit, setContextUnit }) => {
+  const onClick = (unit) => {
+    if (contextUnit.selected !== unit) {
+      setContextUnit({ ...contextUnit, selected: unit });
+    }
+  };
+  return (
+    <Dropdown
+      text={
+        <>
+          {buttonLabel(contextUnit.selected, "Context unit")}
+          <ContextUnitRange contextUnit={contextUnit} setContextUnit={setContextUnit} />
+        </>
+      }
+      inline
+      button
+      compact
+      style={buttonStyle}
+    >
+      <Dropdown.Menu>
+        <Dropdown.Header icon="setting" content="Context Unit" />
+        <Dropdown.Item onClick={() => onClick("document")}>Document</Dropdown.Item>
+        <Dropdown.Item onClick={() => onClick("paragraph")}>Paragraph</Dropdown.Item>
+        <Dropdown.Item onClick={() => onClick("sentence")}>Sentence</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
+  );
+};
 
+const ContextUnitRange = ({ contextUnit, setContextUnit }) => {
+  const onChange = (value, which) => {
+    if (value >= 0) {
+      const newContext = { ...contextUnit };
+      newContext.range[contextUnit.selected][which] = value;
+      setContextUnit(newContext);
+    }
+  };
+
+  const range = contextUnit.range[contextUnit.selected];
+  if (contextUnit.selected === "document") return null;
+
+  return (
+    <Popup
+      on="click"
+      trigger={
+        <Button
+          style={{ paddingTop: 0, paddingBottom: 0, border: "none", boxShadow: "none" }}
+        >{`${range[0]} - ${range[1]}`}</Button>
+      }
+    >
+      <Dropdown.Menu>
+        <Dropdown.Header content={`${contextUnit.selected} window`} />
+        <Grid style={{ paddingTop: "1em", width: "20em" }}>
+          <Grid.Column width={8}>
+            <Input
+              size="mini"
+              value={range[0]}
+              type="number"
+              style={{ width: "6em" }}
+              label={"before"}
+              onChange={(e, d) => onChange(d.value, 0)}
+            />
+          </Grid.Column>
+          <Grid.Column width={5}>
+            <Input
+              size="mini"
+              value={range[1]}
+              type="number"
+              labelPosition="right"
+              style={{ width: "6em" }}
+              label={"after"}
+              onChange={(e, d) => onChange(d.value, 1)}
+            />
+          </Grid.Column>
+        </Grid>
+      </Dropdown.Menu>
+    </Popup>
+  );
+};
+
+const setupCodingjob = async (codingjob, codingUnit, setJobItem, setJobItems) => {
+  console.log(codingjob);
   let items = await db.getCodingjobItems(codingjob, codingUnit);
-  // if (codingUnit === "document") {
-  //   const n = await db.getJobDocumentCount(codingjob);
-  //   const docIndex = [...Array(n).keys()];
-  //   items = docIndex.map((docIndex) => ({ docIndex }));
-  // }
-  // if (codingUnit === "paragraph") {
-  // }
-  // if (codingUnit === "sentence") {
-  // }
-  // if (codingUnit === "annotation") {
-  //   let annotations = await db.getJobAnnotations(codingjob);
-  //   items = annotations.reduce((array, annotation, docIndex) => {
-  //     for (let i of Object.keys(annotation)) {
-  //       for (let group of Object.keys(annotation[i])) {
-  //         array.push({ docIndex, group, index: i, ...annotation[i][group] });
-  //       }
-  //     }
-  //     return array;
-  //   }, []);
-  // }
+
   console.log(items);
   setJobItems(items);
   setJobItem(items[0]);

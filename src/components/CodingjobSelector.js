@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Segment, Dropdown, Container } from "semantic-ui-react";
-import { selectCodingjob, setCodingjobs } from "../actions";
+import { resetCodeHistory, selectCodingjob, setCodingjobs } from "../actions";
 
 import SelectionTable from "./SelectionTable";
 import CreateCodingjob from "./CreateCodingjob";
@@ -17,6 +17,7 @@ const CodingjobSelector = ({ type = "table" }) => {
 
   useEffect(() => {
     setCodingjob(dispatch, selectedCodingjob);
+    dispatch(resetCodeHistory());
   }, [selectedCodingjob, dispatch]);
 
   useEffect(() => {

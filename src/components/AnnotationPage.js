@@ -8,11 +8,9 @@ import Tokens from "./Tokens";
 
 import db from "../apis/dexie";
 
-const AnnotationPage = ({ codingjob, item, mode }) => {
+const AnnotationPage = ({ codingjob, item, mode, contextUnit }) => {
   const [doc, setDoc] = useState(null);
   const codeMap = useSelector((state) => state.codeMap);
-
-  let context = { span: [10, 12], sentence_window: [1, 1], token_window: [50, 50] };
 
   useEffect(() => {
     if (!codingjob || !item) return null;
@@ -24,13 +22,13 @@ const AnnotationPage = ({ codingjob, item, mode }) => {
       case "annotate":
         return (
           <SpanAnnotationEditor doc={doc}>
-            <Tokens doc={doc} item={item} />
+            <Tokens doc={doc} item={item} contextUnit={contextUnit} />
           </SpanAnnotationEditor>
         );
       case "code":
         return (
           <SpanAnnotationsCoder doc={doc}>
-            <Tokens doc={doc} item={item} />
+            <Tokens doc={doc} item={item} contextUnit={contextUnit} />
           </SpanAnnotationsCoder>
         );
       default:
