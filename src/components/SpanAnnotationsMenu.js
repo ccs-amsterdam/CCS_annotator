@@ -48,7 +48,11 @@ const annotationRows = (tokens, annotations) => {
       token = annotations[tokenIndex][code];
 
       if (token.index !== token.span[0]) continue;
-      if (tokens[token.span[0]].isContext || tokens[token.span[1]].isContext) continue;
+      if (
+        tokens[token.span[0]].textPart !== "codingUnit" ||
+        tokens[token.span[1]].textPart !== "codingUnit"
+      )
+        continue;
 
       const annotationTokens = tokens.slice(token.span[0], token.span[1] + 1);
       text = annotationTokens

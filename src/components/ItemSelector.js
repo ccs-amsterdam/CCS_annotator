@@ -34,38 +34,38 @@ const ItemSelector = ({ items, setItem }) => {
   if (!items) return null;
 
   return (
-    <Input
-      style={{ padding: 0, margin: 0 }}
-      min={1}
-      max={items.length}
-      onChange={(e, d) => setDelayedActivePage(d.value)}
-      type="range"
-      labelPosition="left"
-      label={
-        <Pagination
-          secondary
-          activePage={delayedActivePage}
-          pageItem={
-            <Segment style={{ border: "none", boxShadow: "none", padding: 0, leftMargin: "0px" }}>
-              <Loader active={loading} content="" />
-              {`${delayedActivePage} / ${items.length}`}
-            </Segment>
-          }
-          size={"mini"}
-          firstItem={null}
-          lastItem={null}
-          prevItem={"back"}
-          nextItem={"next"}
-          siblingRange={0}
-          boundaryRange={0}
-          ellipsisItem={null}
-          totalPages={items.length}
-          onPageChange={(e, d) => setActivePage(d.activePage)}
-          style={{ fontSize: "9px", border: "none", boxShadow: "none", padding: 0, margin: 0 }}
-        ></Pagination>
-      }
-      value={delayedActivePage}
-    />
+    <Segment style={{ border: "none", boxShadow: "none", padding: 0, leftMargin: "0px" }}>
+      <Loader active={loading} content="" />
+
+      <Input
+        style={{ padding: 0, margin: 0 }}
+        min={1}
+        max={items.length}
+        onChange={(e, d) => setDelayedActivePage(d.value)}
+        type="range"
+        labelPosition="left"
+        label={
+          <Pagination
+            secondary
+            activePage={delayedActivePage}
+            pageItem={`${delayedActivePage} / ${items.length}`}
+            size={"mini"}
+            firstItem={null}
+            lastItem={null}
+            prevItem={"back"}
+            nextItem={"next"}
+            siblingRange={0}
+            boundaryRange={0}
+            ellipsisItem={null}
+            totalPages={items.length}
+            onClick={(e, d) => e.stopPropagation()}
+            onPageChange={(e, d) => setActivePage(d.activePage)}
+            style={{ fontSize: "9px", border: "none", boxShadow: "none", padding: 0, margin: 0 }}
+          ></Pagination>
+        }
+        value={delayedActivePage}
+      />
+    </Segment>
   );
 };
 

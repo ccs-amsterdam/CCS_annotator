@@ -30,8 +30,10 @@ span.token.selected {
 }
 
 span.token.context {
-  color: rgb(138, 131, 131);
-  border-color: black;
+  color: #4848f8;
+  background-color: rgb(200, 204, 200);
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 button.active {

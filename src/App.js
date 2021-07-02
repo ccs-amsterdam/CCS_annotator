@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import HeaderMenu from "./components/HeaderMenu";
-import { Container, Sidebar } from "semantic-ui-react";
+import { Sidebar } from "semantic-ui-react";
 
 // login and authenticated route
 import Welcome from "./components/Welcome";
@@ -49,18 +49,16 @@ const App = () => {
             animation="overlay"
             visible={showSidebar}
             direction={"right"}
-            width="wide"
+            width="very wide"
             style={{ backgroundColor: "white" }}
           >
             <CodeTreeTable showColors />
           </Sidebar>
           <Sidebar.Pusher>
-            <Container style={{ marginTop: "1em" }}>
-              <Switch>
-                <Route exact path={homepage} render={() => <Welcome items={items} />} />
-                {createNavigation(items)}
-              </Switch>
-            </Container>
+            <Switch>
+              <Route exact path={homepage} render={() => <Welcome items={items} />} />
+              {createNavigation(items)}
+            </Switch>
           </Sidebar.Pusher>
         </Sidebar.Pushable>
       </HeaderMenu>

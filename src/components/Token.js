@@ -7,7 +7,7 @@ import { triggerCodeselector } from "../actions";
 import { getColor } from "../util/tokenDesign";
 import { List, Popup } from "semantic-ui-react";
 
-const Token = React.forwardRef(({ token, isContext }, ref) => {
+const Token = React.forwardRef(({ token }, ref) => {
   const selected = useSelector((state) => {
     if (state.tokenSelection.length === 0) return false;
 
@@ -18,7 +18,7 @@ const Token = React.forwardRef(({ token, isContext }, ref) => {
 
   let tokenClass = "token";
   if (selected) tokenClass = tokenClass + " selected";
-  if (token.isContext) tokenClass = tokenClass + " context";
+  //if (token.textPart !== "codingUnit") tokenClass = tokenClass + " context";
 
   return (
     <span ref={ref} className={tokenClass} tokenindex={token.index}>
@@ -46,7 +46,7 @@ const AnnotatedToken = ({ token, selected }) => {
   if (!annotations) return <>{token.pre + token.text + token.post}</>;
 
   // if this is a context token, we can also ignore the fancy stuff
-  if (token.isContext) return <>{token.pre + token.text + token.post}</>;
+  if (token.textPart !== "codingUnit") return <>{token.pre + token.text + token.post}</>;
 
   const tokenSpan = (annotatedTokenClass, color) => {
     return (

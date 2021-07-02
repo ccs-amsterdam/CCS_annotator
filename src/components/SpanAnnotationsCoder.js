@@ -1,11 +1,11 @@
 import React from "react";
 import { Container, Grid, Header, Segment } from "semantic-ui-react";
+import Tokens from "./Tokens";
 
-const gridStyle = { overflowY: "auto", height: "50vh" };
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
-const SpanAnnotationsCoder = ({ children, doc }) => {
+const SpanAnnotationsCoder = ({ doc, item, contextUnit }) => {
   // note that tokens is actually an object with doc included: {doc, tokens}
   // passing the states separately caused race issues
 
@@ -20,7 +20,15 @@ const SpanAnnotationsCoder = ({ children, doc }) => {
   return (
     <Grid container stackable columns={2}>
       <Grid.Column width={8} style={{ paddingRight: "0em" }}>
-        <Grid.Row style={gridStyle}>{children}</Grid.Row>
+        <Grid.Row>
+          <Tokens
+            doc={doc}
+            item={item}
+            contextUnit={contextUnit}
+            height={45}
+            codingUnitPosition={1 / 3}
+          />
+        </Grid.Row>
 
         <Grid.Row style={{ height: "30vh", marginTop: "1em" }}>
           <Segment>Hier coding options</Segment>

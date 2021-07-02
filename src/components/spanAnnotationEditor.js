@@ -3,18 +3,25 @@ import { Container, Grid, Header, List, ListItem, Table } from "semantic-ui-reac
 import SpanAnnotationsDB from "./SpanAnnotationsDB";
 import SpanAnnotationsNavigation from "./SpanAnnotationsNavigation";
 import SpanAnnotationsMenu from "./SpanAnnotationsMenu";
+import Tokens from "./Tokens";
 
-const gridStyle = { overflowY: "auto", height: "75vh" };
+const gridStyle = { height: "100%", paddingTop: "0" };
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
-const SpanAnnotationEditor = ({ children, doc }) => {
+const SpanAnnotationEditor = ({ doc, item, contextUnit }) => {
   if (doc === null) return null;
 
   return (
-    <Grid container stackable columns={2}>
+    <Grid container stackable columns={2} style={gridStyle} verticalAlign={"top"}>
       <Grid.Column width={8} style={{ paddingRight: "0em" }}>
-        <Grid.Row style={gridStyle}>{children}</Grid.Row>
+        <Tokens
+          doc={doc}
+          item={item}
+          contextUnit={contextUnit}
+          height={75}
+          codingUnitPosition={1 / 4}
+        />
       </Grid.Column>
       <Grid.Column width={8}>
         <Grid.Row style={gridStyleTop}>

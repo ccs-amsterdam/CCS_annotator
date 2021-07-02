@@ -49,6 +49,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
       return;
     }
     const codeMap = prepareCodeMap(codes);
+    console.log(codes);
     const cta = getCodeTreeArray(codeMap, showColors);
     setCodeTreeArray(cta);
     dispatch(setCodeMap(codeMap));
@@ -108,73 +109,71 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
   };
 
   return (
-    <>
-      <Table singleLine>
-        <Table.Header className="codes-thead">
-          <Table.Row>
-            <Table.HeaderCell>
-              <Search
-                showNoResults={false}
-                loading={loading}
-                onResultSelect={(e, d) => {
-                  setValue(d.result.code);
-                  setActiveRow(d.result.i);
-                }}
-                onSearchChange={(e, d) => {
-                  if (d.results.length > 0) {
-                    setActiveRow(d.results[[0]].i);
-                  } else {
-                    setActiveRow(-1);
-                  }
-                  handleSearchChange(e, d, codeTreeArray);
-                }}
-                resultRenderer={resultRenderer}
-                results={results}
-                value={value}
-                selectFirstResult={true}
-              ></Search>
-            </Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body style={{ height: height }} className="codes-tbody">
-          {[...codeTreeArray, ""].map((code, i) => {
-            return (
-              <Table.Row className="codes-tr" active={i === activeRow} key={i}>
-                <Table.Cell className="codes-td">
-                  {code.code ? (
-                    <Button
-                      as={"Input"}
-                      style={{
-                        marginLeft: `${1.5 * code.level}em`,
-                        marginRight: "0.4em",
-                        padding: "0",
-                        width: "1em",
-                        height: "1em",
-                        color: code.color ? code.color : "white",
-                      }}
-                      onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
-                      type="color"
-                      value={code.color}
-                    />
-                  ) : null}
-                  <EditCodePopup
-                    codingjob={codingjob}
-                    code={code}
-                    codes={codes}
-                    setCodes={setCodes}
-                    settings={settings}
-                  >
-                    <span ref={i === activeRow ? ref : null} style={formatCode(code.level)}>
-                      {code.code}
-                    </span>
-                  </EditCodePopup>
-                </Table.Cell>
-              </Table.Row>
-            );
-          })}
-        </Table.Body>
-      </Table>
-    </>
+    <Table singleLine>
+      <Table.Header className="codes-thead">
+        <Table.Row>
+          <Table.HeaderCell>
+            <Search
+              showNoResults={false}
+              loading={loading}
+              onResultSelect={(e, d) => {
+                setValue(d.result.code);
+                setActiveRow(d.result.i);
+              }}
+              onSearchChange={(e, d) => {
+                if (d.results.length > 0) {
+                  setActiveRow(d.results[[0]].i);
+                } else {
+                  setActiveRow(-1);
+                }
+                handleSearchChange(e, d, codeTreeArray);
+              }}
+              resultRenderer={resultRenderer}
+              results={results}
+              value={value}
+              selectFirstResult={true}
+            ></Search>
+          </Table.HeaderCell>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body style={{ height: height }} className="codes-tbody">
+        {[...codeTreeArray, ""].map((code, i) => {
+          return (
+            <Table.Row className="codes-tr" active={i === activeRow} key={i}>
+              <Table.Cell className="codes-td">
+                {code.code ? (
+                  <Button
+                    as={"Input"}
+                    style={{
+                      marginLeft: `${1.5 * code.level}em`,
+                      marginRight: "0.4em",
+                      padding: "0",
+                      width: "1em",
+                      height: "1em",
+                      color: code.color ? code.color : "white",
+                    }}
+                    onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
+                    type="color"
+                    value={code.color}
+                  />
+                ) : null}
+                <EditCodePopup
+                  codingjob={codingjob}
+                  code={code}
+                  codes={codes}
+                  setCodes={setCodes}
+                  settings={settings}
+                >
+                  <span ref={i === activeRow ? ref : null} style={formatCode(code.level)}>
+                    {code.code}
+                  </span>
+                </EditCodePopup>
+              </Table.Cell>
+            </Table.Row>
+          );
+        })}
+      </Table.Body>
+    </Table>
   );
 };
 
@@ -304,6 +303,7 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
 
 const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
   const codeMap = useSelector((state) => state.codeMap);
+  const [alreadyExists, setAlreadyExists] = useState(false);
   const dispatch = useDispatch();
   const [textInput, setTextInput] = useState("");
 
@@ -316,7 +316,10 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 
   const addCode = async (newCode) => {
     if (newCode === "") return null;
-    if (codeMap[newCode]) return null;
+    if (codeMap[newCode]) {
+      setAlreadyExists(true);
+      return null;
+    }
     const updatedCodes = [...codes];
     updatedCodes.push({ code: newCode, parent: code });
     await db.writeCodes(codingjob, updatedCodes);
@@ -331,15 +334,23 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
         <Button floated="right" compact size="mini" icon="delete" onClick={() => setOpen(false)} />
       </p>
       <Form onSubmit={() => addCode(textInput)}>
-        <Input
-          autoFocus
-          onChange={(e, d) => {
-            setTextInput(d.value);
-          }}
-          value={textInput}
-          icon={<Icon name="plus" inverted circular link onClick={() => addCode(textInput)} />}
-          placeholder="new code"
-        />
+        <Popup
+          open={alreadyExists}
+          trigger={
+            <Input
+              autoFocus
+              onChange={(e, d) => {
+                setTextInput(d.value);
+                setAlreadyExists(false);
+              }}
+              value={textInput}
+              icon={<Icon name="plus" inverted circular link onClick={() => addCode(textInput)} />}
+              placeholder="new code"
+            />
+          }
+        >
+          Code label already exists
+        </Popup>
       </Form>
     </div>
   );

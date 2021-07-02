@@ -62,13 +62,13 @@ const CodingjobSelector = ({ type = "table" }) => {
   if (type === "dropdown") {
     const asDropdownItems = (indices) => {
       return indices.map((index) => {
-        return { key: index.job_id, text: index.name, value: index.name };
+        return { key: index.job_id, text: index.name, value: index.job_id };
       });
     };
 
     const onDropdownSelect = (value) => {
       if (value && codingjobs.length > 0) {
-        const i = codingjobs.findIndex((row) => row.name === value);
+        const i = codingjobs.findIndex((row) => row.job_id === value);
         setSelectedCodingjob({ ...codingjobs[i], ROW_ID: i.toString() });
       } else {
         setSelectedCodingjob(null);

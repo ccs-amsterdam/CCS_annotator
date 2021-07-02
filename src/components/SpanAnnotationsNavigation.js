@@ -259,6 +259,8 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
 
   if (newPosition > mover.ntokens) newPosition = mover.ntokens;
   if (newPosition < 0) newPosition = 0;
+  console.log(newPosition);
+  if (tokens[newPosition].ref == null) return mover.position;
 
   if (space) {
     // limit selection to current section
@@ -295,12 +297,22 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
 const moveSentence = (tokens, mover, direction = "up") => {
   // moving sentences is a bit tricky, but we can do it via the refs to the
   // token spans, that provide information about the x and y values
+
+  if (tokens[mover.position].ref == null || tokens[mover.startposition] == null) {
+    const firstUnit = tokens.findIndex((token) => token.textPart === "codingUnit");
+    return firstUnit < 0 ? 0 : firstUnit;
+  }
+
   const current = tokens[mover.position].ref.current.getBoundingClientRect();
   const start = tokens[mover.startposition].ref.current.getBoundingClientRect();
   let next;
 
   if (direction === "up") {
     for (let i = mover.position; i >= 0; i--) {
+      if (tokens[i].ref == null) {
+        const firstUnit = tokens.findIndex((token) => token.textPart === "codingUnit");
+        return firstUnit < 0 ? 0 : firstUnit;
+      }
       next = tokens[i].ref.current.getBoundingClientRect();
       if (next.y < current.y && next.x <= start.x) {
         return i;
@@ -311,6 +323,10 @@ const moveSentence = (tokens, mover, direction = "up") => {
   if (direction === "down") {
     let nextsent = null;
     for (let i = mover.position; i < tokens.length; i++) {
+      if (tokens[i].ref == null) {
+        const firstAfterUnit = tokens.findIndex((token) => token.textPart === "contextAfter");
+        return firstAfterUnit < 0 ? tokens.length - 1 : firstAfterUnit - 1;
+      }
       next = tokens[i].ref.current.getBoundingClientRect();
       if (!nextsent && next.y > current.y) nextsent = next.y;
       if (nextsent && next.y > nextsent) return i - 1;

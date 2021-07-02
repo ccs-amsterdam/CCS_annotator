@@ -76,10 +76,9 @@ class AnnotationDB {
     const cj = await this.getCodingjob(codingjob);
     const codebook = cj.codebook ? cj.codebook : {};
 
-    if (!append) {
+    if (!append || !codebook.codes) {
       codebook.codes = codes;
     } else {
-      if (!codebook.codes) codebook.codes = [];
       const codeMap = codebook.codes.reduce((obj, code, i) => {
         obj[code.code] = { parent: code.parent, index: i };
         return obj;
@@ -166,12 +165,17 @@ class AnnotationDB {
     }
 
     codes = Object.keys(codes).reduce((a, code) => {
-      for (let parent of codes[code]) a.push({ code, parent });
+      if (codes[code].length === 1) {
+        if (codes[code][0] !== "") a.push({ code, parent: codes[code][0] });
+      } else {
+        for (let parent of codes[code]) {
+          if (parent !== "") a.push({ code: `${code} (${parent})`, parent });
+        }
+      }
       return a;
     }, []);
     this.writeCodes(codingjob, codes, true);
 
-    console.log(preparedDocuments);
     return this.idb.documents.bulkAdd(preparedDocuments);
   }
 

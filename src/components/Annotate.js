@@ -10,6 +10,7 @@ import {
   Popup,
   Button,
   Input,
+  Container,
 } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
@@ -23,10 +24,10 @@ const Annotate = () => {
   const [codingUnit, setCodingUnit] = useState("document");
   const [contextUnit, setContextUnit] = useState({
     selected: "document",
-    range: { paragraph: [0, 0], sentence: [0, 0] },
+    range: { paragraph: [1, 1], sentence: [2, 2] },
   });
-  const [mode, setMode] = useState("annotate");
 
+  const [taskType, setTaskType] = useState("annotate");
   const [jobItems, setJobItems] = useState(null);
   const [jobItem, setJobItem] = useState(null);
 
@@ -44,35 +45,39 @@ const Annotate = () => {
   }
 
   return (
-    <Grid stackable container columns={2} style={{ minHeight: "100vh" }}>
-      <Grid.Row>
-        <Grid.Column width={10}>
-          <Grid.Row>
-            <ItemBreadcrumb jobItem={jobItem} />
-          </Grid.Row>
-          <br />
-          <Grid.Row>
-            <ButtonGroup compact basic>
-              <CodingUnitDropdown codingUnit={codingUnit} setCodingUnit={setCodingUnit} />
-              <ContextUnitDropdown contextUnit={contextUnit} setContextUnit={setContextUnit} />
+    <Container style={{ paddingLeft: "1em", float: "left" }}>
+      <Grid stackable columns={2}>
+        <Grid.Row>
+          <Grid.Column width={10}>
+            <Grid.Row>
+              <ItemBreadcrumb jobItem={jobItem} />
+            </Grid.Row>
+            <br />
+            <Grid.Row>
+              <ButtonGroup compact basic>
+                <CodingUnitDropdown codingUnit={codingUnit} setCodingUnit={setCodingUnit} />
+                {codingUnit === "document" ? null : (
+                  <ContextUnitDropdown contextUnit={contextUnit} setContextUnit={setContextUnit} />
+                )}
 
-              <ModeDropdown mode={mode} setMode={setMode} />
-            </ButtonGroup>
-          </Grid.Row>
-        </Grid.Column>
-        <Grid.Column align="center" floated="right" width={5}>
-          <ItemSelector items={jobItems} setItem={setJobItem} />
-        </Grid.Column>
-      </Grid.Row>
-      <Grid.Row>
-        <AnnotationPage
-          codingjob={codingjob}
-          item={jobItem}
-          mode={mode}
-          contextUnit={contextUnit}
-        />
-      </Grid.Row>
-    </Grid>
+                <TaskTypeDropdown taskType={taskType} setTaskType={setTaskType} />
+              </ButtonGroup>
+            </Grid.Row>
+          </Grid.Column>
+          <Grid.Column align="center" floated="right" width={5}>
+            <ItemSelector items={jobItems} setItem={setJobItem} />
+          </Grid.Column>
+        </Grid.Row>
+        <Grid.Row>
+          <AnnotationPage
+            codingjob={codingjob}
+            item={jobItem}
+            taskType={taskType}
+            contextUnit={contextUnit}
+          />
+        </Grid.Row>
+      </Grid>
+    </Container>
   );
 };
 
@@ -119,19 +124,13 @@ const ItemBreadcrumb = ({ jobItem }) => {
   );
 };
 
-const ModeDropdown = ({ mode, setMode }) => {
+const TaskTypeDropdown = ({ taskType, setTaskType }) => {
   return (
-    <Dropdown
-      text={<>{buttonLabel(mode, "Coding mode")}</>}
-      inline
-      button
-      compact
-      style={buttonStyle}
-    >
+    <Dropdown text={<>{buttonLabel(taskType, "Task")}</>} inline button compact style={buttonStyle}>
       <Dropdown.Menu>
-        <Dropdown.Header icon="setting" content="Annotation mode" />
-        <Dropdown.Item onClick={() => setMode("annotate")}>Free annotation</Dropdown.Item>
-        <Dropdown.Item onClick={() => setMode("code")}>Coding task</Dropdown.Item>
+        <Dropdown.Header icon="setting" content="Task type" />
+        <Dropdown.Item onClick={() => setTaskType("annotate")}>Free annotation</Dropdown.Item>
+        <Dropdown.Item onClick={() => setTaskType("code")}>Question based</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );

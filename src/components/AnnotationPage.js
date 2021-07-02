@@ -4,40 +4,32 @@ import hash from "object-hash";
 
 import SpanAnnotationEditor from "./spanAnnotationEditor";
 import SpanAnnotationsCoder from "./SpanAnnotationsCoder";
-import Tokens from "./Tokens";
 
 import db from "../apis/dexie";
 
-const AnnotationPage = ({ codingjob, item, mode, contextUnit }) => {
+const AnnotationPage = ({ codingjob, item, taskType, contextUnit }) => {
   const [doc, setDoc] = useState(null);
   const codeMap = useSelector((state) => state.codeMap);
 
   useEffect(() => {
     if (!codingjob || !item) return null;
     documentSelector(codingjob, item, setDoc, hash(codeMap));
-  }, [codingjob, codeMap, item, mode, setDoc]);
+  }, [codingjob, codeMap, item, taskType, setDoc]);
 
-  const renderMode = (mode) => {
-    switch (mode) {
+  const renderTask = (taskType) => {
+    switch (taskType) {
       case "annotate":
-        return (
-          <SpanAnnotationEditor doc={doc}>
-            <Tokens doc={doc} item={item} contextUnit={contextUnit} />
-          </SpanAnnotationEditor>
-        );
+        return <SpanAnnotationEditor doc={doc} item={item} contextUnit={contextUnit} />;
       case "code":
-        return (
-          <SpanAnnotationsCoder doc={doc}>
-            <Tokens doc={doc} item={item} contextUnit={contextUnit} />
-          </SpanAnnotationsCoder>
-        );
+        return <SpanAnnotationsCoder doc={doc} item={item} contextUnit={contextUnit} />;
       default:
         return null;
     }
   };
 
   if (!codingjob || !item || !doc) return null;
-  return renderMode(mode);
+
+  return renderTask(taskType);
 };
 
 const documentSelector = async (codingjob, item, setDoc, codeMapHash) => {
