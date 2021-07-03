@@ -27,7 +27,7 @@ const Annotate = () => {
     range: { paragraph: [1, 1], sentence: [2, 2] },
   });
 
-  const [taskType, setTaskType] = useState("annotate");
+  const [taskType, setTaskType] = useState("open annotation");
   const [jobItems, setJobItems] = useState(null);
   const [jobItem, setJobItem] = useState(null);
 
@@ -129,8 +129,10 @@ const TaskTypeDropdown = ({ taskType, setTaskType }) => {
     <Dropdown text={<>{buttonLabel(taskType, "Task")}</>} inline button compact style={buttonStyle}>
       <Dropdown.Menu>
         <Dropdown.Header icon="setting" content="Task type" />
-        <Dropdown.Item onClick={() => setTaskType("annotate")}>Free annotation</Dropdown.Item>
-        <Dropdown.Item onClick={() => setTaskType("code")}>Question based</Dropdown.Item>
+        <Dropdown.Item onClick={() => setTaskType("open annotation")}>
+          Open annotation
+        </Dropdown.Item>
+        <Dropdown.Item onClick={() => setTaskType("question based")}>Question based</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );

@@ -18,9 +18,9 @@ const AnnotationPage = ({ codingjob, item, taskType, contextUnit }) => {
 
   const renderTask = (taskType) => {
     switch (taskType) {
-      case "annotate":
+      case "open annotation":
         return <SpanAnnotationEditor doc={doc} item={item} contextUnit={contextUnit} />;
-      case "code":
+      case "question based":
         return <SpanAnnotationsCoder doc={doc} item={item} contextUnit={contextUnit} />;
       default:
         return null;
