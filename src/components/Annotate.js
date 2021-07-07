@@ -48,7 +48,7 @@ const Annotate = () => {
     <Container style={{ paddingLeft: "1em", float: "left" }}>
       <Grid stackable columns={2}>
         <Grid.Row>
-          <Grid.Column width={10}>
+          <Grid.Column width={8}>
             <Grid.Row>
               <ItemBreadcrumb jobItem={jobItem} />
             </Grid.Row>

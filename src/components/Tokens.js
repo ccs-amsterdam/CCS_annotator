@@ -25,8 +25,12 @@ const Tokens = ({ doc, item, contextUnit, height, codingUnitPosition }) => {
 
   return (
     <Ref innerRef={containerRef}>
-      <Container
-        style={{ width: "99%", paddingRight: "0%", height: `${height}vh`, overflow: "scroll" }}
+      <div
+        style={{
+          width: "100%",
+          height: `${height}vh`,
+          overflow: "scroll",
+        }}
         textAlign="justified"
       >
         <div style={{ color: contextColor, paddingLeft: "0.5em", paddingRight: "0.5em" }}>
@@ -55,7 +59,7 @@ const Tokens = ({ doc, item, contextUnit, height, codingUnitPosition }) => {
         >
           {tokenComponents["contextAfter"]}
         </div>
-      </Container>
+      </div>
     </Ref>
   );
 };
