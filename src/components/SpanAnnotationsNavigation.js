@@ -7,12 +7,13 @@ import {
   triggerCodeselector,
 } from "../actions";
 import { toggleAnnotations } from "../actions";
+import scrollToMiddle from "../util/scrollToMiddle";
 
 // This component generates no content, but manages navigation for span level annotations
 
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const SpanAnnotationsNavigation = ({ tokens }) => {
+const SpanAnnotationsNavigation = ({ tokens, selectedCode }) => {
   const currentToken = useSelector((state) => state.currentToken);
   const tokenSelection = useSelector((state) => state.tokenSelection);
   const eventsBlocked = useSelector((state) => state.eventsBlocked);
@@ -64,8 +65,9 @@ const SpanAnnotationsNavigation = ({ tokens }) => {
         setMover={setMover}
         setHoldSpace={setHoldSpace}
         setHoldArrow={setHoldArrow}
+        selectedCode={selectedCode}
       />
-      <MouseEvents tokenSelection={tokenSelection} tokens={tokens} />
+      <MouseEvents tokenSelection={tokenSelection} tokens={tokens} selectedCode={selectedCode} />
     </>
   );
 };
@@ -77,6 +79,7 @@ const KeyEvents = ({
   setMover,
   setHoldSpace,
   setHoldArrow,
+  selectedCode,
 }) => {
   const dispatch = useDispatch();
 
@@ -96,9 +99,10 @@ const KeyEvents = ({
   // (see useEffect with 'eventsBlocked' for details on useCallback)
   const onKeyUp = (event) => {
     // keep track of which buttons are pressed in the state
-    if (event.keyCode === 32 || event.key === "Shift") {
+    if (event.keyCode === 32) {
       setHoldSpace(false);
-      if (tokenSelection.length > 0) annotationFromSelection(tokens, tokenSelection, dispatch);
+      if (tokenSelection.length > 0)
+        annotationFromSelection(tokens, tokenSelection, dispatch, selectedCode);
       return;
     }
     if (arrowkeys.includes(event.key)) {
@@ -110,7 +114,7 @@ const KeyEvents = ({
   // (see useEffect with 'eventsBlocked' for details on useCallback)
   const onKeyDown = (event) => {
     // key presses, and key holding (see onKeyUp)
-    if (event.keyCode === 32 || event.key === "Shift") {
+    if (event.keyCode === 32) {
       event.preventDefault();
       if (event.repeat) return;
       setHoldSpace(true);
@@ -141,7 +145,7 @@ const KeyEvents = ({
   return <></>;
 };
 
-const MouseEvents = ({ tokenSelection, tokens }) => {
+const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
   const [holdMouseLeft, setHoldMouseLeft] = useState(false);
   const dispatch = useDispatch();
 
@@ -187,7 +191,9 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     // note that in case of a single click, the token has not been selected (this happens on move)
     // so this way a click can still be used to open
     if (event.which !== 1) return null;
+    console.log(event);
     const currentNode = storeMouseSelection(event);
+    console.log(currentNode);
     window.getSelection().empty();
     setHoldMouseLeft(false);
 
@@ -197,10 +203,10 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     // yet updated within this scope. This results in single clicks (without mousemove)
     // not registering. So if there is no current selection, directly use currentNode as position.
     if (tokenSelection.length > 0) {
-      annotationFromSelection(tokens, tokenSelection, dispatch);
+      annotationFromSelection(tokens, tokenSelection, dispatch, selectedCode);
     } else {
       if (currentNode !== null) {
-        annotationFromSelection(tokens, [currentNode, currentNode], dispatch);
+        annotationFromSelection(tokens, [currentNode, currentNode], dispatch, selectedCode);
       }
     }
   };
@@ -224,7 +230,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
   return <></>;
 };
 
-const annotationFromSelection = (tokens, selection, dispatch) => {
+const annotationFromSelection = (tokens, selection, dispatch, selectedCode) => {
   let [from, to] = selection;
   if (from > to) [from, to] = [to, from];
 
@@ -237,7 +243,7 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
     }
     annotations.push({
       index: i,
-      group: "UNASSIGNED",
+      group: selectedCode == null ? "UNASSIGNED" : selectedCode,
       length: tokens[to].length + tokens[to].offset - tokens[from].offset,
       span: [from, to],
       section: tokens[i].section,
@@ -246,8 +252,10 @@ const annotationFromSelection = (tokens, selection, dispatch) => {
   }
   dispatch(toggleAnnotations(annotations));
   dispatch(clearTokenSelection());
-  dispatch(triggerCodeselector(null, null, null));
-  dispatch(triggerCodeselector("new_selection", to, null));
+  if (selectedCode == null) {
+    dispatch(triggerCodeselector(null, null, null));
+    dispatch(triggerCodeselector("new_selection", to, null));
+  }
 };
 
 const movePosition = (tokens, key, mover, space, dispatch) => {
@@ -259,8 +267,22 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
 
   if (newPosition > mover.ntokens) newPosition = mover.ntokens;
   if (newPosition < 0) newPosition = 0;
-  console.log(newPosition);
-  if (tokens[newPosition].ref == null) return mover.position;
+
+  if (tokens[newPosition] == null) return mover.position;
+
+  if (tokens[newPosition].ref == null) {
+    if (key === "ArrowRight") {
+      const firstUnit = tokens.findIndex((token) => token.textPart === "codingUnit");
+      if (firstUnit < 0) return mover.position;
+      newPosition = firstUnit;
+    }
+    if (key === "ArrowLeft") {
+      const firstAfterUnit = tokens.findIndex((token) => token.textPart === "contextAfter");
+      if (firstAfterUnit < 0) return mover.position;
+      newPosition = firstAfterUnit - 1;
+    }
+    //return firstUnit < 0 ? 0 : firstUnit;
+  }
 
   if (space) {
     // limit selection to current section
@@ -286,10 +308,12 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
     dispatch(setCurrentToken(newPosition));
     dispatch(toggleTokenSelection(tokens, newPosition, space));
 
+    scrollTokenToMiddle(tokens[newPosition].ref.current);
+
     const down = key === "ArrowRight" || key === "ArrowDown";
-    tokens[newPosition].ref.current.scrollIntoView(false, {
-      block: down ? "start" : "end",
-    });
+    // tokens[newPosition].ref.current.scrollIntoView(false, {
+    //   block: down ? "start" : "end",
+    // });
   }
   return newPosition;
 };
@@ -350,25 +374,25 @@ const getToken = (tokens, e) => {
   try {
     // sometimes e is Restricted, and I have no clue why,
     // nor how to check this in a condition. hence the try clause
-    if (e.originalTarget) {
-      if (e.originalTarget.className === "token" || e.originalTarget.className === "token selected")
-        return getTokenAttributes(tokens, e.originalTarget);
-      if (e.originalTarget.parentNode) {
-        if (
-          e.originalTarget.parentNode.className === "token" ||
-          e.originalTarget.parentNode.className === "token selected"
-        )
-          return getTokenAttributes(tokens, e.originalTarget.parentNode);
+    e = e.originalTarget || e.path[0];
+    if (e) {
+      if (e.className === "token" || e.className === "token selected")
+        return getTokenAttributes(tokens, e);
+      if (e.parentNode) {
+        if (e.parentNode.className === "token" || e.parentNode.className === "token selected")
+          return getTokenAttributes(tokens, e.parentNode);
       }
     }
-    if (e.path[0].className === "token" || e.path[0].className === "token selected") {
-      return getTokenAttributes(tokens, e.path[0]);
-    }
-
     return null;
   } catch (e) {
     return null;
   }
 };
+
+function scrollTokenToMiddle(token) {
+  // token->sentence->paragraph->section->textpart->box
+  const parentDiv = token.parentNode.parentNode.parentNode.parentNode.parentNode;
+  scrollToMiddle(parentDiv, token, 1 / 3);
+}
 
 export default SpanAnnotationsNavigation;

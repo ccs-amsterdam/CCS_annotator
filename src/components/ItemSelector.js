@@ -6,6 +6,32 @@ const ItemSelector = ({ items, setItem }) => {
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
 
+  const onKeyDown = (e) => {
+    if (e.keyCode === 9) {
+      e.preventDefault();
+      if (e.shiftKey) {
+        if (e.repeat) {
+          setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
+        } else {
+          setActivePage((current) => (current > 1 ? current - 1 : current));
+        }
+      } else {
+        if (e.repeat) {
+          setDelayedActivePage((current) => (current < items.length ? current + 1 : current));
+        } else {
+          setActivePage((current) => (current < items.length ? current + 1 : current));
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  });
+
   useEffect(() => {
     if (!items) return null;
     setActivePage(1);

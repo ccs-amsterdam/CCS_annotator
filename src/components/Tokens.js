@@ -29,7 +29,7 @@ const Tokens = ({ doc, item, contextUnit, height, codingUnitPosition }) => {
         style={{
           width: "100%",
           height: `${height}vh`,
-          overflow: "scroll",
+          overflow: "auto",
         }}
         textAlign="justified"
       >
@@ -80,6 +80,7 @@ const renderText = (tokens, item, contextUnit) => {
   let section_name = tokens[0].section;
   let paragraph_nr = tokens[0].paragraph;
   let sentence_nr = tokens[0].sentence;
+  let currentParagraph = paragraph_nr;
 
   //let paragraphContext = [0, tokens[tokens.length - 1].paragraph];
   //let sentenceContext = [0, tokens[tokens.length - 1].sentence];
@@ -117,17 +118,38 @@ const renderText = (tokens, item, contextUnit) => {
       sentence = [];
     }
     if (tokens[i].paragraph !== paragraph_nr) {
-      if (paragraph.length > 0) section.push(renderParagraph(i + "_" + paragraph_nr, paragraph));
+      if (paragraph.length > 0) {
+        section.push(
+          renderParagraph(
+            i + "_" + paragraph_nr,
+            paragraph,
+            paragraph_nr !== currentParagraph,
+            tokens[i].paragraph !== paragraph_nr
+          )
+        );
+        currentParagraph = tokens[i].paragraph;
+      }
       paragraph = [];
     }
+
     if (tokens[i].section !== section_name) {
       if (section.length > 0)
         text[textPart].push(renderSection(i + "_" + section_name, section, section_name));
       section = [];
     }
+
     if (tokens[i].textPart !== textPart) {
       if (sentence.length > 0) paragraph.push(renderSentence(i + "_" + sentence_nr, sentence));
-      if (paragraph.length > 0) section.push(renderParagraph(i + "_" + paragraph_nr, paragraph));
+      if (paragraph.length > 0) {
+        section.push(
+          renderParagraph(
+            i + "_" + paragraph_nr,
+            paragraph,
+            paragraph_nr !== currentParagraph,
+            tokens[i].paragraph !== paragraph_nr
+          )
+        );
+      }
       if (section.length > 0)
         text[textPart].push(renderSection(i + "_" + section_name, section, section_name));
       section = [];
@@ -147,7 +169,8 @@ const renderText = (tokens, item, contextUnit) => {
     sentence.push(renderToken(tokens[i]));
   }
   if (sentence.length > 0) paragraph.push(renderSentence("last_" + sentence_nr, sentence));
-  if (paragraph.length > 0) section.push(renderParagraph("last_" + paragraph_nr, paragraph));
+  if (paragraph.length > 0)
+    section.push(renderParagraph("last_" + paragraph_nr, paragraph, true, false));
   if (section.length > 0)
     text[textPart].push(renderSection("last_" + section_name, section, section_name));
   return text;
@@ -186,10 +209,18 @@ const renderSection = (paragraph_nr, paragraphs, section) => {
   );
 };
 
-const renderParagraph = (paragraph_nr, sentences) => {
+const renderParagraph = (paragraph_nr, sentences, start, end) => {
   return (
     // uses span behaving like p, because p is not allowed due to nested div (for Label)
-    <span className="paragraph" style={{ marginTop: "1em", display: "table" }} key={paragraph_nr}>
+    <span
+      className="paragraph"
+      style={{
+        marginTop: start ? "1em" : "0em",
+        marginBottom: end ? "1em" : "0em",
+        display: "table",
+      }}
+      key={paragraph_nr}
+    >
       {sentences}
     </span>
   );

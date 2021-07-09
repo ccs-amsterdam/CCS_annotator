@@ -1,12 +1,12 @@
 import { combineReducers } from "redux";
 import { toggleAnnotations } from "../util/annotations";
 
-const db = (state = null, action) => {
+const mode = (state = "design", action) => {
   switch (action.type) {
-    case "SET_DB":
-      return action.payload;
+    case "SET_MODE":
+      return action.mode;
     case "RESET_DB":
-      return null;
+      return "design";
     default:
       return state;
   }
@@ -181,7 +181,7 @@ const showSidebar = (state = false, action) => {
 };
 
 const rootReducer = combineReducers({
-  db,
+  mode,
   eventsBlocked,
   codingjob,
   codingjobs,

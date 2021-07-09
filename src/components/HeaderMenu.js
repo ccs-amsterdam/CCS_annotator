@@ -3,10 +3,11 @@ import { Menu, Sidebar } from "semantic-ui-react";
 import { Link, withRouter, useLocation } from "react-router-dom";
 import db from "../apis/dexie";
 
-import ExportCodingjob from "./ExportCodingjob";
+//import ExportCodingjob from "./ExportCodingjob";
 import Reset from "./Reset";
 import Persist from "./Persist";
 import CodebookSidebar from "./CodebookSidebar";
+import PreviewMode from "./PreviewMode";
 
 const HeaderMenu = ({ items, homepage, children }) => {
   const location = useLocation();
@@ -32,9 +33,12 @@ const HeaderMenu = ({ items, homepage, children }) => {
       <Sidebar as={Menu} inverted animation="push" visible={true} direction={"top"} size="mini">
         {menuItems}
         <Menu.Menu position="right">
-          <ExportCodingjob />
+          {/* <ExportCodingjob /> */}
           {location.pathname.includes("annotate") ? (
-            <CodebookSidebar />
+            <>
+              <PreviewMode />
+              <CodebookSidebar />
+            </>
           ) : (
             <>
               <Persist />

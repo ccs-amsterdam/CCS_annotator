@@ -1,5 +1,5 @@
-import React from "react";
-import { Container, Grid, Header, List, ListItem, Table } from "semantic-ui-react";
+import React, { useState } from "react";
+import { Container, Grid, Header, List, ListItem, Menu, Table } from "semantic-ui-react";
 import SpanAnnotationsDB from "./SpanAnnotationsDB";
 import SpanAnnotationsNavigation from "./SpanAnnotationsNavigation";
 import SpanAnnotationsMenu from "./SpanAnnotationsMenu";
@@ -10,11 +10,23 @@ const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
 const SpanAnnotationEditor = ({ doc, item, contextUnit }) => {
+  const [menuItem, setMenuItem] = useState("details");
   if (doc === null) return null;
 
+  const renderSwitch = (activeItem) => {
+    switch (activeItem) {
+      case "help":
+        return <SpanInstructions />;
+      case "settings":
+        return <SpanSettings />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <Grid container stackable columns={2} style={gridStyle} verticalAlign={"top"}>
-      <Grid.Column width={8} style={{ paddingRight: "0em" }}>
+    <Grid stackable style={gridStyle} verticalAlign={"top"}>
+      <Grid.Column width={8} style={{ paddingRight: "0em", maxWidth: "700px" }}>
         <Tokens
           doc={doc}
           item={item}
@@ -23,12 +35,24 @@ const SpanAnnotationEditor = ({ doc, item, contextUnit }) => {
           codingUnitPosition={1 / 4}
         />
       </Grid.Column>
-      <Grid.Column width={8}>
+      <Grid.Column width={8} style={{ paddingRight: "3em", maxWidth: "500px" }}>
         <Grid.Row style={gridStyleTop}>
           <SpanAnnotationsMenu doc={doc} tokens={doc.tokens} />
         </Grid.Row>
         <Grid.Row style={gridStyleBottom}>
-          <SpanInstructions />
+          <Menu pointing secondary size="mini">
+            <Menu.Item
+              name="help"
+              active={menuItem === "help"}
+              onClick={(e, d) => setMenuItem(d.name)}
+            />
+            <Menu.Item
+              name="settings"
+              active={menuItem === "settings"}
+              onClick={(e, d) => setMenuItem(d.name)}
+            />
+          </Menu>
+          {renderSwitch(menuItem)}
         </Grid.Row>
         <SpanAnnotationsNavigation tokens={doc.tokens} />
         <SpanAnnotationsDB doc={doc} />
@@ -39,7 +63,7 @@ const SpanAnnotationEditor = ({ doc, item, contextUnit }) => {
 
 const SpanInstructions = () => {
   return (
-    <Container>
+    <Container style={{ paddingTop: "2em" }}>
       <Header as="h2" align="center">
         Edit span annotations
       </Header>
@@ -67,7 +91,7 @@ const SpanInstructions = () => {
               <strong>Select words</strong>
             </Table.Cell>
             <Table.Cell>
-              <i>shift</i> or <i>spacebar</i>
+              <i>spacebar</i>
               <br />
               Hold to select mutiple
             </Table.Cell>
@@ -113,6 +137,10 @@ const SpanInstructions = () => {
       </Table>
     </Container>
   );
+};
+
+const SpanSettings = () => {
+  return <div>stuff</div>;
 };
 
 export default SpanAnnotationEditor;

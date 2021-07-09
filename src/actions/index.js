@@ -1,3 +1,10 @@
+export const setMode = (mode) => {
+  return {
+    type: "SET_MODE",
+    mode: mode,
+  };
+};
+
 export const resetDB = () => {
   return {
     type: "RESET_DB",
