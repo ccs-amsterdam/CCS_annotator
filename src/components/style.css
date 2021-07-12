@@ -17,10 +17,13 @@
 .codes-thead,
 .codes-tbody .codes-tr .codes-td {
   border: none;
-  display: table;
-  width: 100%;
   table-layout: fixed;
   padding: 1px;
+}
+
+span.token {
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 span.token.selected {
@@ -29,9 +32,9 @@ span.token.selected {
   border-color: black;
 }
 
-span.token.context {
-  color: #4848f8;
-  background-color: rgb(200, 204, 200);
+span.token.highlight {
+  background-color: rgb(61, 61, 61) !important;
+  color: rgb(255, 255, 255);
   padding-top: 3px;
   padding-bottom: 3px;
 }

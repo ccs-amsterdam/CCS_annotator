@@ -12,7 +12,9 @@ const Welcome = ({ items }) => {
   const loggin = async (addDemo, checkWelcome) => {
     if (checkWelcome) {
       const iswelcome = await db.isWelcome();
-      if (!iswelcome) return null;
+      if (!iswelcome) {
+        return null;
+      }
     }
     try {
       if (addDemo) await create_demo_job(db);

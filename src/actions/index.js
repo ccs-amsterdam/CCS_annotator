@@ -14,56 +14,37 @@ export const resetDB = () => {
 export const blockEvents = (block) => {
   return {
     type: "BLOCK_EVENTS",
-    payload: block,
+    block,
   };
 };
 
 export const selectCodingjob = (codingjob) => {
   return {
     type: "SELECT_CODINGJOB",
-    payload: codingjob,
+    codingjob,
   };
 };
 
 export const setCodingjobs = (codingjobs) => {
   return {
     type: "SET_CODINGJOBS",
-    payload: codingjobs,
-  };
-};
-
-export const setCodingjobSettings = (codingjobSettings) => {
-  return {
-    type: "SET_CODINGJOB_SETTINGS",
-    payload: codingjobSettings,
-  };
-};
-
-export const setTokenIndices = (tokenIndices) => {
-  return {
-    type: "SET_TOKEN_INDICES",
-    payload: tokenIndices,
+    codingjobs,
   };
 };
 
 export const setCurrentToken = (index) => {
   return {
     type: "SET_CURRENT_TOKEN",
-    payload: index,
+    index,
   };
 };
 
 export const toggleTokenSelection = (tokens, index, add) => {
   return {
     type: "TOGGLE_TOKEN_SELECTION",
-    payload: { tokens, index, add },
-  };
-};
-
-export const setTokenSelection = (tokenSelection) => {
-  return {
-    type: "SET_TOKEN_SELECTION",
-    payload: tokenSelection,
+    tokens,
+    index,
+    add,
   };
 };
 
@@ -85,21 +66,21 @@ export const triggerCodeselector = (from, tokenIndex, code) => {
 export const setAnnotations = (spanAnnotation) => {
   return {
     type: "SET_ANNOTATIONS",
-    payload: spanAnnotation,
+    spanAnnotation,
   };
 };
 
 export const toggleAnnotations = (spanAnnotation) => {
   return {
     type: "TOGGLE_ANNOTATIONS",
-    payload: spanAnnotation,
+    spanAnnotation,
   };
 };
 
 export const rmAnnotations = (spanAnnotation) => {
   return {
     type: "RM_ANNOTATIONS",
-    payload: spanAnnotation,
+    spanAnnotation,
   };
 };
 
@@ -112,7 +93,7 @@ export const clearSpanAnnotations = () => {
 export const setCodeMap = (codes) => {
   return {
     type: "SET_CODE_MAP",
-    payload: codes,
+    codes,
   };
 };
 
@@ -125,13 +106,14 @@ export const resetCodeHistory = () => {
 export const appendCodeHistory = (code, n = 20) => {
   return {
     type: "APPEND_CODE_HISTORY",
-    payload: { code: code, n: n },
+    code,
+    n,
   };
 };
 
 export const setShowSidebar = (show) => {
   return {
     type: "SET_SHOW_SIDEBAR",
-    payload: show,
+    show,
   };
 };

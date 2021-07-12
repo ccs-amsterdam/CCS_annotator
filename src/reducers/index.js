@@ -15,7 +15,7 @@ const mode = (state = "design", action) => {
 const eventsBlocked = (state = false, action) => {
   switch (action.type) {
     case "BLOCK_EVENTS":
-      return action.payload;
+      return action.block;
     default:
       return state;
   }
@@ -24,7 +24,7 @@ const eventsBlocked = (state = false, action) => {
 const codingjob = (state = null, action) => {
   switch (action.type) {
     case "SELECT_CODINGJOB":
-      return action.payload;
+      return action.codingjob;
     case "RESET_DB":
       return null;
     default:
@@ -35,31 +35,7 @@ const codingjob = (state = null, action) => {
 const codingjobs = (state = [], action) => {
   switch (action.type) {
     case "SET_CODINGJOBS":
-      return action.payload;
-    case "RESET_DB":
-      return [];
-    default:
-      return state;
-  }
-};
-
-const codingjobSettings = (state = {}, action) => {
-  switch (action.type) {
-    case "SET_CODINGJOB_SETTINGS":
-      return action.payload;
-    case "RESET_DB":
-      return {};
-    default:
-      return state;
-  }
-};
-
-const tokenIndices = (state = [], action) => {
-  switch (action.type) {
-    case "SET_TOKEN_INDICES":
-      return action.payload;
-    case "SELECT_DOCUMENT":
-      return [];
+      return action.codingjobs;
     case "RESET_DB":
       return [];
     default:
@@ -70,7 +46,7 @@ const tokenIndices = (state = [], action) => {
 const currentToken = (state = 0, action) => {
   switch (action.type) {
     case "SET_CURRENT_TOKEN":
-      return action.payload;
+      return action.index;
     case "SELECT_DOCUMENT":
       return 0;
     case "RESET_DB":
@@ -84,14 +60,7 @@ const tokenSelection = (state = [], action) => {
   // an array of length 2, giving the start and end of the selection
   switch (action.type) {
     case "TOGGLE_TOKEN_SELECTION":
-      return toggleSelection(
-        state,
-        action.payload.tokens,
-        action.payload.index,
-        action.payload.add
-      );
-    case "SET_TOKEN_SELECTION":
-      return action.payload;
+      return toggleSelection(state, action.tokens, action.index, action.add);
     case "CLEAR_TOKEN_SELECTION":
       return [];
     case "RESET_DB":
@@ -131,11 +100,11 @@ const toggleSelection = (selection, tokens, index, add) => {
 const spanAnnotations = (state = {}, action) => {
   switch (action.type) {
     case "SET_ANNOTATIONS":
-      return action.payload;
+      return action.spanAnnotation;
     case "TOGGLE_ANNOTATIONS":
-      return toggleAnnotations({ ...state }, action.payload, false);
+      return toggleAnnotations({ ...state }, action.spanAnnotation, false);
     case "RM_ANNOTATIONS":
-      return toggleAnnotations({ ...state }, action.payload, true);
+      return toggleAnnotations({ ...state }, action.spanAnnotation, true);
     case "CLEAR_SPAN_ANNOTATIONS":
       return {};
     case "RESET_DB":
@@ -148,7 +117,7 @@ const spanAnnotations = (state = {}, action) => {
 const codeMap = (state = {}, action) => {
   switch (action.type) {
     case "SET_CODE_MAP":
-      return action.payload;
+      return action.codes;
     case "RESET_DB":
       return {};
     default:
@@ -161,8 +130,8 @@ const codeHistory = (state = [], action) => {
     case "RESET_CODE_HISTORY":
       return [];
     case "APPEND_CODE_HISTORY":
-      let newstate = state.filter((v) => v !== action.payload.code).slice(0, action.payload.n - 1);
-      newstate.unshift(action.payload.code);
+      let newstate = state.filter((v) => v !== action.code).slice(0, action.n - 1);
+      newstate.unshift(action.code);
       return newstate;
     case "RESET_DB":
       return [];
@@ -174,7 +143,7 @@ const codeHistory = (state = [], action) => {
 const showSidebar = (state = false, action) => {
   switch (action.type) {
     case "SET_SHOW_SIDEBAR":
-      return action.payload;
+      return action.show;
     default:
       return state;
   }
@@ -185,8 +154,6 @@ const rootReducer = combineReducers({
   eventsBlocked,
   codingjob,
   codingjobs,
-  codingjobSettings,
-  tokenIndices,
   currentToken,
   codeSelectorTrigger,
   tokenSelection,

@@ -12,7 +12,6 @@ const PreviewMode = () => {
     if (mode === "design") dispatch(setMode("preview"));
   };
 
-  console.log(mode);
   if (mode === "annotate") return null;
   return (
     <Menu.Item

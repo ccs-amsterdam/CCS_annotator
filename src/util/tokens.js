@@ -79,20 +79,25 @@ export const importTokens = (tokens) => {
       }
     }
 
-    totalLength = tokens[i].length + tokens[i].pre.length + tokens[i].post.length;
+    totalLength = tokens[i].length + tokens[i].post.length;
+    if (i < tokens.length - 1) totalLength = totalLength + tokens[i + 1].pre.length;
 
     if (tokens[i].offset == null) {
       tokens[i].offset = offset;
       offset = offset + totalLength;
     }
 
-    if (i < tokens.length - 1 && tokens[i + 1].offset < tokens[i].offset + totalLength) {
-      alert(
-        `Invalid token position data. The length of "${
-          tokens[i].pre + tokens[i].text + tokens[i].post
-        }" on position ${tokens[i].offset} exeeds the offset/start position of the next token`
-      );
-      return null;
+    if (i < tokens.length - 1) {
+      if (tokens[i].section === tokens[i + 1].section) {
+        if (tokens[i + 1].offset < tokens[i].offset + totalLength) {
+          alert(
+            `Invalid token position data. The length of "${
+              tokens[i].pre + tokens[i].text + tokens[i].post
+            }" on position ${tokens[i].offset} exeeds the offset/start position of the next token`
+          );
+          return null;
+        }
+      }
     }
 
     // ensure sentence counter

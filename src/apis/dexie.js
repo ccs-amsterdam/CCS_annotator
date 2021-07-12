@@ -21,7 +21,9 @@ class AnnotationDB {
 
   // META
   async welcome() {
-    if (!(await this.isWelcome())) this.idb.meta.add({ welcome: 1 });
+    if (!(await this.isWelcome())) {
+      this.idb.meta.add({ welcome: 1 });
+    }
     return null;
   }
   async isWelcome() {
@@ -111,7 +113,7 @@ class AnnotationDB {
     let duplicates = 0;
     let codes = {};
     const preparedDocuments = documentList.reduce((result, document) => {
-      const doc_uid = hash([document, codingjob]); // codingjob included for doc_uid (8nique id) hash
+      const doc_uid = hash([document, codingjob]); // codingjob included for doc_uid (unique id) hash
       if (!ids.has(doc_uid)) {
         ids.add(doc_uid);
 
@@ -174,6 +176,7 @@ class AnnotationDB {
       }
       return a;
     }, []);
+
     this.writeCodes(codingjob, codes, true);
 
     return this.idb.documents.bulkAdd(preparedDocuments);
@@ -193,44 +196,25 @@ class AnnotationDB {
     return documents.toArray();
   }
 
-  async getCodingjobItems(codingjob, codingUnit) {
+  async getCodingjobItems(codingjob, codingUnit, unitSelection) {
     let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
-    const cjIndices = [];
-    let docIndex = 0;
-    await documents.each((e) => {
-      if (codingUnit === "document") cjIndices.push({ document_id: e.document_id, docIndex });
 
-      if (codingUnit === "paragraph") {
-        const paragraphs = e.tokens[e.tokens.length - 1].paragraph;
-        console.log(paragraphs);
-        for (let parIndex = 0; parIndex <= paragraphs; parIndex++)
-          cjIndices.push({ document_id: e.document_id, docIndex, parIndex });
-      }
+    let cjIndices;
+    let done;
+    if (unitSelection.value === "all") {
+      cjIndices = await allJobItems(documents, codingUnit, new Set([]));
+    }
+    if (unitSelection.value.includes("annotation")) {
+      [cjIndices, done] = await annotationJobItems(
+        documents,
+        codingUnit,
+        unitSelection.value === "has annotation"
+      );
+      console.log(done);
+      // if sample includes non annotation draws, add allJobItems with done included
+      // (done should be included in unique jobitems. For 'per annotation' this should be optional)
+    }
 
-      if (codingUnit === "sentence") {
-        const sentences = e.tokens[e.tokens.length - 1].sentence;
-        for (let sentIndex = 0; sentIndex <= sentences; sentIndex++)
-          cjIndices.push({ document_id: e.document_id, docIndex, sentIndex });
-      }
-
-      if (codingUnit === "annotation") {
-        if (e.annotations) {
-          for (let i of Object.keys(e.annotations)) {
-            for (let group of Object.keys(e.annotations[i])) {
-              if (e.annotations[i][group].span[0] !== Number(i)) continue;
-              cjIndices.push({
-                document_id: e.document_id,
-                docIndex,
-                annotationIndex: e.annotations[i][group].span,
-                group,
-              });
-            }
-          }
-        }
-      }
-
-      docIndex++;
-    });
     return cjIndices;
   }
 
@@ -298,6 +282,86 @@ const safeNewCode = (code, codeMap, parentMap, i) => {
   if (i > 2) code = code.slice(0, code.length - code.toString().length);
   code += " " + i;
   safeNewCode(code, codeMap, i + 1);
+};
+
+const allJobItems = async (documents, codingUnit, done) => {
+  const cjIndices = [];
+  await documents.each((e) => {
+    if (codingUnit === "document" && !done.has(e.doc_uid))
+      cjIndices.push({ doc_uid: e.doc_uid, document_id: e.document_id });
+
+    if (codingUnit === "paragraph") {
+      const paragraphs = e.tokens[e.tokens.length - 1].paragraph;
+      for (let parIndex = 0; parIndex <= paragraphs; parIndex++) {
+        if (done.has(e.doc_uid + "_" + parIndex)) continue;
+        cjIndices.push({
+          codingUnit,
+          doc_uid: e.doc_uid,
+          document_id: e.document_id,
+          parIndex,
+        });
+      }
+    }
+
+    if (codingUnit === "sentence") {
+      const sentences = e.tokens[e.tokens.length - 1].sentence;
+      for (let sentIndex = 0; sentIndex <= sentences; sentIndex++) {
+        if (done.has(e.doc_uid + "_" + sentIndex)) continue;
+        cjIndices.push({
+          codingUnit,
+          doc_uid: e.doc_uid,
+          document_id: e.document_id,
+          sentIndex,
+        });
+      }
+    }
+  });
+  return cjIndices;
+};
+
+const annotationJobItems = async (documents, codingUnit, unique) => {
+  const cjIndices = [];
+  const done = new Set([]);
+  await documents.each((e) => {
+    if (e.annotations) {
+      for (let i of Object.keys(e.annotations)) {
+        for (let group of Object.keys(e.annotations[i])) {
+          const span = e.annotations[i][group].span;
+
+          if (i > span[0]) {
+            // an annotation can cover multiple units, and each unit should only be included once
+            if (codingUnit === "document") continue;
+            if (codingUnit === "paragraph" && e.tokens[i].paragraph === e.tokens[i - 1].paragraph)
+              continue;
+            if (codingUnit === "sentence" && e.tokens[i].sentence === e.tokens[i - 1].sentence)
+              continue;
+          }
+
+          const item = {
+            codingUnit,
+            doc_uid: e.doc_uid,
+            document_id: e.document_id,
+            group,
+          };
+          if (codingUnit === "paragraph") item.parIndex = e.tokens[Number(i)].paragraph;
+          if (codingUnit === "sentence") item.sentIndex = e.tokens[Number(i)].sentence;
+
+          if (unique) {
+            let itemId;
+            if (codingUnit === "document") itemId = item.doc_uid;
+            if (codingUnit === "paragraph") itemId = item.doc_uid + "_" + item.parIndex;
+            if (codingUnit === "sentence") itemId = item.doc_uid + "_" + item.sentIndex;
+            if (done.has(itemId)) continue;
+            done.add(itemId);
+          } else {
+            item.annotation = { ...e.annotations[i][group], group };
+          }
+          cjIndices.push(item);
+        }
+      }
+    }
+  });
+  return [cjIndices, done];
 };
 
 const db = new AnnotationDB();

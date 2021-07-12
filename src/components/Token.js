@@ -7,7 +7,7 @@ import { triggerCodeselector } from "../actions";
 import { getColor } from "../util/tokenDesign";
 import { List, Popup } from "semantic-ui-react";
 
-const Token = React.forwardRef(({ token }, ref) => {
+const Token = React.forwardRef(({ token, annotation }, ref) => {
   const selected = useSelector((state) => {
     if (state.tokenSelection.length === 0) return false;
 
@@ -17,8 +17,12 @@ const Token = React.forwardRef(({ token }, ref) => {
   });
 
   let tokenClass = "token";
-  if (selected) tokenClass = tokenClass + " selected";
-  //if (token.textPart !== "codingUnit") tokenClass = tokenClass + " context";
+
+  if (token.textPart === "codingUnit") {
+    if (selected) tokenClass = tokenClass + " selected";
+    // if (annotation && token.index >= annotation.span[0] && token.index <= annotation.span[1])
+    //   tokenClass = tokenClass + " highlight";
+  }
 
   return (
     <span ref={ref} className={tokenClass} tokenindex={token.index}>
@@ -121,7 +125,9 @@ const ShowCodeOnHover = ({ codes, colors, children }) => {
     <Popup trigger={children} style={{ padding: "0.3em", paddingBottom: "0.5em" }}>
       <List>
         {codes.map((code, i) => (
-          <List.Item style={{ backgroundColor: colors[i], padding: "0.3em" }}>{code}</List.Item>
+          <List.Item key={i} style={{ backgroundColor: colors[i], padding: "0.3em" }}>
+            {code}
+          </List.Item>
         ))}
       </List>
     </Popup>

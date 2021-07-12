@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Container, Ref } from "semantic-ui-react";
+import { Ref } from "semantic-ui-react";
 import Token from "./Token";
 import scrollToMiddle from "../util/scrollToMiddle";
 
@@ -87,18 +87,11 @@ const renderText = (tokens, item, contextUnit) => {
   let tokenRange = [0, tokens.length - 1];
   let tokenContext = [0, tokens.length - 1];
 
-  if (item.parIndex != null && item.parIndex !== null) {
-    // if coding unit is paragraph
-    //paragraphContext = [item.parIndex, item.parIndex];
+  if (item.codingUnit === "paragraph") {
     tokenRange = getTokenRange(tokens, "paragraph", item.parIndex, item.parIndex);
   }
-  if (item.sentIndex != null && item.sentIndex !== null) {
-    // if coding unit is sentence
+  if (item.codingUnit === "sentence") {
     tokenRange = getTokenRange(tokens, "sentence", item.sentIndex, item.sentIndex);
-  }
-  if (item.annotationIndex != null && item.annotationIndex !== null) {
-    // if coding unit is annotation
-    tokenRange = [item.annotationIndex[0], item.annotationIndex[1]];
   }
 
   if (contextUnit.selected !== "document")
@@ -166,7 +159,7 @@ const renderText = (tokens, item, contextUnit) => {
     if (i > tokenContext[1]) break;
 
     if (tokens[i].textPart === "codingUnit") tokens[i].ref = React.createRef();
-    sentence.push(renderToken(tokens[i]));
+    sentence.push(renderToken(tokens[i], item.annotation));
   }
   if (sentence.length > 0) paragraph.push(renderSentence("last_" + sentence_nr, sentence));
   if (paragraph.length > 0)
@@ -234,8 +227,8 @@ const renderSentence = (sentence_nr, tokens) => {
   );
 };
 
-const renderToken = (token) => {
-  return <Token ref={token.ref} key={token.index} token={token} />;
+const renderToken = (token, annotation) => {
+  return <Token ref={token.ref} key={token.index} token={token} annotation={annotation} />;
 };
 
 export default React.memo(Tokens);

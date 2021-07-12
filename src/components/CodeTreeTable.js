@@ -49,7 +49,6 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
       return;
     }
     const codeMap = prepareCodeMap(codes);
-    console.log(codes);
     const cta = getCodeTreeArray(codeMap, showColors);
     setCodeTreeArray(cta);
     dispatch(setCodeMap(codeMap));
@@ -112,6 +111,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
     <Table singleLine>
       <Table.Header className="codes-thead">
         <Table.Row>
+          {/* <Table.HeaderCell /> */}
           <Table.HeaderCell>
             <Search
               showNoResults={false}
@@ -132,7 +132,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
               results={results}
               value={value}
               selectFirstResult={true}
-            ></Search>
+            />
           </Table.HeaderCell>
         </Table.Row>
       </Table.Header>
@@ -140,23 +140,37 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
         {[...codeTreeArray, ""].map((code, i) => {
           return (
             <Table.Row className="codes-tr" active={i === activeRow} key={i}>
+              {/* <Table.Cell collapsing className="codes-td">
+                {code === "" ? null : (
+                  <Checkbox
+                    slider
+                    style={{
+                      transform: "scale(0.6)",
+                    }}
+                  />
+                )}
+              </Table.Cell> */}
               <Table.Cell className="codes-td">
                 {code.code ? (
-                  <Button
-                    as={"Input"}
-                    style={{
-                      marginLeft: `${1.5 * code.level}em`,
-                      marginRight: "0.4em",
-                      padding: "0",
-                      width: "1em",
-                      height: "1em",
-                      color: code.color ? code.color : "white",
-                    }}
-                    onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
-                    type="color"
-                    value={code.color}
-                  />
+                  <>
+                    <Button
+                      as={"Input"}
+                      style={{
+                        marginLeft: `${1.5 * code.level}em`,
+                        marginRight: "0.4em",
+                        padding: "0",
+                        width: "1em",
+                        height: "1em",
+                        background: "white",
+                        color: code.color ? code.color : "white",
+                      }}
+                      onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
+                      type="color"
+                      value={code.color}
+                    />
+                  </>
                 ) : null}
+
                 <EditCodePopup
                   codingjob={codingjob}
                   code={code}

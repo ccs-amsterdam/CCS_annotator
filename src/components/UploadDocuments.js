@@ -159,7 +159,10 @@ const SubmitForm = ({ type, data, codingjob, fileRef, columns }) => {
     }
 
     return data.slice(1).map((row) => {
-      const datarow = { original: row.data };
+      const original = keys.map((key, i) => {
+        return { name: key, value: row.data[i] };
+      });
+      const datarow = { original };
 
       for (let field of Object.keys(fields)) {
         if (columns[field].multiple) {

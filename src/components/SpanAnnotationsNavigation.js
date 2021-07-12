@@ -191,9 +191,7 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     // note that in case of a single click, the token has not been selected (this happens on move)
     // so this way a click can still be used to open
     if (event.which !== 1) return null;
-    console.log(event);
     const currentNode = storeMouseSelection(event);
-    console.log(currentNode);
     window.getSelection().empty();
     setHoldMouseLeft(false);
 
@@ -311,9 +309,9 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
     scrollTokenToMiddle(tokens[newPosition].ref.current);
 
     const down = key === "ArrowRight" || key === "ArrowDown";
-    // tokens[newPosition].ref.current.scrollIntoView(false, {
-    //   block: down ? "start" : "end",
-    // });
+    tokens[newPosition].ref.current.scrollIntoView(false, {
+      block: down ? "start" : "end",
+    });
   }
   return newPosition;
 };
@@ -322,7 +320,7 @@ const moveSentence = (tokens, mover, direction = "up") => {
   // moving sentences is a bit tricky, but we can do it via the refs to the
   // token spans, that provide information about the x and y values
 
-  if (tokens[mover.position].ref == null || tokens[mover.startposition] == null) {
+  if (tokens[mover.position].ref == null || tokens[mover.startposition].ref == null) {
     const firstUnit = tokens.findIndex((token) => token.textPart === "codingUnit");
     return firstUnit < 0 ? 0 : firstUnit;
   }
@@ -352,6 +350,7 @@ const moveSentence = (tokens, mover, direction = "up") => {
         return firstAfterUnit < 0 ? tokens.length - 1 : firstAfterUnit - 1;
       }
       next = tokens[i].ref.current.getBoundingClientRect();
+
       if (!nextsent && next.y > current.y) nextsent = next.y;
       if (nextsent && next.y > nextsent) return i - 1;
       if (next.y > current.y && next.x >= start.x) return i;
@@ -376,10 +375,20 @@ const getToken = (tokens, e) => {
     // nor how to check this in a condition. hence the try clause
     e = e.originalTarget || e.path[0];
     if (e) {
-      if (e.className === "token" || e.className === "token selected")
+      if (
+        e.className === "token" ||
+        e.className === "token selected" ||
+        e.className === "token selected highlight" ||
+        e.className === "token highlight"
+      )
         return getTokenAttributes(tokens, e);
       if (e.parentNode) {
-        if (e.parentNode.className === "token" || e.parentNode.className === "token selected")
+        if (
+          e.parentNode.className === "token" ||
+          e.parentNode.className === "token selected" ||
+          e.parentNode.className === "token selected highlight" ||
+          e.parentNode.className === "token highlight"
+        )
           return getTokenAttributes(tokens, e.parentNode);
       }
     }
@@ -391,6 +400,8 @@ const getToken = (tokens, e) => {
 
 function scrollTokenToMiddle(token) {
   // token->sentence->paragraph->section->textpart->box
+  // this should be stable, but it still looks terrible, and might not be super efficient
+  // alternative is to calculate it once on rendering, or passing on ref to parent container
   const parentDiv = token.parentNode.parentNode.parentNode.parentNode.parentNode;
   scrollToMiddle(parentDiv, token, 1 / 3);
 }

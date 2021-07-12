@@ -29,7 +29,7 @@ const SpanAnnotationsMenu = ({ tokens, doc }) => {
         <Table.Row>
           <Table.HeaderCell width={COLWIDTHS[0]}>Code</Table.HeaderCell>
           <Table.HeaderCell width={COLWIDTHS[1]}>Section</Table.HeaderCell>
-          <Table.HeaderCell width={COLWIDTHS[2]}>Span</Table.HeaderCell>
+          <Table.HeaderCell width={COLWIDTHS[2]}>Tokens</Table.HeaderCell>
           <Table.HeaderCell>Text</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
@@ -41,20 +41,21 @@ const SpanAnnotationsMenu = ({ tokens, doc }) => {
 const annotationRows = (tokens, annotations) => {
   const rows = [];
   let text = null;
-  let token = null;
+  let annotation = null;
 
   for (const tokenIndex of Object.keys(annotations)) {
     for (const code of Object.keys(annotations[tokenIndex])) {
-      token = annotations[tokenIndex][code];
+      annotation = annotations[tokenIndex][code];
 
-      if (token.index !== token.span[0]) continue;
-      if (
-        tokens[token.span[0]].textPart !== "codingUnit" ||
-        tokens[token.span[1]].textPart !== "codingUnit"
-      )
-        continue;
+      if (annotation.index !== annotation.span[0]) continue;
+      let notInUnit = true;
+      for (let span_i = annotation.span[0]; span_i <= annotation.span[1]; span_i++) {
+        if (tokens[span_i].textPart === "codingUnit") notInUnit = false;
+      }
 
-      const annotationTokens = tokens.slice(token.span[0], token.span[1] + 1);
+      if (notInUnit) continue;
+
+      const annotationTokens = tokens.slice(annotation.span[0], annotation.span[1] + 1);
       text = annotationTokens
         .map((at, i) => {
           const pre = i > 0 ? at.pre : "";
@@ -67,7 +68,7 @@ const annotationRows = (tokens, annotations) => {
         <AnnotationRow
           key={tokenIndex + code}
           tokens={tokens}
-          token={token}
+          annotation={annotation}
           code={code}
           text={text}
         />
@@ -78,10 +79,10 @@ const annotationRows = (tokens, annotations) => {
   return rows;
 };
 
-const AnnotationRow = ({ tokens, token, code, text }) => {
+const AnnotationRow = ({ tokens, annotation, code, text }) => {
   const codeMap = useSelector((state) => state.codeMap);
   const infocus = useSelector((state) => {
-    return state.currentToken >= token.span[0] && state.currentToken <= token.span[1];
+    return state.currentToken >= annotation.span[0] && state.currentToken <= annotation.span[1];
   });
 
   const ref = useRef();
@@ -107,9 +108,9 @@ const AnnotationRow = ({ tokens, token, code, text }) => {
       <Table.Row
         className="annotations-tr"
         onClick={() => {
-          tokens[token.index].ref.current.scrollIntoView(false, { block: "center" });
+          tokens[annotation.index].ref.current.scrollIntoView(false, { block: "center" });
           dispatch(triggerCodeselector(null, null, null));
-          dispatch(triggerCodeselector("menu", token.index, code));
+          dispatch(triggerCodeselector("menu", annotation.index, code));
         }}
         onMouseOver={() => {
           //dispatch(setTokenSelection(token.span));
@@ -119,9 +120,9 @@ const AnnotationRow = ({ tokens, token, code, text }) => {
         <Table.Cell width={COLWIDTHS[0]} style={color ? { background: color } : null}>
           <span title={code}>{code}</span>
         </Table.Cell>
-        <Table.Cell width={COLWIDTHS[1]}>{token.section}</Table.Cell>
+        <Table.Cell width={COLWIDTHS[1]}>{annotation.section}</Table.Cell>
         <Table.Cell width={COLWIDTHS[2]} cref={ref}>
-          {`${token.offset}-${token.offset + token.length}`}
+          {`${annotation.span[0]}-${annotation.span[1]}`}
         </Table.Cell>
         <Table.Cell>
           <span title={text}>{text}</span>
