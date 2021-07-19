@@ -50,7 +50,7 @@ const annotationRows = (tokens, annotations) => {
       if (annotation.index !== annotation.span[0]) continue;
       let notInUnit = true;
       for (let span_i = annotation.span[0]; span_i <= annotation.span[1]; span_i++) {
-        if (tokens[span_i].textPart === "codingUnit") notInUnit = false;
+        if (tokens[span_i].textPart === "textUnit") notInUnit = false;
       }
 
       if (notInUnit) continue;

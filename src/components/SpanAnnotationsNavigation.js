@@ -270,7 +270,7 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
 
   if (tokens[newPosition].ref == null) {
     if (key === "ArrowRight") {
-      const firstUnit = tokens.findIndex((token) => token.textPart === "codingUnit");
+      const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
       if (firstUnit < 0) return mover.position;
       newPosition = firstUnit;
     }
@@ -321,7 +321,7 @@ const moveSentence = (tokens, mover, direction = "up") => {
   // token spans, that provide information about the x and y values
 
   if (tokens[mover.position].ref == null || tokens[mover.startposition].ref == null) {
-    const firstUnit = tokens.findIndex((token) => token.textPart === "codingUnit");
+    const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
     return firstUnit < 0 ? 0 : firstUnit;
   }
 
@@ -332,7 +332,7 @@ const moveSentence = (tokens, mover, direction = "up") => {
   if (direction === "up") {
     for (let i = mover.position; i >= 0; i--) {
       if (tokens[i].ref == null) {
-        const firstUnit = tokens.findIndex((token) => token.textPart === "codingUnit");
+        const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
         return firstUnit < 0 ? 0 : firstUnit;
       }
       next = tokens[i].ref.current.getBoundingClientRect();

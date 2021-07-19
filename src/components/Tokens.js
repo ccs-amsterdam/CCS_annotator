@@ -3,15 +3,15 @@ import { Ref } from "semantic-ui-react";
 import Token from "./Token";
 import scrollToMiddle from "../util/scrollToMiddle";
 
-const Tokens = ({ doc, item, contextUnit, height, codingUnitPosition }) => {
+const Tokens = ({ doc, item, contextUnit, height, textUnitPosition }) => {
   const [tokenComponents, setTokenComponents] = useState({});
   const containerRef = useRef(null);
 
   useEffect(() => {
-    // immitates componentdidupdate to scroll to the codingUnit after rendering tokens
-    const firstCodingUnitToken = doc.tokens.find((token) => token.textPart === "codingUnit");
-    if (firstCodingUnitToken?.ref?.current && containerRef.current) {
-      scrollToMiddle(containerRef.current, firstCodingUnitToken.ref.current, codingUnitPosition);
+    // immitates componentdidupdate to scroll to the textUnit after rendering tokens
+    const firstTextUnitToken = doc.tokens.find((token) => token.textPart === "textUnit");
+    if (firstTextUnitToken?.ref?.current && containerRef.current) {
+      scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, textUnitPosition);
     }
   });
 
@@ -40,21 +40,21 @@ const Tokens = ({ doc, item, contextUnit, height, codingUnitPosition }) => {
           style={{
             borderTop: "2px solid",
             borderBottom: "2px solid",
-            background: "#f2f2f28a",
+            background: "#f7f7f78a",
             paddingLeft: "0.5em",
             paddingRight: "0.5em",
             lineHeight: 1.6,
             fontSize: 15,
           }}
         >
-          {tokenComponents["codingUnit"]}
+          {tokenComponents["textUnit"]}
         </div>
         <div
           style={{
             color: contextColor,
             paddingLeft: "0.5em",
             paddingRight: "0.5em",
-            paddingBottom: `${height * (1 - codingUnitPosition)}vh`,
+            paddingBottom: `${height * (1 - textUnitPosition)}vh`,
           }}
         >
           {tokenComponents["contextAfter"]}
@@ -73,7 +73,7 @@ const prepareTokens = async (doc, setTokenComponents, item, contextUnit) => {
 };
 
 const renderText = (tokens, item, contextUnit) => {
-  const text = { contextBefore: [], codingUnit: [], contextAfter: [] };
+  const text = { contextBefore: [], textUnit: [], contextAfter: [] };
   let section = [];
   let paragraph = [];
   let sentence = [];
@@ -87,22 +87,22 @@ const renderText = (tokens, item, contextUnit) => {
   let tokenRange = [0, tokens.length - 1];
   let tokenContext = [0, tokens.length - 1];
 
-  if (item.codingUnit === "paragraph") {
+  if (item.textUnit === "paragraph") {
     tokenRange = getTokenRange(tokens, "paragraph", item.parIndex, item.parIndex);
   }
-  if (item.codingUnit === "sentence") {
+  if (item.textUnit === "sentence") {
     tokenRange = getTokenRange(tokens, "sentence", item.sentIndex, item.sentIndex);
   }
 
   if (contextUnit.selected !== "document")
     tokenContext = getContextRange(tokens, contextUnit, tokenRange);
 
-  // textPart indicates if text is contextBefore, codingUnit or contextAfter
+  // textPart indicates if text is contextBefore, textUnit or contextAfter
   let textPart = tokenRange[0] === 0 ? "contextUnit" : "contextBefore";
 
   for (let i = 0; i < tokens.length; i++) {
     tokens[i].index = i;
-    tokens[i].textPart = "codingUnit";
+    tokens[i].textPart = "textUnit";
     if (i < tokenRange[0]) tokens[i].textPart = "contextBefore";
     if (i > tokenRange[1]) tokens[i].textPart = "contextAfter";
 
@@ -158,7 +158,7 @@ const renderText = (tokens, item, contextUnit) => {
     if (i < tokenContext[0]) continue;
     if (i > tokenContext[1]) break;
 
-    if (tokens[i].textPart === "codingUnit") tokens[i].ref = React.createRef();
+    if (tokens[i].textPart === "textUnit") tokens[i].ref = React.createRef();
     sentence.push(renderToken(tokens[i], item.annotation));
   }
   if (sentence.length > 0) paragraph.push(renderSentence("last_" + sentence_nr, sentence));

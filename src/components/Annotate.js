@@ -24,16 +24,21 @@ const Annotate = () => {
   const codingjob = useSelector((state) => state.codingjob);
   const mode = useSelector((state) => state.mode);
 
-  const [codingUnit, setCodingUnit] = useState("document");
-  const [unitSelection, setUnitSelection] = useState({ value: "all", annotationMix: 0 });
+  const [textUnit, setTextUnit] = useState("document");
+  const [unitSelection, setUnitSelection] = useState({
+    value: "all",
+    annotationMix: 0,
+    n: null,
+    random: false,
+  });
   const [contextUnit, setContextUnit] = useState({
     selected: "document",
     range: { paragraph: [1, 1], sentence: [2, 2] },
   });
-  const [sample, setSample] = useState({
-    n: null,
-    random: false,
-  });
+  // const [sample, setSample] = useState({
+  //   n: null,
+  //   random: false,
+  // });
 
   const [taskType, setTaskType] = useState("open annotation");
   const [jobItems, setJobItems] = useState(null);
@@ -41,8 +46,8 @@ const Annotate = () => {
 
   useEffect(() => {
     if (!codingjob) return null;
-    setupCodingjob(codingjob, codingUnit, unitSelection, setJobItem, setJobItems, setSample);
-  }, [codingjob, codingUnit, unitSelection, setJobItem, setJobItems, setSample]);
+    setupCodingjob(codingjob, textUnit, unitSelection, setJobItem, setJobItems);
+  }, [codingjob, textUnit, unitSelection, setJobItem, setJobItems]);
 
   if (!codingjob) {
     return (
@@ -55,12 +60,16 @@ const Annotate = () => {
   const designButtons = () => {
     return (
       <Grid.Column>
-        <ButtonGroup basic compact>
-          <CodingUnitDropdown codingUnit={codingUnit} setCodingUnit={setCodingUnit} />
-          <ContextUnitDropdown contextUnit={contextUnit} setContextUnit={setContextUnit} />
+        <ButtonGroup compact>
+          <TextUnitDropdown textUnit={textUnit} setTextUnit={setTextUnit} />
+          <ContextUnitDropdown
+            textUnit={textUnit}
+            contextUnit={contextUnit}
+            setContextUnit={setContextUnit}
+          />
 
           <UnitSelectionPopup unitSelection={unitSelection} setUnitSelection={setUnitSelection} />
-          <SamplePopup unitSelection={unitSelection} sample={sample} setSample={setSample} />
+          {/* <SamplePopup unitSelection={unitSelection} sample={sample} setSample={setSample} /> */}
 
           <TaskTypeDropdown taskType={taskType} setTaskType={setTaskType} />
         </ButtonGroup>
@@ -140,6 +149,14 @@ const TaskTypeDropdown = ({ taskType, setTaskType }) => {
           Open annotation
         </Dropdown.Item>
         <Dropdown.Item onClick={() => setTaskType("question based")}>Question based</Dropdown.Item>
+        <Dropdown.Item onClick={() => setTaskType("question based")}>Edit labels</Dropdown.Item>
+        <Dropdown.Item onClick={() => setTaskType("question based")}>Validate labels</Dropdown.Item>
+        <Dropdown.Item onClick={() => setTaskType("question based")}>
+          Question per label
+        </Dropdown.Item>
+        <Dropdown.Item onClick={() => setTaskType("question based")}>
+          Question per text
+        </Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );
@@ -157,10 +174,10 @@ const buttonLabel = (text, type) => {
   );
 };
 
-const CodingUnitDropdown = ({ codingUnit, setCodingUnit }) => {
+const TextUnitDropdown = ({ textUnit, setTextUnit }) => {
   return (
     <Dropdown
-      text={<>{buttonLabel(codingUnit, "Text unit")}</>}
+      text={<>{buttonLabel(textUnit, "Text unit")}</>}
       inline
       button
       compact
@@ -168,15 +185,15 @@ const CodingUnitDropdown = ({ codingUnit, setCodingUnit }) => {
     >
       <Dropdown.Menu>
         <Dropdown.Header icon="setting" content="Text unit" />
-        <Dropdown.Item onClick={() => setCodingUnit("document")}>Document</Dropdown.Item>
-        <Dropdown.Item onClick={() => setCodingUnit("paragraph")}>Paragraph</Dropdown.Item>
-        <Dropdown.Item onClick={() => setCodingUnit("sentence")}>Sentence</Dropdown.Item>
+        <Dropdown.Item onClick={() => setTextUnit("document")}>Document</Dropdown.Item>
+        <Dropdown.Item onClick={() => setTextUnit("paragraph")}>Paragraph</Dropdown.Item>
+        <Dropdown.Item onClick={() => setTextUnit("sentence")}>Sentence</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );
 };
 
-const ContextUnitDropdown = ({ contextUnit, setContextUnit }) => {
+const ContextUnitDropdown = ({ textUnit, contextUnit, setContextUnit }) => {
   const onClick = (unit) => {
     if (contextUnit.selected !== unit) {
       setContextUnit({ ...contextUnit, selected: unit });
@@ -184,6 +201,7 @@ const ContextUnitDropdown = ({ contextUnit, setContextUnit }) => {
   };
   return (
     <Dropdown
+      disabled={textUnit === "document"}
       text={
         <>
           {buttonLabel(contextUnit.selected, "Context unit")}
@@ -265,12 +283,23 @@ const ContextUnitRange = ({ contextUnit, setContextUnit }) => {
 const UnitSelectionPopup = ({ unitSelection, setUnitSelection }) => {
   //unitSelection.includes("annotation")
 
+  const n = 1000;
+  if (unitSelection.n === null) unitSelection.n = n;
+
   const onUnitSelection = (e, d) => {
     setUnitSelection({ ...unitSelection, value: d.value });
   };
 
   const onChangeMix = (e, d) => {
     setUnitSelection({ ...unitSelection, annotationMix: d.value });
+  };
+
+  const onChangeN = (e, d) => {
+    setUnitSelection({ ...unitSelection, n: d.value });
+  };
+  const onChangePCT = (e, d) => {
+    const value = Math.ceil((d.value / 100) * n);
+    setUnitSelection({ ...unitSelection, n: value });
   };
 
   return (
@@ -314,7 +343,11 @@ const UnitSelectionPopup = ({ unitSelection, setUnitSelection }) => {
             onChange={onUnitSelection}
           />
         </Form.Group>
-
+        <br />
+        <Form.Group>
+          <Icon name="setting" />
+          <label>Sample</label>
+        </Form.Group>
         <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
           Include units without annotation
         </label>
@@ -334,6 +367,42 @@ const UnitSelectionPopup = ({ unitSelection, setUnitSelection }) => {
             {unitSelection.value === "has annotation" ? "units with annotation" : "annotations"}
           </label>
         </Form.Group>
+        <Form.Group>
+          <Form.Field
+            width={7}
+            label="Sample size"
+            control={Input}
+            style={{ padding: 0, margin: 0 }}
+            value={unitSelection.n}
+            min={1}
+            max={n}
+            onChange={(e, d) => setUnitSelection({ ...unitSelection, n: d.value })}
+            type="range"
+            labelPosition="left"
+          />
+          <Form.Field
+            width={5}
+            min={1}
+            max={n}
+            label="N"
+            size="mini"
+            control={Input}
+            type="number"
+            value={unitSelection.n}
+            onChange={onChangeN}
+          />
+          <Form.Field
+            width={4}
+            min={0}
+            max={100}
+            label="%"
+            size="mini"
+            control={Input}
+            type="number"
+            value={(100 * unitSelection.n) / n}
+            onChange={onChangePCT}
+          />
+        </Form.Group>
       </Form>
     </Popup>
   );
@@ -345,7 +414,7 @@ const SamplePopup = ({ unitSelection, sample, setSample }) => {
   const n = 1000;
   if (sample.n === null) sample.n = n;
 
-  const onChange = (e, d) => {
+  const onChangeN = (e, d) => {
     setSample({ ...sample, n: d.value });
   };
   const onChangePCT = (e, d) => {
@@ -390,7 +459,7 @@ const SamplePopup = ({ unitSelection, sample, setSample }) => {
             control={Input}
             type="number"
             value={sample.n}
-            onChange={onChange}
+            onChange={onChangeN}
           />
           <Form.Field
             width={4}
@@ -409,15 +478,8 @@ const SamplePopup = ({ unitSelection, sample, setSample }) => {
   );
 };
 
-const setupCodingjob = async (
-  codingjob,
-  codingUnit,
-  unitSelection,
-  setJobItem,
-  setJobItems,
-  setSample
-) => {
-  let items = await db.getCodingjobItems(codingjob, codingUnit, unitSelection);
+const setupCodingjob = async (codingjob, textUnit, unitSelection, setJobItem, setJobItems) => {
+  let items = await db.getCodingjobItems(codingjob, textUnit, unitSelection);
   setJobItems(items);
   setJobItem(items[0]);
 };

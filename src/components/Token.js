@@ -18,7 +18,7 @@ const Token = React.forwardRef(({ token, annotation }, ref) => {
 
   let tokenClass = "token";
 
-  if (token.textPart === "codingUnit") {
+  if (token.textPart === "textUnit") {
     if (selected) tokenClass = tokenClass + " selected";
     // if (annotation && token.index >= annotation.span[0] && token.index <= annotation.span[1])
     //   tokenClass = tokenClass + " highlight";
@@ -50,7 +50,7 @@ const AnnotatedToken = ({ token, selected }) => {
   if (!annotations) return <>{token.pre + token.text + token.post}</>;
 
   // if this is a context token, we can also ignore the fancy stuff
-  if (token.textPart !== "codingUnit") return <>{token.pre + token.text + token.post}</>;
+  if (token.textPart !== "textUnit") return <>{token.pre + token.text + token.post}</>;
 
   const tokenSpan = (annotatedTokenClass, color) => {
     return (

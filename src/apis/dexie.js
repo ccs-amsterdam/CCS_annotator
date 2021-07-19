@@ -196,18 +196,18 @@ class AnnotationDB {
     return documents.toArray();
   }
 
-  async getCodingjobItems(codingjob, codingUnit, unitSelection) {
+  async getCodingjobItems(codingjob, textUnit, unitSelection) {
     let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
 
     let cjIndices;
     let done;
     if (unitSelection.value === "all") {
-      cjIndices = await allJobItems(documents, codingUnit, new Set([]));
+      cjIndices = await allJobItems(documents, textUnit, new Set([]));
     }
     if (unitSelection.value.includes("annotation")) {
       [cjIndices, done] = await annotationJobItems(
         documents,
-        codingUnit,
+        textUnit,
         unitSelection.value === "has annotation"
       );
       console.log(done);
@@ -284,18 +284,18 @@ const safeNewCode = (code, codeMap, parentMap, i) => {
   safeNewCode(code, codeMap, i + 1);
 };
 
-const allJobItems = async (documents, codingUnit, done) => {
+const allJobItems = async (documents, textUnit, done) => {
   const cjIndices = [];
   await documents.each((e) => {
-    if (codingUnit === "document" && !done.has(e.doc_uid))
+    if (textUnit === "document" && !done.has(e.doc_uid))
       cjIndices.push({ doc_uid: e.doc_uid, document_id: e.document_id });
 
-    if (codingUnit === "paragraph") {
+    if (textUnit === "paragraph") {
       const paragraphs = e.tokens[e.tokens.length - 1].paragraph;
       for (let parIndex = 0; parIndex <= paragraphs; parIndex++) {
         if (done.has(e.doc_uid + "_" + parIndex)) continue;
         cjIndices.push({
-          codingUnit,
+          textUnit,
           doc_uid: e.doc_uid,
           document_id: e.document_id,
           parIndex,
@@ -303,12 +303,12 @@ const allJobItems = async (documents, codingUnit, done) => {
       }
     }
 
-    if (codingUnit === "sentence") {
+    if (textUnit === "sentence") {
       const sentences = e.tokens[e.tokens.length - 1].sentence;
       for (let sentIndex = 0; sentIndex <= sentences; sentIndex++) {
         if (done.has(e.doc_uid + "_" + sentIndex)) continue;
         cjIndices.push({
-          codingUnit,
+          textUnit,
           doc_uid: e.doc_uid,
           document_id: e.document_id,
           sentIndex,
@@ -319,7 +319,7 @@ const allJobItems = async (documents, codingUnit, done) => {
   return cjIndices;
 };
 
-const annotationJobItems = async (documents, codingUnit, unique) => {
+const annotationJobItems = async (documents, textUnit, unique) => {
   const cjIndices = [];
   const done = new Set([]);
   await documents.each((e) => {
@@ -330,27 +330,27 @@ const annotationJobItems = async (documents, codingUnit, unique) => {
 
           if (i > span[0]) {
             // an annotation can cover multiple units, and each unit should only be included once
-            if (codingUnit === "document") continue;
-            if (codingUnit === "paragraph" && e.tokens[i].paragraph === e.tokens[i - 1].paragraph)
+            if (textUnit === "document") continue;
+            if (textUnit === "paragraph" && e.tokens[i].paragraph === e.tokens[i - 1].paragraph)
               continue;
-            if (codingUnit === "sentence" && e.tokens[i].sentence === e.tokens[i - 1].sentence)
+            if (textUnit === "sentence" && e.tokens[i].sentence === e.tokens[i - 1].sentence)
               continue;
           }
 
           const item = {
-            codingUnit,
+            textUnit,
             doc_uid: e.doc_uid,
             document_id: e.document_id,
             group,
           };
-          if (codingUnit === "paragraph") item.parIndex = e.tokens[Number(i)].paragraph;
-          if (codingUnit === "sentence") item.sentIndex = e.tokens[Number(i)].sentence;
+          if (textUnit === "paragraph") item.parIndex = e.tokens[Number(i)].paragraph;
+          if (textUnit === "sentence") item.sentIndex = e.tokens[Number(i)].sentence;
 
           if (unique) {
             let itemId;
-            if (codingUnit === "document") itemId = item.doc_uid;
-            if (codingUnit === "paragraph") itemId = item.doc_uid + "_" + item.parIndex;
-            if (codingUnit === "sentence") itemId = item.doc_uid + "_" + item.sentIndex;
+            if (textUnit === "document") itemId = item.doc_uid;
+            if (textUnit === "paragraph") itemId = item.doc_uid + "_" + item.parIndex;
+            if (textUnit === "sentence") itemId = item.doc_uid + "_" + item.sentIndex;
             if (done.has(itemId)) continue;
             done.add(itemId);
           } else {

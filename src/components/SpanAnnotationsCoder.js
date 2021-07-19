@@ -28,7 +28,7 @@ const SpanAnnotationsCoder = ({ doc, item, contextUnit }) => {
             item={item}
             contextUnit={contextUnit}
             height={45}
-            codingUnitPosition={1 / 2}
+            textUnitPosition={1 / 2}
           />
         </Grid.Row>
 

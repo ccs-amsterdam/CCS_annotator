@@ -32,7 +32,7 @@ const SpanAnnotationEditor = ({ doc, item, contextUnit }) => {
           item={item}
           contextUnit={contextUnit}
           height={75}
-          codingUnitPosition={1 / 4}
+          textUnitPosition={1 / 4}
         />
       </Grid.Column>
       <Grid.Column width={8} style={{ paddingRight: "3em", maxWidth: "500px" }}>
