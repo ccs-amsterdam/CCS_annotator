@@ -8,20 +8,28 @@
 */
 
 export async function initStoragePersistence() {
-  const persist = await tryPersistWithoutPromtingUser();
-  switch (persist) {
-    case "never":
-      console.log("Not possible to persist storage");
-      break;
-    case "persisted":
-      console.log("Successfully persisted storage silently");
-      break;
-    case "prompt":
-      console.log("Not persisted, but we may prompt user when we want to.");
-      break;
-    default:
-      console.log("compiler desperately wanted a default");
-  }
+  //const persist = tryPersistWithoutPromtingUser();
+  tryPersistWithoutPromtingUser()
+    .then(persist => {
+      switch (persist) {
+        case "never":
+          console.log("Not possible to persist storage");
+          break;
+        case "persisted":
+          console.log("Successfully persisted storage silently");
+          break;
+        case "prompt":
+          console.log("Not persisted, but we may prompt user when we want to.");
+          break;
+        default:
+          console.log("compiler desperately wanted a default");
+      }
+    })
+    .catch(e => {
+      console.log(
+        "actually failed so hard it threw an error. Probably that persistent-storage is not (yet) a valid permission in the browser"
+      );
+    });
 }
 
 /** Tries to convert to persisted storage.

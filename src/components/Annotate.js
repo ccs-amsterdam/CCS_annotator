@@ -21,8 +21,8 @@ import db from "../apis/dexie";
 import ItemSelector from "./ItemSelector";
 
 const Annotate = () => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const mode = useSelector((state) => state.mode);
+  const codingjob = useSelector(state => state.codingjob);
+  const mode = useSelector(state => state.mode);
 
   const [textUnit, setTextUnit] = useState("document");
   const [unitSelection, setUnitSelection] = useState({
@@ -194,7 +194,7 @@ const TextUnitDropdown = ({ textUnit, setTextUnit }) => {
 };
 
 const ContextUnitDropdown = ({ textUnit, contextUnit, setContextUnit }) => {
-  const onClick = (unit) => {
+  const onClick = unit => {
     if (contextUnit.selected !== unit) {
       setContextUnit({ ...contextUnit, selected: unit });
     }
@@ -291,15 +291,15 @@ const UnitSelectionPopup = ({ unitSelection, setUnitSelection }) => {
   };
 
   const onChangeMix = (e, d) => {
-    setUnitSelection({ ...unitSelection, annotationMix: d.value });
+    setUnitSelection({ ...unitSelection, annotationMix: Number(d.value) });
   };
 
   const onChangeN = (e, d) => {
-    setUnitSelection({ ...unitSelection, n: d.value });
+    setUnitSelection({ ...unitSelection, n: Number(d.value) });
   };
   const onChangePCT = (e, d) => {
     const value = Math.ceil((d.value / 100) * n);
-    setUnitSelection({ ...unitSelection, n: value });
+    setUnitSelection({ ...unitSelection, n: Number(value) });
   };
 
   return (
@@ -376,7 +376,7 @@ const UnitSelectionPopup = ({ unitSelection, setUnitSelection }) => {
             value={unitSelection.n}
             min={1}
             max={n}
-            onChange={(e, d) => setUnitSelection({ ...unitSelection, n: d.value })}
+            onChange={(e, d) => setUnitSelection({ ...unitSelection, n: Number(d.value) })}
             type="range"
             labelPosition="left"
           />

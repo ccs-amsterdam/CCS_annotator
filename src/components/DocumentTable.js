@@ -6,7 +6,7 @@ import db from "../apis/dexie";
 const PAGESIZE = 10;
 
 const DocumentTable = () => {
-  const codingjob = useSelector((state) => state.codingjob);
+  const codingjob = useSelector(state => state.codingjob);
   const [data, setData] = useState([]);
   const [pages, setPages] = useState(1);
   const [columns, setColumns] = useState([]);
@@ -30,7 +30,7 @@ const DocumentTable = () => {
     });
   };
 
-  const createBodyRows = (data) => {
+  const createBodyRows = data => {
     return data.map((rowObj, i) => {
       return <Table.Row key={i}>{createRowCells(rowObj)}</Table.Row>;
     });
@@ -43,14 +43,14 @@ const DocumentTable = () => {
     }, "");
   };
 
-  const createRowCells = (rowObj) => {
+  const createRowCells = rowObj => {
     return columns.map((key, i) => {
       let content = null;
       if (key === "document_id") {
         content = rowObj.document_id;
       } else {
         if (rowObj.text_fields) {
-          content = rowObj.text_fields.find((tf) => tf.name === key);
+          content = rowObj.text_fields.find(tf => tf.name === key);
           if (content) content = content.value;
         }
         if (!content && !rowObj.text_fields && rowObj.tokens) {
@@ -77,7 +77,15 @@ const DocumentTable = () => {
 
   return (
     <Container style={{ marginTop: "2em" }}>
-      <Table selectable fixed compact singleLine size="small" style={{ fontSize: "10px" }}>
+      <Table
+        unstackable
+        selectable
+        fixed
+        compact
+        singleLine
+        size="small"
+        style={{ fontSize: "10px" }}
+      >
         <Table.Header>
           <Table.Row>{createHeaderRow(data, columns)}</Table.Row>
         </Table.Header>
@@ -134,7 +142,7 @@ const fetchFromDb = async (codingjob, pageSize, setPages, setData, setColumns) =
   setColumns(getColumns(newdata));
 };
 
-const getColumns = (newdata) => {
+const getColumns = newdata => {
   let newcolumns = [];
   if (newdata.length > 0) {
     newcolumns = newdata.reduce((s, row) => {

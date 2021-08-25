@@ -4,7 +4,7 @@ import { Menu } from "semantic-ui-react";
 import { setMode } from "../actions";
 
 const PreviewMode = () => {
-  const mode = useSelector((state) => state.mode);
+  const mode = useSelector(state => state.mode);
   const dispatch = useDispatch();
 
   const togglePreview = () => {
@@ -17,7 +17,7 @@ const PreviewMode = () => {
     <Menu.Item
       icon={mode === "preview" ? "eye slash" : "eye"}
       style={{ color: "lightgreen" }}
-      name={"Preview"}
+      name={mode === "preview" ? "coder view" : "designer view"}
       onClick={togglePreview}
     />
   );

@@ -2,6 +2,7 @@ import Dexie from "dexie";
 import hash from "object-hash";
 import { importTokens, importTokenAnnotations, parseTokens } from "../util/tokens";
 import { importSpanAnnotations } from "../util/annotations";
+import { drawRandom } from "../util/sample";
 
 class AnnotationDB {
   constructor() {
@@ -56,7 +57,10 @@ class AnnotationDB {
     return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
-    await this.idb.documents.where("job_id").equals(codingjob.job_id).delete();
+    await this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .delete();
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
   async listCodingjobs() {
@@ -107,7 +111,10 @@ class AnnotationDB {
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
 
     let duplicates = 0;
@@ -183,7 +190,7 @@ class AnnotationDB {
   }
 
   async deleteDocuments(documents) {
-    const documentIds = documents.map((document) => document.doc_uid);
+    const documentIds = documents.map(document => document.doc_uid);
     return this.idb.documents.bulkDelete(documentIds);
   }
 
@@ -203,6 +210,7 @@ class AnnotationDB {
     let done;
     if (unitSelection.value === "all") {
       cjIndices = await allJobItems(documents, textUnit, new Set([]));
+      cjIndices = drawRandom(cjIndices, unitSelection.n, false);
     }
     if (unitSelection.value.includes("annotation")) {
       [cjIndices, done] = await annotationJobItems(
@@ -210,9 +218,16 @@ class AnnotationDB {
         textUnit,
         unitSelection.value === "has annotation"
       );
-      console.log(done);
-      // if sample includes non annotation draws, add allJobItems with done included
-      // (done should be included in unique jobitems. For 'per annotation' this should be optional)
+      cjIndices = drawRandom(cjIndices, unitSelection.n, false);
+
+      if (unitSelection.annotationMix > 0) {
+        const noDuplicates = unitSelection.value === "has annotation";
+
+        const all = await allJobItems(documents, textUnit, noDuplicates ? done : new Set([]));
+        let sampleN = Math.ceil(cjIndices.length * (unitSelection.annotationMix / 100));
+        let addSample = drawRandom(all, sampleN, !noDuplicates);
+        cjIndices = cjIndices.concat(addSample);
+      }
     }
 
     return cjIndices;
@@ -221,7 +236,7 @@ class AnnotationDB {
   async getJobAnnotations(codingjob) {
     let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
     const annotations = [];
-    await documents.each((e) => {
+    await documents.each(e => {
       if (e.annotations) {
         annotations.push(e.annotations);
       } else {
@@ -232,7 +247,10 @@ class AnnotationDB {
   }
 
   async getJobDocumentCount(codingjob) {
-    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    return this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .count();
   }
 
   async getDocument(doc_uid) {
@@ -240,7 +258,10 @@ class AnnotationDB {
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
+    return this.idb.documents
+      .where("doc_uid")
+      .equals(document.doc_uid)
+      .modify({ tokens: tokens });
   }
 
   async writeAnnotations(document, annotations) {
@@ -251,7 +272,10 @@ class AnnotationDB {
   }
   async renameAnnotations(codingjob, oldCode, newCode) {
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
     for (let id of ids) {
       let doc = await this.getDocument(id);
@@ -286,7 +310,8 @@ const safeNewCode = (code, codeMap, parentMap, i) => {
 
 const allJobItems = async (documents, textUnit, done) => {
   const cjIndices = [];
-  await documents.each((e) => {
+  let itemId;
+  await documents.each(e => {
     if (textUnit === "document" && !done.has(e.doc_uid))
       cjIndices.push({ doc_uid: e.doc_uid, document_id: e.document_id });
 
@@ -322,7 +347,7 @@ const allJobItems = async (documents, textUnit, done) => {
 const annotationJobItems = async (documents, textUnit, unique) => {
   const cjIndices = [];
   const done = new Set([]);
-  await documents.each((e) => {
+  await documents.each(e => {
     if (e.annotations) {
       for (let i of Object.keys(e.annotations)) {
         for (let group of Object.keys(e.annotations[i])) {
