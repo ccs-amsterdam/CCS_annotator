@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   Breadcrumb,
@@ -19,26 +19,26 @@ import CodingjobSelector from "./CodingjobSelector";
 import AnnotationPage from "./AnnotationPage";
 import db from "../apis/dexie";
 import ItemSelector from "./ItemSelector";
+import { blockEvents } from "../actions";
+
+const UNITSELECTIONDEFAULT = {
+  value: "all",
+  annotationMix: 0,
+  n: null,
+  ordered: true,
+};
 
 const Annotate = () => {
-  const codingjob = useSelector(state => state.codingjob);
-  const mode = useSelector(state => state.mode);
+  const codingjob = useSelector((state) => state.codingjob);
+  const mode = useSelector((state) => state.mode);
 
   const [textUnit, setTextUnit] = useState("document");
-  const [unitSelection, setUnitSelection] = useState({
-    value: "all",
-    annotationMix: 0,
-    n: null,
-    random: false,
-  });
+  const [unitSelection, setUnitSelection] = useState(UNITSELECTIONDEFAULT);
+  const [unitSelectionSettings, setUnitSelectionSettings] = useState(UNITSELECTIONDEFAULT);
   const [contextUnit, setContextUnit] = useState({
     selected: "document",
     range: { paragraph: [1, 1], sentence: [2, 2] },
   });
-  // const [sample, setSample] = useState({
-  //   n: null,
-  //   random: false,
-  // });
 
   const [taskType, setTaskType] = useState("open annotation");
   const [jobItems, setJobItems] = useState(null);
@@ -46,8 +46,15 @@ const Annotate = () => {
 
   useEffect(() => {
     if (!codingjob) return null;
-    setupCodingjob(codingjob, textUnit, unitSelection, setJobItem, setJobItems);
-  }, [codingjob, textUnit, unitSelection, setJobItem, setJobItems]);
+    setupCodingjob(
+      codingjob,
+      textUnit,
+      unitSelectionSettings,
+      setJobItem,
+      setJobItems,
+      setUnitSelection
+    );
+  }, [codingjob, textUnit, unitSelectionSettings, setJobItem, setJobItems, setUnitSelection]);
 
   if (!codingjob) {
     return (
@@ -68,7 +75,11 @@ const Annotate = () => {
             setContextUnit={setContextUnit}
           />
 
-          <UnitSelectionPopup unitSelection={unitSelection} setUnitSelection={setUnitSelection} />
+          <UnitSelectionPopup
+            textUnit={textUnit}
+            unitSelection={unitSelection}
+            setUnitSelectionSettings={setUnitSelectionSettings}
+          />
           {/* <SamplePopup unitSelection={unitSelection} sample={sample} setSample={setSample} /> */}
 
           <TaskTypeDropdown taskType={taskType} setTaskType={setTaskType} />
@@ -131,10 +142,10 @@ const ItemBreadcrumb = ({ jobItem }) => {
       </BreadcrumbSection>
       <Breadcrumb.Divider />
       <BreadcrumbSection>
-        {jobItem?.document_id ? jobItem.document_id : jobItem ? jobItem.docIndex + 1 : 0}
+        {jobItem?.docIndex !== null ? `document ${jobItem.docIndex + 1}` : null}
       </BreadcrumbSection>
       {jobItem && jobItem.parIndex != null ? paragraph() : null}
-      {jobItem && jobItem.sentIndex != null ? sentence : null}
+      {jobItem && jobItem.sentIndex != null ? sentence() : null}
       {jobItem && jobItem.annotation != null ? annotation() : null}
     </Breadcrumb>
   );
@@ -194,7 +205,7 @@ const TextUnitDropdown = ({ textUnit, setTextUnit }) => {
 };
 
 const ContextUnitDropdown = ({ textUnit, contextUnit, setContextUnit }) => {
-  const onClick = unit => {
+  const onClick = (unit) => {
     if (contextUnit.selected !== unit) {
       setContextUnit({ ...contextUnit, selected: unit });
     }
@@ -280,26 +291,52 @@ const ContextUnitRange = ({ contextUnit, setContextUnit }) => {
   );
 };
 
-const UnitSelectionPopup = ({ unitSelection, setUnitSelection }) => {
+const UnitSelectionPopup = ({ textUnit, unitSelection, setUnitSelectionSettings }) => {
   //unitSelection.includes("annotation")
 
-  const n = 1000;
-  if (unitSelection.n === null) unitSelection.n = n;
+  const dispatch = useDispatch();
+  const [n, setN] = useState(unitSelection.n);
+  const [mix, setMix] = useState(0);
+  const [pct, setPct] = useState(100);
+
+  useEffect(() => {
+    setN(unitSelection.totalItems);
+    setPct(100);
+  }, [textUnit, unitSelection.totalItems, unitSelection.value]);
+
+  useEffect(() => {
+    dispatch(blockEvents(true));
+    return () => {
+      dispatch(blockEvents(false));
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (unitSelection.n === n && unitSelection.annotationMix === mix) return null;
+    const timer = setTimeout(() => {
+      setUnitSelectionSettings((old) => ({ ...old, n: n, annotationMix: mix }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [n, mix, setUnitSelectionSettings, unitSelection]);
 
   const onUnitSelection = (e, d) => {
-    setUnitSelection({ ...unitSelection, value: d.value });
+    setUnitSelectionSettings((old) => ({ ...old, value: d.value, n: null }));
   };
 
   const onChangeMix = (e, d) => {
-    setUnitSelection({ ...unitSelection, annotationMix: Number(d.value) });
+    setMix(Number(d.value));
   };
 
   const onChangeN = (e, d) => {
-    setUnitSelection({ ...unitSelection, n: Number(d.value) });
+    setN(Number(d.value));
+    setPct(Math.round((100 * d.value) / unitSelection.totalItems));
   };
   const onChangePCT = (e, d) => {
-    const value = Math.ceil((d.value / 100) * n);
-    setUnitSelection({ ...unitSelection, n: Number(value) });
+    const value = Math.ceil((d.value / 100) * unitSelection.totalItems);
+    if (value > 0) {
+      setPct(d.value);
+      setN(value);
+    }
   };
 
   return (
@@ -348,8 +385,33 @@ const UnitSelectionPopup = ({ unitSelection, setUnitSelection }) => {
           <Icon name="setting" />
           <label>Sample</label>
         </Form.Group>
+
+        <Form.Group>
+          <Form.Field
+            width={5}
+            min={1}
+            max={unitSelection.totalItems}
+            label="N"
+            size="mini"
+            control={Input}
+            type="number"
+            value={n}
+            onChange={onChangeN}
+          />
+          <Form.Field
+            width={4}
+            min={0}
+            max={100}
+            label="%"
+            size="mini"
+            control={Input}
+            type="number"
+            value={pct}
+            onChange={onChangePCT}
+          />
+        </Form.Group>
         <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
-          Include units without annotation
+          Add random units without annotation
         </label>
         <Form.Group inline>
           <Form.Field
@@ -367,121 +429,23 @@ const UnitSelectionPopup = ({ unitSelection, setUnitSelection }) => {
             {unitSelection.value === "has annotation" ? "units with annotation" : "annotations"}
           </label>
         </Form.Group>
-        <Form.Group>
-          <Form.Field
-            width={7}
-            label="Sample size"
-            control={Input}
-            style={{ padding: 0, margin: 0 }}
-            value={unitSelection.n}
-            min={1}
-            max={n}
-            onChange={(e, d) => setUnitSelection({ ...unitSelection, n: Number(d.value) })}
-            type="range"
-            labelPosition="left"
-          />
-          <Form.Field
-            width={5}
-            min={1}
-            max={n}
-            label="N"
-            size="mini"
-            control={Input}
-            type="number"
-            value={unitSelection.n}
-            onChange={onChangeN}
-          />
-          <Form.Field
-            width={4}
-            min={0}
-            max={100}
-            label="%"
-            size="mini"
-            control={Input}
-            type="number"
-            value={(100 * unitSelection.n) / n}
-            onChange={onChangePCT}
-          />
-        </Form.Group>
       </Form>
     </Popup>
   );
 };
 
-const SamplePopup = ({ unitSelection, sample, setSample }) => {
-  //unitSelection.includes("annotation")
-
-  const n = 1000;
-  if (sample.n === null) sample.n = n;
-
-  const onChangeN = (e, d) => {
-    setSample({ ...sample, n: d.value });
-  };
-  const onChangePCT = (e, d) => {
-    const value = Math.ceil((d.value / 100) * n);
-    setSample({ ...sample, n: value });
-  };
-
-  return (
-    <Popup
-      flowing
-      hoverable
-      wide
-      position="bottom right"
-      on="click"
-      style={{ minWidth: "25em" }}
-      trigger={<Button style={buttonStyle}>{buttonLabel("some info", "Sample")}</Button>}
-    >
-      <Form>
-        <Form.Group>
-          <Icon name="setting" />
-          <label>Sample</label>
-        </Form.Group>
-        <Form.Group>
-          <Form.Field
-            width={7}
-            label="Sample size"
-            control={Input}
-            style={{ padding: 0, margin: 0 }}
-            value={sample.n}
-            min={1}
-            max={n}
-            onChange={(e, d) => setSample({ ...sample, n: d.value })}
-            type="range"
-            labelPosition="left"
-          />
-          <Form.Field
-            width={5}
-            min={1}
-            max={n}
-            label="N"
-            size="mini"
-            control={Input}
-            type="number"
-            value={sample.n}
-            onChange={onChangeN}
-          />
-          <Form.Field
-            width={4}
-            min={0}
-            max={100}
-            label="%"
-            size="mini"
-            control={Input}
-            type="number"
-            value={(100 * sample.n) / n}
-            onChange={onChangePCT}
-          />
-        </Form.Group>
-      </Form>
-    </Popup>
-  );
-};
-
-const setupCodingjob = async (codingjob, textUnit, unitSelection, setJobItem, setJobItems) => {
-  let items = await db.getCodingjobItems(codingjob, textUnit, unitSelection);
+const setupCodingjob = async (
+  codingjob,
+  textUnit,
+  unitSelectionSettings,
+  setJobItem,
+  setJobItems,
+  setUnitSelection
+) => {
+  let [totalItems, items] = await db.getCodingjobItems(codingjob, textUnit, unitSelectionSettings);
   setJobItems(items);
   setJobItem(items[0]);
+  setUnitSelection({ ...unitSelectionSettings, totalItems: totalItems });
 };
 
 // from: https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array

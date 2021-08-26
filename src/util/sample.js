@@ -1,14 +1,23 @@
-export const drawRandom = (array, n, replace) => {
-  console.log(n);
+export const drawRandom = (array, n, replace, keep_order) => {
+  if (array.length === n && !replace && keep_order) return array;
+
+  if (n == null || n === null || n > array.length) n = array.length;
+  let index = [...Array(array.length).keys()];
+
   if (replace) {
     let out = [];
     for (let i = 0; i < n; i++) {
-      out.push(array[Math.floor(Math.random() * array.length)]);
+      out.push(index[Math.floor(Math.random() * index.length)]);
     }
-    return out;
+    index = out;
   } else {
-    return getRandomSubarray(array, n < array.length ? n : array.length);
+    index = getRandomSubarray(index, n < index.length ? n : index.length);
   }
+  if (keep_order)
+    index = index.sort(function (a, b) {
+      return a - b;
+    });
+  return index.map((i) => array[i]);
 };
 
 //from: https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array
@@ -24,8 +33,6 @@ const getRandomSubarray = (arr, size) => {
     shuffled[index] = shuffled[i];
     shuffled[i] = temp;
   }
-  console.log(arr);
-  console.log(size);
-  console.log(shuffled.slice(min));
+
   return shuffled.slice(min);
 };
