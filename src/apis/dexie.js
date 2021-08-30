@@ -201,12 +201,18 @@ class AnnotationDB {
     let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
     let totalItems = 0;
 
+    const getGroup = () => {
+      // Placeholder for stratified sampling
+      // Should return a vector of the length of cjIndices with unique group ids
+      return null;
+    };
+
     let cjIndices;
     let done;
     if (unitSelection.value === "all") {
       cjIndices = await allJobItems(documents, textUnit, new Set([]));
       totalItems = cjIndices.length;
-      cjIndices = drawRandom(cjIndices, unitSelection.n, false, false);
+      cjIndices = drawRandom(cjIndices, unitSelection.n, false, unitSelection.seed, getGroup());
     }
     if (unitSelection.value.includes("annotation")) {
       [cjIndices, done] = await annotationJobItems(
@@ -215,14 +221,14 @@ class AnnotationDB {
         unitSelection.value === "has annotation"
       );
       totalItems = cjIndices.length;
-      cjIndices = drawRandom(cjIndices, unitSelection.n, false, false);
+      cjIndices = drawRandom(cjIndices, unitSelection.n, false, unitSelection.seed, getGroup());
 
       if (unitSelection.annotationMix > 0) {
         const noDuplicates = unitSelection.value === "has annotation";
 
         const all = await allJobItems(documents, textUnit, noDuplicates ? done : new Set([]));
         let sampleN = Math.ceil(cjIndices.length * (unitSelection.annotationMix / 100));
-        let addSample = drawRandom(all, sampleN, !noDuplicates, false);
+        let addSample = drawRandom(all, sampleN, !noDuplicates, unitSelection.seed, getGroup());
         cjIndices = cjIndices.concat(addSample);
       }
     }
@@ -303,7 +309,6 @@ const allJobItems = async (documents, textUnit, done) => {
   let docIndex = -1;
   await documents.each((e) => {
     docIndex++;
-    console.log(docIndex);
     if (textUnit === "document" && !done.has(e.doc_uid))
       cjIndices.push({ doc_uid: e.doc_uid, docIndex });
 
@@ -384,17 +389,13 @@ const annotationJobItems = async (documents, textUnit, unique) => {
 };
 
 const orderJobItems = (cjIndices, unitSelection) => {
-  console.log(cjIndices);
-  if (unitSelection.shuffle === "all") return cjIndices;
+  if (!unitSelection.ordered) return cjIndices;
   return cjIndices.sort(function (a, b) {
-    if (unitSelection.shuffle === "documents") return a.docIndex - b.docIndex;
-
-    if (unitSelection.shuffle === "annotations") {
-      if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;
-      if (a.parIndex != null && a.parIndex !== b.parIndex) return a.parIndex - b.parIndex;
-      if (a.sentIndex != null && a.sentIndex !== b.sentIndex) return a.sentIndex - b.sentIndex;
-      //if (a.annotation != null && a.annotation.index !== b.
-    }
+    if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;
+    if (a.parIndex != null && a.parIndex !== b.parIndex) return a.parIndex - b.parIndex;
+    if (a.sentIndex != null && a.sentIndex !== b.sentIndex) return a.sentIndex - b.sentIndex;
+    if (a.annotation != null && a.annotation.index !== b)
+      return a.annotation.index - b.annotation.index;
     return 0;
   });
 };

@@ -21,7 +21,6 @@ const Welcome = ({ items }) => {
       await db.welcome();
       await initStoragePersistence();
       history.push(items[0].path);
-      console.log("test");
     } catch (e) {
       console.log(e);
     }
@@ -57,7 +56,7 @@ const Welcome = ({ items }) => {
   );
 };
 
-const create_demo_job = async db => {
+const create_demo_job = async (db) => {
   try {
     const job = await db.createCodingjob("Demo codingjob");
     await db.createDocuments(job, demo_articles, true);

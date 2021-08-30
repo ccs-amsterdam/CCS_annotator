@@ -13,22 +13,38 @@ import { getColor } from "../util/tokenDesign";
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const CodeSelector = React.memo(({ children, annotations, currentCode, newSelection }) => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const codeMap = useSelector((state) => state.codeMap);
-  const codeHistory = useSelector((state) => state.codeHistory);
-
   const [current, setCurrent] = useState(newSelection ? "UNASSIGNED" : currentCode);
-  const [hasOpened, setHasOpened] = useState(false);
 
   // Placeholder: should be managed in state
   const dispatch = useDispatch();
 
+  // When codeselector opens, disable events for spanannotationsnavigation
+  // when it closes, make sure to clean up if code is UNASSIGNED
   useEffect(() => {
     dispatch(blockEvents(true));
     return () => {
       dispatch(blockEvents(false));
+      if (current === "UNASSIGNED")
+        updateAnnotations(annotations, current, current, setCurrent, dispatch);
     };
-  }, [dispatch]);
+  });
+
+  return (
+    <CodeSelectorPopup current={current} setCurrent={setCurrent} annotations={annotations}>
+      {children}
+    </CodeSelectorPopup>
+  );
+});
+
+const CodeSelectorPopup = ({ children, current, setCurrent, annotations }) => {
+  // separate popup from CodeSelector, because it would rerender CodeSelector,
+  // which messes up the useEffect that cleans up after close
+
+  const codingjob = useSelector((state) => state.codingjob);
+  const codeMap = useSelector((state) => state.codeMap);
+  const codeHistory = useSelector((state) => state.codeHistory);
+  const [hasOpened, setHasOpened] = useState(false);
+  const dispatch = useDispatch();
 
   return (
     <Popup
@@ -100,7 +116,7 @@ const CodeSelector = React.memo(({ children, annotations, currentCode, newSelect
       </div>
     </Popup>
   );
-});
+};
 
 const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
   const annotationCodes = Object.keys(annotations);
