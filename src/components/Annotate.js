@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 import {
   Breadcrumb,
@@ -10,18 +10,13 @@ import {
   Popup,
   Button,
   Input,
-  Form,
-  Icon,
-  Radio,
-  Checkbox,
 } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
-import Help from "./Help";
 import AnnotationPage from "./AnnotationPage";
 import db from "../apis/dexie";
 import ItemSelector from "./ItemSelector";
-import { blockEvents } from "../actions";
+import UnitSelection from "./UnitSelection";
 
 const UNITSELECTIONDEFAULT = {
   value: "all",
@@ -29,11 +24,13 @@ const UNITSELECTIONDEFAULT = {
   n: null,
   seed: 42,
   ordered: true,
+  stratifyDocuments: true,
 };
 
 const Annotate = () => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const mode = useSelector((state) => state.mode);
+  const codingjob = useSelector(state => state.codingjob);
+  const mode = useSelector(state => state.mode);
+  const codeMap = useSelector(state => state.codeMap);
 
   const [textUnit, setTextUnit] = useState("document");
   const [unitSelection, setUnitSelection] = useState(UNITSELECTIONDEFAULT);
@@ -53,11 +50,20 @@ const Annotate = () => {
       codingjob,
       textUnit,
       unitSelectionSettings,
+      codeMap,
       setJobItem,
       setJobItems,
       setUnitSelection
     );
-  }, [codingjob, textUnit, unitSelectionSettings, setJobItem, setJobItems, setUnitSelection]);
+  }, [
+    codingjob,
+    textUnit,
+    unitSelectionSettings,
+    codeMap,
+    setJobItem,
+    setJobItems,
+    setUnitSelection,
+  ]);
 
   if (!codingjob) {
     return (
@@ -78,7 +84,7 @@ const Annotate = () => {
             setContextUnit={setContextUnit}
           />
 
-          <UnitSelectionPopup
+          <UnitSelection
             textUnit={textUnit}
             unitSelection={unitSelection}
             setUnitSelectionSettings={setUnitSelectionSettings}
@@ -216,7 +222,7 @@ const TextUnitDropdown = ({ textUnit, setTextUnit }) => {
 };
 
 const ContextUnitDropdown = ({ textUnit, contextUnit, setContextUnit }) => {
-  const onClick = (unit) => {
+  const onClick = unit => {
     if (contextUnit.selected !== unit) {
       setContextUnit({ ...contextUnit, selected: unit });
     }
@@ -302,250 +308,21 @@ const ContextUnitRange = ({ contextUnit, setContextUnit }) => {
   );
 };
 
-const UnitSelectionPopup = ({ textUnit, unitSelection, setUnitSelectionSettings }) => {
-  //unitSelection.includes("annotation")
-
-  const dispatch = useDispatch();
-  const [n, setN] = useState(unitSelection.n);
-  const [mix, setMix] = useState(0);
-  const [seed, setSeed] = useState(unitSelection.seed);
-  const [pct, setPct] = useState(100);
-
-  useEffect(() => {
-    setSeed(unitSelection.seed);
-    setN(unitSelection.totalItems);
-    setPct(100);
-    setMix(unitSelection.mix);
-  }, [
-    textUnit,
-    unitSelection.totalItems,
-    unitSelection.value,
-    unitSelection.seed,
-    unitSelection.mix,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      dispatch(blockEvents(false));
-    };
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (unitSelection.n === n && unitSelection.annotationMix === mix && unitSelection.seed === seed)
-      return null;
-    const timer = setTimeout(() => {
-      setUnitSelectionSettings((old) => ({ ...old, n: n, annotationMix: mix, seed: seed }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [n, mix, seed, setUnitSelectionSettings, unitSelection]);
-
-  const onUnitSelection = (e, d) => {
-    setUnitSelectionSettings((old) => ({ ...old, value: d.value, n: null }));
-  };
-
-  const onChangeMix = (e, d) => {
-    setMix(Number(d.value));
-  };
-
-  const onChangeSeed = (e, d) => {
-    setSeed(Number(d.value));
-  };
-
-  const onChangeShuffle = (e, d) => {
-    setUnitSelectionSettings((old) => ({ ...old, ordered: !d.checked }));
-  };
-
-  const onChangeN = (e, d) => {
-    setN(Number(d.value));
-    setPct(Math.round((100 * d.value) / unitSelection.totalItems));
-  };
-  const onChangePCT = (e, d) => {
-    const value = Math.ceil((d.value / 100) * unitSelection.totalItems);
-    if (value > 0) {
-      setPct(d.value);
-      setN(value);
-    }
-  };
-
-  return (
-    <Popup
-      flowing
-      hoverable
-      wide
-      onOpen={() => dispatch(blockEvents(true))}
-      onClose={() => dispatch(blockEvents(false))}
-      position="bottom left"
-      on="click"
-      style={{ minWidth: "20em" }}
-      trigger={
-        <Button style={buttonStyle}>{buttonLabel(unitSelection.value, "Unit selection")}</Button>
-      }
-    >
-      <Form>
-        <Form.Group>
-          <Icon name="setting" />
-          <label>Unit selection</label>
-        </Form.Group>
-        <Form.Group grouped>
-          <Form.Field>
-            <Radio
-              value="all"
-              label="All texts"
-              checked={unitSelection.value === "all"}
-              onChange={onUnitSelection}
-            />
-            <Help header={"All texts"} texts={["Use all unique text units"]} />
-          </Form.Field>
-
-          {/* <Form.Field>
-            <Radio
-              value="has annotation"
-              label="texts with annotations"
-              checked={unitSelection.value === "has annotation"}
-              onChange={onUnitSelection}
-            />
-            <Help
-              header={"Texts with annotations"}
-              texts={
-                ["Use text units that have at least annotation. Random units without annotation can be added in the sample"]
-              }
-            />
-          </Form.Field> */}
-
-          <Form.Field>
-            <Radio
-              value="per annotation"
-              label="By annotation"
-              checked={unitSelection.value === "per annotation"}
-              onChange={onUnitSelection}
-            />
-            <Help
-              header={"By annotation"}
-              texts={[
-                "Select text units based on annotations. Only text units with at least one annotation will be used*, and a text unit can appear multiple times if it has multiple annotations.",
-                "The annotation label can also be used in a 'question based' task. This can for instance be used to ask a coder whether [label] occurs in the text unit.",
-                "*random units without any annotations can be added in the sample.",
-              ]}
-            />
-            {unitSelection.value === "per annotation" ? (
-              <Popup
-                position="right center"
-                trigger={
-                  <Button
-                    floated="right"
-                    style={{ margin: "0", padding: "0.2em", floated: "right" }}
-                  >
-                    Update
-                  </Button>
-                }
-              >
-                <p>
-                  Check if new annotations have been added. Beware that this will change the current
-                  unit selection if units are shuffled or a sample is drawn
-                </p>
-              </Popup>
-            ) : null}
-          </Form.Field>
-        </Form.Group>
-        <br />
-      </Form>
-      <Form>
-        <Form.Group>
-          <Icon name="setting" />
-          <label>Sample</label>
-          {/* <Help header={"test"} texts={["test", "this"]} /> */}
-        </Form.Group>
-
-        <Form.Group>
-          <Form.Field
-            width={5}
-            min={0}
-            max={unitSelection.totalItems}
-            step={5}
-            label="N"
-            size="mini"
-            control={Input}
-            type="number"
-            value={n}
-            onChange={onChangeN}
-          />
-          <Form.Field
-            width={5}
-            min={0}
-            max={100}
-            step={5}
-            label="%"
-            size="mini"
-            control={Input}
-            type="number"
-            value={pct}
-            onChange={onChangePCT}
-          />
-          <Form.Field width={3}>
-            <label>Shuffle</label>
-            <Checkbox
-              toggle
-              size="mini"
-              checked={!unitSelection.ordered}
-              onChange={onChangeShuffle}
-            />
-          </Form.Field>
-          <Help
-            header={"Sampling and shuffling"}
-            texts={[
-              "If % < 100, a random sample will be drawn.",
-              "If shuffle is enabled, the order of the units will be randomized.",
-            ]}
-          />
-        </Form.Group>
-
-        <Form.Group>
-          <Form.Field width={5}>
-            <label>Seed</label>
-            <Input size="mini" type="number" min={1} value={seed} onChange={onChangeSeed} />
-          </Form.Field>
-          <Help
-            header={"Random seed"}
-            texts={[
-              "Choose a random seed for drawing the sample and/or shuffling the order",
-              "Simply put, using the same seed will give the same random results if the data is the same. Change this if you want an alternative random selection/order.",
-            ]}
-          />
-        </Form.Group>
-        <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
-          Random text units without annotation
-        </label>
-        <Form.Group inline>
-          <Form.Field
-            disabled={!unitSelection.value.includes("annotation")}
-            width={4}
-            min={0}
-            step={5}
-            size="mini"
-            control={Input}
-            type="number"
-            value={mix}
-            onChange={onChangeMix}
-          />
-          <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
-            % of{" "}
-            {unitSelection.value === "has annotation" ? "units with annotation" : "annotations"}
-          </label>
-        </Form.Group>
-      </Form>
-    </Popup>
-  );
-};
-
 const setupCodingjob = async (
   codingjob,
   textUnit,
   unitSelectionSettings,
+  codeMap,
   setJobItem,
   setJobItems,
   setUnitSelection
 ) => {
-  let [totalItems, items] = await db.getCodingjobItems(codingjob, textUnit, unitSelectionSettings);
+  let [totalItems, items] = await db.getCodingjobItems(
+    codingjob,
+    textUnit,
+    unitSelectionSettings,
+    codeMap
+  );
   setJobItems(items);
   setJobItem(items[0]);
   setUnitSelection({ ...unitSelectionSettings, totalItems: totalItems });

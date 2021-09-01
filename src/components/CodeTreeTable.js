@@ -9,6 +9,7 @@ import {
   Popup,
   Search,
   Table,
+  Checkbox,
 } from "semantic-ui-react";
 import { randomColor } from "randomcolor";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,7 +24,7 @@ const resultRenderer = ({ code, codeTrail }) => (
 );
 
 const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) => {
-  const codingjob = useSelector((state) => state.codingjob);
+  const codingjob = useSelector(state => state.codingjob);
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
@@ -78,7 +79,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
         }
 
         const re = new RegExp(data.value.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
-        const isMatch = (code) => re.test(code.code);
+        const isMatch = code => re.test(code.code);
 
         setLoading(false);
         setResults(codeTreeArray.filter(isMatch));
@@ -100,11 +101,12 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
     };
   }, []);
 
-  const formatCode = (level) => {
-    if (level === 0) return { fontWeight: "bold", fontSize: "12px", cursor: "pointer" };
-    if (level === 1) return { fontSize: "10px", cursor: "pointer" };
-    if (level === 2) return { fontSize: "9px", cursor: "pointer" };
-    return { fontSize: "8px", cursor: "pointer" };
+  const formatCode = code => {
+    const color = code.active == null || code.active ? "black" : "grey";
+    if (code.level === 0) return { fontWeight: "bold", fontSize: "12px", cursor: "pointer", color };
+    if (code.level === 1) return { fontSize: "10px", cursor: "pointer", color };
+    if (code.level === 2) return { fontSize: "9px", cursor: "pointer", color };
+    return { fontSize: "8px", cursor: "pointer", color };
   };
 
   return (
@@ -138,33 +140,33 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
       </Table.Header>
       <Table.Body style={{ height: height }} className="codes-tbody">
         {[...codeTreeArray, ""].map((code, i) => {
+          if (!code.activeParent) return null;
           return (
             <Table.Row className="codes-tr" active={i === activeRow} key={i}>
-              {/* <Table.Cell collapsing className="codes-td">
-                {code === "" ? null : (
-                  <Checkbox
-                    slider
-                    style={{
-                      transform: "scale(0.6)",
-                    }}
-                  />
-                )}
-              </Table.Cell> */}
               <Table.Cell className="codes-td">
                 {code.code ? (
                   <>
+                    {code.active == null ? null : (
+                      <Checkbox
+                        checked={code.active && code.activeParent}
+                        style={{ transform: "scale(0.7)", marginRight: "0.5em" }}
+                        onChange={(e, d) => {
+                          toggleActiveCode(codingjob, codes, code.code, d.checked, setCodes);
+                        }}
+                      />
+                    )}
                     <Button
                       as={"Input"}
                       style={{
-                        marginLeft: `${1.5 * code.level}em`,
+                        marginLeft: `${1 * code.level}em`,
                         marginRight: "0.4em",
                         padding: "0",
                         width: "1em",
-                        height: "1em",
+                        height: "1.5em",
                         background: "white",
                         color: code.color ? code.color : "white",
                       }}
-                      onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
+                      onChange={e => setChangeColor({ code: code.code, color: e.target.value })}
                       type="color"
                       value={code.color}
                     />
@@ -178,7 +180,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
                   setCodes={setCodes}
                   settings={settings}
                 >
-                  <span ref={i === activeRow ? ref : null} style={formatCode(code.level)}>
+                  <span ref={i === activeRow ? ref : null} style={formatCode(code)}>
                     {code.code}
                   </span>
                 </EditCodePopup>
@@ -192,7 +194,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
 };
 
 const changeCodeColor = async (codingjob, code, color, codes, setCodes) => {
-  let updatedCodes = codes.map((ucode) => {
+  let updatedCodes = codes.map(ucode => {
     if (ucode.code === code) ucode.color = color;
     return ucode;
   });
@@ -204,6 +206,7 @@ const loadCodes = async (codingjob, setCodes, setSettings) => {
   const cj = await db.getCodingjob(codingjob);
   if (cj.codebook) {
     const cb = cj.codebook;
+    console.log(cb);
     if (cb && cb.codes && cb.codes.length > 0) {
       setCodes(cb.codes);
     } else {
@@ -232,7 +235,7 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
     );
   };
 
-  const addCodePopup = (root) => {
+  const addCodePopup = root => {
     setPopupContent(
       <AddCodePopup
         codingjob={codingjob}
@@ -316,7 +319,7 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
 };
 
 const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector((state) => state.codeMap);
+  const codeMap = useSelector(state => state.codeMap);
   const [alreadyExists, setAlreadyExists] = useState(false);
   const dispatch = useDispatch();
   const [textInput, setTextInput] = useState("");
@@ -328,14 +331,14 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     };
   }, [dispatch]);
 
-  const addCode = async (newCode) => {
+  const addCode = async newCode => {
     if (newCode === "") return null;
     if (codeMap[newCode]) {
       setAlreadyExists(true);
       return null;
     }
     const updatedCodes = [...codes];
-    updatedCodes.push({ code: newCode, parent: code });
+    updatedCodes.push({ code: newCode, parent: code, active: true });
     await db.writeCodes(codingjob, updatedCodes);
     setCodes(updatedCodes);
     setOpen(false);
@@ -371,7 +374,7 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 };
 
 const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector((state) => state.codeMap);
+  const codeMap = useSelector(state => state.codeMap);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -381,15 +384,15 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     };
   }, [dispatch]);
 
-  const rmCode = async (keepChildren) => {
-    let updatedCodes = codes.filter((ucode) => ucode.code !== code);
+  const rmCode = async keepChildren => {
+    let updatedCodes = codes.filter(ucode => ucode.code !== code);
 
     if (!keepChildren) {
       const children = [];
       getAllChildren(codeMap, code, children);
-      updatedCodes = updatedCodes.filter((ucode) => !children.includes(ucode.code));
+      updatedCodes = updatedCodes.filter(ucode => !children.includes(ucode.code));
     } else {
-      updatedCodes = updatedCodes.map((ucode) => {
+      updatedCodes = updatedCodes.map(ucode => {
         if (codeMap[code].children.includes(ucode.code)) ucode.parent = codeMap[code].parent;
         return ucode;
       });
@@ -427,7 +430,7 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 };
 
 const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector((state) => state.codeMap);
+  const codeMap = useSelector(state => state.codeMap);
   const dispatch = useDispatch();
   const [newParent, setNewParent] = useState(codeMap[code].parent);
   const [textInput, setTextInput] = useState(code);
@@ -446,7 +449,7 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
       if (newCode === "") return null;
       if (codeMap[newCode]) return null;
     }
-    let updatedCodes = codes.map((ucode) => {
+    let updatedCodes = codes.map(ucode => {
       if (ucode.code === code) {
         ucode.code = newCode;
         ucode.parent = newParent;
@@ -511,6 +514,14 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
   );
 };
 
+const toggleActiveCode = async (codingjob, codes, code, active, setCodes) => {
+  let updatedCodes = [...codes];
+  codes.find(ucode => ucode.code === code).active = active;
+
+  await db.writeCodes(codingjob, updatedCodes);
+  setCodes(updatedCodes);
+};
+
 const getAllChildren = (codeMap, code, children) => {
   for (const child of codeMap[code].children) {
     children.push(child);
@@ -521,12 +532,12 @@ const getAllChildren = (codeMap, code, children) => {
 const getAllParentOptions = (codeMap, code) => {
   const children = [];
   getAllChildren(codeMap, code, children);
-  return Object.keys(codeMap).filter((parent) => !children.includes(parent) && parent !== code);
+  return Object.keys(codeMap).filter(parent => !children.includes(parent) && parent !== code);
 };
 
 const getCodeTreeArray = (codeMap, showColors) => {
   let parents = Object.keys(codeMap).filter(
-    (code) => !codeMap[code].parent || codeMap[code].parent === ""
+    code => !codeMap[code].parent || codeMap[code].parent === ""
   );
   const codeTreeArray = [];
   fillCodeTreeArray(codeMap, parents, codeTreeArray, [], showColors);
@@ -540,6 +551,8 @@ const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColor
 
     codeTreeArray.push({
       code: code,
+      active: codeMap[code].active,
+      activeParent: codeMap[code].activeParent,
       codeTrail: codeTrail,
       level: codeTrail.length,
       color: codeMap[code].color
@@ -553,7 +566,7 @@ const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColor
   }
 };
 
-const prepareCodeMap = (codes) => {
+const prepareCodeMap = codes => {
   // the payload is an array of objects, but for efficients operations
   // in the annotator we convert it to an object with the codes as keys
   const codeMap = codes.reduce((result, code) => {
@@ -565,7 +578,11 @@ const prepareCodeMap = (codes) => {
   const originalKeys = Object.keys(codeMap);
   for (const key of originalKeys) {
     if (codeMap[key].parent !== "" && !codeMap[codeMap[key].parent])
-      codeMap[codeMap[key].parent] = { code: codeMap[key].parent, parent: "", children: [] };
+      codeMap[codeMap[key].parent] = {
+        code: codeMap[key].parent,
+        parent: "",
+        children: [],
+      };
   }
 
   for (const code of Object.keys(codeMap)) {
@@ -573,6 +590,7 @@ const prepareCodeMap = (codes) => {
       codeMap[code].color = randomColor({ seed: code, luminosity: "light" });
 
     codeMap[code].tree = getParentTree(codeMap, code);
+    codeMap[code].activeParent = parentIsActive(codeMap, code);
 
     if (codeMap[codeMap[code].parent]) codeMap[codeMap[code].parent].children.push(code);
   }
@@ -587,6 +605,15 @@ const getParentTree = (codes, code) => {
     parent = codes[parent].parent;
   }
   return parents.reverse();
+};
+
+const parentIsActive = (codes, code) => {
+  let parent = codes[code].parent;
+  while (parent) {
+    if (codes[parent].active !== null && codes[parent].active === false) return false;
+    parent = codes[parent].parent;
+  }
+  return true;
 };
 
 export default CodeTreeTable;

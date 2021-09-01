@@ -9,14 +9,15 @@ import db from "../apis/dexie";
 
 const AnnotationPage = ({ item, taskType, contextUnit }) => {
   const [doc, setDoc] = useState(null);
-  const codeMap = useSelector((state) => state.codeMap);
+  const codeMap = useSelector(state => state.codeMap);
 
   useEffect(() => {
     if (!item) return null;
+    setDoc(null);
     documentSelector(item, setDoc, hash(codeMap));
   }, [codeMap, item, taskType, setDoc]);
 
-  const renderTask = (taskType) => {
+  const renderTask = taskType => {
     switch (taskType) {
       case "open annotation":
         return <SpanAnnotationEditor doc={doc} item={item} contextUnit={contextUnit} />;
@@ -42,4 +43,4 @@ const documentSelector = async (item, setDoc, codeMapHash) => {
   if (doc) setDoc(doc);
 };
 
-export default AnnotationPage;
+export default React.memo(AnnotationPage);

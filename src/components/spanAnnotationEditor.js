@@ -13,7 +13,7 @@ const SpanAnnotationEditor = ({ doc, item, contextUnit }) => {
   const [menuItem, setMenuItem] = useState("details");
   if (doc === null) return null;
 
-  const renderSwitch = (activeItem) => {
+  const renderSwitch = activeItem => {
     switch (activeItem) {
       case "help":
         return <SpanInstructions />;
@@ -143,4 +143,12 @@ const SpanSettings = () => {
   return <div>stuff</div>;
 };
 
-export default SpanAnnotationEditor;
+export default React.memo(SpanAnnotationEditor);
+
+// never forget...
+// export default React.memo(SpanAnnotationEditor), (prevprops, nextprops) => {
+//   for (let key of Object.keys(prevprops)) {
+//     console.log(key);
+//     console.log(prevprops[key] === nextprops[key]);
+//   }
+// });
