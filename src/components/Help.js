@@ -29,8 +29,8 @@ const Help = ({ header, texts }) => {
   return (
     <Popup position="right center" trigger={questionMark()}>
       <h3>{header}</h3>
-      {texts.map((text) => (
-        <p>{text}</p>
+      {texts.map((text, i) => (
+        <p key={i}>{text}</p>
       ))}
     </Popup>
   );

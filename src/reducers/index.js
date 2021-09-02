@@ -81,17 +81,23 @@ const codeSelectorTrigger = (state = { from: null, index: null, code: null }, ac
 
 const toggleSelection = (selection, tokens, index, add) => {
   if (!add || selection.length === 0) return [index, index];
-  //if (selection[1] === index) return selection;
 
-  if (tokens[selection[0]].section === tokens[index].section) return [selection[0], index];
+  // Negative offset for if token.index does not start at 0
+  //let offset = -tokens[0].index;
+  let offset = 0;
+
+  if (tokens[selection[0] + offset].section === tokens[index + offset].section)
+    return [selection[0], index];
 
   if (index > selection[0]) {
     for (let i = index; i >= selection[0]; i--) {
-      if (tokens[selection[0]].section === tokens[i].section) return [selection[0], i];
+      if (tokens[selection[0] + offset].section === tokens[i + offset].section)
+        return [selection[0], i];
     }
   } else {
     for (let i = index; i <= selection[0]; i++) {
-      if (tokens[selection[0]].section === tokens[i].section) return [selection[0], i];
+      if (tokens[selection[0] + offset].section === tokens[i + offset].section)
+        return [selection[0], i];
     }
   }
   return selection;

@@ -9,7 +9,7 @@ const gridStyle = { height: "100%", paddingTop: "0" };
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
-const SpanAnnotationEditor = ({ doc, item, contextUnit }) => {
+const SpanAnnotationEditor = ({ doc, item }) => {
   const [menuItem, setMenuItem] = useState("details");
   if (doc === null) return null;
 
@@ -30,7 +30,6 @@ const SpanAnnotationEditor = ({ doc, item, contextUnit }) => {
         <Tokens
           doc={doc}
           item={item}
-          contextUnit={contextUnit}
           height={75}
           textUnitPosition={1 / 4}
         />

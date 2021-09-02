@@ -136,7 +136,7 @@ const KeyEvents = ({
       if (tokenSelection[0] === tokenSelection[1]) {
         // enter key
         if (event.keyCode === 13) {
-          dispatch(triggerCodeselector("enter_key", tokenSelection[0], null));
+          dispatch(triggerCodeselector("enter_key", tokens[tokenSelection[0]].index, null));
         }
       }
     }
@@ -179,9 +179,9 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
       storeMouseSelection(event);
     } else {
       let currentNode = getToken(tokens, event);
-      if (currentNode) {
-        dispatch(setCurrentToken(currentNode.index));
-        dispatch(toggleTokenSelection(tokens, currentNode.index, false));
+      if (currentNode !== null) {
+        dispatch(setCurrentToken(currentNode));
+        dispatch(toggleTokenSelection(tokens, currentNode, false));
       }
     }
   };
@@ -220,9 +220,9 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     let currentNode = getToken(tokens, event);
     if (!currentNode) return null;
 
-    dispatch(setCurrentToken(currentNode.index));
-    dispatch(toggleTokenSelection(tokens, currentNode.index, true));
-    return currentNode.index;
+    dispatch(setCurrentToken(currentNode));
+    dispatch(toggleTokenSelection(tokens, currentNode, true));
+    return currentNode;
   };
 
   return <></>;
@@ -240,7 +240,7 @@ const annotationFromSelection = (tokens, selection, dispatch, selectedCode) => {
       lastSection = tokens[i].section;
     }
     annotations.push({
-      index: i,
+      index: tokens[i].index,
       group: selectedCode == null ? "UNASSIGNED" : selectedCode,
       length: tokens[to].length + tokens[to].offset - tokens[from].offset,
       span: [from, to],
@@ -252,7 +252,7 @@ const annotationFromSelection = (tokens, selection, dispatch, selectedCode) => {
   dispatch(clearTokenSelection());
   if (selectedCode == null) {
     dispatch(triggerCodeselector(null, null, null));
-    dispatch(triggerCodeselector("new_selection", to, null));
+    dispatch(triggerCodeselector("new_selection", tokens[to].index, null));
   }
 };
 
@@ -266,9 +266,7 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
   if (newPosition > mover.ntokens) newPosition = mover.ntokens;
   if (newPosition < 0) newPosition = 0;
 
-  if (tokens[newPosition] == null) return mover.position;
-
-  if (tokens[newPosition].ref == null) {
+  if (tokens[newPosition]?.ref == null) {
     if (key === "ArrowRight") {
       const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
       if (firstUnit < 0) return mover.position;
@@ -279,7 +277,6 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
       if (firstAfterUnit < 0) return mover.position;
       newPosition = firstAfterUnit - 1;
     }
-    //return firstUnit < 0 ? 0 : firstUnit;
   }
 
   if (space) {
@@ -308,10 +305,10 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
 
     scrollTokenToMiddle(tokens[newPosition].ref.current);
 
-    const down = key === "ArrowRight" || key === "ArrowDown";
-    tokens[newPosition].ref.current.scrollIntoView(false, {
-      block: down ? "start" : "end",
-    });
+    // const down = key === "ArrowRight" || key === "ArrowDown";
+    // tokens[newPosition].ref.current.scrollIntoView(false, {
+    //   block: down ? "start" : "end",
+    // });
   }
   return newPosition;
 };
@@ -320,7 +317,7 @@ const moveSentence = (tokens, mover, direction = "up") => {
   // moving sentences is a bit tricky, but we can do it via the refs to the
   // token spans, that provide information about the x and y values
 
-  if (tokens[mover.position].ref == null || tokens[mover.startposition].ref == null) {
+  if (tokens[mover.position]?.ref == null || tokens[mover.startposition]?.ref == null) {
     const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
     return firstUnit < 0 ? 0 : firstUnit;
   }
@@ -360,13 +357,15 @@ const moveSentence = (tokens, mover, direction = "up") => {
 };
 
 const getTokenAttributes = (tokens, tokenNode) => {
-  const tokenindex = parseInt(tokenNode.getAttribute("tokenindex"));
+  return parseInt(tokenNode.getAttribute("tokenindex"));
+  // const tokenArrayIndex = tokenindex - tokens[0].index;
 
-  return {
-    index: tokenindex,
-    offset: tokens[tokenindex].offset,
-    length: tokens[tokenindex].length,
-  };
+  // return {
+  //   index: tokenindex,
+  //   tokenArrayIndex: tokenArrayIndex,
+  //   offset: tokens[tokenArrayIndex].offset,
+  //   length: tokens[tokenArrayIndex].length,
+  // };
 };
 
 const getToken = (tokens, e) => {
@@ -380,8 +379,9 @@ const getToken = (tokens, e) => {
         e.className === "token selected" ||
         e.className === "token selected highlight" ||
         e.className === "token highlight"
-      )
+      ) {
         return getTokenAttributes(tokens, e);
+      }
       if (e.parentNode) {
         if (
           e.parentNode.className === "token" ||
@@ -403,7 +403,7 @@ function scrollTokenToMiddle(token) {
   // this should be stable, but it still looks terrible, and might not be super efficient
   // alternative is to calculate it once on rendering, or passing on ref to parent container
   const parentDiv = token.parentNode.parentNode.parentNode.parentNode.parentNode;
-  scrollToMiddle(parentDiv, token, 1 / 3);
+  scrollToMiddle(parentDiv, token, 1 / 4);
 }
 
 export default SpanAnnotationsNavigation;

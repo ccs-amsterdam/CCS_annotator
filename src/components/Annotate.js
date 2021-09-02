@@ -24,13 +24,14 @@ const UNITSELECTIONDEFAULT = {
   n: null,
   seed: 42,
   ordered: true,
-  stratifyDocuments: true,
+  balanceDocuments: false,
+  balanceAnnotations: true,
 };
 
 const Annotate = () => {
-  const codingjob = useSelector(state => state.codingjob);
-  const mode = useSelector(state => state.mode);
-  const codeMap = useSelector(state => state.codeMap);
+  const codingjob = useSelector((state) => state.codingjob);
+  const mode = useSelector((state) => state.mode);
+  const codeMap = useSelector((state) => state.codeMap);
 
   const [textUnit, setTextUnit] = useState("document");
   const [unitSelection, setUnitSelection] = useState(UNITSELECTIONDEFAULT);
@@ -43,6 +44,12 @@ const Annotate = () => {
   const [taskType, setTaskType] = useState("open annotation");
   const [jobItems, setJobItems] = useState(null);
   const [jobItem, setJobItem] = useState(null);
+
+  useEffect(() => {
+    db.getSetting("textUnit").then((setting) => setTextUnit(setting));
+    db.getSetting("contextUnit").then((setting) => setContextUnit(setting));
+    db.getSetting("unitSelection").then((setting) => setUnitSelectionSettings(setting));
+  }, [codingjob, setUnitSelectionSettings]);
 
   useEffect(() => {
     if (!codingjob) return null;
@@ -64,6 +71,10 @@ const Annotate = () => {
     setJobItems,
     setUnitSelection,
   ]);
+
+  useEffect(() => {
+    setUnitSelectionSettings((current) => ({ ...current, n: unitSelection.totalItems }));
+  }, [textUnit, unitSelection.value, unitSelection.totalItems, setUnitSelectionSettings]);
 
   if (!codingjob) {
     return (
@@ -139,7 +150,15 @@ const ItemBreadcrumb = ({ jobItem }) => {
     return (
       <BreadcrumbSection>
         <Breadcrumb.Divider />
-        {`token ${jobItem.annotation.span[0] + 1}-${jobItem.annotation.span[1] + 1}`}
+        {jobItem.annotation.span != null ? (
+          `${jobItem.annotation.group} ${jobItem.annotation.span[0]}-${jobItem.annotation.span[1]}`
+        ) : (
+          <>
+            {`${jobItem.annotation.group}`}
+            {"  "}
+            <sup>(random added)</sup>
+          </>
+        )}
       </BreadcrumbSection>
     );
   };
@@ -177,14 +196,6 @@ const TaskTypeDropdown = ({ taskType, setTaskType }) => {
           Open annotation
         </Dropdown.Item>
         <Dropdown.Item onClick={() => setTaskType("question based")}>Question based</Dropdown.Item>
-        {/* <Dropdown.Item onClick={() => setTaskType("question based")}>Edit labels</Dropdown.Item>
-        <Dropdown.Item onClick={() => setTaskType("question based")}>Validate labels</Dropdown.Item>
-        <Dropdown.Item onClick={() => setTaskType("question based")}>
-          Question per label
-        </Dropdown.Item>
-        <Dropdown.Item onClick={() => setTaskType("question based")}>
-          Question per text
-        </Dropdown.Item> */}
       </Dropdown.Menu>
     </Dropdown>
   );
@@ -222,7 +233,7 @@ const TextUnitDropdown = ({ textUnit, setTextUnit }) => {
 };
 
 const ContextUnitDropdown = ({ textUnit, contextUnit, setContextUnit }) => {
-  const onClick = unit => {
+  const onClick = (unit) => {
     if (contextUnit.selected !== unit) {
       setContextUnit({ ...contextUnit, selected: unit });
     }
@@ -327,21 +338,5 @@ const setupCodingjob = async (
   setJobItem(items[0]);
   setUnitSelection({ ...unitSelectionSettings, totalItems: totalItems });
 };
-
-// from: https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array
-// const getRandomSubarray = (arr, size) => {
-//   var shuffled = arr.slice(0),
-//     i = arr.length,
-//     min = i - size,
-//     temp,
-//     index;
-//   while (i-- > min) {
-//     index = Math.floor((i + 1) * Math.random());
-//     temp = shuffled[index];
-//     shuffled[index] = shuffled[i];
-//     shuffled[i] = temp;
-//   }
-//   return shuffled.slice(min);
-// };
 
 export default Annotate;

@@ -3,7 +3,8 @@ import seedrandom from "seedrandom";
 export const drawRandom = (array, n, replace, seed, group) => {
   const random = seedrandom(seed);
 
-  if (n == null || n === null || n > array.length) n = array.length;
+  if (n == null || n === null) n = array.length;
+  if (!replace && n > array.length) n = array.length;
   let index = [...Array(array.length).keys()];
 
   let indices, ns;

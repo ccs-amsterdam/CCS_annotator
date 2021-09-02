@@ -6,23 +6,24 @@ import SpanAnnotationEditor from "./spanAnnotationEditor";
 import SpanAnnotationsCoder from "./SpanAnnotationsCoder";
 
 import db from "../apis/dexie";
+import { selectTokens } from "../util/selectTokens";
 
 const AnnotationPage = ({ item, taskType, contextUnit }) => {
   const [doc, setDoc] = useState(null);
-  const codeMap = useSelector(state => state.codeMap);
+  const codeMap = useSelector((state) => state.codeMap);
 
   useEffect(() => {
     if (!item) return null;
     setDoc(null);
-    documentSelector(item, setDoc, hash(codeMap));
-  }, [codeMap, item, taskType, setDoc]);
+    documentSelector(item, setDoc, hash(codeMap), contextUnit);
+  }, [codeMap, item, taskType, contextUnit, setDoc]);
 
-  const renderTask = taskType => {
+  const renderTask = (taskType) => {
     switch (taskType) {
       case "open annotation":
-        return <SpanAnnotationEditor doc={doc} item={item} contextUnit={contextUnit} />;
+        return <SpanAnnotationEditor doc={doc} />;
       case "question based":
-        return <SpanAnnotationsCoder doc={doc} item={item} contextUnit={contextUnit} />;
+        return <SpanAnnotationsCoder doc={doc} />;
       default:
         return null;
     }
@@ -33,13 +34,16 @@ const AnnotationPage = ({ item, taskType, contextUnit }) => {
   return renderTask(taskType);
 };
 
-const documentSelector = async (item, setDoc, codeMapHash) => {
-  //let doc = await db.getJobDocuments(codingjob, item.docIndex, 1);
+const documentSelector = async (item, setDoc, codeMapHash, contextUnit) => {
   let doc = await db.getDocument(item.doc_uid);
   if (!doc) return;
-  //doc = doc[0]; // getJobDocuments returns array of length 1
   doc.codeMapHash = codeMapHash;
-  doc.writable = false;
+  doc.writable = false; // this prevents overwriting annotations before they have been loaded (in spanAnnotationsDB.js)
+
+  // add prepareTokens here
+  if (doc.selectedTokens == null) doc.selectedTokens = selectTokens(doc.tokens, item, contextUnit);
+  if (item.annotation) doc.itemAnnotation = item.annotation;
+
   if (doc) setDoc(doc);
 };
 

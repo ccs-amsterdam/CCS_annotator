@@ -3,21 +3,21 @@ import { Ref } from "semantic-ui-react";
 import Token from "./Token";
 import scrollToMiddle from "../util/scrollToMiddle";
 
-const Tokens = ({ doc, item, contextUnit, height, textUnitPosition }) => {
+const Tokens = ({ doc, height, textUnitPosition }) => {
   const [tokenComponents, setTokenComponents] = useState({});
   const containerRef = useRef(null);
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = doc.tokens.find(token => token.textPart === "textUnit");
+    const firstTextUnitToken = doc.tokens.find((token) => token.textPart === "textUnit");
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, textUnitPosition);
     }
   });
 
   useEffect(() => {
-    prepareTokens(doc, setTokenComponents, item, contextUnit);
-  }, [doc, item, contextUnit]);
+    prepareTokens(doc, setTokenComponents);
+  }, [doc]);
 
   if (doc === null) return null;
 
@@ -64,19 +64,21 @@ const Tokens = ({ doc, item, contextUnit, height, textUnitPosition }) => {
   );
 };
 
-const prepareTokens = async (doc, setTokenComponents, item, contextUnit) => {
-  let tokens = doc.tokens;
+const prepareTokens = async (doc, setTokenComponents) => {
+  let tokens = doc.selectedTokens;
 
   if (!tokens) return null;
-  setTokenComponents(renderText(tokens, item, contextUnit));
-  doc.tokens = tokens;
+  setTokenComponents(renderText(tokens, doc.itemAnnotation));
+  doc.tokens = tokens; // this tokens array has the ref added
 };
 
-const renderText = (tokens, item, contextUnit) => {
+const renderText = (tokens, itemAnnotation) => {
   const text = { contextBefore: [], textUnit: [], contextAfter: [] };
+
   let section = [];
   let paragraph = [];
   let sentence = [];
+  let textPart = tokens[0].textPart;
   let section_name = tokens[0].section;
   let paragraph_nr = tokens[0].paragraph;
   let sentence_nr = tokens[0].sentence;
@@ -84,27 +86,9 @@ const renderText = (tokens, item, contextUnit) => {
 
   //let paragraphContext = [0, tokens[tokens.length - 1].paragraph];
   //let sentenceContext = [0, tokens[tokens.length - 1].sentence];
-  let tokenRange = [0, tokens.length - 1];
-  let tokenContext = [0, tokens.length - 1];
-
-  if (item.textUnit === "paragraph") {
-    tokenRange = getTokenRange(tokens, "paragraph", item.parIndex, item.parIndex);
-  }
-  if (item.textUnit === "sentence") {
-    tokenRange = getTokenRange(tokens, "sentence", item.sentIndex, item.sentIndex);
-  }
-
-  if (contextUnit.selected !== "document")
-    tokenContext = getContextRange(tokens, contextUnit, tokenRange);
-
-  // textPart indicates if text is contextBefore, textUnit or contextAfter
-  let textPart = tokenRange[0] === 0 ? "contextUnit" : "contextBefore";
 
   for (let i = 0; i < tokens.length; i++) {
-    tokens[i].index = i;
-    tokens[i].textPart = "textUnit";
-    if (i < tokenRange[0]) tokens[i].textPart = "contextBefore";
-    if (i > tokenRange[1]) tokens[i].textPart = "contextAfter";
+    tokens[i].arrayIndex = i;
 
     if (tokens[i].sentence !== sentence_nr) {
       if (sentence.length > 0) paragraph.push(renderSentence(i + "_" + sentence_nr, sentence));
@@ -155,11 +139,8 @@ const renderText = (tokens, item, contextUnit) => {
     section_name = tokens[i].section;
     textPart = tokens[i].textPart;
 
-    if (i < tokenContext[0]) continue;
-    if (i > tokenContext[1]) break;
-
     if (tokens[i].textPart === "textUnit") tokens[i].ref = React.createRef();
-    sentence.push(renderToken(tokens[i], item.annotation));
+    sentence.push(renderToken(tokens[i], itemAnnotation));
   }
   if (sentence.length > 0) paragraph.push(renderSentence("last_" + sentence_nr, sentence));
   if (paragraph.length > 0)
@@ -169,27 +150,8 @@ const renderText = (tokens, item, contextUnit) => {
   return text;
 };
 
-const getTokenRange = (tokens, field, startValue, endValue) => {
-  const range = [0, tokens.length - 1];
-
-  const start = tokens.find(token => token[field] === startValue);
-  if (start) range[0] = start.index;
-  const end = tokens.find(token => token[field] === endValue + 1);
-  if (end) range[1] = end.index - 1;
-
-  return range;
-};
-
-const getContextRange = (tokens, contextUnit, tokenRange) => {
-  const field = contextUnit.selected;
-  let range = [tokens[tokenRange[0]][field], tokens[tokenRange[1]][field]];
-  range[0] = range[0] - contextUnit.range[contextUnit.selected][0];
-  range[1] = range[1] + contextUnit.range[contextUnit.selected][1];
-  return getTokenRange(tokens, field, range[0], range[1]);
-};
-
 const renderSection = (paragraph_nr, paragraphs, section) => {
-  const fontstyle = paragraphs => {
+  const fontstyle = (paragraphs) => {
     if (section === "title") return <h2>{paragraphs}</h2>;
     return paragraphs;
   };
@@ -208,8 +170,7 @@ const renderParagraph = (paragraph_nr, sentences, start, end) => {
     <span
       className="paragraph"
       style={{
-        marginTop: start ? "1em" : "0em",
-        marginBottom: end ? "1em" : "0em",
+        paddingBottom: end ? "1.5em" : "0em",
         display: "table",
       }}
       key={paragraph_nr}

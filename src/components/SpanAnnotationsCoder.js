@@ -6,7 +6,7 @@ import Tokens from "./Tokens";
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
-const SpanAnnotationsCoder = ({ doc, item, contextUnit }) => {
+const SpanAnnotationsCoder = ({ doc }) => {
   const mode = useSelector((state) => state.mode);
   // note that tokens is actually an object with doc included: {doc, tokens}
   // passing the states separately caused race issues
@@ -23,13 +23,7 @@ const SpanAnnotationsCoder = ({ doc, item, contextUnit }) => {
     <Grid stackable centered style={{ height: "100%" }}>
       <Grid.Column width={8} style={{ paddingRight: "0em" }}>
         <Grid.Row>
-          <Tokens
-            doc={doc}
-            item={item}
-            contextUnit={contextUnit}
-            height={45}
-            textUnitPosition={1 / 2}
-          />
+          <Tokens doc={doc} height={45} textUnitPosition={1 / 2} />
         </Grid.Row>
 
         <Grid.Row style={{ height: "30vh", marginTop: "1em" }}>

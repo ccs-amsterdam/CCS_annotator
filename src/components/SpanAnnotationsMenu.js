@@ -47,15 +47,26 @@ const annotationRows = (tokens, annotations) => {
     for (const code of Object.keys(annotations[tokenIndex])) {
       annotation = annotations[tokenIndex][code];
 
+      // annotations are stored per token index, and so are duplicated
+      // to get unique annotations we only use the first one.
       if (annotation.index !== annotation.span[0]) continue;
+
+      // negative offset, so that index/span matches array indices (more efficient)
+      const offset = -tokens[0].index;
+      //const span = [annotation.span[0] - tokens[0].index, annotation.span[1] - tokens[0].index];
+
       let notInUnit = true;
       for (let span_i = annotation.span[0]; span_i <= annotation.span[1]; span_i++) {
-        if (tokens[span_i].textPart === "textUnit") notInUnit = false;
+        if (tokens[span_i + offset] != null && tokens[span_i + offset].textPart === "textUnit")
+          notInUnit = false;
       }
 
       if (notInUnit) continue;
 
-      const annotationTokens = tokens.slice(annotation.span[0], annotation.span[1] + 1);
+      const annotationTokens = tokens.slice(
+        annotation.span[0] + offset,
+        annotation.span[1] + 1 + offset
+      );
       text = annotationTokens
         .map((at, i) => {
           const pre = i > 0 ? at.pre : "";
@@ -71,6 +82,7 @@ const annotationRows = (tokens, annotations) => {
           annotation={annotation}
           code={code}
           text={text}
+          offset={offset}
         />
       );
       rows.push(row);
@@ -79,7 +91,7 @@ const annotationRows = (tokens, annotations) => {
   return rows;
 };
 
-const AnnotationRow = ({ tokens, annotation, code, text }) => {
+const AnnotationRow = ({ tokens, annotation, code, text, offset }) => {
   const codeMap = useSelector((state) => state.codeMap);
   const infocus = useSelector((state) => {
     return state.currentToken >= annotation.span[0] && state.currentToken <= annotation.span[1];
@@ -108,7 +120,7 @@ const AnnotationRow = ({ tokens, annotation, code, text }) => {
       <Table.Row
         className="annotations-tr"
         onClick={() => {
-          tokens[annotation.index].ref.current.scrollIntoView(false, { block: "center" });
+          tokens[annotation.index + offset].ref.current.scrollIntoView(false, { block: "center" });
           dispatch(triggerCodeselector(null, null, null));
           dispatch(triggerCodeselector("menu", annotation.index, code));
         }}

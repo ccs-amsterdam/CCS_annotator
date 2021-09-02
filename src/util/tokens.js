@@ -3,9 +3,6 @@ import paragraphs from "compromise-paragraphs";
 nlp.extend(paragraphs);
 
 export const parseTokens = (text_fields) => {
-  // map to single array.
-  // for some reason there's an extra array layer between sents and pars...
-  // I've only found cases where lenght is 1, but I'll map it just in case
   const tokens = [];
   let token = null;
   let paragraph = 0;
@@ -17,9 +14,12 @@ export const parseTokens = (text_fields) => {
     let section = text_field.name;
     text = text_field.value;
     t = nlp.tokenize(text).paragraphs().json({ offset: true });
+    // map to single array.
     for (let par = 0; par < t.length; par++) {
       for (let sent = 0; sent < t[par].sentences.length; sent++) {
         for (let sent2 = 0; sent2 < t[par].sentences[sent].length; sent2++) {
+          // for some reason there's an extra array layer between sents and pars...
+          // I've only found cases where lenght is 1, but I'll map it just in case
           for (let term = 0; term < t[par].sentences[sent][sent2].terms.length; term++) {
             token = t[par].sentences[sent][sent2].terms[term];
             tokens.push({
@@ -137,7 +137,8 @@ export const importTokens = (tokens) => {
 };
 
 export const importTokenAnnotations = (tokens, codes) => {
-  // returns annotations, but also modifies the codes object
+  // returns annotations, and also modifies the codes object
+  // codes keeps track of annotations to create a codebook
   if (tokens.length === 0) return [];
   let annotations = [];
   let codeTracker = {};
@@ -151,7 +152,7 @@ export const importTokenAnnotations = (tokens, codes) => {
 
     let annotationDict = {};
     for (let annotation of tokens[i].annotations) {
-      if (annotation.value === "NA") continue; // Should be a checkbox when importing
+      if (annotation.value === "NA" || annotation.value === "NaN") continue; // Should be a checkbox when importing
 
       if (!codes[annotation.name]) {
         codes[annotation.name] = [""];
@@ -213,3 +214,4 @@ export const importTokenAnnotations = (tokens, codes) => {
 
   return annotations;
 };
+

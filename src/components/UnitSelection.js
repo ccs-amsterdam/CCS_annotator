@@ -37,14 +37,13 @@ const UnitSelection = ({ textUnit, unitSelection, setUnitSelectionSettings }) =>
       onClose={() => dispatch(blockEvents(false))}
       position="bottom left"
       on="click"
-      style={{ minWidth: "20em" }}
+      style={{ minWidth: "25em" }}
       trigger={
         <Button style={buttonStyle}>{buttonLabel(unitSelection.value, "Unit selection")}</Button>
       }
     >
       <UnitForm unitSelection={unitSelection} setUnitSelectionSettings={setUnitSelectionSettings} />
       <SampleForm
-        textUnit={textUnit}
         unitSelection={unitSelection}
         setUnitSelectionSettings={setUnitSelectionSettings}
       />
@@ -54,7 +53,7 @@ const UnitSelection = ({ textUnit, unitSelection, setUnitSelectionSettings }) =>
 
 const UnitForm = ({ unitSelection, setUnitSelectionSettings }) => {
   const onUnitSelection = (e, d) => {
-    setUnitSelectionSettings(old => ({ ...old, value: d.value, n: null }));
+    setUnitSelectionSettings((old) => ({ ...old, value: d.value, n: null }));
   };
 
   return (
@@ -110,7 +109,7 @@ const UnitForm = ({ unitSelection, setUnitSelectionSettings }) => {
               trigger={
                 <Button
                   floated="right"
-                  onClick={() => setUnitSelectionSettings(old => ({ ...old }))}
+                  onClick={() => setUnitSelectionSettings((old) => ({ ...old }))}
                   style={{ margin: "0", padding: "0.2em", floated: "right" }}
                 >
                   Update
@@ -118,187 +117,208 @@ const UnitForm = ({ unitSelection, setUnitSelectionSettings }) => {
               }
             >
               <p>
-                Check if new annotations have been added. Beware that this will change the current
-                unit selection if units are shuffled or a sample is drawn
+                New annotations that you made in the current session are not immediately added to
+                the unit selection. Click here to update. <br />
+                <br />
+                Beware that if the current unit selection is sampled or shuffled, this will change
+                the current selection.
               </p>
             </Popup>
           ) : null}
         </Form.Field>
+        <Form.Field width={10}></Form.Field>
       </Form.Group>
       <br />
     </Form>
   );
 };
 
-const SampleForm = React.memo(
-  ({ textUnit, unitSelection, setUnitSelectionSettings }) => {
-    const [n, setN] = useState(0);
-    const [mix, setMix] = useState(0);
-    const [seed, setSeed] = useState(42);
-    const [pct, setPct] = useState(100);
+const SampleForm = React.memo(({ unitSelection, setUnitSelectionSettings }) => {
+  const [delayed, setDelayed] = useState(null); // delayed unitSelectionSettings
+  const [pct, setPct] = useState(100);
 
-    // useEffect(() => {
-    //     // pff... the previous useEffect resets n if unitselection changes
-    //     // then this updates it with the totalItems. This way cahnging totalItems doesn't trigger the reset
-    //     if (n === null) {
-    //       setN(unitSelection.totalItems);
-    //       setPct(Math.round((100 * n) / unitSelection.totalItems));
-    //       setSeed(unitSelection.seed);
-    //       setMix(unitSelection.mix);
-    //     }
-    //   }, [unitSelection.n, unitSelection.pct, unitSelection.seed, unitSelection.mix]);
+  useEffect(() => {
+    setPct(Math.round((100 * unitSelection.n) / unitSelection.totalItems));
+    if (unitSelection.seed == null) unitSelection.seed = 42;
 
-    useEffect(() => {
-      setN(0);
-      setPct(100);
-    }, [textUnit, unitSelection.value]);
+    setDelayed(unitSelection);
+  }, [unitSelection, setDelayed]);
 
-    useEffect(() => {
-      if (
-        unitSelection.n === n &&
-        unitSelection.annotationMix === mix &&
-        unitSelection.seed === seed
-      )
-        return null;
-      const timer = setTimeout(() => {
-        setUnitSelectionSettings(old => ({ ...old, n: n, annotationMix: mix, seed: seed }));
-      }, 500);
-      return () => clearTimeout(timer);
-    }, [n, mix, seed, setUnitSelectionSettings, unitSelection]);
+  useEffect(() => {
+    if (delayed === unitSelection) return null;
+    const timer = setTimeout(() => {
+      setUnitSelectionSettings(delayed);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [delayed, unitSelection, setUnitSelectionSettings]);
 
-    const onChangeMix = (e, d) => {
-      let value = Number(d.value);
-      //value = value > mix ? value + 4 : Math.max(0, value - 4);
-      setMix(Number(value));
-    };
+  // useEffect(() => {
+  //   if (
+  //     unitSelection.n === n &&
+  //     unitSelection.annotationMix === mix &&
+  //     unitSelection.seed === seed
+  //   )
+  //     return null;
+  //   const timer = setTimeout(() => {
+  //     setUnitSelectionSettings(old => ({ ...old, n: n, annotationMix: mix, seed: seed }));
+  //   }, 500);
+  //   return () => clearTimeout(timer);
+  // }, [n, mix, seed, setUnitSelectionSettings, unitSelection]);
 
-    const onChangeSeed = (e, d) => {
-      setSeed(Number(d.value));
-    };
+  const onChangeMix = (e, d) => {
+    setDelayed((current) => ({ ...current, annotationMix: Number(d.value) }));
+  };
 
-    const onChangeShuffle = (e, d) => {
-      setUnitSelectionSettings(old => ({ ...old, ordered: !d.checked }));
-    };
-    const onChangeStratify = (e, d) => {
-      setUnitSelectionSettings(old => ({ ...old, stratifyDocuments: d.checked }));
-    };
+  const onChangeSeed = (e, d) => {
+    setDelayed((current) => ({ ...current, seed: Number(d.value) }));
+  };
 
-    const onChangeN = (e, d) => {
-      let value = Number(d.value);
-      //value = value > n ? Math.min(unitSelection.totalItems, value + 4) : Math.max(0, value - 4);
-      setN(value);
-      setPct(Math.round((100 * value) / unitSelection.totalItems));
-    };
-    const onChangePCT = (e, d) => {
-      let value = Number(d.value);
-      //value = value > pct ? Math.min(100, value + 4) : Math.max(0, value - 4);
-      let valueN = Math.ceil((value / 100) * unitSelection.totalItems);
-      if (valueN >= 0) {
-        setPct(value);
-        setN(valueN > 0 ? valueN : 1);
-      }
-    };
+  const onChangeShuffle = (e, d) => {
+    setUnitSelectionSettings((old) => ({ ...old, ordered: !d.checked }));
+  };
 
-    return (
-      <Form>
-        <Form.Group>
-          <Icon name="setting" />
-          <label>Sample</label>
-          {/* <Help header={"test"} texts={["test", "this"]} /> */}
-        </Form.Group>
+  const onChangeBalanceDoc = (e, d) => {
+    setUnitSelectionSettings((old) => ({ ...old, balanceDocuments: d.checked }));
+  };
+  const onChangeBalanceAnn = (e, d) => {
+    setUnitSelectionSettings((old) => ({ ...old, balanceAnnotations: d.checked }));
+  };
 
-        <Form.Group>
-          <Form.Field
-            width={5}
-            min={1}
-            max={unitSelection.totalItems}
-            label="N"
+  const onChangeN = (e, d) => {
+    let value = Number(d.value);
+    //value = value > n ? Math.min(unitSelection.totalItems, value + 4) : Math.max(0, value - 4);
+    setPct(Math.round((100 * value) / unitSelection.totalItems));
+    setDelayed((current) => ({ ...current, n: value }));
+  };
+
+  const onChangePCT = (e, d) => {
+    let value = Number(d.value);
+    //value = value > pct ? Math.min(100, value + 4) : Math.max(0, value - 4);
+    let valueN = Math.ceil((value / 100) * unitSelection.totalItems);
+    if (valueN >= 0) {
+      setPct(value);
+      setDelayed((current) => ({ ...current, n: valueN }));
+    }
+  };
+
+  if (delayed === null) return null;
+
+  return (
+    <Form>
+      <Form.Group>
+        <Icon name="setting" />
+        <label>Sample</label>
+        {/* <Help header={"test"} texts={["test", "this"]} /> */}
+      </Form.Group>
+
+      <Form.Group>
+        <Form.Field width={3}>
+          <label>Shuffle</label>
+          <Checkbox
+            toggle
             size="mini"
-            control={Input}
-            type="number"
-            value={unitSelection.n}
-            onChange={onChangeN}
+            checked={!unitSelection.ordered}
+            onChange={onChangeShuffle}
           />
-          <Form.Field
-            width={5}
-            min={0}
-            max={100}
-            label="%"
-            size="mini"
-            control={Input}
-            type="number"
-            value={unitSelection.pct}
-            onChange={onChangePCT}
-          />
-          <Form.Field width={3}>
-            <label>Shuffle</label>
-            <Checkbox
-              toggle
-              size="mini"
-              checked={!unitSelection.ordered}
-              onChange={onChangeShuffle}
-            />
-          </Form.Field>
+        </Form.Field>
+        <Form.Field
+          width={5}
+          min={1}
+          max={unitSelection.totalItems}
+          label="N"
+          size="mini"
+          control={Input}
+          type="number"
+          value={delayed.n}
+          onChange={onChangeN}
+        />
+        <Form.Field
+          width={5}
+          min={0}
+          step={5}
+          max={100}
+          label="%"
+          size="mini"
+          control={Input}
+          type="number"
+          value={pct}
+          onChange={onChangePCT}
+        />
+
+        <Form.Field width={5}>
+          <label>Seed</label>
+          <Input size="mini" type="number" min={1} value={delayed.seed} onChange={onChangeSeed} />
+        </Form.Field>
+        <Help
+          header={"Sampling and shuffling"}
+          texts={[
+            "If % < 100, a random sample will be drawn.",
+            "If shuffle is enabled, the order of the units will be randomized.",
+            "Seed initializes the random number generator. Simply put, using the same seed gives the same 'random' results if the data is the same.",
+          ]}
+        />
+      </Form.Group>
+
+      <Form.Group>
+        <Form.Field width={5}>
+          <b>Balance</b>
           <Help
-            header={"Sampling and shuffling"}
+            header={"Balanced sampling"}
             texts={[
-              "If % < 100, a random sample will be drawn.",
-              "If shuffle is enabled, the order of the units will be randomized.",
+              "Balance sampled items evenly over groups. Uses a simple approach where unique groups are created (documents, codes, or documentsXcodes), and samples are drawn from these groups one by one",
+              "For documents: get an equal number of paragraphs, sentences or annotations per document",
+              "For codes: if units are annotations, get an equal number annotations for each unique code. (You can toggle which codes to include in the codebook, see top-right corner)",
             ]}
           />
-        </Form.Group>
-
-        <Form.Group>
-          <Form.Field width={5}>
-            <label>Seed</label>
-            <Input size="mini" type="number" min={1} value={seed} onChange={onChangeSeed} />
-          </Form.Field>
-          <Help
-            header={"Random seed"}
-            texts={[
-              "Choose a random seed for drawing the sample and/or shuffling the order",
-              "Simply put, using the same seed will give the same random results if the data is the same. Change this if you want an alternative random selection/order.",
-            ]}
+        </Form.Field>
+        <Form.Field width={5}>
+          <Checkbox
+            size="mini"
+            label="documents"
+            checked={unitSelection.balanceDocuments}
+            onChange={onChangeBalanceDoc}
           />
-          <Form.Field width={10}>
-            <label>Stratify documents</label>
-            <Checkbox
-              toggle
-              size="mini"
-              checked={!unitSelection.stratifyDocuments}
-              onChange={onChangeStratify}
-            />
-          </Form.Field>
-        </Form.Group>
+        </Form.Field>
+        <Form.Field>
+          <Checkbox
+            disabled={unitSelection.value !== "per annotation"}
+            size="mini"
+            label="codes"
+            checked={unitSelection.balanceAnnotations}
+            onChange={onChangeBalanceAnn}
+          />
+        </Form.Field>
+      </Form.Group>
+
+      <Form.Group inline>
         <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
-          Random text units without annotation
+          Add random units
         </label>
-        <Form.Group inline>
-          <Form.Field
+        <Help
+          header={"Add random annotations"}
+          texts={[
+            "Add random text units, 'annotated' with random codes",
+            "The random codes can be usefull in coding question, such as 'does this text contain [label]",
+            "If codes are balanced, a balance of all active codes from the codebook is used. If not, it will approximate the distribution of the codes in the actuall annotations in the sample",
+          ]}
+        />
+        <Form.Field width={4}>
+          <Input
             disabled={!unitSelection.value.includes("annotation")}
-            width={5}
             min={0}
+            step={10}
             size="mini"
-            control={Input}
             type="number"
-            value={unitSelection.mix}
+            value={delayed.annotationMix}
             onChange={onChangeMix}
           />
-          <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
-            % of{" "}
-            {unitSelection.value === "has annotation" ? "units with annotation" : "annotations"}
-          </label>
-        </Form.Group>
-      </Form>
-    );
-  },
-  (prevprops, nextprops) => {
-    for (let key of Object.keys(prevprops)) {
-      //   console.log(prevprops.unitSelection);
-      //   console.log(key);
-      //   console.log(prevprops[key] === nextprops[key]);
-    }
-  }
-);
+        </Form.Field>
+        <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
+          % of {unitSelection.value === "has annotation" ? "units with annotation" : "annotations"}
+        </label>
+      </Form.Group>
+    </Form>
+  );
+});
 
 export default UnitSelection;
