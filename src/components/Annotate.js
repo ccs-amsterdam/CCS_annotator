@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 
 import {
@@ -18,7 +18,7 @@ import db from "../apis/dexie";
 import ItemSelector from "./ItemSelector";
 import UnitSelection from "./UnitSelection";
 
-const UNITSELECTIONDEFAULT = {
+const unitSelectionDefault = {
   value: "all",
   annotationMix: 0,
   n: null,
@@ -28,55 +28,85 @@ const UNITSELECTIONDEFAULT = {
   balanceAnnotations: true,
 };
 
-const Annotate = () => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const mode = useSelector((state) => state.mode);
-  const codeMap = useSelector((state) => state.codeMap);
-
-  const [textUnit, setTextUnit] = useState("document");
-  const [unitSelection, setUnitSelection] = useState(UNITSELECTIONDEFAULT);
-  const [unitSelectionSettings, setUnitSelectionSettings] = useState(UNITSELECTIONDEFAULT);
-  const [contextUnit, setContextUnit] = useState({
+const defaultItemSettings = {
+  textUnit: "document",
+  contextUnit: {
     selected: "document",
     range: { paragraph: [1, 1], sentence: [2, 2] },
-  });
+  },
+  unitSelection: unitSelectionDefault,
+  unitSelectionSettings: unitSelectionDefault,
+};
+
+const Annotate = () => {
+  const codingjob = useSelector(state => state.codingjob);
+  const mode = useSelector(state => state.mode);
+  const codeMap = useSelector(state => state.codeMap);
+
+  const [itemSettings, setItemSettings] = useState(defaultItemSettings);
+
+  const setItemSetting = which => {
+    return value => setItemSettings(current => ({ ...current, [which]: value }));
+  };
+  // const [textUnit, setTextUnit] = useState("document");
+  // const [unitSelection, setUnitSelection] = useState(unitSelectionDefault);
+  // const [unitSelectionSettings, setUnitSelectionSettings] = useState(unitSelectionDefault);
+  // const [contextUnit, setContextUnit] = useState({
+  //   selected: "document",
+  //   range: { paragraph: [1, 1], sentence: [2, 2] },
+  // });
 
   const [taskType, setTaskType] = useState("open annotation");
   const [jobItems, setJobItems] = useState(null);
   const [jobItem, setJobItem] = useState(null);
 
-  useEffect(() => {
-    db.getSetting("textUnit").then((setting) => setTextUnit(setting));
-    db.getSetting("contextUnit").then((setting) => setContextUnit(setting));
-    db.getSetting("unitSelection").then((setting) => setUnitSelectionSettings(setting));
-  }, [codingjob, setUnitSelectionSettings]);
+  const codingjobLoaded = useRef(false);
 
   useEffect(() => {
     if (!codingjob) return null;
+
+    getCodingjobSettings(codingjob, setItemSettings, codingjobLoaded);
+  }, [codingjob, setItemSettings, codingjobLoaded]);
+
+  useEffect(() => {
+    if (codingjobLoaded.current) db.setCodingjobProp(codingjob, "itemSettings", itemSettings);
+  }, [codingjob, itemSettings, codingjobLoaded]);
+
+  useEffect(() => {
+    if (!codingjob) return null;
+    if (!codingjobLoaded.current) return null;
     setupCodingjob(
       codingjob,
-      textUnit,
-      unitSelectionSettings,
+      itemSettings.textUnit,
+      itemSettings.unitSelectionSettings,
       codeMap,
       setJobItem,
       setJobItems,
-      setUnitSelection
+      setItemSettings
     );
   }, [
     codingjob,
-    textUnit,
-    unitSelectionSettings,
+    itemSettings.textUnit,
+    itemSettings.unitSelectionSettings,
     codeMap,
     setJobItem,
     setJobItems,
-    setUnitSelection,
+    setItemSettings,
   ]);
 
   useEffect(() => {
-    setUnitSelectionSettings((current) => ({ ...current, n: unitSelection.totalItems }));
-  }, [textUnit, unitSelection.value, unitSelection.totalItems, setUnitSelectionSettings]);
+    setItemSettings(current => ({
+      ...current,
+      unitSelection: { ...current.unitSelection, n: current.unitSelection.totalItems },
+    }));
+  }, [
+    itemSettings.textUnit,
+    itemSettings.unitSelection.value,
+    itemSettings.unitSelection.totalItems,
+    setItemSettings,
+  ]);
 
-  if (!codingjob) {
+  if (!codingjob || !codingjobLoaded.current) {
     return (
       <Grid stackable container style={{ height: "100vh", marginTop: "2em" }}>
         Select a codingjob: <CodingjobSelector type={"dropdown"} />
@@ -88,17 +118,19 @@ const Annotate = () => {
     return (
       <Grid.Column>
         <ButtonGroup compact>
-          <TextUnitDropdown textUnit={textUnit} setTextUnit={setTextUnit} />
+          <TextUnitDropdown
+            textUnit={itemSettings.textUnit}
+            setTextUnit={setItemSetting("textUnit")}
+          />
           <ContextUnitDropdown
-            textUnit={textUnit}
-            contextUnit={contextUnit}
-            setContextUnit={setContextUnit}
+            textUnit={itemSettings.textUnit}
+            contextUnit={itemSettings.contextUnit}
+            setContextUnit={setItemSetting("contextUnit")}
           />
 
           <UnitSelection
-            textUnit={textUnit}
-            unitSelection={unitSelection}
-            setUnitSelectionSettings={setUnitSelectionSettings}
+            unitSelection={itemSettings.unitSelection}
+            setItemSettings={setItemSettings}
           />
           {/* <SamplePopup unitSelection={unitSelection} sample={sample} setSample={setSample} /> */}
 
@@ -121,7 +153,11 @@ const Annotate = () => {
         </Grid.Row>
         <Grid.Row>{mode === "design" ? designButtons() : null}</Grid.Row>
         <Grid.Row style={{ paddingLeft: "1em" }}>
-          <AnnotationPage item={jobItem} taskType={taskType} contextUnit={contextUnit} />
+          <AnnotationPage
+            item={jobItem}
+            taskType={taskType}
+            contextUnit={itemSettings.contextUnit}
+          />
         </Grid.Row>
       </Grid>
     </div>
@@ -233,7 +269,7 @@ const TextUnitDropdown = ({ textUnit, setTextUnit }) => {
 };
 
 const ContextUnitDropdown = ({ textUnit, contextUnit, setContextUnit }) => {
-  const onClick = (unit) => {
+  const onClick = unit => {
     if (contextUnit.selected !== unit) {
       setContextUnit({ ...contextUnit, selected: unit });
     }
@@ -326,7 +362,7 @@ const setupCodingjob = async (
   codeMap,
   setJobItem,
   setJobItems,
-  setUnitSelection
+  setItemSettings
 ) => {
   let [totalItems, items] = await db.getCodingjobItems(
     codingjob,
@@ -336,7 +372,21 @@ const setupCodingjob = async (
   );
   setJobItems(items);
   setJobItem(items[0]);
-  setUnitSelection({ ...unitSelectionSettings, totalItems: totalItems });
+  setItemSettings(current => ({
+    ...current,
+    unitSelection: { ...unitSelectionSettings, totalItems: totalItems },
+  }));
 };
 
-export default Annotate;
+const getCodingjobSettings = async (codingjob, setItemSettings, codingjobLoaded) => {
+  const itemSettings = await db.getCodingjobProp(codingjob, "itemSettings");
+
+  codingjobLoaded.current = true;
+  if (itemSettings) setItemSettings(itemSettings);
+};
+
+export default React.memo(Annotate, (prev, next) => {
+  // for (let k of Object.keys(prev)) {
+  //   if (prev[k] !== next[k]) console.log(k);
+  // }
+});

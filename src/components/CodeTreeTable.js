@@ -206,7 +206,6 @@ const loadCodes = async (codingjob, setCodes, setSettings) => {
   const cj = await db.getCodingjob(codingjob);
   if (cj.codebook) {
     const cb = cj.codebook;
-    console.log(cb);
     if (cb && cb.codes && cb.codes.length > 0) {
       setCodes(cb.codes);
     } else {

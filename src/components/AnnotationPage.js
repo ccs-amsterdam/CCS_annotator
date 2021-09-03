@@ -10,7 +10,7 @@ import { selectTokens } from "../util/selectTokens";
 
 const AnnotationPage = ({ item, taskType, contextUnit }) => {
   const [doc, setDoc] = useState(null);
-  const codeMap = useSelector((state) => state.codeMap);
+  const codeMap = useSelector(state => state.codeMap);
 
   useEffect(() => {
     if (!item) return null;
@@ -18,7 +18,7 @@ const AnnotationPage = ({ item, taskType, contextUnit }) => {
     documentSelector(item, setDoc, hash(codeMap), contextUnit);
   }, [codeMap, item, taskType, contextUnit, setDoc]);
 
-  const renderTask = (taskType) => {
+  const renderTask = taskType => {
     switch (taskType) {
       case "open annotation":
         return <SpanAnnotationEditor doc={doc} />;
@@ -47,4 +47,8 @@ const documentSelector = async (item, setDoc, codeMapHash, contextUnit) => {
   if (doc) setDoc(doc);
 };
 
-export default React.memo(AnnotationPage);
+export default React.memo(AnnotationPage, (prev, next) => {
+  // for (let k of Object.keys(prev)) {
+  //   if (prev[k] !== next[k]) console.log(k);
+  // }
+});

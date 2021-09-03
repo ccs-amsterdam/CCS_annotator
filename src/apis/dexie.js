@@ -47,21 +47,6 @@ class AnnotationDB {
     return this.idb.apis.get(api);
   }
 
-  // SETTINGS
-  async getSetting(codingjob, setting) {
-    let cj = await this.getCodingjob(codingjob);
-    return cj.settings ? cj.settings[setting] : null;
-  }
-  async setSetting(codingjob, setting, value) {
-    let cj = await this.getCodingjob(codingjob);
-    if (cj.settings == null) cj.settings = {};
-    cj.settings[setting] = value;
-    return this.idb.codingjobs
-      .where("job_id")
-      .equals(codingjob.job_id)
-      .modify({ settings: cj.settings });
-  }
-
   // CODINGJOBS
   async createCodingjob(name, job_id = null) {
     if (!job_id) job_id = hash([name, Date.now().toString()]);
@@ -72,7 +57,10 @@ class AnnotationDB {
     return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
-    await this.idb.documents.where("job_id").equals(codingjob.job_id).delete();
+    await this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .delete();
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
   async listCodingjobs() {
@@ -82,6 +70,19 @@ class AnnotationDB {
   async getCodingjob(codingjob) {
     return this.idb.codingjobs.get(codingjob.job_id);
   }
+  async getCodingjobProp(codingjob, prop) {
+    let cj = await this.getCodingjob(codingjob);
+    return cj[prop];
+  }
+  async setCodingjobProp(codingjob, prop, value) {
+    let cj = await this.getCodingjob(codingjob);
+    if (cj.settings == null) cj.settings = {};
+    return this.idb.codingjobs
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .modify({ [prop]: value });
+  }
+
   async writeCodebook(codingjob, codebook) {
     console.log("writing to db");
     return this.idb.codingjobs
@@ -123,7 +124,10 @@ class AnnotationDB {
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
 
     let duplicates = 0;
@@ -199,7 +203,7 @@ class AnnotationDB {
   }
 
   async deleteDocuments(documents) {
-    const documentIds = documents.map((document) => document.doc_uid);
+    const documentIds = documents.map(document => document.doc_uid);
     return this.idb.documents.bulkDelete(documentIds);
   }
 
@@ -215,10 +219,10 @@ class AnnotationDB {
   async getCodingjobItems(codingjob, textUnit, unitSelection, codeMap) {
     let totalItems = 0;
 
-    const getGroup = (cjIndices) => {
+    const getGroup = cjIndices => {
       if (!unitSelection.balanceDocuments && !unitSelection.statifyAnnotations) return null; // if not balanced
 
-      return cjIndices.map((item) => {
+      return cjIndices.map(item => {
         let group = "";
         if (unitSelection.balanceDocuments) group += item.docIndex;
         if (item.annotation && unitSelection.balanceAnnotations)
@@ -299,7 +303,10 @@ class AnnotationDB {
   }
 
   async getJobDocumentCount(codingjob) {
-    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    return this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .count();
   }
 
   async getDocuments(codingjob) {
@@ -311,7 +318,10 @@ class AnnotationDB {
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
+    return this.idb.documents
+      .where("doc_uid")
+      .equals(document.doc_uid)
+      .modify({ tokens: tokens });
   }
 
   async writeAnnotations(document, annotations) {
@@ -322,7 +332,10 @@ class AnnotationDB {
   }
   async renameAnnotations(codingjob, oldCode, newCode) {
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
     for (let id of ids) {
       let doc = await this.getDocument(id);
@@ -360,7 +373,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
 
   const cjIndices = [];
   let docIndex = -1;
-  await documents.each((e) => {
+  await documents.each(e => {
     docIndex++;
     if (textUnit === "document" && !done.has(e.doc_uid)) {
       if (noDuplicates && done.has(e.doc_uid)) return;
@@ -404,7 +417,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, codeMap) => {
   const cjIndices = [];
   const done = new Set([]);
   let docIndex = -1;
-  await documents.each((e) => {
+  await documents.each(e => {
     docIndex++;
     if (e.annotations) {
       for (let i of Object.keys(e.annotations)) {
@@ -452,7 +465,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, codeMap) => {
 
 const orderJobItems = (cjIndices, unitSelection) => {
   if (!unitSelection.ordered) return cjIndices;
-  return cjIndices.sort(function (a, b) {
+  return cjIndices.sort(function(a, b) {
     if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;
     if (a.parIndex != null && a.parIndex !== b.parIndex) return a.parIndex - b.parIndex;
     if (a.sentIndex != null && a.sentIndex !== b.sentIndex) return a.sentIndex - b.sentIndex;

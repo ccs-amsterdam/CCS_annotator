@@ -27,12 +27,7 @@ const SpanAnnotationEditor = ({ doc, item }) => {
   return (
     <Grid stackable style={gridStyle} verticalAlign={"top"}>
       <Grid.Column width={8} style={{ paddingRight: "0em", maxWidth: "700px" }}>
-        <Tokens
-          doc={doc}
-          item={item}
-          height={75}
-          textUnitPosition={1 / 4}
-        />
+        <Tokens doc={doc} item={item} height={75} textUnitPosition={1 / 4} />
       </Grid.Column>
       <Grid.Column width={8} style={{ paddingRight: "3em", maxWidth: "500px" }}>
         <Grid.Row style={gridStyleTop}>
