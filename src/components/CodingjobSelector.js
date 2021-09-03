@@ -21,11 +21,15 @@ const CodingjobSelector = ({ type = "table" }) => {
   }, [selectedCodingjob, dispatch]);
 
   useEffect(() => {
-    if (!codingjob) setSelectedCodingjob(null);
+    if (!codingjob) {
+      console.log(1);
+      setSelectedCodingjob(null);
+    }
   }, [codingjob, dispatch]);
 
   useEffect(() => {
     if (codingjobs.length === 0) {
+      console.log(2);
       getCodingjobs(dispatch, setSelectedCodingjob);
     }
   }, [codingjobs, dispatch]);
@@ -69,12 +73,12 @@ const CodingjobSelector = ({ type = "table" }) => {
     const onDropdownSelect = (value) => {
       if (value && codingjobs.length > 0) {
         const i = codingjobs.findIndex((row) => row.job_id === value);
+        console.log(3);
         setSelectedCodingjob({ ...codingjobs[i], ROW_ID: i.toString() });
       } else {
         setSelectedCodingjob(null);
       }
     };
-
     return (
       <Dropdown
         inline
@@ -97,6 +101,7 @@ const setCodingjob = async (dispatch, codingjob) => {
   }
   const ROW_ID = codingjob.ROW_ID;
   const cj = await db.getCodingjob(codingjob);
+
   if (cj) {
     cj.ROW_ID = ROW_ID;
     dispatch(selectCodingjob(cj));
@@ -114,6 +119,7 @@ const getCodingjobs = async (dispatch, setSelectedCodingjob) => {
     const cjs = await db.listCodingjobs();
     if (cjs.length > 0) {
       dispatch(setCodingjobs(cjs));
+      console.log(4);
       setSelectedCodingjob({ ...cjs[0], ROW_ID: "0" });
     }
   } catch (e) {
@@ -121,4 +127,8 @@ const getCodingjobs = async (dispatch, setSelectedCodingjob) => {
   }
 };
 
-export default CodingjobSelector;
+export default React.memo(CodingjobSelector, (prev, next) => {
+  for (let key of Object.keys(prev)) {
+    if (prev[key] !== next[key]) console.log(key);
+  }
+});

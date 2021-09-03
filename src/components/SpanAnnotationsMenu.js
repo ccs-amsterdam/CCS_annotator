@@ -94,7 +94,8 @@ const annotationRows = (tokens, annotations) => {
 const AnnotationRow = ({ tokens, annotation, code, text, offset }) => {
   const codeMap = useSelector((state) => state.codeMap);
   const infocus = useSelector((state) => {
-    return state.currentToken >= annotation.span[0] && state.currentToken <= annotation.span[1];
+    const currentIndex = tokens[state.currentToken].index; // currentToken is the arrayIndex
+    return currentIndex >= annotation.span[0] && currentIndex <= annotation.span[1];
   });
 
   const ref = useRef();

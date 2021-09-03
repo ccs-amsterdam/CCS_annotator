@@ -20,8 +20,8 @@ const SpanAnnotationsCoder = ({ doc }) => {
   // give option for max annotations per article
 
   return (
-    <Grid stackable centered style={{ height: "100%" }}>
-      <Grid.Column width={8} style={{ paddingRight: "0em" }}>
+    <Grid stackable centered container style={{ height: "100%" }}>
+      <Grid.Column width={8}>
         <Grid.Row>
           <Tokens doc={doc} height={45} textUnitPosition={1 / 2} />
         </Grid.Row>

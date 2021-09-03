@@ -18,7 +18,7 @@ const buttonLabel = (text, type) => {
   );
 };
 
-const UnitSelection = ({ unitSelection, setItemSettings }) => {
+const UnitSelection = ({ totalItems, unitSelection, setItemSettings }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -43,16 +43,20 @@ const UnitSelection = ({ unitSelection, setItemSettings }) => {
       }
     >
       <UnitForm unitSelection={unitSelection} setItemSettings={setItemSettings} />
-      <SampleForm unitSelection={unitSelection} setItemSettings={setItemSettings} />
+      <SampleForm
+        totalItems={totalItems}
+        unitSelection={unitSelection}
+        setItemSettings={setItemSettings}
+      />
     </Popup>
   );
 };
 
 const UnitForm = ({ unitSelection, setItemSettings }) => {
   const onUnitSelection = (e, d) => {
-    setItemSettings(current => ({
+    setItemSettings((current) => ({
       ...current,
-      unitSelectionSettings: { ...current.unitSelectionSettings, value: d.value, n: null },
+      unitSelection: { ...current.unitSelection, value: d.value, n: null },
     }));
   };
 
@@ -109,7 +113,7 @@ const UnitForm = ({ unitSelection, setItemSettings }) => {
               trigger={
                 <Button
                   floated="right"
-                  onClick={() => setItemSettings(old => ({ ...old }))}
+                  onClick={() => setItemSettings((old) => ({ ...old }))}
                   style={{ margin: "0", padding: "0.2em", floated: "right" }}
                 >
                   Update
@@ -133,58 +137,63 @@ const UnitForm = ({ unitSelection, setItemSettings }) => {
   );
 };
 
-const SampleForm = React.memo(({ unitSelection, setItemSettings }) => {
-  const [delayed, setDelayed] = useState(null); // delayed unitSelectionSettings
+const SampleForm = React.memo(({ totalItems, unitSelection, setItemSettings }) => {
+  const [delayed, setDelayed] = useState(null); // delayed unitSelection
   const [pct, setPct] = useState(100);
 
   useEffect(() => {
-    setPct(Math.round((100 * unitSelection.n) / unitSelection.totalItems));
-    if (unitSelection.seed == null) unitSelection.seed = 42;
-
+    setPct(Math.round((100 * unitSelection.n) / totalItems));
     setDelayed(unitSelection);
-  }, [unitSelection, setDelayed]);
+  }, [totalItems, unitSelection, setDelayed]);
 
   useEffect(() => {
     if (delayed === unitSelection) return null;
     const timer = setTimeout(() => {
-      setItemSettings(current => ({ ...current, unitSelectionSettings: delayed }));
-    }, 500);
+      setItemSettings((current) => ({ ...current, unitSelection: delayed }));
+    }, 300);
     return () => clearTimeout(timer);
   }, [delayed, unitSelection, setItemSettings]);
 
+  const setWithoutDelay = (field, value) => {
+    setItemSettings((current) => ({
+      ...current,
+      unitSelection: { ...current.unitSelection, [field]: value },
+    }));
+  };
+
   const onChangeMix = (e, d) => {
-    setDelayed(current => ({ ...current, annotationMix: Number(d.value) }));
+    setDelayed((current) => ({ ...current, annotationMix: Number(d.value) }));
   };
 
   const onChangeSeed = (e, d) => {
-    setDelayed(current => ({ ...current, seed: Number(d.value) }));
+    setDelayed((current) => ({ ...current, seed: Number(d.value) }));
   };
 
   const onChangeShuffle = (e, d) => {
-    setDelayed(old => ({ ...old, ordered: !d.checked }));
+    setWithoutDelay("ordered", !d.checked);
   };
 
   const onChangeBalanceDoc = (e, d) => {
-    setDelayed(old => ({ ...old, balanceDocuments: d.checked }));
+    setWithoutDelay("balanceDocuments", d.checked);
   };
   const onChangeBalanceAnn = (e, d) => {
-    setDelayed(old => ({ ...old, balanceAnnotations: d.checked }));
+    setWithoutDelay("balanceAnnotations", d.checked);
   };
 
   const onChangeN = (e, d) => {
     let value = Number(d.value);
-    //value = value > n ? Math.min(unitSelection.totalItems, value + 4) : Math.max(0, value - 4);
-    setPct(Math.round((100 * value) / unitSelection.totalItems));
-    setDelayed(current => ({ ...current, n: value }));
+    //value = value > n ? Math.min(totalItems, value + 4) : Math.max(0, value - 4);
+    setPct(Math.round((100 * value) / totalItems));
+    setDelayed((current) => ({ ...current, n: value }));
   };
 
   const onChangePCT = (e, d) => {
     let value = Number(d.value);
     //value = value > pct ? Math.min(100, value + 4) : Math.max(0, value - 4);
-    let valueN = Math.ceil((value / 100) * unitSelection.totalItems);
+    let valueN = Math.ceil((value / 100) * totalItems);
     if (valueN >= 0) {
       setPct(value);
-      setDelayed(current => ({ ...current, n: valueN }));
+      setDelayed((current) => ({ ...current, n: valueN }));
     }
   };
 
@@ -211,7 +220,7 @@ const SampleForm = React.memo(({ unitSelection, setItemSettings }) => {
         <Form.Field
           width={5}
           min={1}
-          max={unitSelection.totalItems}
+          max={totalItems}
           label="N"
           size="mini"
           control={Input}

@@ -24,7 +24,7 @@ const resultRenderer = ({ code, codeTrail }) => (
 );
 
 const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) => {
-  const codingjob = useSelector(state => state.codingjob);
+  const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
@@ -44,6 +44,10 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
   }, [codingjob, dispatch]);
 
   useEffect(() => {
+    console.log(codes);
+  }, [codes]);
+
+  useEffect(() => {
     if (!codes || codes.length === 0) {
       setCodeTreeArray([]);
       dispatch(setCodeMap({}));
@@ -57,8 +61,9 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (changeColor)
+      if (changeColor) {
         changeCodeColor(codingjob, changeColor.code, changeColor.color, codes, setCodes);
+      }
       setChangeColor(null);
     }, 500);
     return () => clearTimeout(timer);
@@ -79,7 +84,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
         }
 
         const re = new RegExp(data.value.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
-        const isMatch = code => re.test(code.code);
+        const isMatch = (code) => re.test(code.code);
 
         setLoading(false);
         setResults(codeTreeArray.filter(isMatch));
@@ -101,7 +106,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
     };
   }, []);
 
-  const formatCode = code => {
+  const formatCode = (code) => {
     const color = code.active == null || code.active ? "black" : "grey";
     if (code.level === 0) return { fontWeight: "bold", fontSize: "12px", cursor: "pointer", color };
     if (code.level === 1) return { fontSize: "10px", cursor: "pointer", color };
@@ -166,7 +171,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
                         background: "white",
                         color: code.color ? code.color : "white",
                       }}
-                      onChange={e => setChangeColor({ code: code.code, color: e.target.value })}
+                      onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
                       type="color"
                       value={code.color}
                     />
@@ -194,7 +199,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
 };
 
 const changeCodeColor = async (codingjob, code, color, codes, setCodes) => {
-  let updatedCodes = codes.map(ucode => {
+  let updatedCodes = codes.map((ucode) => {
     if (ucode.code === code) ucode.color = color;
     return ucode;
   });
@@ -204,6 +209,7 @@ const changeCodeColor = async (codingjob, code, color, codes, setCodes) => {
 
 const loadCodes = async (codingjob, setCodes, setSettings) => {
   const cj = await db.getCodingjob(codingjob);
+
   if (cj.codebook) {
     const cb = cj.codebook;
     if (cb && cb.codes && cb.codes.length > 0) {
@@ -234,7 +240,7 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
     );
   };
 
-  const addCodePopup = root => {
+  const addCodePopup = (root) => {
     setPopupContent(
       <AddCodePopup
         codingjob={codingjob}
@@ -318,7 +324,7 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
 };
 
 const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector(state => state.codeMap);
+  const codeMap = useSelector((state) => state.codeMap);
   const [alreadyExists, setAlreadyExists] = useState(false);
   const dispatch = useDispatch();
   const [textInput, setTextInput] = useState("");
@@ -330,7 +336,7 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     };
   }, [dispatch]);
 
-  const addCode = async newCode => {
+  const addCode = async (newCode) => {
     if (newCode === "") return null;
     if (codeMap[newCode]) {
       setAlreadyExists(true);
@@ -373,7 +379,7 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 };
 
 const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector(state => state.codeMap);
+  const codeMap = useSelector((state) => state.codeMap);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -383,15 +389,15 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     };
   }, [dispatch]);
 
-  const rmCode = async keepChildren => {
-    let updatedCodes = codes.filter(ucode => ucode.code !== code);
+  const rmCode = async (keepChildren) => {
+    let updatedCodes = codes.filter((ucode) => ucode.code !== code);
 
     if (!keepChildren) {
       const children = [];
       getAllChildren(codeMap, code, children);
-      updatedCodes = updatedCodes.filter(ucode => !children.includes(ucode.code));
+      updatedCodes = updatedCodes.filter((ucode) => !children.includes(ucode.code));
     } else {
-      updatedCodes = updatedCodes.map(ucode => {
+      updatedCodes = updatedCodes.map((ucode) => {
         if (codeMap[code].children.includes(ucode.code)) ucode.parent = codeMap[code].parent;
         return ucode;
       });
@@ -429,7 +435,7 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 };
 
 const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector(state => state.codeMap);
+  const codeMap = useSelector((state) => state.codeMap);
   const dispatch = useDispatch();
   const [newParent, setNewParent] = useState(codeMap[code].parent);
   const [textInput, setTextInput] = useState(code);
@@ -448,7 +454,7 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
       if (newCode === "") return null;
       if (codeMap[newCode]) return null;
     }
-    let updatedCodes = codes.map(ucode => {
+    let updatedCodes = codes.map((ucode) => {
       if (ucode.code === code) {
         ucode.code = newCode;
         ucode.parent = newParent;
@@ -515,7 +521,7 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 
 const toggleActiveCode = async (codingjob, codes, code, active, setCodes) => {
   let updatedCodes = [...codes];
-  codes.find(ucode => ucode.code === code).active = active;
+  codes.find((ucode) => ucode.code === code).active = active;
 
   await db.writeCodes(codingjob, updatedCodes);
   setCodes(updatedCodes);
@@ -531,12 +537,12 @@ const getAllChildren = (codeMap, code, children) => {
 const getAllParentOptions = (codeMap, code) => {
   const children = [];
   getAllChildren(codeMap, code, children);
-  return Object.keys(codeMap).filter(parent => !children.includes(parent) && parent !== code);
+  return Object.keys(codeMap).filter((parent) => !children.includes(parent) && parent !== code);
 };
 
 const getCodeTreeArray = (codeMap, showColors) => {
   let parents = Object.keys(codeMap).filter(
-    code => !codeMap[code].parent || codeMap[code].parent === ""
+    (code) => !codeMap[code].parent || codeMap[code].parent === ""
   );
   const codeTreeArray = [];
   fillCodeTreeArray(codeMap, parents, codeTreeArray, [], showColors);
@@ -565,7 +571,7 @@ const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColor
   }
 };
 
-const prepareCodeMap = codes => {
+const prepareCodeMap = (codes) => {
   // the payload is an array of objects, but for efficients operations
   // in the annotator we convert it to an object with the codes as keys
   const codeMap = codes.reduce((result, code) => {

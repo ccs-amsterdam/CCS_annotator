@@ -40,8 +40,8 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations }) => {
   // separate popup from CodeSelector, because it would rerender CodeSelector,
   // which messes up the useEffect that cleans up after close
 
-  const codingjob = useSelector(state => state.codingjob);
-  const codeMap = useSelector(state => {
+  const codingjob = useSelector((state) => state.codingjob);
+  const codeMap = useSelector((state) => {
     let activeCodeMap = {};
     for (let key of Object.keys(state.codeMap)) {
       if (state.codeMap[key].active && state.codeMap[key].activeParent)
@@ -49,7 +49,7 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations }) => {
     }
     return activeCodeMap;
   });
-  const codeHistory = useSelector(state => state.codeHistory);
+  const codeHistory = useSelector((state) => state.codeHistory);
   const [hasOpened, setHasOpened] = useState(false);
   const dispatch = useDispatch();
 
@@ -128,12 +128,12 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations }) => {
 const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
   const annotationCodes = Object.keys(annotations);
 
-  const onButtonSelect = value => {
+  const onButtonSelect = (value) => {
     setCurrent(value);
   };
 
-  const getOptions = annotationCodes => {
-    return annotationCodes.map(code => ({ label: code, color: getColor(code, codeMap) }));
+  const getOptions = (annotationCodes) => {
+    return annotationCodes.map((code) => ({ label: code, color: getColor(code, codeMap) }));
   };
 
   if (annotationCodes.length === 1) setCurrent(annotationCodes[0]);
@@ -158,7 +158,7 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
   const [focusOnButtons, setFocusOnButtons] = useState(true);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const focusOnTextInput = textInputRef?.current?.children[0] === document.activeElement;
       if (!focusOnTextInput) setFocusOnButtons(true);
 
@@ -178,7 +178,7 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
     };
   });
 
-  const onButtonSelect = value => {
+  const onButtonSelect = (value) => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
       updateAnnotations(annotations, current, current, setCurrent, dispatch);
@@ -189,7 +189,7 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
 
   const getOptions = (codeHistory, n) => {
     return codeHistory.reduce((options, code) => {
-      if (!annotations[code] && options.length <= n)
+      if (!annotations[code] && options.length <= n && codeMap[code])
         options.push({ label: code, color: getColor(code, codeMap) });
       return options;
     }, []);
@@ -264,7 +264,7 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const nbuttons = canDelete ? options.length + 1 : options.length;
 
       // any arrowkey

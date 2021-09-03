@@ -8,21 +8,21 @@ import SpanAnnotationsCoder from "./SpanAnnotationsCoder";
 import db from "../apis/dexie";
 import { selectTokens } from "../util/selectTokens";
 
-const AnnotationPage = ({ item, taskType, contextUnit }) => {
+const AnnotationPage = ({ item, itemSettings }) => {
   const [doc, setDoc] = useState(null);
-  const codeMap = useSelector(state => state.codeMap);
+  const codeMap = useSelector((state) => state.codeMap);
 
   useEffect(() => {
     if (!item) return null;
     setDoc(null);
-    documentSelector(item, setDoc, hash(codeMap), contextUnit);
-  }, [codeMap, item, taskType, contextUnit, setDoc]);
+    documentSelector(item, itemSettings, setDoc, hash(codeMap));
+  }, [item, itemSettings, setDoc, codeMap]);
 
-  const renderTask = taskType => {
+  const renderTask = (taskType) => {
     switch (taskType) {
-      case "open annotation":
+      case "annotate":
         return <SpanAnnotationEditor doc={doc} />;
-      case "question based":
+      case "question":
         return <SpanAnnotationsCoder doc={doc} />;
       default:
         return null;
@@ -30,20 +30,22 @@ const AnnotationPage = ({ item, taskType, contextUnit }) => {
   };
 
   if (!item || !doc) return null;
-
-  return renderTask(taskType);
+  return renderTask(itemSettings.taskType);
 };
 
-const documentSelector = async (item, setDoc, codeMapHash, contextUnit) => {
+const documentSelector = async (item, itemSettings, setDoc, codeMapHash) => {
   let doc = await db.getDocument(item.doc_uid);
   if (!doc) return;
   doc.codeMapHash = codeMapHash;
   doc.writable = false; // this prevents overwriting annotations before they have been loaded (in spanAnnotationsDB.js)
 
-  // add prepareTokens here
-  if (doc.selectedTokens == null) doc.selectedTokens = selectTokens(doc.tokens, item, contextUnit);
+  // either take tokens from item, or take all tokens from the document and (if necessary) filter on contextUnit
+  if (item.tokens != null) {
+    doc.tokens = item.tokens;
+  } else {
+    doc.tokens = selectTokens(doc.tokens, item, itemSettings.contextUnit);
+  }
   if (item.annotation) doc.itemAnnotation = item.annotation;
-
   if (doc) setDoc(doc);
 };
 

@@ -10,7 +10,7 @@ const Tokens = ({ doc, height, textUnitPosition }) => {
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = doc.tokens.find(token => token.textPart === "textUnit");
+    const firstTextUnitToken = doc.tokens.find((token) => token.textPart === "textUnit");
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, textUnitPosition);
     }
@@ -30,7 +30,7 @@ const Tokens = ({ doc, height, textUnitPosition }) => {
         style={{
           width: "100%",
           height: `${height}vh`,
-          overflow: "auto",
+          overflowY: "auto",
         }}
         textAlign="justified"
       >
@@ -55,7 +55,7 @@ const Tokens = ({ doc, height, textUnitPosition }) => {
             color: contextColor,
             paddingLeft: "0.5em",
             paddingRight: "0.5em",
-            paddingBottom: `${height * (1 - textUnitPosition)}vh`,
+            paddingBottom: `${0.8 * height * (1 - textUnitPosition)}vh`,
           }}
         >
           {tokenComponents["contextAfter"]}
@@ -66,11 +66,9 @@ const Tokens = ({ doc, height, textUnitPosition }) => {
 };
 
 const prepareTokens = async (doc, setTokenComponents) => {
-  let tokens = doc.selectedTokens;
-
-  if (!tokens) return null;
-  setTokenComponents(renderText(tokens, doc.itemAnnotation));
-  doc.tokens = tokens; // this tokens array has the ref added
+  if (!doc.tokens) return null;
+  setTokenComponents(renderText(doc.tokens, doc.itemAnnotation));
+  // assignment by reference: renderText also adds a react ref to each token in doc.tokens
 };
 
 const renderText = (tokens, itemAnnotation) => {
@@ -152,7 +150,7 @@ const renderText = (tokens, itemAnnotation) => {
 };
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
-  const fontstyle = paragraphs => {
+  const fontstyle = (paragraphs) => {
     if (section === "title") return <h2>{paragraphs}</h2>;
     return paragraphs;
   };

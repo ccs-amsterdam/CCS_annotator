@@ -6,20 +6,20 @@ const ItemSelector = ({ items, setItem }) => {
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
 
-  const onKeyDown = e => {
+  const onKeyDown = (e) => {
     if (e.keyCode === 9) {
       e.preventDefault();
       if (e.shiftKey) {
         if (e.repeat) {
-          setDelayedActivePage(current => (current > 1 ? current - 1 : current));
+          setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
         } else {
-          setActivePage(current => (current > 1 ? current - 1 : current));
+          setActivePage((current) => (current > 1 ? current - 1 : current));
         }
       } else {
         if (e.repeat) {
-          setDelayedActivePage(current => (current < items.length ? current + 1 : current));
+          setDelayedActivePage((current) => (current < items.length ? current + 1 : current));
         } else {
-          setActivePage(current => (current < items.length ? current + 1 : current));
+          setActivePage((current) => (current < items.length ? current + 1 : current));
         }
       }
     }
@@ -95,8 +95,4 @@ const ItemSelector = ({ items, setItem }) => {
   );
 };
 
-export default React.memo(ItemSelector, (prev, next) => {
-  for (let k of Object.keys(prev)) {
-    if (prev[k] !== next[k]) console.log(k);
-  }
-});
+export default React.memo(ItemSelector)
