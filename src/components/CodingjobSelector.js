@@ -22,14 +22,12 @@ const CodingjobSelector = ({ type = "table" }) => {
 
   useEffect(() => {
     if (!codingjob) {
-      console.log(1);
       setSelectedCodingjob(null);
     }
   }, [codingjob, dispatch]);
 
   useEffect(() => {
     if (codingjobs.length === 0) {
-      console.log(2);
       getCodingjobs(dispatch, setSelectedCodingjob);
     }
   }, [codingjobs, dispatch]);
@@ -73,7 +71,6 @@ const CodingjobSelector = ({ type = "table" }) => {
     const onDropdownSelect = (value) => {
       if (value && codingjobs.length > 0) {
         const i = codingjobs.findIndex((row) => row.job_id === value);
-        console.log(3);
         setSelectedCodingjob({ ...codingjobs[i], ROW_ID: i.toString() });
       } else {
         setSelectedCodingjob(null);
@@ -119,7 +116,6 @@ const getCodingjobs = async (dispatch, setSelectedCodingjob) => {
     const cjs = await db.listCodingjobs();
     if (cjs.length > 0) {
       dispatch(setCodingjobs(cjs));
-      console.log(4);
       setSelectedCodingjob({ ...cjs[0], ROW_ID: "0" });
     }
   } catch (e) {

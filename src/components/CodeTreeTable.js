@@ -13,7 +13,7 @@ import {
 } from "semantic-ui-react";
 import { randomColor } from "randomcolor";
 import { useDispatch, useSelector } from "react-redux";
-import { blockEvents, setCodeMap } from "../actions";
+import { blockEvents, setAnnotations, setCodeMap } from "../actions";
 import db from "../apis/dexie";
 
 const resultRenderer = ({ code, codeTrail }) => (
@@ -44,10 +44,6 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
   }, [codingjob, dispatch]);
 
   useEffect(() => {
-    console.log(codes);
-  }, [codes]);
-
-  useEffect(() => {
     if (!codes || codes.length === 0) {
       setCodeTreeArray([]);
       dispatch(setCodeMap({}));
@@ -75,6 +71,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
       clearTimeout(timeoutRef.current);
       setLoading(true);
       setValue(data.value);
+      setActiveRow(-1);
 
       timeoutRef.current = setTimeout(() => {
         if (data.value.length === 0) {
@@ -94,7 +91,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
   );
 
   useEffect(() => {
-    if (ref.current)
+    if (ref.current && activeRow >= 0)
       ref.current.scrollIntoView(false, {
         block: "center",
       });
@@ -108,19 +105,19 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
 
   const formatCode = (code) => {
     const color = code.active == null || code.active ? "black" : "grey";
-    if (code.level === 0) return { fontWeight: "bold", fontSize: "12px", cursor: "pointer", color };
-    if (code.level === 1) return { fontSize: "10px", cursor: "pointer", color };
-    if (code.level === 2) return { fontSize: "9px", cursor: "pointer", color };
-    return { fontSize: "8px", cursor: "pointer", color };
+    if (code.level === 0) return { fontWeight: "bold", fontSize: "15px", color };
+    if (code.level === 1) return { fontSize: "12px", color };
+    if (code.level === 2) return { fontSize: "10px", color };
+    return { fontSize: "10px", color };
   };
 
   return (
-    <Table singleLine>
+    <Table singleLine columns={2} textAlign="left">
       <Table.Header className="codes-thead">
         <Table.Row>
-          {/* <Table.HeaderCell /> */}
           <Table.HeaderCell>
             <Search
+              fluid
               showNoResults={false}
               loading={loading}
               onResultSelect={(e, d) => {
@@ -143,56 +140,104 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
           </Table.HeaderCell>
         </Table.Row>
       </Table.Header>
-      <Table.Body style={{ height: height }} className="codes-tbody">
-        {[...codeTreeArray, ""].map((code, i) => {
-          if (!code.activeParent) return null;
+      <Table.Body style={{ height: height, margin: "0" }} className="codes-tbody">
+        {[...codeTreeArray].map((code, i) => {
+          if (code.foldToParent) return null;
           return (
-            <Table.Row className="codes-tr" active={i === activeRow} key={i}>
-              <Table.Cell className="codes-td">
-                {code.code ? (
-                  <>
-                    {code.active == null ? null : (
-                      <Checkbox
-                        checked={code.active && code.activeParent}
-                        style={{ transform: "scale(0.7)", marginRight: "0.5em" }}
-                        onChange={(e, d) => {
-                          toggleActiveCode(codingjob, codes, code.code, d.checked, setCodes);
-                        }}
-                      />
-                    )}
-                    <Button
-                      as={"Input"}
-                      style={{
-                        marginLeft: `${1 * code.level}em`,
-                        marginRight: "0.4em",
-                        padding: "0",
-                        width: "1em",
-                        height: "1.5em",
-                        background: "white",
-                        color: code.color ? code.color : "white",
-                      }}
-                      onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
-                      type="color"
-                      value={code.color}
-                    />
-                  </>
-                ) : null}
+            <Table.Row
+              className="codes-tr"
+              active={i === activeRow}
+              key={i}
+              style={{
+                backgroundColor: code.level === 0 ? "lightgrey" : null,
+              }}
+            >
+              <Table.Cell
+                className="codes-td"
+                width={1}
+                style={{
+                  border: "1px solid black",
+                  borderRight: code.active == null ? null : "1px solid black",
+                  backgroundColor: code.color && code.active ? code.color : "white",
+                }}
+              >
+                {code.active == null ? null : (
+                  <Checkbox
+                    slider
+                    checked={code.active && code.activeParent}
+                    style={{ transform: "scale(0.6)", width: "1.5em" }}
+                    onChange={(e, d) => {
+                      toggleActiveCode(codingjob, codes, code.code, d.checked, setCodes);
+                    }}
+                  />
+                )}
+              </Table.Cell>
 
-                <EditCodePopup
-                  codingjob={codingjob}
-                  code={code}
-                  codes={codes}
-                  setCodes={setCodes}
-                  settings={settings}
+              <Table.Cell
+                className="codes-td"
+                style={{
+                  borderTop: code.level === 0 ? "1px solid black" : null,
+                  borderBottom: code.level === 0 ? "1px solid black" : null,
+                }}
+              >
+                <span
+                  ref={i === activeRow ? ref : null}
+                  style={{ ...formatCode(code), marginLeft: `${2 * code.level}em` }}
                 >
-                  <span ref={i === activeRow ? ref : null} style={formatCode(code)}>
-                    {code.code}
-                  </span>
-                </EditCodePopup>
+                  <EditCodePopup
+                    codingjob={codingjob}
+                    code={code}
+                    codes={codes}
+                    setCodes={setCodes}
+                    setChangeColor={setChangeColor}
+                    settings={settings}
+                  >
+                    <Icon name="cog" style={{ marginRight: "0.5em", cursor: "pointer" }} />
+                  </EditCodePopup>
+                  {code.code}
+                  {code.totalChildren === 0 || code.active == null ? null : (
+                    <>
+                      <Icon
+                        style={{
+                          padding: "0",
+                          margin: "0",
+                          marginLeft: "1em",
+                          cursor: "pointer",
+                        }}
+                        onClick={() =>
+                          toggleFoldCode(
+                            codingjob,
+                            codes,
+                            code.code,
+                            code.folded != null && code.folded,
+                            setCodes
+                          )
+                        }
+                        name={code.folded ? "caret right" : "dropdown"}
+                      />
+                      {!code.folded ? null : (
+                        <span
+                          style={{ color: "grey" }}
+                        >{`${code.totalActiveChildren}/${code.totalChildren}`}</span>
+                      )}
+                    </>
+                  )}
+                </span>
               </Table.Cell>
             </Table.Row>
           );
         })}
+
+        <EditCodePopup
+          codingjob={codingjob}
+          code={""}
+          codes={codes}
+          setCodes={setCodes}
+          setChangeColor={setChangeColor}
+          settings={settings}
+        >
+          <Icon name="cog" style={{ marginLeft: "0.7em", cursor: "pointer" }} />
+        </EditCodePopup>
       </Table.Body>
     </Table>
   );
@@ -226,13 +271,37 @@ const loadCodes = async (codingjob, setCodes, setSettings) => {
   }
 };
 
-const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings }) => {
+const EditCodePopup = ({
+  children,
+  codingjob,
+  code,
+  codes,
+  setCodes,
+  setChangeColor,
+  settings,
+}) => {
   const [open, setOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
 
   const buttonContent = () => {
     return (
       <ButtonGroup basic>
+        {code.code && code.active != null ? (
+          <Button
+            as={"Input"}
+            style={{
+              padding: "0",
+              margin: "0",
+              width: "2em",
+              height: "2em",
+              background: "white",
+              color: code.color ? code.color : "white",
+            }}
+            onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
+            type="color"
+            value={code.color}
+          />
+        ) : null}
         <Button icon="plus" compact size="mini" onClick={() => addCodePopup(false)} />
         <Button icon="minus" compact size="mini" onClick={rmCodePopup} />
         <Button icon="shuffle" compact size="mini" onClick={moveCodePopup} />
@@ -300,7 +369,7 @@ const EditCodePopup = ({ children, codingjob, code, codes, setCodes, settings })
               addCodePopup(true);
               setOpen(true);
             }}
-            style={{ marginTop: "1em" }}
+            style={{ marginTop: "1em", marginLeft: "1em" }}
             compact
             size="mini"
           >
@@ -380,6 +449,7 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 
 const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
   const codeMap = useSelector((state) => state.codeMap);
+  const annotations = useSelector((state) => state.spanAnnotations);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -392,8 +462,8 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
   const rmCode = async (keepChildren) => {
     let updatedCodes = codes.filter((ucode) => ucode.code !== code);
 
+    const children = [];
     if (!keepChildren) {
-      const children = [];
       getAllChildren(codeMap, code, children);
       updatedCodes = updatedCodes.filter((ucode) => !children.includes(ucode.code));
     } else {
@@ -404,6 +474,21 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     }
 
     await db.writeCodes(codingjob, updatedCodes);
+
+    const removeCodes = [code, ...children];
+    let annotationsHasChanged = false;
+    for (let i of Object.keys(annotations)) {
+      for (let rmCode of removeCodes) {
+        if (annotations[i][rmCode]) {
+          delete annotations[i][rmCode];
+          annotationsHasChanged = true;
+        }
+      }
+    }
+
+    await db.modifyAnnotations(codingjob, removeCodes, null);
+    if (annotationsHasChanged) dispatch(setAnnotations({ ...annotations }));
+
     setCodes(updatedCodes);
     setOpen(false);
   };
@@ -436,11 +521,12 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 
 const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
   const codeMap = useSelector((state) => state.codeMap);
+  const annotations = useSelector((state) => state.spanAnnotations);
   const dispatch = useDispatch();
   const [newParent, setNewParent] = useState(codeMap[code].parent);
   const [textInput, setTextInput] = useState(code);
 
-  const parentOptions = getAllParentOptions(codeMap, code); // fills parents array
+  const parentOptions = ["ROOT", ...getAllParentOptions(codeMap, code)]; // fills parents array
 
   useEffect(() => {
     dispatch(blockEvents(true));
@@ -454,19 +540,36 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
       if (newCode === "") return null;
       if (codeMap[newCode]) return null;
     }
+    let codeIsNew = true; // if code was only a parent, it isn't yet in the edgelist
     let updatedCodes = codes.map((ucode) => {
       if (ucode.code === code) {
         ucode.code = newCode;
         ucode.parent = newParent;
+        codeIsNew = false;
       }
       if (ucode.parent === code) {
         ucode.parent = newCode;
       }
       return ucode;
     });
+    if (codeIsNew) codes.push({ code: newCode, parent: newParent, active: true });
+    codes = codes.filter((code) => code.parent !== "ROOT");
 
+    // update codingjob in db
     await db.writeCodes(codingjob, updatedCodes);
-    await db.renameAnnotations(codingjob, code, newCode);
+    // update all annotations
+    await db.modifyAnnotations(codingjob, [code], newCode);
+
+    // update tokens of current annotations (so changes are immediately visible without having to reload unit)
+    let annotationsHasChanged = false;
+    for (let i of Object.keys(annotations)) {
+      if (annotations[i][code]) {
+        annotations[i][newCode] = { ...annotations[i][code] };
+        delete annotations[i][code];
+        annotationsHasChanged = true;
+      }
+    }
+    if (annotationsHasChanged) dispatch(setAnnotations({ ...annotations }));
     setCodes(updatedCodes);
     setOpen(false);
   };
@@ -521,7 +624,29 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 
 const toggleActiveCode = async (codingjob, codes, code, active, setCodes) => {
   let updatedCodes = [...codes];
-  codes.find((ucode) => ucode.code === code).active = active;
+
+  const selectedCode = updatedCodes.find((ucode) => ucode.code === code);
+
+  // there is a possibility that code.code does not exist, if it only existed as a parent
+  // this is ideally resolved upstream (when creating the codebook), but as a plan B it can be added here
+  if (selectedCode) {
+    selectedCode.active = active;
+  } else updatedCodes.push({ code: code, parent: "", active: true });
+
+  await db.writeCodes(codingjob, updatedCodes);
+  setCodes(updatedCodes);
+};
+
+const toggleFoldCode = async (codingjob, codes, code, folded, setCodes) => {
+  let updatedCodes = [...codes];
+
+  const selectedCode = updatedCodes.find((ucode) => ucode.code === code);
+
+  // there is a possibility that code.code does not exist, if it only existed as a parent
+  // this is ideally resolved upstream (when creating the codebook), but as a plan B it can be added here
+  if (selectedCode) {
+    selectedCode.folded = !folded;
+  } else updatedCodes.push({ code: code, parent: "", active: true, folded: !folded });
 
   await db.writeCodes(codingjob, updatedCodes);
   setCodes(updatedCodes);
@@ -555,9 +680,8 @@ const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColor
     newcodeTrail.push(code);
 
     codeTreeArray.push({
+      ...codeMap[code],
       code: code,
-      active: codeMap[code].active,
-      activeParent: codeMap[code].activeParent,
       codeTrail: codeTrail,
       level: codeTrail.length,
       color: codeMap[code].color
@@ -575,50 +699,83 @@ const prepareCodeMap = (codes) => {
   // the payload is an array of objects, but for efficients operations
   // in the annotator we convert it to an object with the codes as keys
   const codeMap = codes.reduce((result, code) => {
-    result[code.code] = { ...code, children: [] };
+    result[code.code] = { ...code, children: [], totalChildren: 0, totalActiveChildren: 0 };
     return result;
   }, {});
 
   // If there are codes of which the parent doesn't exist, add the parent
   const originalKeys = Object.keys(codeMap);
   for (const key of originalKeys) {
-    if (codeMap[key].parent !== "" && !codeMap[codeMap[key].parent])
+    if (codeMap[key].parent !== "" && !codeMap[codeMap[key].parent]) {
       codeMap[codeMap[key].parent] = {
         code: codeMap[key].parent,
         parent: "",
         children: [],
+        active: false,
+        totalChildren: 0,
+        totalActiveChildren: 0,
       };
+    }
   }
+
+  // SOLVE THIS DIFFERENTLY!!
+  // IF CODES ARE UPLOADED, ALWAYS ADD CODES THAT ONLY EXIST AS PARENTS AS CODES
+  // JUST SET ACTIVE TO FALSE
+  // THIS WAY, WE DON'T NEED A SEPARATE LOGIC, AND THEY BY DEFAULT CAN'T BE CODED ANYWAY
 
   for (const code of Object.keys(codeMap)) {
     if (!codeMap[code].color)
       codeMap[code].color = randomColor({ seed: code, luminosity: "light" });
 
-    codeMap[code].tree = getParentTree(codeMap, code);
-    codeMap[code].activeParent = parentIsActive(codeMap, code);
+    [codeMap[code].tree, codeMap[code].activeParent, codeMap[code].foldToParent] = parentData(
+      codeMap,
+      code
+    );
 
-    if (codeMap[codeMap[code].parent]) codeMap[codeMap[code].parent].children.push(code);
+    if (codeMap[code].parent) codeMap[codeMap[code].parent].children.push(code);
+
+    for (const parent of codeMap[code].tree) {
+      codeMap[parent].totalChildren++;
+      if (codeMap[code].active && codeMap[code].activeParent) {
+        codeMap[parent].totalActiveChildren++;
+      }
+    }
   }
+
   return codeMap;
 };
 
-const getParentTree = (codes, code) => {
+// const getParentTree = (codes, code) => {
+//   const parents = [];
+//   let parent = codes[code].parent;
+//   while (parent) {
+//     parents.push(parent);
+//     parent = codes[parent].parent;
+//   }
+//   return parents.reverse();
+// };
+
+const parentData = (codes, code) => {
+  // get array of parents from highest to lowers (tree)
+  // look at parents to see if one is not active (activeParent).
+  //    (this only matters if the same parent is folded, otherwise only the parent code itself is inactive)
+  // look if there are folded parents, and if so pick the highest (foldToParent)
   const parents = [];
+  let activeParent = true;
+  let foldToParent = "";
+
   let parent = codes[code].parent;
   while (parent) {
     parents.push(parent);
-    parent = codes[parent].parent;
-  }
-  return parents.reverse();
-};
+    if (codes[parent].folded != null && codes[parent].folded) {
+      foldToParent = parent; // this ends up being the highest level folded parent
 
-const parentIsActive = (codes, code) => {
-  let parent = codes[code].parent;
-  while (parent) {
-    if (codes[parent].active !== null && codes[parent].active === false) return false;
+      // code is inactive if only one of the folded parents is inactive
+      if (codes[parent].active != null && !codes[parent].active) activeParent = false;
+    }
     parent = codes[parent].parent;
   }
-  return true;
+  return [parents.reverse(), activeParent, foldToParent];
 };
 
 export default CodeTreeTable;

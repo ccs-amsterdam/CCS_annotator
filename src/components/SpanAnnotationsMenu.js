@@ -10,6 +10,7 @@ const COLWIDTHS = [4, 2, 2]; // for offset and text
 const SpanAnnotationsMenu = ({ tokens, doc }) => {
   const annotations = useSelector((state) => state.spanAnnotations);
 
+  console.log(annotations);
   if (!tokens || tokens.length === 0) return null;
   if (!doc.writable) return null;
 
@@ -46,6 +47,7 @@ const annotationRows = (tokens, annotations) => {
   for (const tokenIndex of Object.keys(annotations)) {
     for (const code of Object.keys(annotations[tokenIndex])) {
       annotation = annotations[tokenIndex][code];
+      console.log(annotation);
 
       // annotations are stored per token index, and so are duplicated
       // to get unique annotations we only use the first one.
@@ -115,6 +117,7 @@ const AnnotationRow = ({ tokens, annotation, code, text, offset }) => {
   }, [infocus]);
 
   const color = getColor(code, codeMap);
+  const label = codeMap[code]?.foldToParent ? `${codeMap[code].foldToParent} - ${code}` : code;
 
   return (
     <Ref innerRef={ref}>
@@ -131,7 +134,7 @@ const AnnotationRow = ({ tokens, annotation, code, text, offset }) => {
         }}
       >
         <Table.Cell width={COLWIDTHS[0]} style={color ? { background: color } : null}>
-          <span title={code}>{code}</span>
+          <span title={label}>{label}</span>
         </Table.Cell>
         <Table.Cell width={COLWIDTHS[1]}>{annotation.section}</Table.Cell>
         <Table.Cell width={COLWIDTHS[2]} cref={ref}>

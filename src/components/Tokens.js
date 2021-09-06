@@ -23,7 +23,6 @@ const Tokens = ({ doc, height, textUnitPosition }) => {
   if (doc === null) return null;
 
   const contextColor = "grey";
-
   return (
     <Ref innerRef={containerRef}>
       <div

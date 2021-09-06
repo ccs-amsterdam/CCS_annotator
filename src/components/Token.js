@@ -52,7 +52,8 @@ const AnnotatedToken = ({ token, selected }) => {
     annotations = { ...annotations };
     for (let code of Object.keys(annotations)) {
       if (!codeMap[code]) continue;
-      if (!codeMap[code].active || !codeMap[code].activeParent) delete annotations[code];
+      if (!codeMap[code] || !codeMap[code].active || !codeMap[code].activeParent)
+        delete annotations[code];
     }
   }
 

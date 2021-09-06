@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import hash from "object-hash";
 
 import SpanAnnotationEditor from "./spanAnnotationEditor";
 import SpanAnnotationsCoder from "./SpanAnnotationsCoder";
@@ -10,13 +8,12 @@ import { selectTokens } from "../util/selectTokens";
 
 const AnnotationPage = ({ item, itemSettings }) => {
   const [doc, setDoc] = useState(null);
-  const codeMap = useSelector((state) => state.codeMap);
 
   useEffect(() => {
     if (!item) return null;
     setDoc(null);
-    documentSelector(item, itemSettings, setDoc, hash(codeMap));
-  }, [item, itemSettings, setDoc, codeMap]);
+    documentSelector(item, itemSettings, setDoc);
+  }, [item, itemSettings, setDoc]);
 
   const renderTask = (taskType) => {
     switch (taskType) {
@@ -33,10 +30,10 @@ const AnnotationPage = ({ item, itemSettings }) => {
   return renderTask(itemSettings.taskType);
 };
 
-const documentSelector = async (item, itemSettings, setDoc, codeMapHash) => {
+const documentSelector = async (item, itemSettings, setDoc) => {
   let doc = await db.getDocument(item.doc_uid);
   if (!doc) return;
-  doc.codeMapHash = codeMapHash;
+  //doc.codeMapHash = codeMapHash;
   doc.writable = false; // this prevents overwriting annotations before they have been loaded (in spanAnnotationsDB.js)
 
   // either take tokens from item, or take all tokens from the document and (if necessary) filter on contextUnit

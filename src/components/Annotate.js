@@ -32,6 +32,7 @@ const defaultItemSettings = {
     ordered: true,
     balanceDocuments: false,
     balanceAnnotations: true,
+    useCodes: null,
   },
   taskType: "annotate",
 };
@@ -64,11 +65,18 @@ const Annotate = () => {
 
   useEffect(() => {
     if (codingjobLoaded.current) {
-      console.log("kankefod");
-      console.log(itemSettings);
       db.setCodingjobProp(codingjob, "itemSettings", itemSettings);
     }
   }, [codingjob, itemSettings, codingjobLoaded]);
+
+  useEffect(() => {
+    // this only updates the codeMap used in unitselection if unit is span annotation
+    if (itemSettings.unitSelection.value === "per annotation")
+      setItemSettings((current) => ({
+        ...current,
+        unitSelection: { ...current.unitSelection, codeMap },
+      }));
+  }, [codeMap, itemSettings.unitSelection.value, setItemSettings]);
 
   useEffect(() => {
     if (!codingjob) return null;
@@ -78,7 +86,6 @@ const Annotate = () => {
       itemSettings.textUnit,
       itemSettings.unitSelection,
       totalItems,
-      codeMap,
       setJobItem,
       setJobItems,
       setItemSettings
@@ -88,7 +95,6 @@ const Annotate = () => {
     itemSettings.textUnit,
     itemSettings.unitSelection,
     totalItems,
-    codeMap,
     setJobItem,
     setJobItems,
     setItemSettings,
@@ -122,8 +128,8 @@ const Annotate = () => {
   };
 
   return (
-    <div style={{ paddingLeft: "1em", float: "left", height: "100vh" }}>
-      <Grid stackable>
+    <div style={{ paddingLeft: "1em", height: "100vh" }}>
+      <Grid container stackable>
         <Grid.Row style={{ paddingBottom: "0" }}>
           <Grid.Column width={8}>
             {mode === "design" ? <ItemBreadcrumb jobItem={jobItem} /> : null}
@@ -342,18 +348,12 @@ const setupCodingjob = async (
   textUnit,
   unitSelection,
   totalItems,
-  codeMap,
   setJobItem,
   setJobItems,
   setItemSettings
 ) => {
   let items;
-  [totalItems.current, items] = await db.getCodingjobItems(
-    codingjob,
-    textUnit,
-    unitSelection,
-    codeMap
-  );
+  [totalItems.current, items] = await db.getCodingjobItems(codingjob, textUnit, unitSelection);
   setJobItems(items);
   setJobItem(items[0]);
 
@@ -368,7 +368,6 @@ const setupCodingjob = async (
 const getCodingjobSettings = async (codingjob, setItemSettings, codingjobLoaded) => {
   const itemSettings = await db.getCodingjobProp(codingjob, "itemSettings");
   codingjobLoaded.current = true;
-  console.log(itemSettings);
   if (itemSettings) setItemSettings(itemSettings);
 };
 

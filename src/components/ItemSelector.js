@@ -95,4 +95,4 @@ const ItemSelector = ({ items, setItem }) => {
   );
 };
 
-export default React.memo(ItemSelector)
+export default React.memo(ItemSelector);

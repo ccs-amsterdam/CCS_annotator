@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      // before React is loaded
+      // (disables react devtools)
+      if (typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ === "object") {
+        __REACT_DEVTOOLS_GLOBAL_HOOK__.inject = function () {};
+      }
+    </script>
+
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
+    <meta name="AmCAT Annotator" content="An in-browser annotation tool" />
 
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -26,7 +31,7 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
 
-    <title>React App</title>
+    <title>AmCAT Annotator</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

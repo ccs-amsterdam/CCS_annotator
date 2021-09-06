@@ -21,7 +21,7 @@ const SpanAnnotationsCoder = ({ doc }) => {
 
   return (
     <Grid stackable centered container style={{ height: "100%" }}>
-      <Grid.Column width={8}>
+      <Grid.Column width={mode === "design" ? 8 : 16}>
         <Grid.Row>
           <Tokens doc={doc} height={45} textUnitPosition={1 / 2} />
         </Grid.Row>
