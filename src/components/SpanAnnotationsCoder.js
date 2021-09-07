@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { Container, Grid, Header, Segment } from "semantic-ui-react";
+import { Container, Grid, Segment } from "semantic-ui-react";
 import Tokens from "./Tokens";
 
 const gridStyleTop = { height: "35vh" };
@@ -43,13 +43,7 @@ const SpanAnnotationsCoder = ({ doc }) => {
 };
 
 const SpanInstructions = () => {
-  return (
-    <Container>
-      <Header as="h2" align="center">
-        Code annotations
-      </Header>
-    </Container>
-  );
+  return <Container>Here edit question</Container>;
 };
 
 export default SpanAnnotationsCoder;

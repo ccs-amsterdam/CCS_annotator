@@ -203,7 +203,7 @@ const SampleForm = React.memo(({ totalItems, unitSelection, setItemSettings }) =
     <Form>
       <Form.Group>
         <Icon name="setting" />
-        <label>Sample</label>
+        <label>Sample settings</label>
         {/* <Help header={"test"} texts={["test", "this"]} /> */}
       </Form.Group>
 
