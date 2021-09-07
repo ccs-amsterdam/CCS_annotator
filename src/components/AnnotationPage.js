@@ -1,21 +1,26 @@
 import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 
 import SpanAnnotationEditor from "./spanAnnotationEditor";
 import SpanAnnotationsCoder from "./SpanAnnotationsCoder";
 
 import db from "../apis/dexie";
 import { selectTokens } from "../util/selectTokens";
+import { setItemSettings } from "../actions";
 
 const AnnotationPage = ({ item, itemSettings }) => {
   const [doc, setDoc] = useState(null);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (!item) return null;
     setDoc(null);
     documentSelector(item, itemSettings, setDoc);
-  }, [item, itemSettings, setDoc]);
+    console.log(itemSettings);
+    dispatch(setItemSettings(itemSettings));
+  }, [item, itemSettings, setDoc, dispatch]);
 
-  const renderTask = (taskType) => {
+  const renderTask = taskType => {
     switch (taskType) {
       case "annotate":
         return <SpanAnnotationEditor doc={doc} />;
@@ -43,6 +48,7 @@ const documentSelector = async (item, itemSettings, setDoc) => {
     doc.tokens = selectTokens(doc.tokens, item, itemSettings.contextUnit);
   }
   if (item.annotation) doc.itemAnnotation = item.annotation;
+
   if (doc) setDoc(doc);
 };
 

@@ -8,9 +8,8 @@ import "./spanAnnotationsStyle.css";
 const COLWIDTHS = [4, 2, 2]; // for offset and text
 
 const SpanAnnotationsMenu = ({ tokens, doc }) => {
-  const annotations = useSelector((state) => state.spanAnnotations);
+  const annotations = useSelector(state => state.spanAnnotations);
 
-  console.log(annotations);
   if (!tokens || tokens.length === 0) return null;
   if (!doc.writable) return null;
 
@@ -47,7 +46,6 @@ const annotationRows = (tokens, annotations) => {
   for (const tokenIndex of Object.keys(annotations)) {
     for (const code of Object.keys(annotations[tokenIndex])) {
       annotation = annotations[tokenIndex][code];
-      console.log(annotation);
 
       // annotations are stored per token index, and so are duplicated
       // to get unique annotations we only use the first one.
@@ -94,8 +92,8 @@ const annotationRows = (tokens, annotations) => {
 };
 
 const AnnotationRow = ({ tokens, annotation, code, text, offset }) => {
-  const codeMap = useSelector((state) => state.codeMap);
-  const infocus = useSelector((state) => {
+  const codeMap = useSelector(state => state.codeMap);
+  const infocus = useSelector(state => {
     const currentIndex = tokens[state.currentToken].index; // currentToken is the arrayIndex
     return currentIndex >= annotation.span[0] && currentIndex <= annotation.span[1];
   });

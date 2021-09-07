@@ -1,4 +1,4 @@
-export const setMode = (mode) => {
+export const setMode = mode => {
   return {
     type: "SET_MODE",
     mode: mode,
@@ -11,28 +11,28 @@ export const resetDB = () => {
   };
 };
 
-export const blockEvents = (block) => {
+export const blockEvents = block => {
   return {
     type: "BLOCK_EVENTS",
     block,
   };
 };
 
-export const selectCodingjob = (codingjob) => {
+export const selectCodingjob = codingjob => {
   return {
     type: "SELECT_CODINGJOB",
     codingjob,
   };
 };
 
-export const setCodingjobs = (codingjobs) => {
+export const setCodingjobs = codingjobs => {
   return {
     type: "SET_CODINGJOBS",
     codingjobs,
   };
 };
 
-export const setCurrentToken = (index) => {
+export const setCurrentToken = index => {
   return {
     type: "SET_CURRENT_TOKEN",
     index,
@@ -63,21 +63,21 @@ export const triggerCodeselector = (from, tokenIndex, code) => {
   };
 };
 
-export const setAnnotations = (spanAnnotation) => {
+export const setAnnotations = spanAnnotation => {
   return {
     type: "SET_ANNOTATIONS",
     spanAnnotation,
   };
 };
 
-export const toggleAnnotations = (spanAnnotation) => {
+export const toggleAnnotations = spanAnnotation => {
   return {
     type: "TOGGLE_ANNOTATIONS",
     spanAnnotation,
   };
 };
 
-export const rmAnnotations = (spanAnnotation) => {
+export const rmAnnotations = spanAnnotation => {
   return {
     type: "RM_ANNOTATIONS",
     spanAnnotation,
@@ -90,7 +90,7 @@ export const clearSpanAnnotations = () => {
   };
 };
 
-export const setCodeMap = (codes) => {
+export const setCodeMap = codes => {
   return {
     type: "SET_CODE_MAP",
     codes,
@@ -111,7 +111,14 @@ export const appendCodeHistory = (code, n = 20) => {
   };
 };
 
-export const setShowSidebar = (show) => {
+export const setItemSettings = itemSettings => {
+  return {
+    type: "SET_ITEM_SETTINGS",
+    itemSettings,
+  };
+};
+
+export const setShowSidebar = show => {
   return {
     type: "SET_SHOW_SIDEBAR",
     show,

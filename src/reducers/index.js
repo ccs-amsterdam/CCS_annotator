@@ -136,11 +136,20 @@ const codeHistory = (state = [], action) => {
     case "RESET_CODE_HISTORY":
       return [];
     case "APPEND_CODE_HISTORY":
-      let newstate = state.filter((v) => v !== action.code).slice(0, action.n - 1);
+      let newstate = state.filter(v => v !== action.code).slice(0, action.n - 1);
       newstate.unshift(action.code);
       return newstate;
     case "RESET_DB":
       return [];
+    default:
+      return state;
+  }
+};
+
+const itemSettings = (state = {}, action) => {
+  switch (action.type) {
+    case "SET_ITEM_SETTINGS":
+      return action.itemSettings;
     default:
       return state;
   }
@@ -166,6 +175,7 @@ const rootReducer = combineReducers({
   spanAnnotations,
   codeMap,
   codeHistory,
+  itemSettings,
   showSidebar,
 });
 

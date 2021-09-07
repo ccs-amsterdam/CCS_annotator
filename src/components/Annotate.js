@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 
 import {
   Breadcrumb,
@@ -10,6 +10,10 @@ import {
   Popup,
   Button,
   Input,
+  Form,
+  Radio,
+  Icon,
+  Checkbox,
 } from "semantic-ui-react";
 
 import CodingjobSelector from "./CodingjobSelector";
@@ -17,6 +21,7 @@ import AnnotationPage from "./AnnotationPage";
 import db from "../apis/dexie";
 import ItemSelector from "./ItemSelector";
 import UnitSelection from "./UnitSelection";
+import { blockEvents } from "../actions";
 
 const defaultItemSettings = {
   textUnit: "document",
@@ -35,19 +40,24 @@ const defaultItemSettings = {
     useCodes: null,
   },
   taskType: "annotate",
+  codeSelector: {
+    type: "recent",
+    searchBox: true,
+    rowSize: 5,
+  },
 };
 
 const Annotate = () => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const mode = useSelector((state) => state.mode);
-  const codeMap = useSelector((state) => state.codeMap);
+  const codingjob = useSelector(state => state.codingjob);
+  const mode = useSelector(state => state.mode);
+  const codeMap = useSelector(state => state.codeMap);
 
   const [itemSettings, setItemSettings] = useState(defaultItemSettings);
   const totalItems = useRef(0);
-  const setItemSetting = (which) => {
+  const setItemSetting = which => {
     // creates a set state function for a specific key in itemSettings
     // setItemSetting('textUnit') returns a function for setting itemSettings.textUnit
-    return (value) => setItemSettings((current) => ({ ...current, [which]: value }));
+    return value => setItemSettings(current => ({ ...current, [which]: value }));
   };
 
   const [jobItems, setJobItems] = useState(null);
@@ -57,6 +67,7 @@ const Annotate = () => {
   // before the settings can be overwritten
   const codingjobLoaded = useRef(false);
 
+  console.log(itemSettings.codeSelector.searchBox);
   useEffect(() => {
     if (!codingjob) return null;
     codingjobLoaded.current = false;
@@ -72,7 +83,7 @@ const Annotate = () => {
   useEffect(() => {
     // this only updates the codeMap used in unitselection if unit is span annotation
     if (itemSettings.unitSelection.value === "per annotation")
-      setItemSettings((current) => ({
+      setItemSettings(current => ({
         ...current,
         unitSelection: { ...current.unitSelection, codeMap },
       }));
@@ -121,6 +132,10 @@ const Annotate = () => {
           <TaskTypeDropdown
             taskType={itemSettings.taskType}
             setTaskType={setItemSetting("taskType")}
+          />
+          <CodeSelectorSettings
+            codeSelector={itemSettings.codeSelector}
+            setCodeSelector={setItemSetting("codeSelector")}
           />
         </ButtonGroup>
       </Grid.Column>
@@ -231,8 +246,8 @@ const buttonLabel = (text, type) => {
 };
 
 const TextUnitDropdown = ({ textUnit, setItemSettings }) => {
-  const setTextUnit = (value) =>
-    setItemSettings((current) => ({
+  const setTextUnit = value =>
+    setItemSettings(current => ({
       ...current,
       textUnit: value,
       unitSelection: { ...current.unitSelection, n: null },
@@ -257,7 +272,7 @@ const TextUnitDropdown = ({ textUnit, setItemSettings }) => {
 };
 
 const ContextUnitDropdown = ({ textUnit, contextUnit, setContextUnit }) => {
-  const onClick = (unit) => {
+  const onClick = unit => {
     if (contextUnit.selected !== unit) {
       setContextUnit({ ...contextUnit, selected: unit });
     }
@@ -343,6 +358,77 @@ const ContextUnitRange = ({ contextUnit, setContextUnit }) => {
   );
 };
 
+const CodeSelectorSettings = ({ codeSelector, setCodeSelector }) => {
+  const dispatch = useDispatch();
+
+  if (!codeSelector) return null;
+  return (
+    <Popup
+      flowing
+      hoverable
+      wide
+      mouseLeaveDelay={10000000} // just don't use mouse leave
+      onOpen={() => dispatch(blockEvents(true))}
+      onClose={() => dispatch(blockEvents(false))}
+      position="bottom left"
+      on="click"
+      style={{ minWidth: "15em" }}
+      trigger={
+        <Button style={buttonStyle}>{buttonLabel(codeSelector.type, "Code Selector")}</Button>
+      }
+    >
+      <Form>
+        <Form.Group>
+          <Icon name="setting" />
+          <label>Code Selector settings</label>
+        </Form.Group>
+        <Form.Group grouped>
+          <Form.Field>
+            <Radio
+              value="recent"
+              label="Recently used codes"
+              checked={codeSelector.type === "recent"}
+              onChange={() => setCodeSelector({ ...codeSelector, type: "recent" })}
+            />
+          </Form.Field>
+          <Form.Field>
+            <Radio
+              value="active"
+              label="All active codes"
+              checked={codeSelector.type === "active"}
+              onChange={() => setCodeSelector({ ...codeSelector, type: "active" })}
+            />
+          </Form.Field>
+        </Form.Group>
+        <Form.Group>
+          <Form.Field>
+            <Checkbox
+              label="Search box"
+              disabled={codeSelector.type === "recent"}
+              checked={codeSelector.searchBox}
+              onChange={(e, d) => setCodeSelector({ ...codeSelector, searchBox: d.checked })}
+            />
+          </Form.Field>
+        </Form.Group>
+        <Form.Group>
+          <Form.Field>
+            <Input
+              size="mini"
+              min={1}
+              max={10}
+              value={codeSelector.rowSize}
+              type="number"
+              style={{ width: "6em" }}
+              label={"Codes per row"}
+              onChange={(e, d) => setCodeSelector({ ...codeSelector, rowSize: d.value })}
+            />
+          </Form.Field>
+        </Form.Group>
+      </Form>
+    </Popup>
+  );
+};
+
 const setupCodingjob = async (
   codingjob,
   textUnit,
@@ -358,7 +444,7 @@ const setupCodingjob = async (
   setJobItem(items[0]);
 
   if (unitSelection.n === null || unitSelection.n == null) {
-    setItemSettings((current) => {
+    setItemSettings(current => {
       const newUnitSelection = { ...unitSelection, n: totalItems.current };
       return { ...current, unitSelection: newUnitSelection };
     });

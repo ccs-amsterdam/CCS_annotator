@@ -18,6 +18,7 @@ const CodeSelector = React.memo(({ children, annotations, currentCode, newSelect
   // Placeholder: should be managed in state
   const dispatch = useDispatch();
 
+  console.log(newSelection);
   // When codeselector opens, disable events for spanannotationsnavigation
   // when it closes, make sure to clean up if code is UNASSIGNED
   useEffect(() => {
@@ -40,8 +41,8 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations }) => {
   // separate popup from CodeSelector, because it would rerender CodeSelector,
   // which messes up the useEffect that cleans up after close
 
-  const codingjob = useSelector((state) => state.codingjob);
-  const codeMap = useSelector((state) => {
+  const codingjob = useSelector(state => state.codingjob);
+  const codeMap = useSelector(state => {
     let activeCodeMap = {};
     for (let key of Object.keys(state.codeMap)) {
       if (state.codeMap[key].active && state.codeMap[key].activeParent)
@@ -49,9 +50,10 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations }) => {
     }
     return activeCodeMap;
   });
-  const codeHistory = useSelector((state) => state.codeHistory);
-  const [hasOpened, setHasOpened] = useState(false);
+  const codeHistory = useSelector(state => state.codeHistory);
   const dispatch = useDispatch();
+
+  const [hasOpened, setHasOpened] = useState(false);
 
   return (
     <Popup
@@ -128,12 +130,12 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations }) => {
 const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
   const annotationCodes = Object.keys(annotations);
 
-  const onButtonSelect = (value) => {
+  const onButtonSelect = value => {
     setCurrent(value);
   };
 
-  const getOptions = (annotationCodes) => {
-    return annotationCodes.map((code) => ({ label: code, color: getColor(code, codeMap) }));
+  const getOptions = annotationCodes => {
+    return annotationCodes.map(code => ({ label: code, color: getColor(code, codeMap) }));
   };
 
   if (annotationCodes.length === 1) setCurrent(annotationCodes[0]);
@@ -153,19 +155,21 @@ const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
 };
 
 const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent }) => {
+  const itemSettings = useSelector(state => state.itemSettings);
+
   const textInputRef = useRef(null);
   const dispatch = useDispatch();
   const [focusOnButtons, setFocusOnButtons] = useState(true);
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const focusOnTextInput = textInputRef?.current?.children[0] === document.activeElement;
       if (!focusOnTextInput) setFocusOnButtons(true);
 
       if (event.keyCode === 27) dispatch(triggerCodeselector(null));
       if (arrowKeys.includes(event.key)) return null;
       if (event.keyCode <= 46 || event.keyCode >= 106) return null;
-      textInputRef.current.click();
+      if (textInputRef.current) textInputRef.current.click();
       setFocusOnButtons(false);
     },
     [textInputRef, dispatch]
@@ -178,7 +182,7 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
     };
   });
 
-  const onButtonSelect = (value) => {
+  const onButtonSelect = value => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
       updateAnnotations(annotations, current, current, setCurrent, dispatch);
@@ -188,63 +192,82 @@ const NewCodePage = ({ codeHistory, codeMap, annotations, current, setCurrent })
   };
 
   const getOptions = (codeHistory, n) => {
-    return codeHistory.reduce((options, code) => {
-      if (!annotations[code] && options.length <= n && codeMap[code])
+    const settings = itemSettings?.codeSelector;
+
+    if (settings && settings.type === "active") {
+      return Object.keys(codeMap).reduce((options, code) => {
         options.push({ label: code, color: getColor(code, codeMap) });
-      return options;
-    }, []);
+        return options;
+      }, []);
+    } else {
+      return codeHistory.reduce((options, code) => {
+        if (options.length <= n && codeMap[code])
+          options.push({ label: code, color: getColor(code, codeMap) });
+        return options;
+      }, []);
+    }
+  };
+
+  const searchBoxDropdown = () => {
+    const settings = itemSettings?.codeSelector;
+    if (settings && settings.type !== "recent" && !settings.searchBox) return null;
+    return (
+      <>
+        <Grid>
+          <Grid.Column width={13} floated="left">
+            <Ref innerRef={textInputRef}>
+              <Dropdown
+                fluid
+                placeholder={"<type to search>"}
+                style={{ minWidth: "12em" }}
+                options={Object.keys(codeMap).reduce((options, code) => {
+                  if (!annotations[code]) {
+                    let tree = codeMap[code].tree.join(" - ");
+                    if (tree === "") tree = "Root";
+                    options.push({
+                      key: code,
+                      value: code,
+                      text: code + " " + tree,
+                      content: (
+                        <>
+                          {code}
+                          <br />
+                          <span style={{ color: "grey" }}>{tree}</span>
+                        </>
+                      ),
+                    });
+                  }
+                  return options;
+                }, [])}
+                open={!focusOnButtons}
+                search
+                selection
+                compact
+                selectOnNavigation={false}
+                minCharacters={0}
+                autoComplete={"on"}
+                onClick={() => setFocusOnButtons(false)}
+                onSearchChange={(e, d) => {
+                  if (d.searchQuery === "") setFocusOnButtons(true);
+                }}
+                onClose={() => setFocusOnButtons(true)}
+                onChange={(e, d) => {
+                  if (codeMap[d.value])
+                    updateAnnotations(annotations, current, d.value, setCurrent, dispatch);
+                }}
+              />
+            </Ref>
+          </Grid.Column>
+        </Grid>
+        <br />
+      </>
+    );
   };
 
   if (!current) return null;
   return (
     <>
-      <Grid>
-        <Grid.Column width={13} floated="left">
-          <Ref innerRef={textInputRef}>
-            <Dropdown
-              fluid
-              placeholder={"<type to search>"}
-              style={{ minWidth: "12em" }}
-              options={Object.keys(codeMap).reduce((options, code) => {
-                if (!annotations[code]) {
-                  let tree = codeMap[code].tree.join(" - ");
-                  if (tree === "") tree = "Root";
-                  options.push({
-                    key: code,
-                    value: code,
-                    text: code + " " + tree,
-                    content: (
-                      <>
-                        {code}
-                        <br />
-                        <span style={{ color: "grey" }}>{tree}</span>
-                      </>
-                    ),
-                  });
-                }
-                return options;
-              }, [])}
-              open={!focusOnButtons}
-              search
-              selection
-              compact
-              selectOnNavigation={false}
-              minCharacters={0}
-              autoComplete={"on"}
-              onClick={() => setFocusOnButtons(false)}
-              onSearchChange={(e, d) => {
-                if (d.searchQuery === "") setFocusOnButtons(true);
-              }}
-              onClose={() => setFocusOnButtons(true)}
-              onChange={(e, d) => {
-                if (codeMap[d.value])
-                  updateAnnotations(annotations, current, d.value, setCurrent, dispatch);
-              }}
-            />
-          </Ref>
-        </Grid.Column>
-      </Grid>
-      <br />
+      {searchBoxDropdown()}
       <ButtonSelection
         key={"newCodePageButtons"}
         active={focusOnButtons}
@@ -261,10 +284,13 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
+  const itemSettings = useSelector(state => state.itemSettings);
   const [selected, setSelected] = useState(0);
 
+  const rowSize = itemSettings?.codeSelector?.rowSize || 5;
+
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const nbuttons = canDelete ? options.length + 1 : options.length;
 
       // any arrowkey
@@ -275,8 +301,16 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
           if (selected < nbuttons - 1) setSelected(selected + 1);
         }
 
+        if (event.key === "ArrowDown") {
+          if (selected < nbuttons - 1) setSelected(Math.min(selected + rowSize, nbuttons - 1));
+        }
+
         if (event.key === "ArrowLeft") {
           if (selected > 0) setSelected(selected - 1);
+        }
+
+        if (event.key === "ArrowUp") {
+          if (selected > 0) setSelected(Math.max(0, selected - rowSize));
         }
 
         return;
@@ -287,6 +321,9 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
 
       // space or enter
       if (event.keyCode === 32 || event.keyCode === 13) {
+        event.preventDefault();
+        event.stopPropagation();
+
         if (selected === options.length) {
           callback(null); // this means delete button was selected
         } else {
@@ -294,7 +331,7 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
         }
       }
     },
-    [selected, callback, options, canDelete]
+    [selected, callback, options, canDelete, rowSize]
   );
 
   useEffect(() => {
@@ -311,18 +348,32 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
   const mapButtons = () => {
     return options.map((option, i) => {
       return (
-        <Button
-          style={{ backgroundColor: option.color }}
-          key={option.label}
-          value={option.label}
-          compact
-          size="mini"
-          active={i === selected}
-          onMouseOver={() => setSelected(i)}
-          onClick={(e, d) => callback(d.value)}
-        >
-          {option.label}
-        </Button>
+        <>
+          {i % rowSize === 0 ? <br /> : null}
+          <Button
+            style={{ backgroundColor: option.color, margin: "0" }}
+            key={option.label}
+            value={option.label}
+            compact
+            size="mini"
+            active={i === selected}
+            onMouseOver={() => setSelected(i)}
+            onClick={(e, d) => callback(d.value)}
+          >
+            {/* <div  
+              style={{
+                position: "relative",
+                float: "left",
+                fontStyle: "bold",
+                marginTop: "-0.5em",
+                marginLeft: "-1em",
+              }}
+            >
+              {i + 1}
+            </div> */}
+            {" " + option.label}
+          </Button>
+        </>
       );
     });
   };
