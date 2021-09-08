@@ -43,8 +43,8 @@ const Tokens = ({ doc, height, textUnitPosition }) => {
             background: "#f7f7f78a",
             paddingLeft: "0.5em",
             paddingRight: "0.5em",
-            lineHeight: 1.6,
-            fontSize: 15,
+            lineHeight: "2em",
+            fontSize: "1.2em",
           }}
         >
           {tokenComponents["textUnit"]}
@@ -54,7 +54,7 @@ const Tokens = ({ doc, height, textUnitPosition }) => {
             color: contextColor,
             paddingLeft: "0.5em",
             paddingRight: "0.5em",
-            paddingBottom: `${0.8 * height * (1 - textUnitPosition)}vh`,
+            //paddingBottom: `${0.8 * height * (1 - textUnitPosition)}vh`,
           }}
         >
           {tokenComponents["contextAfter"]}

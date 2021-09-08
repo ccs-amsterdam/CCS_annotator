@@ -24,7 +24,7 @@ const resultRenderer = ({ code, codeTrail }) => (
 );
 
 const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) => {
-  const codingjob = useSelector(state => state.codingjob);
+  const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
         }
 
         const re = new RegExp(data.value.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
-        const isMatch = code => re.test(code.code);
+        const isMatch = (code) => re.test(code.code);
 
         setLoading(false);
         setResults(codeTreeArray.filter(isMatch));
@@ -103,7 +103,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
     };
   }, []);
 
-  const formatCode = code => {
+  const formatCode = (code) => {
     const color = code.active == null || code.active ? "black" : "grey";
     if (code.level === 0) return { fontWeight: "bold", fontSize: "15px", color };
     if (code.level === 1) return { fontSize: "12px", color };
@@ -250,7 +250,7 @@ const CodeTreeTable = ({ showColors = true, typeDelay = 0, height = "30vh" }) =>
 };
 
 const changeCodeColor = async (codingjob, code, color, codes, setCodes) => {
-  let updatedCodes = codes.map(ucode => {
+  let updatedCodes = codes.map((ucode) => {
     if (ucode.code === code) ucode.color = color;
     return ucode;
   });
@@ -303,7 +303,7 @@ const EditCodePopup = ({
               background: "white",
               color: code.color ? code.color : "white",
             }}
-            onChange={e => setChangeColor({ code: code.code, color: e.target.value })}
+            onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
             type="color"
             value={code.color}
           />
@@ -315,7 +315,7 @@ const EditCodePopup = ({
     );
   };
 
-  const addCodePopup = root => {
+  const addCodePopup = (root) => {
     setPopupContent(
       <AddCodePopup
         codingjob={codingjob}
@@ -399,11 +399,11 @@ const EditCodePopup = ({
 };
 
 const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector(state => state.codeMap);
+  const codeMap = useSelector((state) => state.codeMap);
   const [alreadyExists, setAlreadyExists] = useState(false);
   const [textInput, setTextInput] = useState("");
 
-  const addCode = async newCode => {
+  const addCode = async (newCode) => {
     if (newCode === "") return null;
     if (codeMap[newCode]) {
       setAlreadyExists(true);
@@ -446,19 +446,19 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 };
 
 const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector(state => state.codeMap);
-  const annotations = useSelector(state => state.spanAnnotations);
+  const codeMap = useSelector((state) => state.codeMap);
+  const annotations = useSelector((state) => state.spanAnnotations);
   const dispatch = useDispatch();
 
-  const rmCode = async keepChildren => {
-    let updatedCodes = codes.filter(ucode => ucode.code !== code);
+  const rmCode = async (keepChildren) => {
+    let updatedCodes = codes.filter((ucode) => ucode.code !== code);
 
     const children = [];
     if (!keepChildren) {
       getAllChildren(codeMap, code, children);
-      updatedCodes = updatedCodes.filter(ucode => !children.includes(ucode.code));
+      updatedCodes = updatedCodes.filter((ucode) => !children.includes(ucode.code));
     } else {
-      updatedCodes = updatedCodes.map(ucode => {
+      updatedCodes = updatedCodes.map((ucode) => {
         if (codeMap[code].children.includes(ucode.code)) ucode.parent = codeMap[code].parent;
         return ucode;
       });
@@ -511,8 +511,8 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 };
 
 const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector(state => state.codeMap);
-  const annotations = useSelector(state => state.spanAnnotations);
+  const codeMap = useSelector((state) => state.codeMap);
+  const annotations = useSelector((state) => state.spanAnnotations);
   const dispatch = useDispatch();
   const [newParent, setNewParent] = useState(codeMap[code].parent);
   const [textInput, setTextInput] = useState(code);
@@ -525,7 +525,7 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
       if (codeMap[newCode]) return null;
     }
     let codeIsNew = true; // if code was only a parent, it isn't yet in the edgelist
-    let updatedCodes = codes.map(ucode => {
+    let updatedCodes = codes.map((ucode) => {
       if (ucode.code === code) {
         ucode.code = newCode;
         ucode.parent = newParent;
@@ -537,7 +537,7 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
       return ucode;
     });
     if (codeIsNew) codes.push({ code: newCode, parent: newParent, active: true });
-    codes = codes.filter(code => code.parent !== "ROOT");
+    codes = codes.filter((code) => code.parent !== "ROOT");
 
     // update codingjob in db
     await db.writeCodes(codingjob, updatedCodes);
@@ -609,7 +609,7 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 const toggleActiveCode = async (codingjob, codes, code, active, setCodes) => {
   let updatedCodes = [...codes];
 
-  const selectedCode = updatedCodes.find(ucode => ucode.code === code);
+  const selectedCode = updatedCodes.find((ucode) => ucode.code === code);
 
   // there is a possibility that code.code does not exist, if it only existed as a parent
   // this is ideally resolved upstream (when creating the codebook), but as a plan B it can be added here
@@ -624,7 +624,7 @@ const toggleActiveCode = async (codingjob, codes, code, active, setCodes) => {
 const toggleFoldCode = async (codingjob, codes, code, folded, setCodes) => {
   let updatedCodes = [...codes];
 
-  const selectedCode = updatedCodes.find(ucode => ucode.code === code);
+  const selectedCode = updatedCodes.find((ucode) => ucode.code === code);
 
   // there is a possibility that code.code does not exist, if it only existed as a parent
   // this is ideally resolved upstream (when creating the codebook), but as a plan B it can be added here
@@ -646,12 +646,12 @@ const getAllChildren = (codeMap, code, children) => {
 const getAllParentOptions = (codeMap, code) => {
   const children = [];
   getAllChildren(codeMap, code, children);
-  return Object.keys(codeMap).filter(parent => !children.includes(parent) && parent !== code);
+  return Object.keys(codeMap).filter((parent) => !children.includes(parent) && parent !== code);
 };
 
 const getCodeTreeArray = (codeMap, showColors) => {
   let parents = Object.keys(codeMap).filter(
-    code => !codeMap[code].parent || codeMap[code].parent === ""
+    (code) => !codeMap[code].parent || codeMap[code].parent === ""
   );
   const codeTreeArray = [];
   fillCodeTreeArray(codeMap, parents, codeTreeArray, [], showColors);
@@ -679,10 +679,24 @@ const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColor
   }
 };
 
-const prepareCodeMap = codes => {
+const prepareCodeMap = (codes) => {
+  const sortFun = (a, b) => {
+    if (a.order && b.order && a.order !== b.order) return a.order - b.order;
+
+    let labelA = a.code.toUpperCase(); // ignore upper and lowercase
+    let labelB = b.code.toUpperCase(); // ignore upper and lowercase
+    if (labelA < labelB) {
+      return -1;
+    }
+    if (labelA > labelB) {
+      return 1;
+    }
+    return 0;
+  };
+
   // the payload is an array of objects, but for efficients operations
   // in the annotator we convert it to an object with the codes as keys
-  const codeMap = codes.reduce((result, code) => {
+  const codeMap = codes.sort(sortFun).reduce((result, code) => {
     result[code.code] = { ...code, children: [], totalChildren: 0, totalActiveChildren: 0 };
     return result;
   }, {});

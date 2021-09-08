@@ -70,11 +70,11 @@ const UnitForm = ({ unitSelection, setItemSettings }) => {
         <Form.Field>
           <Radio
             value="all"
-            label="All texts"
+            label="All text units"
             checked={unitSelection.value === "all"}
             onChange={onUnitSelection}
           />
-          <Help header={"All texts"} texts={["Use all unique text units"]} />
+          <Help header={"All text units"} texts={["Use all unique text units"]} />
         </Form.Field>
 
         {/* <Form.Field>
@@ -113,7 +113,12 @@ const UnitForm = ({ unitSelection, setItemSettings }) => {
               trigger={
                 <Button
                   floated="right"
-                  onClick={() => setItemSettings((old) => ({ ...old }))}
+                  onClick={() => {
+                    setItemSettings((current) => ({
+                      ...current,
+                      unitSelection: { ...current.unitSelection },
+                    }));
+                  }}
                   style={{ margin: "0", padding: "0.2em", floated: "right" }}
                 >
                   Update
@@ -203,7 +208,18 @@ const SampleForm = React.memo(({ totalItems, unitSelection, setItemSettings }) =
     <Form>
       <Form.Group>
         <Icon name="setting" />
-        <label>Sample settings</label>
+        <div>
+          <label>Sample settings</label>
+          <Help
+            header={"Sampling and shuffling"}
+            texts={[
+              "If % < 100, a random sample will be drawn.",
+              "If shuffle is enabled, the order of the units will be randomized.",
+              "Seed initializes the random number generator. Simply put, using the same seed gives the same 'random' results if the data is the same.",
+            ]}
+          />
+        </div>
+
         {/* <Help header={"test"} texts={["test", "this"]} /> */}
       </Form.Group>
 
@@ -245,14 +261,6 @@ const SampleForm = React.memo(({ totalItems, unitSelection, setItemSettings }) =
           <label>Seed</label>
           <Input size="mini" type="number" min={1} value={delayed.seed} onChange={onChangeSeed} />
         </Form.Field>
-        <Help
-          header={"Sampling and shuffling"}
-          texts={[
-            "If % < 100, a random sample will be drawn.",
-            "If shuffle is enabled, the order of the units will be randomized.",
-            "Seed initializes the random number generator. Simply put, using the same seed gives the same 'random' results if the data is the same.",
-          ]}
-        />
       </Form.Group>
 
       <Form.Group>
@@ -290,14 +298,7 @@ const SampleForm = React.memo(({ totalItems, unitSelection, setItemSettings }) =
         <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
           Add random units
         </label>
-        <Help
-          header={"Add random annotations"}
-          texts={[
-            "Add random text units, 'annotated' with random codes",
-            "The random codes can be usefull in coding question, such as 'does this text contain [label]",
-            "If codes are balanced, a balance of all active codes from the codebook is used. If not, it will approximate the distribution of the codes in the actuall annotations in the sample",
-          ]}
-        />
+
         <Form.Field width={4}>
           <Input
             disabled={!unitSelection.value.includes("annotation")}
@@ -309,9 +310,20 @@ const SampleForm = React.memo(({ totalItems, unitSelection, setItemSettings }) =
             onChange={onChangeMix}
           />
         </Form.Field>
-        <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
-          % of {unitSelection.value === "has annotation" ? "units with annotation" : "annotations"}
-        </label>
+        <div>
+          <label style={{ color: unitSelection.value.includes("annotation") ? "black" : "grey" }}>
+            % of{" "}
+            {unitSelection.value === "has annotation" ? "units with annotation" : "annotations"}
+          </label>
+          <Help
+            header={"Add random annotations"}
+            texts={[
+              "Add random text units, 'annotated' with random codes",
+              "The random codes can be usefull in coding question, such as 'does this text contain [label]",
+              "If codes are balanced, a balance of all active codes from the codebook is used. If not, it will approximate the distribution of the codes in the actuall annotations in the sample",
+            ]}
+          />
+        </div>
       </Form.Group>
     </Form>
   );

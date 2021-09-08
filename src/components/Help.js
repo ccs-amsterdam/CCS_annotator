@@ -2,7 +2,7 @@ import React from "react";
 
 import { Button, Popup } from "semantic-ui-react";
 
-const Help = ({ header, texts }) => {
+const Help = ({ header, texts, type }) => {
   // a simple question mark popup for help texts
   // header should be a string
   // texts an array of strings (for different paragraphs)
@@ -11,16 +11,19 @@ const Help = ({ header, texts }) => {
     return (
       <Button
         circular
+        icon={type === "warn" ? "exclamation" : "question"}
         size="mini"
-        icon="question"
         style={{
-          margin: "0",
-          marginLeft: "0.5em",
-          maxHeight: "1.5em",
-          maxWidth: "1.5em",
-          padding: "0.2em",
-          background: "black",
-          color: "white",
+          position: "absolute",
+          marginTop: "-0.6em",
+          marginLeft: "0.2em",
+          paddingLeft: "0.1em",
+          paddingRight: "0.1em",
+          paddingTop: "0.2em",
+          paddingBottom: "0.2em",
+          background: type === "warn" ? "red" : "white",
+          color: "black",
+          border: "1px solid grey",
         }}
       />
     );
