@@ -1,43 +1,86 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-import { Header, Button, Dropdown, Grid, Ref } from "semantic-ui-react";
+import { Header, Button, Dropdown, Ref, Segment } from "semantic-ui-react";
+import { getColor } from "../util/tokenDesign";
+
+import { moveUp, moveDown } from "../util/buttonNav";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const QuestionForm = ({ doc }) => {
-  const settings = useSelector((state) => state.itemSettings.questionForm);
+  const settings = useSelector(state => state.itemSettings.questionForm);
+  const codeMap = useSelector(state => state.codeMap);
+  if (!settings) return null;
 
-  const prepareQuestion = (question) => {
-    if (question.search("\\[code\\]") >= 0) {
-      if (doc.itemAnnotation) {
-        const codeTag = `{{lightyellow###${doc.itemAnnotation.group}}}`; // add optional color from itemSettings
-        question = question.replace("[code]", codeTag);
-      }
-    }
-
-    if (question.search("\\[text\\]") >= 0) {
-      if (doc.itemAnnotation?.span != null) {
-        const text = doc.tokens.reduce((str, token) => {
-          const i = token.index;
-          const [from, to] = doc.itemAnnotation.span;
-          if (i === from && i === to) str += token.text;
-          if (i === from && i < to) str += token.text + token.post;
-          if (i > from && i < to) str += token.pre + token.text + token.post;
-          if (i > from && i === to) str += token.text + token.post;
-          return str;
-        }, "");
-        const textTag = `{{lightblue###${text}}}`; // add optional color from itemSettings
-
-        question = question.replace("[text]", textTag);
-      }
-    }
-    return markedString(question);
+  const onSelect = code => {
+    alert("You selected a code, but nothing happens!! Woe is upon you!!");
   };
 
-  return <Header textAlign="center">{prepareQuestion(settings.question)}</Header>;
+  return (
+    <Segment style={{ height: "100%", border: "0", backgroundColor: "#bcbcf133" }}>
+      <Header textAlign="center">{prepareQuestion(doc, settings, codeMap)}</Header>
+      {settings.type === "search code" ? <SearchBoxDropdown callback={onSelect} /> : null}
+      {settings.type === "select code" ? <ButtonSelection callback={onSelect} /> : null}
+    </Segment>
+  );
 };
 
-const markedString = (text) => {
+const getOptions = codeMap => {
+  return Object.keys(codeMap).reduce((options, code) => {
+    if (!codeMap[code].active) return options;
+    if (!codeMap[code].activeParent) return options;
+    let tree = codeMap[code].tree.join(" - ");
+    if (tree === "") tree = "Root";
+    options.push({
+      ref: React.createRef(),
+      code: code,
+      tree: tree,
+      color: getColor(code, codeMap),
+    });
+    return options;
+  }, []);
+};
+
+const prepareQuestion = (doc, settings, codeMap) => {
+  let question = settings.question;
+
+  if (question.search("\\[code\\]") >= 0) {
+    if (doc.itemAnnotation) {
+      let code = doc.itemAnnotation.group;
+      const codeTag = `{{lightyellow###${code}}}`; // add optional color from itemSettings
+      question = question.replace("[code]", codeTag);
+    }
+  }
+
+  if (question.search("\\[group\\]") >= 0) {
+    if (doc.itemAnnotation) {
+      let code = doc.itemAnnotation.group;
+      if (codeMap[code].foldToParent) code = codeMap[code].foldToParent;
+      const codeTag = `{{yellow###${code}}}`; // add optional color from itemSettings
+      question = question.replace("[group]", codeTag);
+    }
+  }
+
+  if (question.search("\\[text\\]") >= 0) {
+    if (doc.itemAnnotation?.span != null) {
+      const text = doc.tokens.reduce((str, token) => {
+        const i = token.index;
+        const [from, to] = doc.itemAnnotation.span;
+        if (i === from && i === to) str += token.text;
+        if (i === from && i < to) str += token.text + token.post;
+        if (i > from && i < to) str += token.pre + token.text + token.post;
+        if (i > from && i === to) str += token.text + token.post;
+        return str;
+      }, "");
+      const textTag = `{{lightblue###${text}}}`; // add optional color from itemSettings
+
+      question = question.replace("[text]", textTag);
+    }
+  }
+  return markedString(question);
+};
+
+const markedString = text => {
   const regex = new RegExp(/\{\{(.*?)\}\}/); // Match text inside two square brackets
 
   return (
@@ -59,67 +102,57 @@ const markedString = (text) => {
   );
 };
 
-const SearchBoxDropdown = () => {
+const SearchBoxDropdown = ({ callback }) => {
   const ref = useRef();
-  const codeMap = useSelector((state) => state.codeMap);
+  const options = useSelector(state => getOptions(state.codeMap));
 
   return (
-    <>
-      <Grid>
-        <Grid.Column width={13} floated="left">
-          <Ref innerRef={ref}>
-            <Dropdown
-              fluid
-              placeholder={"<type to search>"}
-              style={{ minWidth: "12em" }}
-              options={Object.keys(codeMap).reduce((options, code) => {
-                let tree = codeMap[code].tree.join(" - ");
-                if (tree === "") tree = "Root";
-                options.push({
-                  key: code,
-                  value: code,
-                  text: code + " " + tree,
-                  content: (
-                    <>
-                      {code}
-                      <br />
-                      <span style={{ color: "grey" }}>{tree}</span>
-                    </>
-                  ),
-                });
-
-                return options;
-              }, [])}
-              search
-              selection
-              compact
-              selectOnNavigation={false}
-              minCharacters={0}
-              autoComplete={"on"}
-              onChange={(e, d) => {
-                if (codeMap[d.value]) console.log(d.value);
-              }}
-            />
-          </Ref>
-        </Grid.Column>
-      </Grid>
-      <br />
-    </>
+    <Ref innerRef={ref}>
+      <Dropdown
+        fluid
+        placeholder={"<type to search>"}
+        searchInput={{ autoFocus: true }}
+        style={{ minWidth: "12em" }}
+        options={options.map(option => {
+          return {
+            key: option.code,
+            value: option.code,
+            text: option.code + " (" + option.tree + ")",
+            content: (
+              <>
+                {option.code}
+                <br />
+                <span style={{ color: "grey" }}>{option.tree}</span>
+              </>
+            ),
+          };
+        })}
+        search
+        selection
+        compact
+        selectOnNavigation={false}
+        minCharacters={0}
+        autoComplete={"on"}
+        onChange={(e, d) => {
+          callback(d.value);
+        }}
+      />
+    </Ref>
   );
 };
 
-const ButtonSelection = ({ active, options, canDelete, callback }) => {
+const ButtonSelection = ({ callback }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const itemSettings = useSelector((state) => state.itemSettings);
+  const options = useSelector(state => getOptions(state.codeMap));
+  const eventsBlocked = useSelector(state => state.eventsBlocked);
+
   const [selected, setSelected] = useState(0);
 
-  const rowSize = itemSettings?.codeSelector?.rowSize || 5;
-
   const onKeydown = React.useCallback(
-    (event) => {
-      const nbuttons = canDelete ? options.length + 1 : options.length;
+    event => {
+      const nbuttons = options.length;
 
       // any arrowkey
       if (arrowKeys.includes(event.key)) {
@@ -130,7 +163,12 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
         }
 
         if (event.key === "ArrowDown") {
-          if (selected < nbuttons - 1) setSelected(Math.min(selected + rowSize, nbuttons - 1));
+          setSelected(
+            moveDown(
+              options.map(option => option.ref),
+              selected
+            )
+          );
         }
 
         if (event.key === "ArrowLeft") {
@@ -138,7 +176,12 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
         }
 
         if (event.key === "ArrowUp") {
-          if (selected > 0) setSelected(Math.max(0, selected - rowSize));
+          setSelected(
+            moveUp(
+              options.map(option => option.ref),
+              selected
+            )
+          );
         }
 
         return;
@@ -155,79 +198,58 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
         if (selected === options.length) {
           callback(null); // this means delete button was selected
         } else {
-          callback(options[selected].label);
+          callback(options[selected].code);
         }
       }
     },
-    [selected, callback, options, canDelete, rowSize]
+    [selected, callback, options]
   );
 
   useEffect(() => {
-    if (active) {
+    if (!eventsBlocked) {
       window.addEventListener("keydown", onKeydown);
-    } else {
-      window.removeEventListener("keydown", onKeydown);
-    }
+    } else window.removeEventListener("keydown", onKeydown);
+
     return () => {
       window.removeEventListener("keydown", onKeydown);
     };
-  }, [active, onKeydown]);
+  }, [onKeydown, eventsBlocked]);
 
   const mapButtons = () => {
     return options.map((option, i) => {
       return (
         <>
-          {i % rowSize === 0 ? <br /> : null}
-          <Button
-            style={{ backgroundColor: option.color, margin: "0" }}
-            key={option.label}
-            value={option.label}
-            compact
-            size="mini"
-            active={i === selected}
-            onMouseOver={() => setSelected(i)}
-            onClick={(e, d) => callback(d.value)}
-          >
-            {/* <div  
-              style={{
-                position: "relative",
-                float: "left",
-                fontStyle: "bold",
-                marginTop: "-0.5em",
-                marginLeft: "-1em",
-              }}
+          <Ref innerRef={option.ref}>
+            <Button
+              style={{ backgroundColor: option.color, margin: "0", padding: "2em" }}
+              key={option.code}
+              value={option.code}
+              compact
+              size="mini"
+              active={i === selected}
+              onMouseOver={() => setSelected(i)}
+              onClick={(e, d) => callback(d.value)}
             >
-              {i + 1}
-            </div> */}
-            {" " + option.label}
-          </Button>
+              {/* <div
+                style={{
+                  position: "relative",
+                  float: "left",
+                  fontStyle: "bold",
+                  marginTop: "-0.5em",
+                  marginLeft: "-1em",
+                }}
+              >
+                {i + 1}
+              </div> */}
+              {" " + option.code}
+            </Button>
+          </Ref>
         </>
       );
     });
   };
 
-  const deleteButton = () => {
-    if (!canDelete) return null;
-    return (
-      <Button
-        icon="trash"
-        size="mini"
-        floated="right"
-        active={selected === options.length}
-        compact
-        style={{ backgroundColor: "red", borderColor: "black" }}
-        onMouseOver={() => setSelected(options.length)}
-        onClick={(e, d) => callback(null)}
-      />
-    );
-  };
-
-  return (
-    <span>
-      {mapButtons()}
-      {deleteButton()}
-    </span>
-  );
+  return <div style={{ textAlign: "center" }}>{mapButtons()}</div>;
 };
 
 export default QuestionForm;

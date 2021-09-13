@@ -54,7 +54,7 @@ const UnitSelection = ({ totalItems, unitSelection, setItemSettings }) => {
 
 const UnitForm = ({ unitSelection, setItemSettings }) => {
   const onUnitSelection = (e, d) => {
-    setItemSettings((current) => ({
+    setItemSettings(current => ({
       ...current,
       unitSelection: { ...current.unitSelection, value: d.value, n: null },
     }));
@@ -114,9 +114,12 @@ const UnitForm = ({ unitSelection, setItemSettings }) => {
                 <Button
                   floated="right"
                   onClick={() => {
-                    setItemSettings((current) => ({
+                    setItemSettings(current => ({
                       ...current,
-                      unitSelection: { ...current.unitSelection },
+                      unitSelection: {
+                        ...current.unitSelection,
+                        update: current.unitSelection.update + 1,
+                      },
                     }));
                   }}
                   style={{ margin: "0", padding: "0.2em", floated: "right" }}
@@ -154,24 +157,24 @@ const SampleForm = React.memo(({ totalItems, unitSelection, setItemSettings }) =
   useEffect(() => {
     if (delayed === unitSelection) return null;
     const timer = setTimeout(() => {
-      setItemSettings((current) => ({ ...current, unitSelection: delayed }));
+      setItemSettings(current => ({ ...current, unitSelection: delayed }));
     }, 300);
     return () => clearTimeout(timer);
   }, [delayed, unitSelection, setItemSettings]);
 
   const setWithoutDelay = (field, value) => {
-    setItemSettings((current) => ({
+    setItemSettings(current => ({
       ...current,
       unitSelection: { ...current.unitSelection, [field]: value },
     }));
   };
 
   const onChangeMix = (e, d) => {
-    setDelayed((current) => ({ ...current, annotationMix: Number(d.value) }));
+    setDelayed(current => ({ ...current, annotationMix: Number(d.value) }));
   };
 
   const onChangeSeed = (e, d) => {
-    setDelayed((current) => ({ ...current, seed: Number(d.value) }));
+    setDelayed(current => ({ ...current, seed: Number(d.value) }));
   };
 
   const onChangeShuffle = (e, d) => {
@@ -189,7 +192,7 @@ const SampleForm = React.memo(({ totalItems, unitSelection, setItemSettings }) =
     let value = Number(d.value);
     //value = value > n ? Math.min(totalItems, value + 4) : Math.max(0, value - 4);
     setPct(Math.round((100 * value) / totalItems));
-    setDelayed((current) => ({ ...current, n: value }));
+    setDelayed(current => ({ ...current, n: value }));
   };
 
   const onChangePCT = (e, d) => {
@@ -198,7 +201,7 @@ const SampleForm = React.memo(({ totalItems, unitSelection, setItemSettings }) =
     let valueN = Math.ceil((value / 100) * totalItems);
     if (valueN >= 0) {
       setPct(value);
-      setDelayed((current) => ({ ...current, n: valueN }));
+      setDelayed(current => ({ ...current, n: valueN }));
     }
   };
 

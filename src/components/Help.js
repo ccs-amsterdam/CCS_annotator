@@ -2,7 +2,7 @@ import React from "react";
 
 import { Button, Popup } from "semantic-ui-react";
 
-const Help = ({ header, texts, type }) => {
+const Help = ({ children, header, texts, type }) => {
   // a simple question mark popup for help texts
   // header should be a string
   // texts an array of strings (for different paragraphs)
@@ -21,7 +21,7 @@ const Help = ({ header, texts, type }) => {
           paddingRight: "0.1em",
           paddingTop: "0.2em",
           paddingBottom: "0.2em",
-          background: type === "warn" ? "red" : "white",
+          background: type === "warn" ? "orange" : "white",
           color: "black",
           border: "1px solid grey",
         }}
@@ -31,10 +31,9 @@ const Help = ({ header, texts, type }) => {
 
   return (
     <Popup position="right center" trigger={questionMark()}>
-      <h3>{header}</h3>
-      {texts.map((text, i) => (
-        <p key={i}>{text}</p>
-      ))}
+      {header ? <h3>{header}</h3> : null}
+      {texts ? texts.map((text, i) => <p key={i}>{text}</p>) : null}
+      {children}
     </Popup>
   );
 };

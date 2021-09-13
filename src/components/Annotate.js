@@ -34,7 +34,8 @@ const defaultItemSettings = {
     ordered: true,
     balanceDocuments: false,
     balanceAnnotations: true,
-    useCodes: null,
+    validCodes: null,
+    update: 0, // just increments when update button is pressed
   },
   taskType: "annotate",
   codeSelector: {
@@ -45,21 +46,22 @@ const defaultItemSettings = {
   questionForm: {
     type: "search code",
     question: "Assign",
-    rowSize: 5,
+    useFolded: true,
   },
+  codeMap: null,
 };
 
 const Annotate = () => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const mode = useSelector((state) => state.mode);
-  const codeMap = useSelector((state) => state.codeMap);
+  const codingjob = useSelector(state => state.codingjob);
+  const mode = useSelector(state => state.mode);
+  const codeMap = useSelector(state => state.codeMap);
 
   const [itemSettings, setItemSettings] = useState(defaultItemSettings);
   const totalItems = useRef(0);
-  const setItemSetting = (which) => {
+  const setItemSetting = which => {
     // creates a set state function for a specific key in itemSettings
     // setItemSetting('textUnit') returns a function for setting itemSettings.textUnit
-    return (value) => setItemSettings((current) => ({ ...current, [which]: value }));
+    return value => setItemSettings(current => ({ ...current, [which]: value }));
   };
 
   const [jobItems, setJobItems] = useState(null);
@@ -69,7 +71,6 @@ const Annotate = () => {
   // before the settings can be overwritten
   const codingjobLoaded = useRef(false);
 
-  console.log(itemSettings.codeSelector.searchBox);
   useEffect(() => {
     if (!codingjob) return null;
     codingjobLoaded.current = false;
@@ -83,11 +84,14 @@ const Annotate = () => {
   }, [codingjob, itemSettings, codingjobLoaded]);
 
   useEffect(() => {
-    // this only updates the codeMap used in unitselection if unit is span annotation
+    const validCodes = Object.keys(codeMap).reduce((codes, code) => {
+      if (codeMap[code].active && codeMap[code].activeParent) codes.push(code);
+      return codes;
+    }, []);
     if (itemSettings.unitSelection.value === "per annotation")
-      setItemSettings((current) => ({
+      setItemSettings(current => ({
         ...current,
-        unitSelection: { ...current.unitSelection, codeMap },
+        unitSelection: { ...current.unitSelection, validCodes: validCodes },
       }));
   }, [codeMap, itemSettings.unitSelection.value, setItemSettings]);
 
@@ -267,8 +271,8 @@ const buttonLabel = (text, type) => {
 };
 
 const TextUnitDropdown = ({ textUnit, setItemSettings }) => {
-  const setTextUnit = (value) =>
-    setItemSettings((current) => ({
+  const setTextUnit = value =>
+    setItemSettings(current => ({
       ...current,
       textUnit: value,
       unitSelection: { ...current.unitSelection, n: null },
@@ -293,7 +297,7 @@ const TextUnitDropdown = ({ textUnit, setItemSettings }) => {
 };
 
 const ContextUnitDropdown = ({ textUnit, contextUnit, setContextUnit }) => {
-  const onClick = (unit) => {
+  const onClick = unit => {
     if (contextUnit.selected !== unit) {
       setContextUnit({ ...contextUnit, selected: unit });
     }
@@ -392,9 +396,9 @@ const setupCodingjob = async (
   [totalItems.current, items] = await db.getCodingjobItems(codingjob, textUnit, unitSelection);
   setJobItems(items);
   setJobItem(items[0]);
-
+  console.log(unitSelection.validCodes);
   if (unitSelection.n === null || unitSelection.n == null) {
-    setItemSettings((current) => {
+    setItemSettings(current => {
       const newUnitSelection = { ...unitSelection, n: totalItems.current };
       return { ...current, unitSelection: newUnitSelection };
     });

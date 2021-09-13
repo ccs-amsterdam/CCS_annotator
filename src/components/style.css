@@ -35,7 +35,7 @@ span.token.selected {
 span.token.highlight {
   font-weight: bold;
   font-size: 1.2em;
-  background-color: lightblue !important;
+  background-color: #5f5feb33 !important;
   padding-top: 3px;
   padding-bottom: 3px;
 }

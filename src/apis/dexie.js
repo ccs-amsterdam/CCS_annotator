@@ -57,7 +57,10 @@ class AnnotationDB {
     return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
-    await this.idb.documents.where("job_id").equals(codingjob.job_id).delete();
+    await this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .delete();
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
   async listCodingjobs() {
@@ -121,7 +124,7 @@ class AnnotationDB {
     }
 
     // making absolutely sure no garbage is added
-    codebook.codes = codebook.codes.filter((code) => code.code !== "");
+    codebook.codes = codebook.codes.filter(code => code.code !== "");
 
     return await this.writeCodebook(codingjob, codebook);
   }
@@ -129,7 +132,10 @@ class AnnotationDB {
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
 
     let duplicates = 0;
@@ -205,7 +211,7 @@ class AnnotationDB {
   }
 
   async deleteDocuments(documents) {
-    const documentIds = documents.map((document) => document.doc_uid);
+    const documentIds = documents.map(document => document.doc_uid);
     return this.idb.documents.bulkDelete(documentIds);
   }
 
@@ -221,10 +227,10 @@ class AnnotationDB {
   async getCodingjobItems(codingjob, textUnit, unitSelection) {
     let totalItems = 0;
 
-    const getGroup = (cjIndices) => {
+    const getGroup = cjIndices => {
       if (!unitSelection.balanceDocuments && !unitSelection.statifyAnnotations) return null; // if not balanced
 
-      return cjIndices.map((item) => {
+      return cjIndices.map(item => {
         let group = "";
         if (unitSelection.balanceDocuments) group += item.docIndex;
         if (item.annotation && unitSelection.balanceAnnotations)
@@ -251,13 +257,11 @@ class AnnotationDB {
     }
 
     if (unitSelection.value.includes("annotation")) {
-      let codeMap = unitSelection.codeMap;
-
       [cjIndices, done] = await annotationJobItems(
         codingjob,
         textUnit,
         unitSelection.value === "has annotation",
-        codeMap
+        unitSelection.validCodes
       );
       totalItems = cjIndices.length;
       cjIndices = drawRandom(
@@ -281,15 +285,12 @@ class AnnotationDB {
           getGroup(cjIndices)
         );
 
-        let uniqueCodes = Object.keys(codeMap).reduce((array, code) => {
-          if (codeMap[code]?.active && codeMap[code].activeParent) array.push(code);
-          return array;
-        }, []);
+        let nCodes = unitSelection.validCodes.length;
         addSample = addSample.map((item, i) => {
           // add random annotation to mix by drawing from the annotations in the cjIndices sample.
           // this is random, and automatically gives approximately the same distribution of codes/groups
           if (unitSelection.balanceAnnotations) {
-            item.group = uniqueCodes[i % uniqueCodes.length];
+            item.group = unitSelection.validCodes[i % nCodes];
           } else {
             const annSample = cjIndices[i % cjIndices.length];
             if (annSample?.group) item.group = annSample.group;
@@ -307,7 +308,10 @@ class AnnotationDB {
   }
 
   async getJobDocumentCount(codingjob) {
-    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    return this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .count();
   }
 
   async getDocuments(codingjob) {
@@ -319,7 +323,10 @@ class AnnotationDB {
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
+    return this.idb.documents
+      .where("doc_uid")
+      .equals(document.doc_uid)
+      .modify({ tokens: tokens });
   }
 
   async writeAnnotations(document, annotations) {
@@ -332,7 +339,10 @@ class AnnotationDB {
     // renames oldCodes to newCode
     // if newCode is falsy, removes oldCodes
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
     for (let id of ids) {
       let doc = await this.getDocument(id);
@@ -372,7 +382,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
 
   const cjIndices = [];
   let docIndex = -1;
-  await documents.each((e) => {
+  await documents.each(e => {
     docIndex++;
     if (textUnit === "document" && !done.has(e.doc_uid)) {
       if (noDuplicates && done.has(e.doc_uid)) return;
@@ -408,15 +418,22 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
   return cjIndices;
 };
 
-const annotationJobItems = async (codingjob, textUnit, unique, codeMap) => {
+const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
   // need to get 'this' from class.
   // maybe just use db.
   let documents = await db.getDocuments(codingjob);
 
+  let useCode = null;
+  if (validCodes)
+    useCode = validCodes.reduce((obj, code) => {
+      obj[code] = true;
+      return obj;
+    }, {});
+
   const cjIndices = [];
   const done = new Set([]);
   let docIndex = -1;
-  await documents.each((e) => {
+  await documents.each(e => {
     docIndex++;
     if (e.annotations) {
       for (let i of Object.keys(e.annotations)) {
@@ -431,9 +448,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, codeMap) => {
               continue;
           }
 
-          if (codeMap && codeMap[group] != null) {
-            if (codeMap[group].active === false || codeMap[group].activeParent === false) continue;
-          }
+          if (useCode && useCode[group] == null) continue;
 
           const item = {
             textUnit,
@@ -464,7 +479,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, codeMap) => {
 
 const orderJobItems = (cjIndices, unitSelection) => {
   if (!unitSelection.ordered) return cjIndices;
-  return cjIndices.sort(function (a, b) {
+  return cjIndices.sort(function(a, b) {
     if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;
     if (a.parIndex != null && a.parIndex !== b.parIndex) return a.parIndex - b.parIndex;
     if (a.sentIndex != null && a.sentIndex !== b.sentIndex) return a.sentIndex - b.sentIndex;

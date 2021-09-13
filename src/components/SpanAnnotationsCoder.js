@@ -1,6 +1,5 @@
 import React from "react";
-import { useSelector } from "react-redux";
-import { Grid, Segment } from "semantic-ui-react";
+import { Grid } from "semantic-ui-react";
 import Tokens from "./Tokens";
 import QuestionForm from "./QuestionForm";
 
@@ -20,9 +19,7 @@ const SpanAnnotationsCoder = ({ doc }) => {
         </Grid.Row>
 
         <Grid.Row style={{ height: "30vh", marginTop: "1em" }}>
-          <Segment style={{ height: "100%", border: "0", backgroundColor: "#bcbcf133" }}>
-            <QuestionForm doc={doc} />
-          </Segment>
+          <QuestionForm doc={doc} />
         </Grid.Row>
       </Grid.Column>
     </Grid>

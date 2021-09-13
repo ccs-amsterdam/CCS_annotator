@@ -16,7 +16,6 @@ const AnnotationPage = ({ item, itemSettings }) => {
     if (!item) return null;
     setDoc(null);
     documentSelector(item, itemSettings, setDoc);
-    console.log(itemSettings);
     dispatch(setItemSettings(itemSettings));
   }, [item, itemSettings, setDoc, dispatch]);
 
@@ -40,6 +39,7 @@ const documentSelector = async (item, itemSettings, setDoc) => {
   if (!doc) return;
   //doc.codeMapHash = codeMapHash;
   doc.writable = false; // this prevents overwriting annotations before they have been loaded (in spanAnnotationsDB.js)
+  console.log(itemSettings);
 
   // either take tokens from item, or take all tokens from the document and (if necessary) filter on contextUnit
   if (item.tokens != null) {

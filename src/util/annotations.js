@@ -77,10 +77,6 @@ export const toggleAnnotations = (annotations, annList, rm) => {
             }
           }
         }
-        // if selection was one token (a click),
-        // just remove the annotation. But if it was a multi-token selection,
-        // we do add the new selection
-        if (a.span[0] === a.span[1]) continue;
       }
     }
 
@@ -98,7 +94,7 @@ export const toggleAnnotations = (annotations, annList, rm) => {
   return annotations;
 };
 
-const prepareAnnotations = (annotations) => {
+const prepareAnnotations = annotations => {
   if (!annotations || annotations === "") return {};
 
   // create an object where the key is a section+offset, and the

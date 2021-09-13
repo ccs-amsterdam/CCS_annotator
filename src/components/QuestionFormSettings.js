@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
-import { Popup, Button, Input, Form, Radio, Icon, TextArea } from "semantic-ui-react";
+import { Popup, Button, Form, Radio, Icon, TextArea } from "semantic-ui-react";
 
 import { blockEvents } from "../actions";
 import Help from "./Help";
@@ -11,13 +11,13 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
   const [delayedQuestion, setDelayedQuestion] = useState("");
   const [warn, setWarn] = useState([]);
 
-  useEffect(() => {
-    if (questionForm.question === delayedQuestion) return;
-    const timer = setTimeout(() => {
-      setQuestionForm({ ...questionForm, question: delayedQuestion });
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [delayedQuestion, questionForm, setQuestionForm]);
+  // useEffect(() => {
+  //   if (questionForm.question === delayedQuestion) return;
+  //   const timer = setTimeout(() => {
+  //     setQuestionForm({ ...questionForm, question: delayedQuestion });
+  //   }, 500);
+  //   return () => clearTimeout(timer);
+  // }, [delayedQuestion, questionForm, setQuestionForm]);
 
   useEffect(() => {
     let newWarn = [];
@@ -27,7 +27,7 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
 
     if (hasCodeRef && unitSelection.value === "all")
       newWarn.push(
-        'Referring to a specific [code] is only possible if unit selection is "by annotation"'
+        'Referring to a specific code with [code] is only possible if unit selection is "by annotation"'
       );
     if (hasTextRef) {
       if (unitSelection.value === "per annotation" && unitSelection.annotationMix > 0) {
@@ -42,7 +42,6 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
       }
     }
 
-    console.log(newWarn);
     setWarn(newWarn);
     setDelayedQuestion(questionForm.question);
   }, [setDelayedQuestion, questionForm, setWarn, unitSelection]);
@@ -61,10 +60,10 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
       on="click"
       style={{ minWidth: "20em" }}
       trigger={
-        <div>
+        <Button style={buttonStyle}>
+          {buttonLabel(questionForm.type, "Question form")}
           {warn.length > 0 ? <Help header="Warning" texts={warn} type={"warn"} /> : null}
-          <Button style={buttonStyle}>{buttonLabel(questionForm.type, "Question form")}</Button>
-        </div>
+        </Button>
       }
     >
       <Form>
@@ -80,12 +79,23 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
               header={"How to ask a question"}
               texts={[
                 "Type here the question as it should be displayed to the code",
-                "If Units are selected 'per annotation', you can also type [code] to refer to the code label, and [text] to refer to the text of the annotation. (using [text] is not possible if 'add random units' is used)",
+                "If unit selection is 'per annotation', you can also use the tags [code], [group], and [text]. These will be replaced by information from the annotation",
+                "[code] and [group] show the code label. The difference is that [code] always shows the specific label, regardless of whether codes are grouped together in the codebook. [group] shows the code into which a code is grouped, or the code itself if it isn't grouped",
+                "[text] shows the text of the annotation. Note that this is not possible if 'add random units' is used",
               ]}
             />
           </label>
           <Form.Field>
             <TextArea value={delayedQuestion} onChange={(e, d) => setDelayedQuestion(d.value)} />
+          </Form.Field>
+          <Form.Field>
+            <Button
+              fluid
+              disabled={questionForm.question === delayedQuestion}
+              onClick={() => setQuestionForm({ ...questionForm, question: delayedQuestion })}
+            >
+              Apply changes
+            </Button>
           </Form.Field>
         </Form.Group>
 
@@ -111,20 +121,6 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
               texts={[
                 "You can toggle which codes are active in the codebook (top-right in menu bar)",
               ]}
-            />
-          </Form.Field>
-        </Form.Group>
-        <Form.Group>
-          <Form.Field>
-            <Input
-              size="mini"
-              min={1}
-              max={10}
-              value={questionForm.rowSize}
-              type="number"
-              style={{ width: "6em" }}
-              label={"Buttons per row"}
-              onChange={(e, d) => setQuestionForm({ ...questionForm, rowSize: d.value })}
             />
           </Form.Field>
         </Form.Group>
