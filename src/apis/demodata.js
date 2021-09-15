@@ -42,7 +42,6 @@ export const demo_codebook = {
 export const demo_articles = [
   {
     document_id: "Some document ID",
-    annotations: [],
     text_fields: [
       {
         name: "title",
@@ -88,7 +87,6 @@ Tjeenk Willink heeft namelijk ook de opdracht om te onderzoeken "of en zo ja ond
   },
   {
     document_id: "Another document ID",
-    annotations: [],
     text_fields: [
       {
         name: "title",

@@ -1,3 +1,5 @@
+import { objectTypeAnnotation } from "@babel/types";
+
 export const exportSpanAnnotations = async (doc, annotations) => {
   // export annotations from the object format (for fast use in the annotator) to array format
   const uniqueAnnotations = Object.values(annotations).reduce((un_ann, ann) => {
@@ -29,9 +31,28 @@ export const exportSpanAnnotations = async (doc, annotations) => {
   return uniqueAnnotations;
 };
 
+export const importAnnotations = (annotations, tokens) => {
+  if (!annotations) {
+    return { document: {}, paragraph: {}, sentence: {}, span: {} };
+  }
+  if (!annotations.document) annotations.document = {};
+  if (!annotations.paragraph) annotations.paragraph = {};
+  if (!annotations.sentence) annotations.sentence = {};
+  if (annotations.span) {
+    annotations.span = importSpanAnnotations({}, annotations.span, tokens);
+  } else annotations.span = {};
+
+  for (let key of Object.keys(annotations)) {
+    if (key !== "document" && key !== "paragraph" && key !== "sentence" && key !== "span")
+      delete annotations[key];
+  }
+
+  return annotations;
+};
+
 export const importSpanAnnotations = (currentAnnotations, newAnnotations, tokens) => {
   // import span annotations. Uses the offset to match annotations to tokens
-  const importedAnnotations = prepareAnnotations(newAnnotations);
+  const importedAnnotations = prepareSpanAnnotations(newAnnotations);
   let trackAnnotations = {};
   let matchedAnnotations = [];
 
@@ -56,10 +77,10 @@ export const importSpanAnnotations = (currentAnnotations, newAnnotations, tokens
     }
   }
 
-  return toggleAnnotations(currentAnnotations, addAnnotations, false);
+  return toggleSpanAnnotations(currentAnnotations, addAnnotations, false);
 };
 
-export const toggleAnnotations = (annotations, annList, rm) => {
+export const toggleSpanAnnotations = (annotations, annList, rm) => {
   // Add span annotations in a way that prevents double assignments of the same group to a token
 
   for (let a of annList) {
@@ -94,15 +115,12 @@ export const toggleAnnotations = (annotations, annList, rm) => {
   return annotations;
 };
 
-const prepareAnnotations = annotations => {
+const prepareSpanAnnotations = (annotations) => {
   if (!annotations || annotations === "") return {};
 
   // create an object where the key is a section+offset, and the
   // value is an array that tells which codes start and end there
   // used in Tokens for matching to token indices
-  // (switching to tokenindices keeps the annotation nice and fast. in time
-  //  we might also move the internal storage to tokenindices instead of
-  //  converting back and fro spans, but for now it helps ensure they're aligned)
   return annotations.reduce((obj, ann) => {
     if (!obj[ann.section]) obj[ann.section] = {};
     if (!obj[ann.section][ann.offset]) obj[ann.section][ann.offset] = { start: [], end: [] };

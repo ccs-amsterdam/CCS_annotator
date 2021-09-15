@@ -1,16 +1,16 @@
 import React from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
-import HeaderMenu from "./components/HeaderMenu";
+import HeaderMenu from "components/HeaderMenu/HeaderMenu";
 import { Sidebar } from "semantic-ui-react";
 
 // login and authenticated route
-import Welcome from "./components/Welcome";
-import AuthRoute from "./components/AuthRoute";
+import Welcome from "components/routing/Welcome";
+import AuthRoute from "components/routing/AuthRoute";
 
 // Main pages. Use below in items to include in header menu
-import CodingJobs from "./components/CodingJobs";
-import Annotate from "./components/Annotate";
-import CodeTreeTable from "./components/CodeTreeTable";
+import CodingJobsPage from "components/CodingJobsPage";
+import AnnotatePage from "components/AnnotatePage";
+import CodeBook from "components/CodeBook";
 import { useSelector } from "react-redux";
 
 // Change to add new components to the header
@@ -20,9 +20,9 @@ const items = [
   {
     label: "Coding Jobs",
     path: homepage + "/codingjobs",
-    Component: CodingJobs,
+    Component: CodingJobsPage,
   },
-  { label: "Annotate", path: homepage + "/annotate", Component: Annotate },
+  { label: "Annotate", path: homepage + "/annotate", Component: AnnotatePage },
 ];
 
 const App = () => {
@@ -52,7 +52,7 @@ const App = () => {
             width="very wide"
             style={{ backgroundColor: "white" }}
           >
-            <CodeTreeTable showColors />
+            <CodeBook showColors />
           </Sidebar>
           <Sidebar.Pusher>
             <Switch>

@@ -21,7 +21,7 @@ export const drawRandom = (array, n, replace, seed, group) => {
   for (let j = 0; j < indices.length; j++) {
     if (replace) {
       for (let i = 0; i < n; i++) {
-        out.push(indices[j][Math.floor(random() * ns[j])]);
+        out.push(indices[j][Math.floor(random() * indices[j].length)]);
       }
     } else {
       indices[j] = getRandomSubarray(

@@ -1,5 +1,5 @@
 import { combineReducers } from "redux";
-import { toggleAnnotations } from "../util/annotations";
+import { toggleSpanAnnotations } from "../util/annotations";
 
 const mode = (state = "design", action) => {
   switch (action.type) {
@@ -103,18 +103,22 @@ const toggleSelection = (selection, tokens, index, add) => {
   return selection;
 };
 
-const spanAnnotations = (state = {}, action) => {
+const emptyAnnotations = { document: {}, paragraph: {}, sentence: {}, span: {} };
+const annotations = (state = { ...emptyAnnotations }, action) => {
+  let span;
   switch (action.type) {
     case "SET_ANNOTATIONS":
-      return action.spanAnnotation;
-    case "TOGGLE_ANNOTATIONS":
-      return toggleAnnotations({ ...state }, action.spanAnnotation, false);
-    case "RM_ANNOTATIONS":
-      return toggleAnnotations({ ...state }, action.spanAnnotation, true);
-    case "CLEAR_SPAN_ANNOTATIONS":
-      return {};
+      return action.annotations;
+    case "TOGGLE_SPAN_ANNOTATIONS":
+      span = toggleSpanAnnotations({ ...state.span }, action.spanAnnotation, false);
+      return { ...state, span };
+    case "RM_SPAN_ANNOTATIONS":
+      span = toggleSpanAnnotations({ ...state.span }, action.spanAnnotation, true);
+      return { ...state, span };
+    case "CLEAR_ANNOTATIONS":
+      return { ...emptyAnnotations };
     case "RESET_DB":
-      return {};
+      return { ...emptyAnnotations };
     default:
       return state;
   }
@@ -136,7 +140,7 @@ const codeHistory = (state = [], action) => {
     case "RESET_CODE_HISTORY":
       return [];
     case "APPEND_CODE_HISTORY":
-      let newstate = state.filter(v => v !== action.code).slice(0, action.n - 1);
+      let newstate = state.filter((v) => v !== action.code).slice(0, action.n - 1);
       newstate.unshift(action.code);
       return newstate;
     case "RESET_DB":
@@ -172,7 +176,7 @@ const rootReducer = combineReducers({
   currentToken,
   codeSelectorTrigger,
   tokenSelection,
-  spanAnnotations,
+  annotations,
   codeMap,
   codeHistory,
   itemSettings,

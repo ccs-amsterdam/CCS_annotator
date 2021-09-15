@@ -3,8 +3,8 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import hash from "object-hash";
 
-import db from "../apis/dexie";
-import { selectCodingjob, setCodingjobs } from "../actions";
+import db from "apis/dexie";
+import { selectCodingjob, setCodingjobs } from "actions";
 
 const JobFromUrl = () => {
   // probably turn into a hook or something
