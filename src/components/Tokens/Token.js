@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import "components/style.css";
 import CodeSelector from "./CodeSelector";
 import { triggerCodeselector } from "actions";
-import { getColor } from "util/tokenDesign";
+import { getColor, getColorGradient } from "util/tokenDesign";
 import { List, Popup } from "semantic-ui-react";
 
 const Token = React.forwardRef(({ token, annotation }, ref) => {
@@ -41,6 +41,7 @@ const AnnotatedToken = ({ token, selected }) => {
   let annotations = useSelector((state) => state.annotations.span[token.index]);
 
   const csTrigger = useSelector((state) => {
+    if (state.codeSelectorTrigger.unit !== "token") return null;
     if (state.codeSelectorTrigger.index !== token.index) return null;
     return state.codeSelectorTrigger;
   });
@@ -73,7 +74,7 @@ const AnnotatedToken = ({ token, selected }) => {
         className={annotatedTokenClass}
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(triggerCodeselector("right_click", token.index, null));
+          dispatch(triggerCodeselector("right_click", "token", token.index, null));
         }}
         style={
           color
@@ -92,26 +93,8 @@ const AnnotatedToken = ({ token, selected }) => {
   };
 
   let tokenCodes = Object.keys(annotations);
-  let color = null;
   let colors = tokenCodes.map((code) => getColor(code, codeMap));
-
-  if (tokenCodes.length === 1) {
-    color = colors[0];
-  } else {
-    const pct = Math.floor(100 / colors.length);
-    const gradColors = colors.reduce((a, color, i) => {
-      if (i === 0) a.push(color + ` ${pct}%`);
-      if (i === colors.length - 1) a.push(color + ` ${100 - pct}%`);
-
-      if (i > 0 && i < colors.length - 1) {
-        a.push(color + ` ${pct * i}%`);
-        a.push(color + ` ${pct * (i + 1)}%`);
-      }
-      return a;
-    }, []);
-
-    color = `linear-gradient(to bottom, ${gradColors.join(", ")})`;
-  }
+  let color = getColorGradient(colors);
 
   // Set specific classes for nice css to show the start/end of codes
   const allLeft = !Object.values(annotations).some((code) => code.span[0] !== code.index);
@@ -137,6 +120,7 @@ const AnnotatedToken = ({ token, selected }) => {
       {csTrigger ? (
         <CodeSelector
           annotations={annotations}
+          unit={"span"}
           currentCode={csTrigger.code}
           newSelection={csTrigger.from === "new_selection"}
         >

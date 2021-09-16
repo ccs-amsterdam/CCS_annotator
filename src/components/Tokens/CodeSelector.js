@@ -7,12 +7,13 @@ import {
   rmSpanAnnotations,
   blockEvents,
   triggerCodeselector,
+  toggleAnnotation,
 } from "actions";
 import { getColor } from "util/tokenDesign";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const CodeSelector = React.memo(({ children, annotations, currentCode, newSelection }) => {
+const CodeSelector = React.memo(({ children, annotations, unit, currentCode, newSelection }) => {
   const [current, setCurrent] = useState(newSelection ? "UNASSIGNED" : currentCode);
 
   // Placeholder: should be managed in state
@@ -25,7 +26,7 @@ const CodeSelector = React.memo(({ children, annotations, currentCode, newSelect
     return () => {
       dispatch(blockEvents(false));
       if (current === "UNASSIGNED")
-        updateAnnotations(annotations, current, current, setCurrent, dispatch);
+        updateAnnotations(annotations, unit, current, current, dispatch);
     };
   });
 
@@ -34,6 +35,7 @@ const CodeSelector = React.memo(({ children, annotations, currentCode, newSelect
       current={current}
       setCurrent={setCurrent}
       annotations={annotations}
+      unit={unit}
       newSelection={newSelection}
     >
       {children}
@@ -41,7 +43,7 @@ const CodeSelector = React.memo(({ children, annotations, currentCode, newSelect
   );
 });
 
-const CodeSelectorPopup = ({ children, current, setCurrent, annotations, newSelection }) => {
+const CodeSelectorPopup = ({ children, current, setCurrent, annotations, unit, newSelection }) => {
   // separate popup from CodeSelector, because it would rerender CodeSelector,
   // which messes up the useEffect that cleans up after close
   const itemSettings = useSelector((state) => state.itemSettings);
@@ -49,7 +51,7 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations, newSele
   const codeMap = useSelector((state) => {
     let activeCodeMap = {};
     for (let key of Object.keys(state.codeMap)) {
-      if (!newSelection && annotations[key]) continue;
+      if (!newSelection && current && annotations[key]) continue;
       if (!state.codeMap[key].active || !state.codeMap[key].activeParent) continue;
 
       activeCodeMap[key] = state.codeMap[key];
@@ -72,8 +74,9 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations, newSele
       onOpen={() => setHasOpened(true)}
       onClose={() => {
         if (hasOpened) {
+          console.log("onclose?");
           if (current === "UNASSIGNED")
-            updateAnnotations(annotations, current, current, setCurrent, dispatch);
+            updateAnnotations(annotations, unit, current, current, dispatch);
           // calling dispatch directly causes a memory leak warning, because it unmounts
           // the component. The very minor async timeout fixes this.
           setTimeout(() => dispatch(triggerCodeselector(null)), 10);
@@ -108,8 +111,8 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations, newSele
           style={{ background: "#80808000", margin: "0px" }}
           onClick={() => {
             if (current === "UNASSIGNED")
-              updateAnnotations(annotations, current, current, setCurrent, dispatch);
-            dispatch(triggerCodeselector(null));
+              updateAnnotations(annotations, unit, current, current, dispatch);
+            dispatch(triggerCodeselector(null, null, null, null));
           }}
         />
       </div>
@@ -126,6 +129,7 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations, newSele
           itemSettings={itemSettings}
           codeMap={codeMap}
           annotations={annotations}
+          unit={unit}
           current={current}
           setCurrent={setCurrent}
         />
@@ -141,6 +145,7 @@ const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
     setCurrent(value);
   };
 
+  console.log(codeMap);
   const getOptions = (annotationCodes) => {
     return annotationCodes.map((code) => ({ label: code, color: getColor(code, codeMap) }));
   };
@@ -161,7 +166,15 @@ const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
   );
 };
 
-const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, current, setCurrent }) => {
+const NewCodePage = ({
+  codeHistory,
+  itemSettings,
+  codeMap,
+  annotations,
+  unit,
+  current,
+  setCurrent,
+}) => {
   const textInputRef = useRef(null);
   const dispatch = useDispatch();
   const [focusOnButtons, setFocusOnButtons] = useState(true);
@@ -190,9 +203,9 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, current,
   const onButtonSelect = (value) => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
-      updateAnnotations(annotations, current, current, setCurrent, dispatch);
+      updateAnnotations(annotations, unit, current, current, dispatch);
     } else {
-      updateAnnotations(annotations, current, value, setCurrent, dispatch);
+      updateAnnotations(annotations, unit, current, value, dispatch);
     }
   };
 
@@ -257,7 +270,7 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, current,
                 onClose={() => setFocusOnButtons(true)}
                 onChange={(e, d) => {
                   if (codeMap[d.value])
-                    updateAnnotations(annotations, current, d.value, setCurrent, dispatch);
+                    updateAnnotations(annotations, unit, current, d.value, dispatch);
                 }}
               />
             </Ref>
@@ -406,7 +419,24 @@ const ButtonSelection = ({ active, options, canDelete, callback }) => {
   );
 };
 
-const updateAnnotations = (annotations, current, value, setCurrent, dispatch) => {
+const updateAnnotations = (annotations, unit, current, value, dispatch) => {
+  if (!annotations) return null;
+
+  if (unit === "span") {
+    updateSpanAnnotations(annotations, current, value, dispatch);
+  } else {
+    const ann = annotations[current];
+    if (!ann) return;
+    dispatch(toggleAnnotation(unit, ann.index, current, null)); // toggleAnnotation with null deletes
+    if (current !== value) {
+      dispatch(toggleAnnotation(unit, ann.index, value, { ...ann }));
+      dispatch(appendCodeHistory(value));
+    }
+    dispatch(triggerCodeselector(null, null, null, null));
+  }
+};
+
+const updateSpanAnnotations = (annotations, current, value, dispatch) => {
   if (!annotations) return null;
 
   let ann = { ...annotations[current] };
@@ -417,7 +447,7 @@ const updateAnnotations = (annotations, current, value, setCurrent, dispatch) =>
   dispatch(rmSpanAnnotations([oldAnnotation]));
 
   if (value === current) {
-    dispatch(triggerCodeselector(null, null, null));
+    dispatch(triggerCodeselector(null, null, null, null));
     return null;
   }
 
@@ -430,14 +460,7 @@ const updateAnnotations = (annotations, current, value, setCurrent, dispatch) =>
   }
   dispatch(toggleSpanAnnotations(newAnnotations));
   dispatch(appendCodeHistory(value));
-
-  // if (Object.keys(annotations).includes(null)) {
-  //   setCurrent(null);
-  // } else {
-  //   setCurrent(value);
-  // }
-
-  dispatch(triggerCodeselector(null, null, null));
+  dispatch(triggerCodeselector(null, null, null, null));
 };
 
 export default CodeSelector;

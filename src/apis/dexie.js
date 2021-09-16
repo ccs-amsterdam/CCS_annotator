@@ -323,17 +323,24 @@ class AnnotationDB {
   async modifyAnnotations(codingjob, oldCodes, newCode) {
     // renames oldCodes to newCode
     // if newCode is falsy, removes oldCodes
+
+    // This is a dangerous operation, since it could break codes.
+    // needs some extra security and maybe a backup plan
+    // (like, lookup all annotations that have invalid codes, and rename them)
     let ids = new Set(
       await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
     );
     for (let id of ids) {
       let doc = await this.getDocument(id);
 
-      for (let i of Object.keys(doc.annotations)) {
-        for (let oldCode of oldCodes) {
-          if (doc.annotations[i][oldCode]) {
-            if (newCode) doc.annotations[i][newCode] = doc.annotations[i][oldCode];
-            delete doc.annotations[i][oldCode];
+      for (let textUnit of Object.keys(doc.annotations)) {
+        for (let i of Object.keys(doc.annotations[textUnit])) {
+          for (let oldCode of oldCodes) {
+            if (doc.annotations[textUnit][i][oldCode]) {
+              if (newCode)
+                doc.annotations[textUnit][i][newCode] = doc.annotations[textUnit][i][oldCode];
+              delete doc.annotations[textUnit][i][oldCode];
+            }
           }
         }
       }
@@ -370,6 +377,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
       if (noDuplicates && done.has(e.doc_uid)) return;
       cjIndices.push({
         textUnit,
+        unitIndex: 0, // this is for consistency with paragraph and sentence
         doc_uid: e.doc_uid,
         docIndex,
       });
@@ -381,9 +389,10 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
         if (noDuplicates && done.has(e.doc_uid + "_" + parIndex)) return;
         cjIndices.push({
           textUnit,
+          unitIndex: parIndex,
           doc_uid: e.doc_uid,
           docIndex,
-          parIndex,
+          //parIndex,
         });
       }
     }
@@ -394,9 +403,10 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
         if (noDuplicates && done.has(e.doc_uid + "_" + sentIndex)) return;
         cjIndices.push({
           textUnit,
+          unitIndex: sentIndex,
           doc_uid: e.doc_uid,
           docIndex,
-          sentIndex,
+          //sentIndex,
         });
       }
     }
@@ -440,14 +450,16 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
             docIndex,
             group,
           };
-          if (textUnit === "paragraph") item.parIndex = e.tokens[Number(i)].paragraph;
-          if (textUnit === "sentence") item.sentIndex = e.tokens[Number(i)].sentence;
+          //if (textUnit === "paragraph") item.parIndex = e.tokens[Number(i)].paragraph;
+          //if (textUnit === "sentence") item.sentIndex = e.tokens[Number(i)].sentence;
+          if (textUnit === "paragraph") item.unitIndex = e.tokens[Number(i)].paragraph;
+          if (textUnit === "sentence") item.unitIndex = e.tokens[Number(i)].sentence;
 
           if (unique) {
-            let itemId;
-            if (textUnit === "document") itemId = item.doc_uid;
-            if (textUnit === "paragraph") itemId = item.doc_uid + "_" + item.parIndex;
-            if (textUnit === "sentence") itemId = item.doc_uid + "_" + item.sentIndex;
+            let itemId = item.doc_uid + "_" + item.textUnit + "_" + item.unitIndex;
+            // if (textUnit === "document") itemId = item.doc_uid;
+            // if (textUnit === "paragraph") itemId = item.doc_uid + "_" + item.parIndex;
+            // if (textUnit === "sentence") itemId = item.doc_uid + "_" + item.sentIndex;
             if (done.has(itemId)) continue;
             done.add(itemId);
           } else {
@@ -464,9 +476,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
 const orderJobItems = (cjIndices, unitSelection) => {
   if (!unitSelection.ordered) return cjIndices;
   return cjIndices.sort(function (a, b) {
-    if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;
-    if (a.parIndex != null && a.parIndex !== b.parIndex) return a.parIndex - b.parIndex;
-    if (a.sentIndex != null && a.sentIndex !== b.sentIndex) return a.sentIndex - b.sentIndex;
+    if (a.unitIndex !== b.unitIndex) return a.unitIndex - b.unitIndex;
     if (a.annotation != null && a.annotation.index !== b)
       return a.annotation.index - b.annotation.index;
     return 0;

@@ -8,7 +8,7 @@ import "components/spanAnnotationsStyle.css";
 const COLWIDTHS = [4, 2, 2]; // for offset and text
 
 const AnnotateTable = ({ taskItem }) => {
-  const annotations = useSelector((state) => state.annotations.span);
+  const annotations = useSelector((state) => state.annotations);
 
   if (!taskItem.tokens || taskItem.tokens.length === 0) return null;
   if (!taskItem.writable) return null;
@@ -34,7 +34,7 @@ const AnnotateTable = ({ taskItem }) => {
         </Table.Row>
       </Table.Header>
       <Table.Body className="annotations-tbody">
-        {annotationRows(taskItem.tokens, annotations)}
+        {annotationRows(taskItem.tokens, annotations.span)}
       </Table.Body>
     </Table>
   );
@@ -126,8 +126,8 @@ const AnnotationRow = ({ tokens, annotation, code, text, offset }) => {
         className="annotations-tr"
         onClick={() => {
           tokens[annotation.index + offset].ref.current.scrollIntoView(false, { block: "center" });
-          dispatch(triggerCodeselector(null, null, null));
-          dispatch(triggerCodeselector("menu", annotation.index, code));
+          dispatch(triggerCodeselector(null, null, null, null));
+          dispatch(triggerCodeselector("menu", "token", annotation.index, code));
         }}
         onMouseOver={() => {
           //dispatch(setTokenSelection(token.span));

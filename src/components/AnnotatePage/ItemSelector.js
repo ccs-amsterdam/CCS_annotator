@@ -79,7 +79,7 @@ const ItemSelector = ({ items, setItem }) => {
         style={{ padding: 0, margin: 0 }}
         min={1}
         max={items.length}
-        onChange={(e, d) => setDelayedActivePage(d.value)}
+        onChange={(e, d) => setDelayedActivePage(Number(d.value))}
         type="range"
         labelPosition="left"
         label={
@@ -97,7 +97,7 @@ const ItemSelector = ({ items, setItem }) => {
             ellipsisItem={null}
             totalPages={items.length}
             onClick={(e, d) => e.stopPropagation()}
-            onPageChange={(e, d) => setActivePage(d.activePage)}
+            onPageChange={(e, d) => setActivePage(Number(d.activePage))}
             style={{ fontSize: "9px", border: "none", boxShadow: "none", padding: 0, margin: 0 }}
           ></Pagination>
         }

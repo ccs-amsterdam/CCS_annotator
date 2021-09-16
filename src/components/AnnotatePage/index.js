@@ -52,7 +52,7 @@ const AnnotatePage = () => {
   return (
     <div style={{ paddingLeft: "1em", height: "100vh" }}>
       <Grid container stackable>
-        <Grid.Row style={{ paddingBottom: "0" }}>
+        <Grid.Row style={{ paddingBottom: "0", maxHeight: "10vh", overflow: "auto" }}>
           <Grid.Column width={8}>
             {mode === "design" ? <ItemBreadcrumb jobItem={jobItem} /> : null}
           </Grid.Column>

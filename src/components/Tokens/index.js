@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Ref } from "semantic-ui-react";
-import Token from "./Token";
-
 import { scrollToMiddle } from "util/scroll";
+import AnnotatedTextUnit from "./AnnotatedTextUnit";
+import Token from "./Token";
 
 const Tokens = ({ taskItem, height, textUnitPosition }) => {
   const [tokenComponents, setTokenComponents] = useState({});
@@ -89,14 +89,15 @@ const renderText = (tokens, itemAnnotation) => {
     tokens[i].arrayIndex = i;
 
     if (tokens[i].sentence !== sentence_nr) {
-      if (sentence.length > 0) paragraph.push(renderSentence(i + "_" + sentence_nr, sentence));
+      if (sentence.length > 0) paragraph.push(renderSentence(i, sentence_nr, sentence));
       sentence = [];
     }
     if (tokens[i].paragraph !== paragraph_nr) {
       if (paragraph.length > 0) {
         section.push(
           renderParagraph(
-            i + "_" + paragraph_nr,
+            i,
+            paragraph_nr,
             paragraph,
             paragraph_nr !== currentParagraph,
             tokens[i].paragraph !== paragraph_nr
@@ -114,11 +115,12 @@ const renderText = (tokens, itemAnnotation) => {
     }
 
     if (tokens[i].textPart !== textPart) {
-      if (sentence.length > 0) paragraph.push(renderSentence(i + "_" + sentence_nr, sentence));
+      if (sentence.length > 0) paragraph.push(renderSentence(i, sentence_nr, sentence));
       if (paragraph.length > 0) {
         section.push(
           renderParagraph(
-            i + "_" + paragraph_nr,
+            i,
+            paragraph_nr,
             paragraph,
             paragraph_nr !== currentParagraph,
             tokens[i].paragraph !== paragraph_nr
@@ -140,9 +142,9 @@ const renderText = (tokens, itemAnnotation) => {
     if (tokens[i].textPart === "textUnit") tokens[i].ref = React.createRef();
     sentence.push(renderToken(tokens[i], itemAnnotation));
   }
-  if (sentence.length > 0) paragraph.push(renderSentence("last_" + sentence_nr, sentence));
+  if (sentence.length > 0) paragraph.push(renderSentence("last", sentence_nr, sentence));
   if (paragraph.length > 0)
-    section.push(renderParagraph("last_" + paragraph_nr, paragraph, true, false));
+    section.push(renderParagraph("last", paragraph_nr, paragraph, true, false));
   if (section.length > 0)
     text[textPart].push(renderSection("last_" + section_name, section, section_name));
   return text;
@@ -162,25 +164,39 @@ const renderSection = (paragraph_nr, paragraphs, section) => {
   );
 };
 
-const renderParagraph = (paragraph_nr, sentences, start, end) => {
+const renderParagraph = (position, paragraph_nr, sentences, start, end) => {
   return (
     // uses span behaving like p, because p is not allowed due to nested div (for Label)
-    <span
-      className="paragraph"
-      style={{
-        paddingBottom: end ? "1.5em" : "0em",
-        display: "table",
-      }}
-      key={paragraph_nr}
-    >
-      {sentences}
-    </span>
+    <>
+      {/* <AnnotatedTextUnit
+        unit="paragraph"
+        index={paragraph_nr}
+        symbol="¶"
+        style={{ padding: "0.5em 0.5em" }}
+      /> */}
+      <span
+        className="paragraph"
+        style={{
+          paddingBottom: end ? "1.5em" : "0em",
+          display: "table",
+        }}
+        key={position + "_" + paragraph_nr}
+      >
+        {sentences}
+      </span>
+    </>
   );
 };
 
-const renderSentence = (sentence_nr, tokens) => {
+const renderSentence = (position, sentence_nr, tokens) => {
   return (
     <span className="sentence" key={sentence_nr}>
+      {/* <AnnotatedTextUnit
+        unit="sentence"
+        index={sentence_nr}
+        symbol="S"
+        style={{ float: "left", padding: "0.3em 0.5em" }}
+      /> */}
       {tokens}
     </span>
   );

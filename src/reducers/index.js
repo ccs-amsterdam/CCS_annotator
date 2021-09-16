@@ -1,5 +1,5 @@
 import { combineReducers } from "redux";
-import { toggleSpanAnnotations } from "../util/annotations";
+import { toggleAnnotation, toggleSpanAnnotations } from "../util/annotations";
 
 const mode = (state = "design", action) => {
   switch (action.type) {
@@ -70,10 +70,13 @@ const tokenSelection = (state = [], action) => {
   }
 };
 
-const codeSelectorTrigger = (state = { from: null, index: null, code: null }, action) => {
+const codeSelectorTrigger = (
+  state = { from: null, unit: null, index: null, code: null },
+  action
+) => {
   switch (action.type) {
     case "TRIGGER_CODESELECTOR":
-      return { from: action.from, index: action.index, code: action.code };
+      return { from: action.from, unit: action.unit, index: action.index, code: action.code };
     default:
       return state;
   }
@@ -109,7 +112,16 @@ const annotations = (state = { ...emptyAnnotations }, action) => {
   switch (action.type) {
     case "SET_ANNOTATIONS":
       return action.annotations;
+    case "TOGGLE_ANNOTATION":
+      return toggleAnnotation(
+        { ...state },
+        action.unit,
+        action.index,
+        action.group,
+        action.annotation
+      );
     case "TOGGLE_SPAN_ANNOTATIONS":
+      // token/span annotations require special function that also looks at the span to toggle
       span = toggleSpanAnnotations({ ...state.span }, action.spanAnnotation, false);
       return { ...state, span };
     case "RM_SPAN_ANNOTATIONS":

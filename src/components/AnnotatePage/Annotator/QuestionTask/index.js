@@ -11,20 +11,23 @@ const QuestionTask = ({ taskItem }) => {
   // passing the states separately caused race issues
 
   if (taskItem === null) return null;
+  const relativeWindowSplit = 50;
+  const windowheight = 80;
+  const windowSplit = relativeWindowSplit * (windowheight / 100);
 
   return (
-    <Grid stackable centered container style={{ height: "100%" }}>
+    <Grid stackable centered container>
       <Grid.Column width={8}>
         <Grid.Row>
-          <Tokens taskItem={taskItem} height={45} textUnitPosition={1 / 2} />
+          <Tokens taskItem={taskItem} height={windowSplit} textUnitPosition={1 / 2} />
         </Grid.Row>
 
-        <Grid.Row style={{ height: "30vh", marginTop: "1em" }}>
+        <Grid.Row style={{ marginTop: "1em", height: `${windowheight - windowSplit}vh` }}>
           <QuestionForm taskItem={taskItem} />
         </Grid.Row>
       </Grid.Column>
       <Grid.Column>
-        <QuestionTable />
+        <QuestionTable taskItem={taskItem} />
       </Grid.Column>
     </Grid>
   );

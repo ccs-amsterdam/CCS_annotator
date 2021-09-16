@@ -19,22 +19,7 @@ const QuestionForm = ({ taskItem }) => {
   const currentAnswer = getCurrentAnswer(taskItem, annotations, rawQuestion);
 
   const onSelect = (answer) => {
-    const newAnnotations = { ...annotations };
-
-    const item = taskItem.item;
-    if (item.textUnit === "document") newAnnotations["document"][rawQuestion] = answer;
-    if (item.textUnit === "paragraph") {
-      if (!newAnnotations["paragraph"][item.parIndex])
-        newAnnotations["paragraph"][item.parIndex] = {};
-      newAnnotations["paragraph"][item.parIndex][rawQuestion] = answer;
-    }
-    if (item.textUnit === "sentence") {
-      if (!newAnnotations["sentence"][item.sentIndex])
-        newAnnotations["sentence"][item.sentIndex] = {};
-      newAnnotations["sentence"][item.sentIndex][rawQuestion] = answer;
-    }
-
-    dispatch(setAnnotations({ ...newAnnotations }));
+    setNewAnswer(taskItem, annotations, rawQuestion, answer, dispatch);
   };
 
   return (
@@ -44,19 +29,16 @@ const QuestionForm = ({ taskItem }) => {
         flexFlow: "column",
         height: "100%",
         border: "0",
-        backgroundColor: currentAnswer === null ? "#bcbcf133" : "#b7f5b794",
+        backgroundColor: currentAnswer == null ? "#bcbcf133" : "#b7f5b794",
       }}
     >
       <Header textAlign="center">{question}</Header>
       {showCurrent(currentAnswer, codeMap)}
       <Segment
         style={{
-          display: "table",
           flex: "1 1 auto",
-          overflowY: "auto",
           padding: "0.1em",
-          float: "none",
-          overflow: "hidden",
+          overflowX: "auto",
         }}
       >
         {settings.type === "search code" ? <SearchBoxDropdown callback={onSelect} /> : null}
@@ -66,23 +48,40 @@ const QuestionForm = ({ taskItem }) => {
   );
 };
 
-const getCurrentAnswer = (taskItem, annotations, rawQuestion) => {
+const setNewAnswer = (taskItem, annotations, rawQuestion, answer, dispatch) => {
+  const newAnnotations = { ...annotations };
   const item = taskItem.item;
-  let ann = annotations[item.textUnit];
-  if (!ann) return null;
-  if (item.textUnit === "paragraph") ann = ann[item.parIndex];
-  if (item.textUnit === "sentence") ann = ann[item.sentIndex];
-  if (!ann) return null;
-  if (!ann[rawQuestion]) return null;
-  return ann[rawQuestion];
+  const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
+
+  if (!newAnnotations[item.textUnit][item.unitIndex])
+    newAnnotations[item.textUnit][item.unitIndex] = {};
+
+  newAnnotations[item.textUnit][item.unitIndex][root] = { question: rawQuestion, answer: answer };
+
+  dispatch(setAnnotations({ ...newAnnotations }));
+};
+
+const getCurrentAnswer = (taskItem, annotations, rawQuestion) => {
+  const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
+  const item = taskItem.item;
+  return annotations[item.textUnit]?.[item.unitIndex]?.[root]?.answer;
 };
 
 const showCurrent = (currentAnswer, codeMap) => {
-  if (currentAnswer === null) return null;
+  if (currentAnswer == null) return null;
   return (
-    <Segment style={{ backgroundColor: getColor(currentAnswer, codeMap), margin: "0" }}>
-      Current answer: <span style={{ fontSize: "1.5em" }}>{currentAnswer}</span>
-    </Segment>
+    <div style={{ backgroundColor: "white" }}>
+      <Segment
+        style={{
+          backgroundColor: getColor(currentAnswer, codeMap),
+          padding: "0.2em",
+          margin: "0",
+          textAlign: "center",
+        }}
+      >
+        Current answer: <span style={{ fontSize: "1.5em" }}>{currentAnswer}</span>
+      </Segment>
+    </div>
   );
 };
 
@@ -288,12 +287,16 @@ const ButtonSelection = ({ callback }) => {
         <>
           <Ref innerRef={option.ref}>
             <Button
-              style={{ backgroundColor: option.color, margin: "0", padding: "2em" }}
+              style={{
+                backgroundColor: option.color,
+                padding: "1em",
+                margin: "0.2em",
+                border: i === selected ? "3px solid black" : "3px solid #ece9e9",
+              }}
               key={option.code}
               value={option.code}
               compact
-              size="mini"
-              active={i === selected}
+              //active={i === selected}
               onMouseOver={() => setSelected(i)}
               onClick={(e, d) => callback(d.value)}
             >

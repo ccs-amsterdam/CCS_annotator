@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
-import { Popup, Button, Form, Radio, Icon, TextArea, Checkbox } from "semantic-ui-react";
+import { Popup, Button, Form, Radio, Icon, TextArea } from "semantic-ui-react";
 
 import { blockEvents } from "actions";
 import Help from "components/Help";

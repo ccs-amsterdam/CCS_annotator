@@ -141,7 +141,7 @@ const KeyEvents = ({
       if (tokenSelection[0] === tokenSelection[1]) {
         // enter key
         if (event.keyCode === 13) {
-          dispatch(triggerCodeselector("enter_key", tokens[tokenSelection[0]].index, null));
+          dispatch(triggerCodeselector("enter_key", 'token', tokens[tokenSelection[0]].index, null));
         }
       }
     }
@@ -257,8 +257,8 @@ const annotationFromSelection = (tokens, selection, dispatch, selectedCode) => {
   dispatch(toggleSpanAnnotations(annotations));
   dispatch(clearTokenSelection());
   if (selectedCode == null) {
-    dispatch(triggerCodeselector(null, null, null));
-    dispatch(triggerCodeselector("new_selection", tokens[to].index, null));
+    dispatch(triggerCodeselector(null, null, null, null));
+    dispatch(triggerCodeselector("new_selection", 'token', tokens[to].index, null));
   }
 };
 

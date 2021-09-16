@@ -1,4 +1,4 @@
-import { setAnnotations } from "actions";
+import { selectCodingjob, setAnnotations, setCodeMap } from "actions";
 import db from "apis/dexie";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -244,7 +244,7 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 
 const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
   const codeMap = useSelector((state) => state.codeMap);
-  const annotations = useSelector((state) => state.spanAnnotations);
+  const annotations = useSelector((state) => state.annotations);
   const dispatch = useDispatch();
   const [newParent, setNewParent] = useState(codeMap[code].parent);
   const [textInput, setTextInput] = useState(code);
@@ -278,14 +278,17 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
 
     // update tokens of current annotations (so changes are immediately visible without having to reload unit)
     let annotationsHasChanged = false;
-    for (let i of Object.keys(annotations)) {
-      if (annotations[i][code]) {
-        annotations[i][newCode] = { ...annotations[i][code] };
-        delete annotations[i][code];
-        annotationsHasChanged = true;
+    for (let textUnit of Object.keys(annotations)) {
+      for (let i of Object.keys(annotations[textUnit])) {
+        if (annotations[textUnit][i][code]) {
+          annotations[textUnit][i][newCode] = { ...annotations[textUnit][i][code] };
+          delete annotations[textUnit][i][code];
+          annotationsHasChanged = true;
+        }
       }
     }
     if (annotationsHasChanged) dispatch(setAnnotations({ ...annotations }));
+
     setCodes(updatedCodes);
     setOpen(false);
   };

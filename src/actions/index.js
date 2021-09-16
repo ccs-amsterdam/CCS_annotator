@@ -54,11 +54,12 @@ export const clearTokenSelection = () => {
   };
 };
 
-export const triggerCodeselector = (from, tokenIndex, code) => {
+export const triggerCodeselector = (from, unit, index, code) => {
   return {
     type: "TRIGGER_CODESELECTOR",
     from: from,
-    index: tokenIndex,
+    unit: unit,
+    index: index,
     code: code,
   };
 };
@@ -67,6 +68,24 @@ export const setAnnotations = (annotations) => {
   return {
     type: "SET_ANNOTATIONS",
     annotations,
+  };
+};
+
+/**
+ * Add one specific annotation, or replace or delete existing annotation
+ * @param {string} unit  Whether the annotation is a document, paragraph, sentence or span annotation
+ * @param {number} index The index of the unit. (document is always 0)
+ * @param {string} group The unique annotation group
+ * @param {object} annotation The annotation. If null, deletes the current annotation
+ * @returns
+ */
+export const toggleAnnotation = (unit, index, group, annotation) => {
+  return {
+    type: "TOGGLE_ANNOTATION",
+    unit,
+    index,
+    group,
+    annotation,
   };
 };
 

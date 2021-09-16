@@ -7,13 +7,12 @@ import "components/spanAnnotationsStyle.css";
 
 const COLWIDTHS = [4, 2, 2]; // for offset and text
 
-const QuestionTable = ({ tokens, doc }) => {
+const QuestionTable = ({ taskItem }) => {
   const annotations = useSelector((state) => state.annotations);
 
-  console.log(annotations);
-  if (!tokens || tokens.length === 0) return null;
-  if (!doc.writable) return null;
-
+  if (!taskItem.tokens || taskItem.tokens.length === 0) return null;
+  if (!taskItem.writable) return null;
+  return null;
   return (
     <Table
       style={{ fontSize: "10px" }}
@@ -34,7 +33,9 @@ const QuestionTable = ({ tokens, doc }) => {
           <Table.HeaderCell>Text</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
-      <Table.Body className="annotations-tbody">{annotationRows(tokens, annotations)}</Table.Body>
+      <Table.Body className="annotations-tbody">
+        {annotationRows(taskItem.tokens, annotations)}
+      </Table.Body>
     </Table>
   );
 };
@@ -125,8 +126,8 @@ const AnnotationRow = ({ tokens, annotation, code, text, offset }) => {
         className="annotations-tr"
         onClick={() => {
           tokens[annotation.index + offset].ref.current.scrollIntoView(false, { block: "center" });
-          dispatch(triggerCodeselector(null, null, null));
-          dispatch(triggerCodeselector("menu", annotation.index, code));
+          dispatch(triggerCodeselector(null, null, null, null));
+          dispatch(triggerCodeselector("menu", "token", annotation.index, code));
         }}
         onMouseOver={() => {
           //dispatch(setTokenSelection(token.span));

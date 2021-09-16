@@ -3,22 +3,25 @@ import React from "react";
 import { Breadcrumb, BreadcrumbSection } from "semantic-ui-react";
 
 import CodingjobSelector from "components/CodingJobsPage/CodingjobSelector";
+import { is } from "@babel/types";
 
 const ItemBreadcrumb = ({ jobItem }) => {
   const paragraph = () => {
     return (
       <BreadcrumbSection>
         <Breadcrumb.Divider />
-        {`paragraph ${jobItem.parIndex + 1}`}
+        {`paragraph ${jobItem.itemIndex}`}
       </BreadcrumbSection>
     );
   };
-  const sentence = () => {
+
+  const paragraphOrSentence = (jobItem) => {
+    if (jobItem === null) return null;
     return (
       <BreadcrumbSection>
         {" "}
         <Breadcrumb.Divider />
-        {`sentence ${jobItem.sentIndex + 1}`}
+        {`${jobItem.textUnit} ${jobItem.unitIndex}`}
       </BreadcrumbSection>
     );
   };
@@ -44,10 +47,9 @@ const ItemBreadcrumb = ({ jobItem }) => {
       <>
         <Breadcrumb.Divider />
         <BreadcrumbSection>
-          {jobItem?.docIndex !== null ? `document ${jobItem.docIndex + 1}` : null}
+          {jobItem?.docIndex !== null ? `document ${jobItem.docIndex}` : null}
         </BreadcrumbSection>
-        {jobItem && jobItem.parIndex != null ? paragraph() : null}
-        {jobItem && jobItem.sentIndex != null ? sentence() : null}
+        {paragraphOrSentence(jobItem)}
         {jobItem && jobItem.annotation != null ? annotation() : null}
       </>
     );

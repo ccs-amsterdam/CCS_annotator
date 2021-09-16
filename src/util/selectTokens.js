@@ -4,11 +4,8 @@ export const selectTokens = (tokens, item, contextUnit) => {
   let tokenRange = [0, tokens.length - 1];
   let tokenContext = [0, tokens.length - 1];
 
-  if (item.textUnit === "paragraph") {
-    tokenRange = getTokenRange(tokens, "paragraph", item.parIndex, item.parIndex);
-  }
-  if (item.textUnit === "sentence") {
-    tokenRange = getTokenRange(tokens, "sentence", item.sentIndex, item.sentIndex);
+  if (item.textUnit === "paragraph" || item.textUnit === "sentence") {
+    tokenRange = getTokenRange(tokens, item.textUnit, item.unitIndex, item.unitIndex);
   }
 
   if (contextUnit.selected !== "document")

@@ -14,7 +14,7 @@ const resultRenderer = ({ code, codeTrail }) => (
   </div>
 );
 
-const CodeBook = ({ showColors = true, typeDelay = 0, height = "30vh" }) => {
+const CodeBook = ({ showColors = true, typeDelay = 0, height = "80vh" }) => {
   const codingjob = useSelector((state) => state.codingjob);
   const dispatch = useDispatch();
 

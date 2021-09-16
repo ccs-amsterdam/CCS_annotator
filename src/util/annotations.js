@@ -1,5 +1,3 @@
-import { objectTypeAnnotation } from "@babel/types";
-
 export const exportSpanAnnotations = async (doc, annotations) => {
   // export annotations from the object format (for fast use in the annotator) to array format
   const uniqueAnnotations = Object.values(annotations).reduce((un_ann, ann) => {
@@ -78,6 +76,21 @@ export const importSpanAnnotations = (currentAnnotations, newAnnotations, tokens
   }
 
   return toggleSpanAnnotations(currentAnnotations, addAnnotations, false);
+};
+
+export const toggleAnnotation = (annotations, unit, index, group, annotation) => {
+  if (!annotations[unit][index]) annotations[unit][index] = {};
+
+  if (annotation === null) {
+    delete annotations[unit][index][group];
+    if (Object.keys(annotations[unit][index]).length === 0) {
+      delete annotations[unit][index];
+    }
+  } else {
+    annotations[unit][index][group] = annotation;
+  }
+
+  return annotations;
 };
 
 export const toggleSpanAnnotations = (annotations, annList, rm) => {
