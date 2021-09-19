@@ -79,7 +79,9 @@ const showCurrent = (currentAnswer, codeMap) => {
           textAlign: "center",
         }}
       >
-        Current answer: <span style={{ fontSize: "1.5em" }}>{currentAnswer}</span>
+        <div style={{ fontSize: "1.5em", marginTop: "0.3em" }}>{currentAnswer}</div>
+        <div style={{ float: "left", fontStyle: "italic" }}>selected</div>{" "}
+        <div style={{ textAlign: "right", fontStyle: "italic" }}>select again to continue</div>
       </Segment>
     </div>
   );

@@ -74,7 +74,6 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations, unit, n
       onOpen={() => setHasOpened(true)}
       onClose={() => {
         if (hasOpened) {
-          console.log("onclose?");
           if (current === "UNASSIGNED")
             updateAnnotations(annotations, unit, current, current, dispatch);
           // calling dispatch directly causes a memory leak warning, because it unmounts

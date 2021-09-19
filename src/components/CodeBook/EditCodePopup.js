@@ -1,4 +1,4 @@
-import { selectCodingjob, setAnnotations, setCodeMap } from "actions";
+import { setAnnotations } from "actions";
 import db from "apis/dexie";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";

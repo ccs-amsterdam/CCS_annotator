@@ -18,7 +18,7 @@ const QuestionTask = ({ taskItem }) => {
   return (
     <Grid stackable centered container>
       <Grid.Column width={8}>
-        <Grid.Row>
+        <Grid.Row style={{ height: `${windowheight - windowSplit}vh` }}>
           <Tokens taskItem={taskItem} height={windowSplit} textUnitPosition={1 / 2} />
         </Grid.Row>
 

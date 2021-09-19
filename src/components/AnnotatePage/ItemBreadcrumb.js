@@ -1,20 +1,8 @@
+import CodingjobSelector from "components/CodingJobsPage/CodingjobSelector";
 import React from "react";
-
 import { Breadcrumb, BreadcrumbSection } from "semantic-ui-react";
 
-import CodingjobSelector from "components/CodingJobsPage/CodingjobSelector";
-import { is } from "@babel/types";
-
 const ItemBreadcrumb = ({ jobItem }) => {
-  const paragraph = () => {
-    return (
-      <BreadcrumbSection>
-        <Breadcrumb.Divider />
-        {`paragraph ${jobItem.itemIndex}`}
-      </BreadcrumbSection>
-    );
-  };
-
   const paragraphOrSentence = (jobItem) => {
     if (jobItem === null) return null;
     return (

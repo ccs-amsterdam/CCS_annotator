@@ -141,7 +141,9 @@ const KeyEvents = ({
       if (tokenSelection[0] === tokenSelection[1]) {
         // enter key
         if (event.keyCode === 13) {
-          dispatch(triggerCodeselector("enter_key", 'token', tokens[tokenSelection[0]].index, null));
+          dispatch(
+            triggerCodeselector("enter_key", "token", tokens[tokenSelection[0]].index, null)
+          );
         }
       }
     }
@@ -258,7 +260,7 @@ const annotationFromSelection = (tokens, selection, dispatch, selectedCode) => {
   dispatch(clearTokenSelection());
   if (selectedCode == null) {
     dispatch(triggerCodeselector(null, null, null, null));
-    dispatch(triggerCodeselector("new_selection", 'token', tokens[to].index, null));
+    dispatch(triggerCodeselector("new_selection", "token", tokens[to].index, null));
   }
 };
 
@@ -405,9 +407,9 @@ const getToken = (tokens, e) => {
 };
 
 function scrollTokenToMiddle(token) {
-  // token->sentence->paragraph->section->textpart->box
+  // token->sentence->paragraph->paragraphFlexBox->section->textpart->box
   // this should be stable, but it still looks terrible
-  const parentDiv = token.parentNode.parentNode.parentNode.parentNode.parentNode;
+  const parentDiv = token.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
   keepInView(parentDiv, token);
 }
 

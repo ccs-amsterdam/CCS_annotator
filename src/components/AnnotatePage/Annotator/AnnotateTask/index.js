@@ -25,7 +25,7 @@ const AnnotateTask = ({ taskItem }) => {
   };
 
   return (
-    <Grid stackable style={gridStyle} verticalAlign={"top"}>
+    <Grid style={gridStyle} verticalAlign={"top"}>
       <Grid.Column width={8} style={{ paddingRight: "0em", maxWidth: "700px" }}>
         <Tokens taskItem={taskItem} height={75} textUnitPosition={1 / 4} />
       </Grid.Column>
