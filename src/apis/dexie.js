@@ -61,8 +61,7 @@ class AnnotationDB {
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
   async listCodingjobs() {
-    const test = await this.idb.codingjobs.toArray();
-    return test;
+    return await this.idb.codingjobs.toArray();
   }
   async getCodingjob(codingjob) {
     return this.idb.codingjobs.get(codingjob.job_id);
@@ -379,6 +378,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
         textUnit,
         unitIndex: 0, // this is for consistency with paragraph and sentence
         doc_uid: e.doc_uid,
+        doc_id: e.doc_id,
         docIndex,
       });
     }
@@ -391,6 +391,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
           textUnit,
           unitIndex: parIndex,
           doc_uid: e.doc_uid,
+          doc_id: e.doc_id,
           docIndex,
           //parIndex,
         });
@@ -405,6 +406,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
           textUnit,
           unitIndex: sentIndex,
           doc_uid: e.doc_uid,
+          doc_id: e.doc_id,
           docIndex,
           //sentIndex,
         });
@@ -447,6 +449,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
           const item = {
             textUnit,
             doc_uid: e.doc_uid,
+            doc_id: e.doc_id,
             docIndex,
             group,
           };

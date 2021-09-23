@@ -31,11 +31,10 @@ const HeaderMenu = ({ items, homepage, children }) => {
   });
 
   return (
-    <Sidebar.Pushable>
+    <Sidebar.Pushable style={{ height: "100vh" }}>
       <Sidebar as={Menu} inverted animation="push" visible={true} direction={"top"} size="mini">
         {menuItems}
         <Menu.Menu position="right">
-          {/* <ExportCodingjob /> */}
           {location.pathname.includes("annotate") ? (
             <>
               <PreviewMode />

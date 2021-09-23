@@ -8,6 +8,7 @@ import Welcome from "components/routing/Welcome";
 import AuthRoute from "components/routing/AuthRoute";
 
 // Main pages. Use below in items to include in header menu
+import CodingjobManager from "components/CodingjobManager/CodingjobManager";
 import CodingJobsPage from "components/CodingJobsPage/CodingJobsPage";
 import AnnotatePage from "components/AnnotatePage/AnnotatePage.js";
 import CodeBook from "components/CodeBook/CodeBook";
@@ -22,14 +23,15 @@ const items = [
     path: homepage + "/codingjobs",
     Component: CodingJobsPage,
   },
+  { label: "Codingjob manager", path: homepage + "/manager", Component: CodingjobManager },
   { label: "Annotate", path: homepage + "/annotate", Component: AnnotatePage },
 ];
 
 const App = () => {
-  const showSidebar = useSelector(state => state.showSidebar);
+  const showSidebar = useSelector((state) => state.showSidebar);
 
-  const createNavigation = items => {
-    return items.map(item => {
+  const createNavigation = (items) => {
+    return items.map((item) => {
       return (
         <AuthRoute
           key={item.path}
