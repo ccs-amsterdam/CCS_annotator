@@ -2,18 +2,18 @@ import React, { useState } from "react";
 import { Container, Grid, Header, List, ListItem, Menu, Table } from "semantic-ui-react";
 import AnnotateNavigation from "./AnnotateNavigation";
 import AnnotateTable from "./AnnotateTable";
-import Tokens from "components/Tokens";
+import Tokens from "components/Tokens/Tokens.js";
 
 const gridStyle = { height: "100%", paddingTop: "0" };
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
-const AnnotateTask = ({ taskItem }) => {
+const AnnotateTask = ({ taskItem, annotations }) => {
   const [menuItem, setMenuItem] = useState("help");
 
   if (taskItem === null) return null;
 
-  const renderSwitch = (activeItem) => {
+  const renderSwitch = activeItem => {
     switch (activeItem) {
       case "help":
         return <Instructions />;
@@ -27,7 +27,12 @@ const AnnotateTask = ({ taskItem }) => {
   return (
     <Grid style={gridStyle} verticalAlign={"top"}>
       <Grid.Column width={8} style={{ paddingRight: "0em", maxWidth: "700px" }}>
-        <Tokens taskItem={taskItem} height={75} textUnitPosition={1 / 4} />
+        <Tokens
+          taskItem={taskItem}
+          height={75}
+          textUnitPosition={1 / 4}
+          annotations={annotations}
+        />
       </Grid.Column>
       <Grid.Column width={8} style={{ paddingRight: "3em", maxWidth: "500px" }}>
         <Grid.Row style={gridStyleTop}>

@@ -8,9 +8,9 @@ import Welcome from "components/routing/Welcome";
 import AuthRoute from "components/routing/AuthRoute";
 
 // Main pages. Use below in items to include in header menu
-import CodingJobsPage from "components/CodingJobsPage";
-import AnnotatePage from "components/AnnotatePage";
-import CodeBook from "components/CodeBook";
+import CodingJobsPage from "components/CodingJobsPage/CodingJobsPage";
+import AnnotatePage from "components/AnnotatePage/AnnotatePage.js";
+import CodeBook from "components/CodeBook/CodeBook";
 import { useSelector } from "react-redux";
 
 // Change to add new components to the header
@@ -26,10 +26,10 @@ const items = [
 ];
 
 const App = () => {
-  const showSidebar = useSelector((state) => state.showSidebar);
+  const showSidebar = useSelector(state => state.showSidebar);
 
-  const createNavigation = (items) => {
-    return items.map((item) => {
+  const createNavigation = items => {
+    return items.map(item => {
       return (
         <AuthRoute
           key={item.path}

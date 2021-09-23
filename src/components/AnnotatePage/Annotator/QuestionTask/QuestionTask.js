@@ -1,8 +1,7 @@
 import React from "react";
 import { Grid } from "semantic-ui-react";
-import Tokens from "components/Tokens";
+import Tokens from "components/Tokens/Tokens.js";
 import QuestionForm from "./QuestionForm";
-import QuestionTable from "./QuestionTable";
 
 const QuestionTask = ({ taskItem }) => {
   // const mode = useSelector((state) => state.mode);
@@ -25,9 +24,6 @@ const QuestionTask = ({ taskItem }) => {
         <Grid.Row style={{ marginTop: "1em", height: `${windowheight - windowSplit}vh` }}>
           <QuestionForm taskItem={taskItem} />
         </Grid.Row>
-      </Grid.Column>
-      <Grid.Column>
-        <QuestionTable taskItem={taskItem} />
       </Grid.Column>
     </Grid>
   );

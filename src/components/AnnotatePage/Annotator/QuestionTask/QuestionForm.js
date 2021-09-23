@@ -2,15 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Header, Button, Dropdown, Ref, Segment } from "semantic-ui-react";
 import { getColor } from "util/tokenDesign";
-import { moveUp, moveDown } from "util/buttonNav";
+import { moveUp, moveDown } from "util/refNavigation";
 import { setAnnotations } from "actions";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const QuestionForm = ({ taskItem }) => {
-  const annotations = useSelector((state) => state.annotations);
-  const settings = useSelector((state) => state.itemSettings.questionForm);
-  const codeMap = useSelector((state) => state.codeMap);
+  const annotations = useSelector(state => state.annotations);
+  const settings = useSelector(state => state.itemSettings.questionForm);
+  const codeMap = useSelector(state => state.codeMap);
   const dispatch = useDispatch();
   if (!settings) return null;
 
@@ -18,7 +18,7 @@ const QuestionForm = ({ taskItem }) => {
   const [rawQuestion, question] = prepareQuestion(taskItem, settings, codeMap);
   const currentAnswer = getCurrentAnswer(taskItem, annotations, rawQuestion);
 
-  const onSelect = (answer) => {
+  const onSelect = answer => {
     setNewAnswer(taskItem, annotations, rawQuestion, answer, dispatch);
   };
 
@@ -87,7 +87,7 @@ const showCurrent = (currentAnswer, codeMap) => {
   );
 };
 
-const getOptions = (codeMap) => {
+const getOptions = codeMap => {
   return Object.keys(codeMap).reduce((options, code) => {
     if (!codeMap[code].active) return options;
     if (!codeMap[code].activeParent) return options;
@@ -147,7 +147,7 @@ const prepareQuestion = (taskItem, settings, codeMap) => {
   return [rawQuestion, markedString(question)];
 };
 
-const markedString = (text) => {
+const markedString = text => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");
@@ -172,7 +172,7 @@ const markedString = (text) => {
 
 const SearchBoxDropdown = ({ callback }) => {
   const ref = useRef();
-  const options = useSelector((state) => getOptions(state.codeMap));
+  const options = useSelector(state => getOptions(state.codeMap));
 
   return (
     <Ref innerRef={ref}>
@@ -181,7 +181,7 @@ const SearchBoxDropdown = ({ callback }) => {
         placeholder={"<type to search>"}
         searchInput={{ autoFocus: true }}
         style={{ minWidth: "12em" }}
-        options={options.map((option) => {
+        options={options.map(option => {
           return {
             key: option.code,
             value: option.code,
@@ -213,13 +213,13 @@ const ButtonSelection = ({ callback }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const options = useSelector((state) => getOptions(state.codeMap));
-  const eventsBlocked = useSelector((state) => state.eventsBlocked);
+  const options = useSelector(state => getOptions(state.codeMap));
+  const eventsBlocked = useSelector(state => state.eventsBlocked);
 
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const nbuttons = options.length;
 
       // any arrowkey
@@ -231,12 +231,7 @@ const ButtonSelection = ({ callback }) => {
         }
 
         if (event.key === "ArrowDown") {
-          setSelected(
-            moveDown(
-              options.map((option) => option.ref),
-              selected
-            )
-          );
+          setSelected(moveDown(options, selected));
         }
 
         if (event.key === "ArrowLeft") {
@@ -244,12 +239,7 @@ const ButtonSelection = ({ callback }) => {
         }
 
         if (event.key === "ArrowUp") {
-          setSelected(
-            moveUp(
-              options.map((option) => option.ref),
-              selected
-            )
-          );
+          setSelected(moveUp(options, selected));
         }
 
         return;

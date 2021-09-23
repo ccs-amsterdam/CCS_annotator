@@ -3,15 +3,15 @@ import { useSelector } from "react-redux";
 
 import { Grid } from "semantic-ui-react";
 
-import Annotator from "./Annotator";
+import Annotator from "./Annotator/Annotator";
 import ItemSelector from "components/AnnotatePage/ItemSelector";
-import ItemSettings, { defaultItemSettings } from "./ItemSettings";
+import ItemSettings, { defaultItemSettings } from "./ItemSettings/ItemSettings";
 import ItemBreadcrumb from "./ItemBreadcrumb";
 import db from "apis/dexie";
 
 const AnnotatePage = () => {
-  const codingjob = useSelector((state) => state.codingjob);
-  const mode = useSelector((state) => state.mode);
+  const codingjob = useSelector(state => state.codingjob);
+  const mode = useSelector(state => state.mode);
 
   const [itemSettings, setItemSettings] = useState(defaultItemSettings);
   const totalItems = useRef(0);
@@ -91,7 +91,7 @@ const setupCodingjob = async (
   setJobItems(items);
   setJobItem(items[0]);
   if (unitSelection.n === null || unitSelection.n == null) {
-    setItemSettings((current) => {
+    setItemSettings(current => {
       const newUnitSelection = { ...unitSelection, n: totalItems.current };
       return { ...current, unitSelection: newUnitSelection };
     });

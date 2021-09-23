@@ -25,14 +25,9 @@ export const keepInView = (parent, child) => {
   const parentHeight = parentBounding.height;
   const clientTop = clientBounding.top;
 
-  console.log("----------");
-
   const needUp = clientTop - parentTop < 50;
   const needDown = clientTop > parentTop + parentHeight * 0.9;
 
-  console.log(parent.scrollTop);
-  console.log(parent.scrollHeight);
-  console.log(parent.clientTop);
   //if (needUp > 0) parent.scrollTop = parent.scrollTop + needUp;
   if (needDown) {
     parent.scrollTop = parent.scrollTop + clientTop - (parentHeight * 0.9 + parentTop);

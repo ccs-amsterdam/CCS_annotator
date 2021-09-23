@@ -1,12 +1,18 @@
-export const moveUp = (refs, selected) => {
+/**
+ *
+ * @param {*} arr An array of objects that each has a .ref key
+ * @param {*} selected
+ */
+export const moveUp = (arr, selected) => {
   // given an array of refs for buttons (or any divs), and the current selected button,
   // move to most overlapping button on previous row
   // (basically, what you want to happen when you press 'up' in a grid of buttons)
-  const currentPos = getButtonPosition(refs[selected]);
+  const currentPos = getPosition(arr[selected].ref);
   let correctRow = null;
   let prevColOverlap = 0;
   for (let i = selected - 1; i >= 0; i--) {
-    const nextPos = getButtonPosition(refs[i]);
+    if (arr[i].ref == null || arr[i].ref.current === null) return i + 1;
+    const nextPos = getPosition(arr[i].ref);
 
     if (correctRow === null) {
       if (sameRow(currentPos, nextPos)) continue;
@@ -16,7 +22,7 @@ export const moveUp = (refs, selected) => {
     }
 
     const colOverlap = calcColOverlap(currentPos, nextPos);
-    if (colOverlap > 0.5) return i;
+    //if (colOverlap > 0.5) return i;
     if (prevColOverlap > 0 && colOverlap < prevColOverlap) return i + 1;
     if (currentPos.left > nextPos.right) return i;
 
@@ -26,13 +32,20 @@ export const moveUp = (refs, selected) => {
   return 0;
 };
 
-export const moveDown = (refs, selected) => {
+/**
+ *
+ * @param {*} arr An array of objects that each has a .ref key
+ * @param {*} selected
+ */
+export const moveDown = (arr, selected) => {
   // like moveUp, but down
-  const currentPos = getButtonPosition(refs[selected]);
+  const currentPos = getPosition(arr[selected].ref);
   let correctRow = null;
   let prevColOverlap = 0;
-  for (let i = selected + 1; i < refs.length; i++) {
-    const nextPos = getButtonPosition(refs[i]);
+  for (let i = selected + 1; i < arr.length; i++) {
+    if (arr[i].ref == null || arr[i].ref.current === null) return i - 1;
+
+    const nextPos = getPosition(arr[i].ref);
 
     if (correctRow === null) {
       if (sameRow(currentPos, nextPos)) continue;
@@ -42,13 +55,13 @@ export const moveDown = (refs, selected) => {
     }
 
     const colOverlap = calcColOverlap(currentPos, nextPos);
-    if (colOverlap > 0.5) return i;
+    //if (colOverlap > 0.5) return i;
     if (prevColOverlap > 0 && colOverlap < prevColOverlap) return i - 1;
     if (currentPos.right < nextPos.left) return i;
     prevColOverlap = colOverlap;
   }
 
-  return refs.length - 1;
+  return arr.length - 1;
 };
 
 const sameRow = (a, b) => {
@@ -68,10 +81,12 @@ const calcColOverlap = (a, b) => {
   const rightestLeft = Math.max(a.left, b.left);
   const leftestRight = Math.min(a.right, b.right);
 
-  return (leftestRight - rightestLeft) / a.width;
+  const pctA = (leftestRight - rightestLeft) / a.width;
+  const pctB = (leftestRight - rightestLeft) / b.width;
+  return Math.max(pctA, pctB);
 };
 
-const getButtonPosition = ref => {
+const getPosition = ref => {
   if (!ref) return null;
   return ref.current.getBoundingClientRect();
 };

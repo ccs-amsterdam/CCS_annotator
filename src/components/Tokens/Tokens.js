@@ -12,7 +12,7 @@ const Tokens = ({ taskItem, height, textUnitPosition }) => {
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = taskItem.tokens.find((token) => token.textPart === "textUnit");
+    const firstTextUnitToken = taskItem.tokens.find(token => token.textPart === "textUnit");
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, textUnitPosition);
     }
@@ -213,7 +213,7 @@ const renderText = (tokens, itemAnnotation, itemSettings) => {
 };
 
 const renderSection = (paragraph_nr, paragraphs, section, itemSettings, textPart) => {
-  const fontstyle = (paragraphs) => {
+  const fontstyle = paragraphs => {
     if (section === "title") return <h2>{paragraphs}</h2>;
     return paragraphs;
   };

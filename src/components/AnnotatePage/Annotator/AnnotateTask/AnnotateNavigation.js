@@ -8,18 +8,19 @@ import {
 } from "actions";
 import { toggleSpanAnnotations } from "actions";
 import { keepInView } from "util/scroll";
+import { moveUp, moveDown } from "util/refNavigation";
 
 // This component generates no content, but manages navigation for span level annotations
 
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const AnnotateNavigation = ({ tokens, selectedCode }) => {
-  const eventsBlocked = useSelector((state) => state.eventsBlocked);
+  const eventsBlocked = useSelector(state => state.eventsBlocked);
   // positions based on token.arrayIndex, not token.index
   // arrayIndex is the actual tokens array, where token.index is the position of the token in the document
   // (these can be different if the text/context does not start at token.index 0)
-  const currentToken = useSelector((state) => state.currentToken);
-  const tokenSelection = useSelector((state) => state.tokenSelection); // selection based on token.arrayIndex (not token.index)
+  const currentToken = useSelector(state => state.currentToken);
+  const tokenSelection = useSelector(state => state.tokenSelection); // selection based on token.arrayIndex (not token.index)
 
   const [mover, setMover] = useState(null);
   const [HoldSpace, setHoldSpace] = useState(false);
@@ -102,7 +103,7 @@ const KeyEvents = ({
   });
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyUp = (event) => {
+  const onKeyUp = event => {
     // keep track of which buttons are pressed in the state
     if (event.keyCode === 32 && HoldSpace) {
       setHoldSpace(false);
@@ -117,7 +118,7 @@ const KeyEvents = ({
   };
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyDown = (event) => {
+  const onKeyDown = event => {
     // key presses, and key holding (see onKeyUp)
     if (event.keyCode === 32) {
       event.preventDefault();
@@ -169,7 +170,7 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     };
   });
 
-  const onMouseDown = (event) => {
+  const onMouseDown = event => {
     // When left button pressed, start new selection
     if (event.which === 1) {
       //event.preventDefault();
@@ -178,7 +179,7 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     }
   };
 
-  const onMouseMove = (event) => {
+  const onMouseMove = event => {
     // When selection started (mousedown), select tokens hovered over
     if (holdMouseLeft) {
       if (event.which !== 1) return null;
@@ -193,7 +194,7 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     }
   };
 
-  const onMouseUp = (event) => {
+  const onMouseUp = event => {
     // When left mouse key is released, create the annotation
     // note that in case of a single click, the token has not been selected (this happens on move)
     // so this way a click can still be used to open
@@ -216,13 +217,13 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     }
   };
 
-  const onContextMenu = (event) => {
+  const onContextMenu = event => {
     if (event.button === 2) return null;
     event.preventDefault();
     event.stopPropagation();
   };
 
-  const storeMouseSelection = (event) => {
+  const storeMouseSelection = event => {
     // select tokens that the mouse/touch is currently pointing at
     let currentNode = getToken(tokens, event);
     if (currentNode == null || currentNode === null) return null;
@@ -276,12 +277,12 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
 
   if (tokens[newPosition]?.ref == null) {
     if (key === "ArrowRight") {
-      const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
+      const firstUnit = tokens.findIndex(token => token.textPart === "textUnit");
       if (firstUnit < 0) return mover.position;
       newPosition = firstUnit;
     }
     if (key === "ArrowLeft") {
-      const firstAfterUnit = tokens.findIndex((token) => token.textPart === "contextAfter");
+      const firstAfterUnit = tokens.findIndex(token => token.textPart === "contextAfter");
       if (firstAfterUnit < 0) return mover.position;
       newPosition = firstAfterUnit - 1;
     }
@@ -326,54 +327,20 @@ const moveSentence = (tokens, mover, direction = "up") => {
   // token spans, that provide information about the x and y values
 
   if (tokens[mover.position]?.ref == null || tokens[mover.startposition]?.ref == null) {
-    const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
+    const firstUnit = tokens.findIndex(token => token.textPart === "textUnit");
     return firstUnit < 0 ? 0 : firstUnit;
   }
 
-  const current = tokens[mover.position].ref.current.getBoundingClientRect();
-  const start = tokens[mover.startposition].ref.current.getBoundingClientRect();
-  let next;
-
   if (direction === "up") {
-    for (let i = mover.position; i >= 0; i--) {
-      if (tokens[i].ref == null) {
-        const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
-        return firstUnit < 0 ? 0 : firstUnit;
-      }
-      next = tokens[i].ref.current.getBoundingClientRect();
-      if (next.y < current.y && next.x <= start.x) {
-        return i;
-      }
-    }
-    return 0;
+    return moveUp(tokens, mover.position);
   }
   if (direction === "down") {
-    let nextsent = null;
-    for (let i = mover.position; i < tokens.length; i++) {
-      if (tokens[i].ref == null) {
-        const firstAfterUnit = tokens.findIndex((token) => token.textPart === "contextAfter");
-        return firstAfterUnit < 0 ? tokens.length - 1 : firstAfterUnit - 1;
-      }
-      next = tokens[i].ref.current.getBoundingClientRect();
-
-      if (!nextsent && next.y > current.y) nextsent = next.y;
-      if (nextsent && next.y > nextsent) return i - 1;
-      if (next.y > current.y && next.x >= start.x) return i;
-    }
-    return tokens.length - 1;
+    return moveDown(tokens, mover.position);
   }
 };
 
 const getTokenAttributes = (tokens, tokenNode) => {
   return parseInt(tokenNode.getAttribute("tokenindex"));
-  // const tokenArrayIndex = tokenindex - tokens[0].index;
-
-  // return {
-  //   index: tokenindex,
-  //   tokenArrayIndex: tokenArrayIndex,
-  //   offset: tokens[tokenArrayIndex].offset,
-  //   length: tokens[tokenArrayIndex].length,
-  // };
 };
 
 const getToken = (tokens, e) => {

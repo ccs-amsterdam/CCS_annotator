@@ -10,7 +10,7 @@ import db from "apis/dexie";
  * another backend.
  */
 const ManageAnnotations = ({ taskItem, callback }) => {
-  let annotations = useSelector((state) => state.annotations);
+  let annotations = useSelector(state => state.annotations);
   const dispatch = useDispatch();
 
   useEffect(() => {
