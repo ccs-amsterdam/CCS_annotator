@@ -1,148 +1,153 @@
 import React, { useEffect, useState } from "react";
 import {
-  Label,
   Icon,
   Form,
   Radio,
   Checkbox,
-  Button,
   Input,
-  Popup,
   Segment,
+  Dropdown,
+  Popup,
+  Button,
+  Grid,
+  ButtonGroup,
 } from "semantic-ui-react";
 import Help from "components/Help";
 import db from "apis/dexie";
 
 export const defaultUnitSettings = {
-  textUnit: "document",
+  textUnit: null,
+  contextUnit: "document",
+  contextWindow: [1, 1],
   value: "all",
-  annotationMix: 0,
   n: null,
   seed: 42,
-  ordered: true,
-  balanceDocuments: false,
+  ordered: false,
+  balanceDocuments: true,
   balanceAnnotations: true,
   validCodes: null,
   highlightAnnotation: false,
-  update: 0, // just increments when update button is pressed
 };
 
-const UnitSettings = ({
-  codingjob,
-  unitSettings,
-  setUnitSettings,
-  totalItems,
-  codingjobLoaded,
-}) => {
-  useEffect(() => {
-    if (!codingjob) return null;
-    codingjobLoaded.current = false;
-    getCodingjobUnitSettings(codingjob, setUnitSettings, codingjobLoaded);
-  }, [codingjob, setUnitSettings, codingjobLoaded]);
-
-  useEffect(() => {
-    if (codingjobLoaded.current) {
-      db.setCodingjobProp(codingjob, "unitSettings", unitSettings);
-    }
-  }, [codingjob, unitSettings, codingjobLoaded]);
+const UnitSettings = ({ codingjob }) => {
+  const unitSettings = codingjob?.unitSettings || defaultUnitSettings;
+  const setUnitSettings = (us) => {
+    db.setCodingjobProp(codingjob, "unitSettings", us);
+  };
 
   if (!unitSettings) return null;
   return (
-    <Segment>
-      <UnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+    <Segment style={{ border: "0" }}>
+      <Form>
+        {/* <ButtonGroup fluid vertical>
+          <TextUnitDropdown unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+          <ContextUnitDropdown unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+        </ButtonGroup> */}
+        <Grid style={{ paddingTop: "1em" }}>
+          <CodingUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+          <br />
+          <ContextUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+        </Grid>
+      </Form>
       <br />
       <br />
-      <SampleForm
-        totalItems={totalItems.current}
-        unitSettings={unitSettings}
-        setUnitSettings={setUnitSettings}
-      />
+      <SampleForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
     </Segment>
   );
 };
 
-const UnitForm = ({ unitSettings, setUnitSettings }) => {
+const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
+  const radioButton = (value, label) => {
+    return (
+      <Form.Field>
+        <Radio
+          value={value}
+          label={label}
+          checked={unitSettings.textUnit === value}
+          onChange={(e, d) =>
+            setUnitSettings({
+              ...unitSettings,
+              textUnit: value,
+              value: "all",
+              n: null,
+              totalItems: null,
+            })
+          }
+        />
+      </Form.Field>
+    );
+  };
+
   return (
     <Form>
       <Form.Group>
         <Icon name="setting" />
-        <label>Choose coding unit</label>
+        <label>Coding unit</label>
       </Form.Group>
       <Form.Group grouped widths="equal">
-        <label>Text Unit</label>
-        <Form.Field>
-          <Radio
-            value="document"
-            label="Documents"
-            checked={unitSettings.textUnit === "document"}
-            onChange={(e, d) => setUnitSettings({ ...unitSettings, textUnit: "document", n: null })}
-          />
-        </Form.Field>
-        <Form.Field>
-          <Radio
-            value="paragraph"
-            label="Paragraphs"
-            checked={unitSettings.textUnit === "paragraph"}
-            onChange={(e, d) =>
-              setUnitSettings({ ...unitSettings, textUnit: "paragraph", n: null })
-            }
-          />
-        </Form.Field>
-        <Form.Field>
-          <Radio
-            value="sentence"
-            label="Sentences"
-            checked={unitSettings.textUnit === "sentence"}
-            onChange={(e, d) => setUnitSettings({ ...unitSettings, textUnit: "sentence", n: null })}
-          />
-        </Form.Field>
-        <br />
-        <Form.Field>
-          <label>Coding Unit</label>
-          <Radio
-            value="all"
-            label="All text units"
-            checked={unitSettings.value === "all"}
-            onChange={(e, d) => setUnitSettings({ ...unitSettings, value: "all", n: null })}
-          />
-        </Form.Field>
-        <Form.Field>
-          <Radio
-            value="per annotation"
-            label="Text units with annotations"
-            checked={unitSettings.value === "per annotation"}
-            onChange={(e, d) =>
-              setUnitSettings({ ...unitSettings, value: "per annotation", n: null })
-            }
-          />
-          <Help
-            header={"By annotation"}
-            texts={[
-              "Select text units based on annotations. Only text units with at least one annotation will be used*, and a text unit can appear multiple times if it has multiple annotations.",
-              "The annotation label can also be used in a 'question based' task. This can for instance be used to ask a coder whether [label] occurs in the text unit.",
-              "*random units without any annotations can be added in the sample.",
-            ]}
-          />
-        </Form.Field>
-
-        {/* <Form.Field></Form.Field>
-        <Checkbox
-          disabled={!unitSettings || unitSettings.textUnit !== "annotation"}
-          label="highlight annotation"
-          checked={unitSettings.highlightAnnotation}
-          onChange={(e, d) =>
-            setUnitSettings((current) => ({ ...current, highlightAnnotation: d.checked }))
-          }
-          style={{ marginLeft: "2em" }}
-        /> */}
+        {radioButton("document", "Document")}
+        {radioButton("paragraph", "Paragraph")}
+        {radioButton("sentence", "Sentence")}
+        {radioButton("span", "Span annotation")}
       </Form.Group>
     </Form>
   );
 };
 
-const SampleForm = React.memo(({ totalItems, unitSettings, setUnitSettings }) => {
+const ContextUnitForm = ({ unitSettings, setUnitSettings }) => {
+  const setContextWindow = (value) => {
+    setUnitSettings({
+      ...unitSettings,
+      contextWindow: value,
+    });
+  };
+
+  const radioButton = (value, label) => {
+    return (
+      <Form.Field>
+        <Radio
+          value={value}
+          label={label}
+          disabled={unitSettings.textUnit === "document"}
+          checked={unitSettings.contextUnit === value}
+          onChange={(e, d) =>
+            setUnitSettings({
+              ...unitSettings,
+              contextUnit: value,
+            })
+          }
+        />
+        {"  "}
+        {(value === "paragraph" || value === "sentence") && value === unitSettings.contextUnit ? (
+          <ContextWindow
+            contextUnit={unitSettings.contextUnit}
+            contextWindow={unitSettings.contextWindow}
+            setContextWindow={setContextWindow}
+          />
+        ) : null}
+      </Form.Field>
+    );
+  };
+
+  return (
+    <Form>
+      <Form.Group>
+        <Icon name="setting" />
+        <label>Context unit</label>
+      </Form.Group>
+      <Form.Group grouped widths="equal">
+        {radioButton("document", "Document")}
+        {radioButton("paragraph", "Paragraph")}
+        {radioButton("sentence", "Sentence")}
+      </Form.Group>
+    </Form>
+  );
+};
+
+const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
   const [delayed, setDelayed] = useState(null); // delayed unitSettings
   const [pct, setPct] = useState(100);
+  const totalItems = unitSettings.totalItems || 0;
 
   useEffect(() => {
     setPct(Math.round((100 * unitSettings.n) / totalItems));
@@ -158,12 +163,12 @@ const SampleForm = React.memo(({ totalItems, unitSettings, setUnitSettings }) =>
   }, [delayed, unitSettings, setUnitSettings]);
 
   const setWithoutDelay = (field, value) => {
-    setUnitSettings((current) => ({ ...current, [field]: value }));
+    setUnitSettings({ ...unitSettings, [field]: value });
   };
 
-  const onChangeMix = (e, d) => {
-    setDelayed((current) => ({ ...current, annotationMix: Number(d.value) }));
-  };
+  // const onChangeMix = (e, d) => {
+  //   setDelayed((current) => ({ ...current, annotationMix: Number(d.value) }));
+  // };
 
   const onChangeSeed = (e, d) => {
     setDelayed((current) => ({ ...current, seed: Number(d.value) }));
@@ -219,12 +224,8 @@ const SampleForm = React.memo(({ totalItems, unitSettings, setUnitSettings }) =>
       </Form.Group>
 
       <Form.Group>
-        <Form.Field width={3}>
-          <label>Shuffle</label>
-          <Checkbox toggle size="mini" checked={!unitSettings.ordered} onChange={onChangeShuffle} />
-        </Form.Field>
         <Form.Field
-          width={5}
+          width={8}
           min={1}
           max={totalItems}
           label="N"
@@ -235,7 +236,7 @@ const SampleForm = React.memo(({ totalItems, unitSettings, setUnitSettings }) =>
           onChange={onChangeN}
         />
         <Form.Field
-          width={5}
+          width={8}
           min={0}
           step={5}
           max={100}
@@ -246,15 +247,22 @@ const SampleForm = React.memo(({ totalItems, unitSettings, setUnitSettings }) =>
           value={pct}
           onChange={onChangePCT}
         />
+      </Form.Group>
 
-        <Form.Field width={5}>
+      <Form.Group>
+        <Form.Field width={8}>
+          <label>Shuffle</label>
+          <Checkbox toggle size="mini" checked={!unitSettings.ordered} onChange={onChangeShuffle} />
+        </Form.Field>
+
+        <Form.Field width={8}>
           <label>Seed</label>
           <Input size="mini" type="number" min={1} value={delayed.seed} onChange={onChangeSeed} />
         </Form.Field>
       </Form.Group>
 
-      <Form.Group>
-        <Form.Field width={5}>
+      <Form.Group grouped widths="equal">
+        <Form.Field>
           <b>Balance</b>
           <Help
             header={"Balanced sampling"}
@@ -265,7 +273,7 @@ const SampleForm = React.memo(({ totalItems, unitSettings, setUnitSettings }) =>
             ]}
           />
         </Form.Field>
-        <Form.Field width={5}>
+        <Form.Field>
           <Checkbox
             size="mini"
             label="documents"
@@ -283,47 +291,54 @@ const SampleForm = React.memo(({ totalItems, unitSettings, setUnitSettings }) =>
           />
         </Form.Field>
       </Form.Group>
-
-      <Form.Group inline>
-        <label style={{ color: unitSettings.codingUnit === "annotation" ? "black" : "grey" }}>
-          Add random units
-        </label>
-
-        <Form.Field width={4}>
-          <Input
-            disabled={!unitSettings.codingUnit === "annotation"}
-            min={0}
-            step={10}
-            size="mini"
-            type="number"
-            value={delayed.annotationMix}
-            onChange={onChangeMix}
-          />
-        </Form.Field>
-        <div>
-          <label style={{ color: unitSettings.codingUnit === "annotation" ? "black" : "grey" }}>
-            % of{" "}
-            {unitSettings.codingUnit === "annotation" ? "units with annotation" : "annotations"}
-          </label>
-          <Help
-            header={"Add random annotations"}
-            texts={[
-              "Add random text units, 'annotated' with random codes",
-              "The random codes can be usefull in coding question, such as 'does this text contain [label]",
-              "If codes are balanced, a balance of all active codes from the codebook is used. If not, it will approximate the distribution of the codes in the actuall annotations in the sample",
-            ]}
-          />
-        </div>
-      </Form.Group>
     </Form>
   );
 });
 
-const getCodingjobUnitSettings = async (codingjob, setUnitSettings, codingjobLoaded) => {
-  const unitSettings = await db.getCodingjobProp(codingjob, "unitSettings");
-  codingjobLoaded.current = true;
-  console.log(codingjobLoaded.current);
-  if (unitSettings) setUnitSettings(unitSettings);
+const ContextWindow = ({ contextUnit, contextWindow, setContextWindow }) => {
+  if (contextUnit === "document") return null;
+
+  return (
+    <Popup
+      hoverable
+      trigger={
+        <Button
+          style={{
+            padding: "0em 0.2em 0em 0.2em",
+            background: "white",
+            border: "1px solid",
+          }}
+        >{`${contextWindow[0]} - ${contextWindow[1]}`}</Button>
+      }
+    >
+      <Dropdown.Menu>
+        <Dropdown.Header content={`Set ${contextUnit} window`} />
+        <Grid style={{ paddingTop: "1em", width: "20em" }}>
+          <Grid.Column width={8}>
+            <Input
+              size="mini"
+              value={contextWindow[0]}
+              type="number"
+              style={{ width: "6em" }}
+              label={"before"}
+              onChange={(e, d) => setContextWindow([Number(d.value), contextWindow[1]])}
+            />
+          </Grid.Column>
+          <Grid.Column width={5}>
+            <Input
+              size="mini"
+              value={contextWindow[1]}
+              type="number"
+              labelPosition="right"
+              style={{ width: "6em" }}
+              label={"after"}
+              onChange={(e, d) => setContextWindow([contextWindow[0], Number(d.value)])}
+            />
+          </Grid.Column>
+        </Grid>
+      </Dropdown.Menu>
+    </Popup>
+  );
 };
 
 export default React.memo(UnitSettings);

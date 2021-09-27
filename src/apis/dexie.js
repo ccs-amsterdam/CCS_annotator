@@ -213,7 +213,12 @@ class AnnotationDB {
     return documents.toArray();
   }
 
-  async getCodingjobItems(codingjob, textUnit, unitSelection) {
+  async getCodingjobItems(codingjob) {
+    codingjob = await this.getCodingjob(codingjob);
+    if (!codingjob.unitSettings) return null;
+    const textUnit = codingjob.unitSettings.textUnit;
+    const unitSelection = codingjob.unitSettings;
+
     let totalItems = 0;
 
     const getGroup = (cjIndices) => {
@@ -226,8 +231,6 @@ class AnnotationDB {
           group += "_" + item.annotation.group;
         return group;
       });
-      // Placeholder for balanced sampling
-      // Should return a vector of the length of cjIndices with unique group ids
     };
 
     let cjIndices;
@@ -378,7 +381,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
         textUnit,
         unitIndex: 0, // this is for consistency with paragraph and sentence
         doc_uid: e.doc_uid,
-        doc_id: e.doc_id,
+        document_id: e.document_id,
         docIndex,
       });
     }
@@ -391,7 +394,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
           textUnit,
           unitIndex: parIndex,
           doc_uid: e.doc_uid,
-          doc_id: e.doc_id,
+          document_id: e.document_id,
           docIndex,
           //parIndex,
         });
@@ -406,7 +409,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
           textUnit,
           unitIndex: sentIndex,
           doc_uid: e.doc_uid,
-          doc_id: e.doc_id,
+          document_id: e.document_id,
           docIndex,
           //sentIndex,
         });
@@ -436,8 +439,9 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
         for (let group of Object.keys(e.annotations.span[i])) {
           const span = e.annotations.span[i][group].span;
           if (i > span[0]) {
-            // an annotation can cover multiple units, and each unit should only be included once
             if (textUnit === "document") continue;
+            if (textUnit === "span") continue;
+            // an annotation can cover multiple units, and each unit should only be included once
             if (textUnit === "paragraph" && e.tokens[i].paragraph === e.tokens[i - 1].paragraph)
               continue;
             if (textUnit === "sentence" && e.tokens[i].sentence === e.tokens[i - 1].sentence)
@@ -449,12 +453,13 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
           const item = {
             textUnit,
             doc_uid: e.doc_uid,
-            doc_id: e.doc_id,
+            document_id: e.document_id,
             docIndex,
             group,
           };
           //if (textUnit === "paragraph") item.parIndex = e.tokens[Number(i)].paragraph;
           //if (textUnit === "sentence") item.sentIndex = e.tokens[Number(i)].sentence;
+          if (textUnit === "document" || textUnit === "span") item.unitIndex = Number(i);
           if (textUnit === "paragraph") item.unitIndex = e.tokens[Number(i)].paragraph;
           if (textUnit === "sentence") item.unitIndex = e.tokens[Number(i)].sentence;
 
@@ -479,6 +484,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
 const orderJobItems = (cjIndices, unitSelection) => {
   if (!unitSelection.ordered) return cjIndices;
   return cjIndices.sort(function (a, b) {
+    if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;
     if (a.unitIndex !== b.unitIndex) return a.unitIndex - b.unitIndex;
     if (a.annotation != null && a.annotation.index !== b)
       return a.annotation.index - b.annotation.index;

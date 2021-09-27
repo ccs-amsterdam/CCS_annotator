@@ -10,7 +10,7 @@ const ManageDocuments = ({ codingjob }) => {
   return (
     <div style={{ paddingLeft: "1em" }}>
       <Grid stackable columns={2}>
-        <Grid.Column stretched width={8} style={{ height: "calc(100vh - 3em)" }}>
+        <Grid.Column stretched width={8}>
           <DocumentTable codingjob={codingjob} />
         </Grid.Column>
         <Grid.Column width={8}>

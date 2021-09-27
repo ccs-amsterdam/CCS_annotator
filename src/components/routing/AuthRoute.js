@@ -27,7 +27,7 @@ const AuthRoute = ({ Component, homepage, ...componentProps }) => {
         ) : hasdb ? (
           <Component {...componentProps} {...props} />
         ) : (
-          <Redirect to={homepage} />
+          <Redirect to={"/home"} />
         )
       }
     />

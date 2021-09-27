@@ -16,15 +16,15 @@ import { useSelector } from "react-redux";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
-const homepage = "/amcat4annotator";
+const homepage = "/test";
 const items = [
   {
     label: "Coding Jobs",
-    path: homepage + "/codingjobs",
+    path: "/codingjobs",
     Component: CodingJobsPage,
   },
-  { label: "Codingjob manager", path: homepage + "/manager", Component: CodingjobManager },
-  { label: "Annotate", path: homepage + "/annotate", Component: AnnotatePage },
+  { label: "Codingjob manager", path: "/manager", Component: CodingjobManager },
+  { label: "Annotate", path: "/annotate", Component: AnnotatePage },
 ];
 
 const App = () => {

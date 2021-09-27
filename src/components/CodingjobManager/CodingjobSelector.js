@@ -8,24 +8,23 @@ import DeleteCodingjob from "./DeleteCodingjob";
 import db from "apis/dexie";
 import { useLiveQuery } from "dexie-react-hooks";
 
-const CodingjobSelector = ({ codingjob, setCodingjob, setMenuItem }) => {
+const CodingjobSelector = ({ codingjob, setSelectedCodingjob, open, setOpen, setMenuItem }) => {
   const codingjobs = useLiveQuery(() => db.listCodingjobs());
-  const [open, setOpen] = useState(true);
+  // //const [selectedCodingjob, setSelectedCodingjob] = useState(codingjob);
 
-  const [selectedCodingjob, setSelectedCodingjob] = useState(codingjob);
+  // useEffect(() => {
+  //   if (selectedCodingjob === null) setCodingjob(null);
+  //   if (selectedCodingjob && setCodingjob)
+  //     db.getCodingjob(selectedCodingjob).then((cj) => {
+  //       setCodingjob({ ...cj, ROW_ID: selectedCodingjob.ROW_ID });
+  //     });
+  // }, [setCodingjob, selectedCodingjob]);
 
-  useEffect(() => {
-    if (selectedCodingjob && setCodingjob)
-      db.getCodingjob(selectedCodingjob).then(cj => {
-        setCodingjob({ ...cj, ROW_ID: selectedCodingjob.ROW_ID });
-      });
-  }, [setCodingjob, selectedCodingjob]);
-
-  useEffect(() => {
-    if (!codingjob && codingjobs) {
-      setSelectedCodingjob(codingjobs.length > 0 ? { ...codingjobs[0], ROW_ID: "0" } : null);
-    }
-  }, [codingjob, codingjobs]);
+  // useEffect(() => {
+  //   if (!codingjob && codingjobs) {
+  //     setSelectedCodingjob(codingjobs.length > 0 ? { ...codingjobs[0], ROW_ID: "0" } : null);
+  //   }
+  // }, [codingjob, codingjobs]);
 
   const tableColumns = [
     {
@@ -37,10 +36,11 @@ const CodingjobSelector = ({ codingjob, setCodingjob, setMenuItem }) => {
 
   return (
     <Modal
+      centered={false}
       dimmer="blurring"
       open={open}
       onClose={() => {
-        setMenuItem("documents");
+        if (codingjob) setMenuItem("documents");
         setOpen(false);
       }}
       style={{ width: "50em" }}
@@ -50,8 +50,8 @@ const CodingjobSelector = ({ codingjob, setCodingjob, setMenuItem }) => {
       <Modal.Content>
         <Segment style={{ border: "0" }}>
           <Button.Group widths="2" size="mini">
-            <CreateCodingjob />
-            <DeleteCodingjob codingjob={codingjob} setCodingjob={setCodingjob} />
+            <CreateCodingjob setSelectedCodingjob={setSelectedCodingjob} />
+            <DeleteCodingjob codingjob={codingjob} setCodingjob={setSelectedCodingjob} />
           </Button.Group>
 
           <Container style={{ marginTop: "30px", overflow: "auto", width: "800px" }}>

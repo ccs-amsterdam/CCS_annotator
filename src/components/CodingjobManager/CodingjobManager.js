@@ -10,25 +10,33 @@ import SetCodingUnit from "./setCodingUnit";
 import CodingjobSelector from "./CodingjobSelector";
 
 const CodingjobManager = () => {
-  const [codingjob, setCodingjob] = useState(null);
   const [menuItem, setMenuItem] = useState("codingjobs");
-  const totalItems = useRef(0);
+  const [openCodingjobSelector, setOpenCodingjobSelector] = useState(false);
+  const [selectedCodingjob, setSelectedCodingjob] = useState(null);
+
+  const codingjob = useLiveQuery(() => {
+    // retrieve codingjob from Dexie whenever selectedCodingjob changes OR dexie is updated
+    if (selectedCodingjob) {
+      return db.getCodingjob(selectedCodingjob).then((cj) => {
+        return { ...cj, ROW_ID: selectedCodingjob.ROW_ID };
+      });
+    }
+  }, [selectedCodingjob]);
 
   const nDocuments = useLiveQuery(() => {
     if (!codingjob) return 0;
-    return db.idb.documents
-      .where("job_id")
-      .equals(codingjob.job_id)
-      .count();
+    return db.idb.documents.where("job_id").equals(codingjob.job_id).count();
   }, [codingjob]);
 
-  const renderSwitch = menuItem => {
+  const renderSwitch = (menuItem) => {
     switch (menuItem) {
       case "codingjobs":
         return (
           <CodingjobSelector
             codingjob={codingjob}
-            setCodingjob={setCodingjob}
+            setSelectedCodingjob={setSelectedCodingjob}
+            open={openCodingjobSelector}
+            setOpen={setOpenCodingjobSelector}
             setMenuItem={setMenuItem}
           />
         );
@@ -42,14 +50,17 @@ const CodingjobManager = () => {
   };
 
   return (
-    <Container style={{ margin: "1em", overflow: "auto" }}>
+    <Container style={{ margin: "1em" }}>
       <Step.Group ordered size="tiny">
         <Step
           title="Codingjob"
           description={codingjob ? codingjob.name : "none selected"}
           active={menuItem === "codingjobs"}
           completed={codingjob !== null}
-          onClick={(e, d) => setMenuItem("codingjobs")}
+          onClick={(e, d) => {
+            setMenuItem("codingjobs");
+            setOpenCodingjobSelector(true);
+          }}
         />
         <Step
           title="Documents"
@@ -63,12 +74,15 @@ const CodingjobManager = () => {
           title="Coding unit"
           description="Specify the coding unit"
           active={menuItem === "units"}
-          disabled={nDocuments === 0}
+          completed={codingjob?.unitSettings?.textUnit}
+          disabled={codingjob === null}
           onClick={(e, d) => setMenuItem("units")}
         />
       </Step.Group>
 
-      <Segment attached="bottom">{renderSwitch(menuItem)}</Segment>
+      <Segment style={{ border: "0" }} attached="bottom">
+        {renderSwitch(menuItem)}
+      </Segment>
     </Container>
   );
 };

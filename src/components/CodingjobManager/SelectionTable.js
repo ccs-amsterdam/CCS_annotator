@@ -31,6 +31,7 @@ const SelectionTable = ({
   defaultSize = 15,
 }) => {
   const [activeRow, setActiveRow] = useState(selectedRow ? selectedRow.ROW_ID : null);
+
   const {
     getTableProps,
     getTableBodyProps,

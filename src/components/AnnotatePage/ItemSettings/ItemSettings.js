@@ -181,6 +181,7 @@ const TextUnitDropdown = ({ textUnit, setItemSettings }) => {
         <Dropdown.Item onClick={() => setTextUnit("document")}>Document</Dropdown.Item>
         <Dropdown.Item onClick={() => setTextUnit("paragraph")}>Paragraph</Dropdown.Item>
         <Dropdown.Item onClick={() => setTextUnit("sentence")}>Sentence</Dropdown.Item>
+        <Dropdown.Item onClick={() => setTextUnit("span")}>Span</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
   );

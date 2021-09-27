@@ -12,7 +12,7 @@ import ManageAnnotations from "./ManageAnnotations";
 const Annotator = ({ item, itemSettings }) => {
   const [taskItem, setTaskItem] = useState(null);
 
-  const codeMap = useSelector(state => state.codeMap);
+  const codeMap = useSelector((state) => state.codeMap);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const Annotator = ({ item, itemSettings }) => {
     dispatch(setItemSettings(itemSettings));
   }, [item, itemSettings, setTaskItem, codeMap, dispatch]);
 
-  const renderTask = taskType => {
+  const renderTask = (taskType) => {
     switch (taskType) {
       case "annotate":
         return <AnnotateTask taskItem={taskItem} />;
@@ -54,8 +54,8 @@ const prepareTaskItem = async (item, itemSettings, setTaskItem, codeMap) => {
     taskItem.tokens = selectTokens(taskItem.tokens, item, itemSettings.contextUnit);
   }
 
-  const firstUnitToken = taskItem.tokens.find(token => token.textPart === "textUnit");
-  let lastUnitToken = taskItem.tokens.find(token => token.textPart === "contextAfter");
+  const firstUnitToken = taskItem.tokens.find((token) => token.textPart === "textUnit");
+  let lastUnitToken = taskItem.tokens.find((token) => token.textPart === "contextAfter");
   if (lastUnitToken == null) lastUnitToken = taskItem.tokens[taskItem.tokens.length - 1];
   taskItem.textUnitSpan = [firstUnitToken.offset, lastUnitToken.offset + lastUnitToken.length];
 
@@ -63,7 +63,6 @@ const prepareTaskItem = async (item, itemSettings, setTaskItem, codeMap) => {
   taskItem.itemSettings = itemSettings;
 
   taskItem.codeMap = codeMap;
-
   if (taskItem) setTaskItem(taskItem);
 };
 

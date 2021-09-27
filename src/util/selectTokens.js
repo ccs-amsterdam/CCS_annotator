@@ -4,6 +4,12 @@ export const selectTokens = (tokens, item, contextUnit) => {
   let tokenRange = [0, tokens.length - 1];
   let tokenContext = [0, tokens.length - 1];
 
+  console.log(item);
+
+  if (item.textUnit === "span") {
+    tokenRange = item.annotation.span;
+  }
+
   if (item.textUnit === "paragraph" || item.textUnit === "sentence") {
     tokenRange = getTokenRange(tokens, item.textUnit, item.unitIndex, item.unitIndex);
   }

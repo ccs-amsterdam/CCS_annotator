@@ -1,12 +1,8 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { selectCodingjob, setCodingjobs } from "actions";
 import { Header, Button, Modal, Form, Loader, Dimmer, Icon } from "semantic-ui-react";
 import db from "apis/dexie";
 
-const CreateCodingjob = () => {
-  const dispatch = useDispatch();
-
+const CreateCodingjob = ({ setSelectedCodingjob }) => {
   const [status, setStatus] = useState("inactive");
   const [codingjobName, setCodingjobName] = useState("");
 
@@ -19,8 +15,7 @@ const CreateCodingjob = () => {
     try {
       await db.createCodingjob(codingjobName);
       const codingjobs = await db.listCodingjobs();
-      dispatch(selectCodingjob(null));
-      dispatch(setCodingjobs(codingjobs));
+      setSelectedCodingjob(null);
       setStatus("inactive");
     } catch (e) {
       console.log(e);
