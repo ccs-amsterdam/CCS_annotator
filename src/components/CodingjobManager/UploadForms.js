@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Container, Header, Table, Grid, Form, Button, Icon, Dropdown } from "semantic-ui-react";
-import { useSelector } from "react-redux";
 
 //import CSVReader from "react-csv-reader";
 //import Papa from "papaparse";
@@ -190,6 +189,7 @@ const SubmitForm = ({ type, data, codingjob, fileRef, columns }) => {
       let preparedData = csvToJson(data, fields);
       if (type === "tokens") preparedData = tokensToDocumentList(preparedData);
       await db.createDocuments(codingjob, preparedData);
+      await db.setCodingjobProp(codingjob, "codebook.unitSettings.n", null);
       fileRef.current.removeFile();
       //dispatch(selectCodingjob(codingjob));
       setLoading(false);

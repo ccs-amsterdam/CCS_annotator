@@ -1,18 +1,8 @@
-import { setAnnotations } from "actions";
 import db from "apis/dexie";
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Button, ButtonGroup, Dropdown, Form, Icon, Input, Popup } from "semantic-ui-react";
 
-const EditCodePopup = ({
-  children,
-  codingjob,
-  code,
-  codes,
-  setCodes,
-  setChangeColor,
-  settings,
-}) => {
+const EditCodePopup = ({ children, codingjob, codeMap, code, codes, setChangeColor, settings }) => {
   const [open, setOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
 
@@ -51,10 +41,10 @@ const EditCodePopup = ({
     setPopupContent(
       <AddCodePopup
         codingjob={codingjob}
+        codeMap={codeMap}
         code={root ? "" : code.code}
         codes={codes}
         setOpen={setOpen}
-        setCodes={setCodes}
       />
     );
   };
@@ -63,10 +53,10 @@ const EditCodePopup = ({
     setPopupContent(
       <RmCodePopup
         codingjob={codingjob}
+        codeMap={codeMap}
         code={code.code}
         codes={codes}
         setOpen={setOpen}
-        setCodes={setCodes}
       />
     );
   };
@@ -75,10 +65,10 @@ const EditCodePopup = ({
     setPopupContent(
       <MoveCodePopup
         codingjob={codingjob}
+        codeMap={codeMap}
         code={code.code}
         codes={codes}
         setOpen={setOpen}
-        setCodes={setCodes}
       />
     );
   };
@@ -130,8 +120,7 @@ const EditCodePopup = ({
   );
 };
 
-const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector((state) => state.codeMap);
+const AddCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
   const [alreadyExists, setAlreadyExists] = useState(false);
   const [textInput, setTextInput] = useState("");
 
@@ -141,10 +130,11 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
       setAlreadyExists(true);
       return null;
     }
+
     const updatedCodes = [...codes];
     updatedCodes.push({ code: newCode, parent: code, active: true });
     await db.writeCodes(codingjob, updatedCodes);
-    setCodes(updatedCodes);
+    // setCodes(updatedCodes);
     setOpen(false);
   };
 
@@ -177,11 +167,7 @@ const AddCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
   );
 };
 
-const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector((state) => state.codeMap);
-  const annotations = useSelector((state) => state.annotations.span);
-  const dispatch = useDispatch();
-
+const RmCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
   const rmCode = async (keepChildren) => {
     let updatedCodes = codes.filter((ucode) => ucode.code !== code);
 
@@ -196,23 +182,11 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
       });
     }
 
-    await db.writeCodes(codingjob, updatedCodes);
-
     const removeCodes = [code, ...children];
-    let annotationsHasChanged = false;
-    for (let i of Object.keys(annotations)) {
-      for (let rmCode of removeCodes) {
-        if (annotations[i][rmCode]) {
-          delete annotations[i][rmCode];
-          annotationsHasChanged = true;
-        }
-      }
-    }
-
+    await db.writeCodes(codingjob, updatedCodes);
     await db.modifyAnnotations(codingjob, removeCodes, null);
-    if (annotationsHasChanged) dispatch(setAnnotations({ ...annotations }));
 
-    setCodes(updatedCodes);
+    // setCodes(updatedCodes);
     setOpen(false);
   };
 
@@ -242,10 +216,7 @@ const RmCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
   );
 };
 
-const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
-  const codeMap = useSelector((state) => state.codeMap);
-  const annotations = useSelector((state) => state.annotations);
-  const dispatch = useDispatch();
+const MoveCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
   const [newParent, setNewParent] = useState(codeMap[code].parent);
   const [textInput, setTextInput] = useState(code);
 
@@ -276,20 +247,7 @@ const MoveCodePopup = ({ codingjob, code, codes, setOpen, setCodes }) => {
     // update all annotations
     await db.modifyAnnotations(codingjob, [code], newCode);
 
-    // update tokens of current annotations (so changes are immediately visible without having to reload unit)
-    let annotationsHasChanged = false;
-    for (let textUnit of Object.keys(annotations)) {
-      for (let i of Object.keys(annotations[textUnit])) {
-        if (annotations[textUnit][i][code]) {
-          annotations[textUnit][i][newCode] = { ...annotations[textUnit][i][code] };
-          delete annotations[textUnit][i][code];
-          annotationsHasChanged = true;
-        }
-      }
-    }
-    if (annotationsHasChanged) dispatch(setAnnotations({ ...annotations }));
-
-    setCodes(updatedCodes);
+    // setCodes(updatedCodes);
     setOpen(false);
   };
 

@@ -16,7 +16,7 @@ import { useSelector } from "react-redux";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
-const homepage = "/test";
+const homepage = "/home";
 const items = [
   {
     label: "Coding Jobs",

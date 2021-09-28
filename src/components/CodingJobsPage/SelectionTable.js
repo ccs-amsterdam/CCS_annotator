@@ -183,4 +183,4 @@ const GlobalFilter = ({ preGlobalFilteredRows, globalFilter, setGlobalFilter }) 
   );
 };
 
-export default SelectionTable;
+export default React.memo(SelectionTable);

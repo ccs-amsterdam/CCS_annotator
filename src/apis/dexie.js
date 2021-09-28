@@ -16,6 +16,7 @@ class AnnotationDB {
       meta: "welcome", // this just serves to keep track of whether db was 'created' via the welcome component
       apis: "api", // unindexed fields: token, refresh_token, expiration_date,
       codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
+
       documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
     });
   }
@@ -215,9 +216,9 @@ class AnnotationDB {
 
   async getCodingjobItems(codingjob) {
     codingjob = await this.getCodingjob(codingjob);
-    if (!codingjob.unitSettings) return null;
-    const textUnit = codingjob.unitSettings.textUnit;
-    const unitSelection = codingjob.unitSettings;
+    if (!codingjob?.codebook?.unitSettings) return null;
+    const textUnit = codingjob.codebook.unitSettings.textUnit;
+    const unitSelection = codingjob.codebook.unitSettings;
 
     let totalItems = 0;
 
@@ -248,7 +249,11 @@ class AnnotationDB {
       );
     }
 
+    console.log(unitSelection);
     if (unitSelection.value.includes("annotation")) {
+      // The annotation options are 'per annotation' and 'has annotation'.
+      // The latter is currently not used, but leaving it here for now
+      // THe difference is that 'has annotations' gives unique text units with at least one annotation
       [cjIndices, done] = await annotationJobItems(
         codingjob,
         textUnit,
@@ -264,7 +269,8 @@ class AnnotationDB {
         getGroup(cjIndices)
       );
 
-      if (unitSelection.annotationMix > 0) {
+      if (unitSelection.annotationMix && unitSelection.annotationMix > 0) {
+        // Annotationmix is now disabled, but leaving it here because it might make a comeback someday
         const noDuplicates = unitSelection.value === "has annotation";
 
         const all = await allJobItems(codingjob, textUnit, done, noDuplicates);

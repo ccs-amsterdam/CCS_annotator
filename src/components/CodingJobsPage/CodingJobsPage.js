@@ -4,7 +4,6 @@ import { Dropdown, Grid, Menu, Segment } from "semantic-ui-react";
 import CodingjobSelector from "./CodingjobSelector";
 import JobDetails from "./JobDetails";
 import { UploadTextsCsv, UploadTokensCsv } from "./UploadDocuments";
-import UploadRaw from "./UploadRaw";
 import { useSelector } from "react-redux";
 
 const CodingJobsPage = () => {
@@ -19,8 +18,7 @@ const CodingJobsPage = () => {
         return <UploadTextsCsv />;
       case "upload tokens CSV":
         return <UploadTokensCsv />;
-      case "upload Raw":
-        return <UploadRaw />;
+
       default:
         return null;
     }

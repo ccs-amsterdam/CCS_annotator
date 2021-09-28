@@ -13,51 +13,69 @@ import { getColor } from "util/tokenDesign";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const CodeSelector = React.memo(({ children, annotations, unit, currentCode, newSelection }) => {
-  const [current, setCurrent] = useState(newSelection ? "UNASSIGNED" : currentCode);
+const CodeSelector = React.memo(
+  ({ children, codebook, annotations, unit, currentCode, newSelection }) => {
+    const [current, setCurrent] = useState(newSelection ? "UNASSIGNED" : currentCode);
 
-  // Placeholder: should be managed in state
-  const dispatch = useDispatch();
+    // Placeholder: should be managed in state
+    const dispatch = useDispatch();
 
-  // When codeselector opens, disable events for spanannotationsnavigation
-  // when it closes, make sure to clean up if code is UNASSIGNED
-  useEffect(() => {
-    dispatch(blockEvents(true));
-    return () => {
-      dispatch(blockEvents(false));
-      if (current === "UNASSIGNED")
-        updateAnnotations(annotations, unit, current, current, dispatch);
-    };
-  });
+    // When codeselector opens, disable events for spanannotationsnavigation
+    // when it closes, make sure to clean up if code is UNASSIGNED
+    useEffect(() => {
+      dispatch(blockEvents(true));
+      return () => {
+        dispatch(blockEvents(false));
+        if (current === "UNASSIGNED")
+          updateAnnotations(annotations, unit, current, current, dispatch);
+      };
+    });
 
-  return (
-    <CodeSelectorPopup
-      current={current}
-      setCurrent={setCurrent}
-      annotations={annotations}
-      unit={unit}
-      newSelection={newSelection}
-    >
-      {children}
-    </CodeSelectorPopup>
-  );
-});
+    return (
+      <CodeSelectorPopup
+        current={current}
+        codebook={codebook}
+        setCurrent={setCurrent}
+        annotations={annotations}
+        unit={unit}
+        newSelection={newSelection}
+      >
+        {children}
+      </CodeSelectorPopup>
+    );
+  }
+);
 
-const CodeSelectorPopup = ({ children, current, setCurrent, annotations, unit, newSelection }) => {
+const CodeSelectorPopup = ({
+  children,
+  codebook,
+  current,
+  setCurrent,
+  annotations,
+  unit,
+  newSelection,
+}) => {
   // separate popup from CodeSelector, because it would rerender CodeSelector,
   // which messes up the useEffect that cleans up after close
-  const itemSettings = useSelector((state) => state.itemSettings);
-  const codingjob = useSelector((state) => state.codingjob);
-  const codeMap = useSelector((state) => {
-    let activeCodeMap = {};
-    for (let key of Object.keys(state.codeMap)) {
-      if (!newSelection && current && annotations[key]) continue;
-      if (!state.codeMap[key].active || !state.codeMap[key].activeParent) continue;
+  const itemSettings = codebook.codeSelectorSettings;
+  console.log(codebook.codeMap);
+  const codeMap = Object.keys(codebook.codeMap).reduce((obj, key) => {
+    if (!newSelection && current && annotations[key]) return obj;
+    if (!codebook.codeMap[key].active || !codebook.codeMap[key].activeParent) return obj;
+    obj[key] = codebook.codeMap[key];
+    return obj;
+  }, {});
+  console.log(codeMap);
+  // const codeMap = useSelector((state) => {
+  //   let activeCodeMap = {};
+  //   for (let key of Object.keys(state.codeMap)) {
+  //     if (!newSelection && current && annotations[key]) continue;
+  //     if (!state.codeMap[key].active || !state.codeMap[key].activeParent) continue;
 
-      activeCodeMap[key] = state.codeMap[key];
-    }
-    return activeCodeMap;
-  });
+  //     activeCodeMap[key] = state.codeMap[key];
+  //   }
+  //   return activeCodeMap;
+  // });
   const codeHistory = useSelector((state) => state.codeHistory);
   const dispatch = useDispatch();
 
@@ -124,13 +142,11 @@ const CodeSelectorPopup = ({ children, current, setCurrent, annotations, unit, n
         />
         <NewCodePage
           codeHistory={codeHistory}
-          codingjob={codingjob}
           itemSettings={itemSettings}
           codeMap={codeMap}
           annotations={annotations}
           unit={unit}
           current={current}
-          setCurrent={setCurrent}
         />
       </div>
     </Popup>
@@ -165,15 +181,7 @@ const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
   );
 };
 
-const NewCodePage = ({
-  codeHistory,
-  itemSettings,
-  codeMap,
-  annotations,
-  unit,
-  current,
-  setCurrent,
-}) => {
+const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, current }) => {
   const textInputRef = useRef(null);
   const dispatch = useDispatch();
   const [focusOnButtons, setFocusOnButtons] = useState(true);

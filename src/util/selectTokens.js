@@ -1,10 +1,8 @@
-export const selectTokens = (tokens, item, contextUnit) => {
+export const selectTokens = (tokens, item, contextUnit, contextWindow) => {
   let newTokens = [];
 
   let tokenRange = [0, tokens.length - 1];
   let tokenContext = [0, tokens.length - 1];
-
-  console.log(item);
 
   if (item.textUnit === "span") {
     tokenRange = item.annotation.span;
@@ -14,8 +12,8 @@ export const selectTokens = (tokens, item, contextUnit) => {
     tokenRange = getTokenRange(tokens, item.textUnit, item.unitIndex, item.unitIndex);
   }
 
-  if (contextUnit.selected !== "document")
-    tokenContext = getContextRange(tokens, contextUnit, tokenRange);
+  if (contextUnit !== "document")
+    tokenContext = getContextRange(tokens, tokenRange, contextUnit, contextWindow);
 
   for (let i = 0; i < tokens.length; i++) {
     tokens[i].textPart = "textUnit";
@@ -39,12 +37,13 @@ const getTokenRange = (tokens, field, startValue, endValue) => {
   return range;
 };
 
-const getContextRange = (tokens, contextUnit, tokenRange) => {
-  const field = contextUnit.selected;
+const getContextRange = (tokens, tokenRange, contextUnit, contextWindow) => {
   const offset = -tokens[0].index;
-
-  let range = [tokens[tokenRange[0] + offset][field], tokens[tokenRange[1] + offset][field]];
-  range[0] = range[0] - contextUnit.range[contextUnit.selected][0];
-  range[1] = range[1] + contextUnit.range[contextUnit.selected][1];
-  return getTokenRange(tokens, field, range[0], range[1]);
+  let range = [
+    tokens[tokenRange[0] + offset][contextUnit],
+    tokens[tokenRange[1] + offset][contextUnit],
+  ];
+  range[0] = range[0] - contextWindow[0];
+  range[1] = range[1] + contextWindow[1];
+  return getTokenRange(tokens, contextUnit, range[0], range[1]);
 };

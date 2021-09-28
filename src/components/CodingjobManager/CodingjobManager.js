@@ -6,8 +6,9 @@ import { Container, Segment, Step } from "semantic-ui-react";
 import ManageDocuments from "./ManageDocuments";
 import db from "apis/dexie";
 import { useLiveQuery } from "dexie-react-hooks";
-import SetCodingUnit from "./setCodingUnit";
+import ManageCodingUnits from "./ManageCodingUnits";
 import CodingjobSelector from "./CodingjobSelector";
+import ManageTask from "./ManageTask";
 
 const CodingjobManager = () => {
   const [menuItem, setMenuItem] = useState("codingjobs");
@@ -17,7 +18,7 @@ const CodingjobManager = () => {
   const codingjob = useLiveQuery(() => {
     // retrieve codingjob from Dexie whenever selectedCodingjob changes OR dexie is updated
     if (selectedCodingjob) {
-      return db.getCodingjob(selectedCodingjob).then((cj) => {
+      return db.idb.codingjobs.get(selectedCodingjob.job_id).then((cj) => {
         return { ...cj, ROW_ID: selectedCodingjob.ROW_ID };
       });
     }
@@ -43,12 +44,13 @@ const CodingjobManager = () => {
       case "documents":
         return <ManageDocuments codingjob={codingjob} />;
       case "units":
-        return <SetCodingUnit codingjob={codingjob} />;
+        return <ManageCodingUnits codingjob={codingjob} />;
+      case "task":
+        return <ManageTask codingjob={codingjob} />;
       default:
         return null;
     }
   };
-
   return (
     <Container style={{ margin: "1em" }}>
       <Step.Group ordered size="tiny">
@@ -56,7 +58,7 @@ const CodingjobManager = () => {
           title="Codingjob"
           description={codingjob ? codingjob.name : "none selected"}
           active={menuItem === "codingjobs"}
-          completed={codingjob !== null}
+          completed={codingjob !== null && codingjob != null}
           onClick={(e, d) => {
             setMenuItem("codingjobs");
             setOpenCodingjobSelector(true);
@@ -64,19 +66,31 @@ const CodingjobManager = () => {
         />
         <Step
           title="Documents"
-          description={nDocuments === 0 ? "" : `${nDocuments} in set`}
+          description={nDocuments > 0 ? `${nDocuments} documents` : ""}
           active={menuItem === "documents"}
           completed={nDocuments > 0}
           disabled={codingjob === null}
           onClick={(e, d) => setMenuItem("documents")}
         />
         <Step
-          title="Coding unit"
-          description="Specify the coding unit"
+          title="Units"
+          description={
+            codingjob?.codebook?.unitSettings?.n
+              ? `${codingjob?.codebook?.unitSettings?.n} units`
+              : null
+          }
           active={menuItem === "units"}
-          completed={codingjob?.unitSettings?.textUnit}
+          completed={codingjob?.codebook?.unitSettings?.n}
           disabled={codingjob === null}
           onClick={(e, d) => setMenuItem("units")}
+        />
+        <Step
+          title="Task"
+          description={"Define the task"}
+          active={menuItem === "task"}
+          completed={codingjob?.codebook?.taskSettings?.type}
+          disabled={codingjob === null}
+          onClick={(e, d) => setMenuItem("task")}
         />
       </Step.Group>
 

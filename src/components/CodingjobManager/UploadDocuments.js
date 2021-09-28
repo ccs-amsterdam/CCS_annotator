@@ -8,9 +8,9 @@ const UploadDocuments = ({ codingjob }) => {
   const renderSwitch = (activeItem) => {
     switch (activeItem) {
       case "Documents CSV":
-        return <UploadTextsCsv />;
+        return <UploadTextsCsv codingjob={codingjob} />;
       case "Tokens CSV":
-        return <UploadTokensCsv />;
+        return <UploadTokensCsv codingjob={codingjob} />;
       default:
         return null;
     }

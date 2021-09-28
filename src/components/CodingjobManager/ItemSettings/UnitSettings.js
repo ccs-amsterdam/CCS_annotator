@@ -13,9 +13,10 @@ import {
   ButtonGroup,
 } from "semantic-ui-react";
 import Help from "components/Help";
+import CodeBook from "components/CodeBook/CodeBook2";
 import db from "apis/dexie";
 
-export const defaultUnitSettings = {
+const defaultUnitSettings = {
   textUnit: null,
   contextUnit: "document",
   contextWindow: [1, 1],
@@ -30,49 +31,49 @@ export const defaultUnitSettings = {
 };
 
 const UnitSettings = ({ codingjob }) => {
-  const unitSettings = codingjob?.unitSettings || defaultUnitSettings;
+  const unitSettings = codingjob?.codebook?.unitSettings || defaultUnitSettings;
   const setUnitSettings = (us) => {
-    db.setCodingjobProp(codingjob, "unitSettings", us);
+    db.setCodingjobProp(codingjob, "codebook.unitSettings", us);
   };
 
   if (!unitSettings) return null;
   return (
-    <Segment style={{ border: "0" }}>
-      <Form>
-        {/* <ButtonGroup fluid vertical>
-          <TextUnitDropdown unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
-          <ContextUnitDropdown unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
-        </ButtonGroup> */}
-        <Grid style={{ paddingTop: "1em" }}>
-          <CodingUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
-          <br />
-          <ContextUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
-        </Grid>
-      </Form>
+    <div style={{ verticalAlign: "top", float: "top" }}>
+      <Grid verticalAlign="top" style={{ verticalAlign: "top", paddingTop: "1em" }}>
+        <CodingUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+        <br />
+        <ContextUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+      </Grid>
       <br />
       <br />
       <SampleForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
-    </Segment>
+      <br />
+      <br />
+      <SelectValidCodes codingjob={codingjob} />
+    </div>
   );
 };
 
 const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
-  const radioButton = (value, label) => {
+  const radioButton = (value, label, annotated, jump) => {
+    const codingUnit = annotated ? "per annotation" : "all";
+
     return (
       <Form.Field>
         <Radio
           value={value}
           label={label}
-          checked={unitSettings.textUnit === value}
+          checked={unitSettings.textUnit === value && unitSettings.value === codingUnit}
           onChange={(e, d) =>
             setUnitSettings({
               ...unitSettings,
               textUnit: value,
-              value: "all",
+              value: codingUnit,
               n: null,
               totalItems: null,
             })
           }
+          style={{marginLeft: jump ? '1em' : '0em'}}
         />
       </Form.Field>
     );
@@ -85,10 +86,13 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
         <label>Coding unit</label>
       </Form.Group>
       <Form.Group grouped widths="equal">
-        {radioButton("document", "Document")}
-        {radioButton("paragraph", "Paragraph")}
-        {radioButton("sentence", "Sentence")}
-        {radioButton("span", "Span annotation")}
+        {radioButton("document", "Document", false)}
+        {radioButton("paragraph", "Paragraph", false)}
+        {radioButton("sentence", "Sentence", false)}
+        {radioButton("span", "Span annotation", true)}
+        {/* {radioButton("document", "incl. document", true, true)}
+        {radioButton("paragraph", "incl.  paragraph", true, true)}
+        {radioButton("sentence", "incl.  sentence", true, true)} */}
       </Form.Group>
     </Form>
   );
@@ -338,6 +342,37 @@ const ContextWindow = ({ contextUnit, contextWindow, setContextWindow }) => {
         </Grid>
       </Dropdown.Menu>
     </Popup>
+  );
+};
+
+const SelectValidCodes = ({ codingjob }) => {
+  if (!codingjob?.codebook?.unitSettings) return null;
+  if (!codingjob.codebook?.unitSettings.totalItems) return null;
+  if (codingjob.codebook.unitSettings.textUnit !== "span") return null;
+
+  const unitSettings = codingjob.codebook.unitSettings;
+  const setUnitSettings = (us) => {
+    db.setCodingjobProp(codingjob, "codebook.unitSettings", us);
+  };
+
+  if (!unitSettings) return null;
+  return (
+    <Form>
+      <Form.Group>
+        <Icon name="setting" />
+        <div>
+          <label>Manage annotation codes</label>
+          <Help
+            header={"Annotation codes"}
+            texts={[
+              "Click on the gear icon to add, remove, move, rename and change the colors of codes",
+              "You can also toggle codes off if you just want to disable them in the current unit selection",
+            ]}
+          />
+        </div>
+      </Form.Group>
+      <CodeBook codingjob={codingjob} height="40%" />
+    </Form>
   );
 };
 

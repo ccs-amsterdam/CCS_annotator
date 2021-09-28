@@ -8,12 +8,12 @@ const gridStyle = { height: "100%", paddingTop: "0" };
 const gridStyleTop = { height: "35vh" };
 const gridStyleBottom = { overflowY: "auto", height: "45vh" };
 
-const AnnotateTask = ({ taskItem, annotations }) => {
+const AnnotateTask = ({ taskItem }) => {
   const [menuItem, setMenuItem] = useState("help");
 
   if (taskItem === null) return null;
 
-  const renderSwitch = activeItem => {
+  const renderSwitch = (activeItem) => {
     switch (activeItem) {
       case "help":
         return <Instructions />;
@@ -27,12 +27,7 @@ const AnnotateTask = ({ taskItem, annotations }) => {
   return (
     <Grid style={gridStyle} verticalAlign={"top"}>
       <Grid.Column width={8} style={{ paddingRight: "0em", maxWidth: "700px" }}>
-        <Tokens
-          taskItem={taskItem}
-          height={75}
-          textUnitPosition={1 / 4}
-          annotations={annotations}
-        />
+        <Tokens taskItem={taskItem} height={75} textUnitPosition={1 / 4} />
       </Grid.Column>
       <Grid.Column width={8} style={{ paddingRight: "3em", maxWidth: "500px" }}>
         <Grid.Row style={gridStyleTop}>

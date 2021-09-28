@@ -1,11 +1,11 @@
 import db from "apis/dexie";
-import SelectionTable from "components/CodingJobsPage/SelectionTable";
+import SelectionTable from "./SelectionTable";
 import React, { useEffect, useRef, useState } from "react";
-import { Grid, Table, Header } from "semantic-ui-react";
+import { Grid, Table, Header, Dimmer, Loader } from "semantic-ui-react";
 import { getColor } from "util/tokenDesign";
 import { useSelector } from "react-redux";
 import UnitSettings from "./ItemSettings/UnitSettings";
-import SelectValidCodes from "./ItemSettings/SelectValidCodes";
+import Document from "components/Tokens/Document";
 
 const getTableColumns = (unitSettings) => {
   if (!unitSettings) return [];
@@ -39,40 +39,39 @@ const getTableColumns = (unitSettings) => {
   return columns;
 };
 
-const SetCodingUnit = ({ codingjob }) => {
+const previewDocumentSettings = {
+  height: 50,
+  textUnitPosition: 1 / 4,
+  showAnnotations: false,
+  canAnnotate: true,
+  saveAnnotations: true,
+};
+
+const ManageCodingUnits = ({ codingjob }) => {
   const [jobItems, setJobItems] = useState(null);
 
   // When a new codingjob is loaded, set codingjobLoaded ref to false
   // this prevents actually loading the data until unitSettings has loaded
   // the unitSettings stored in the codingjob
-  const codingjobLoaded = useRef(false);
 
   useEffect(() => {
-    codingjobLoaded.current = false;
-  }, [codingjob]);
-
-  useEffect(() => {
-    if (!codingjob?.unitSettings) return null;
+    if (!codingjob?.codebook?.unitSettings) return null;
+    setJobItems(null);
     getJobItems(codingjob, setJobItems);
-  }, [codingjob, codingjobLoaded, setJobItems]);
+  }, [codingjob, setJobItems]);
 
   if (!codingjob) return null;
 
   return (
-    <div style={{ paddingLeft: "1em" }}>
+    <div>
       <Grid stackable columns={5}>
-        <Grid.Column stretched width={5}>
-          <UnitSettings codingjob={codingjob} codingjobLoaded={codingjobLoaded} />
+        <Grid.Column verticalAlign="top" stretched width={5}>
+          <Header textAlign="center">Settings</Header>
+
+          <UnitSettings codingjob={codingjob} />
         </Grid.Column>
-        <Grid.Column width={5}>
-          <ItemDetails items={jobItems || []} />
-          <SelectionTable
-            columns={getTableColumns(codingjob?.unitSettings)}
-            data={jobItems || []}
-            defaultSize={10}
-          />
-        </Grid.Column>
-        <SelectValidCodes codingjob={codingjob} />
+
+        <Preview codingjob={codingjob} jobItems={jobItems} />
       </Grid>
     </div>
   );
@@ -80,20 +79,67 @@ const SetCodingUnit = ({ codingjob }) => {
 
 const getJobItems = async (codingjob, setJobItems) => {
   let [totalItems, items] = await db.getCodingjobItems(codingjob);
-  //await db.setCodingjobProp(codingjob, "jobItems", items);
   setJobItems(items);
   if (
-    codingjob.unitSettings.n === null ||
-    codingjob.unitSettings.n == null ||
-    codingjob.unitSettings.totalItems !== totalItems
+    codingjob.codebook.unitSettings.n === null ||
+    codingjob.codebook.unitSettings.n == null ||
+    codingjob.codebook.unitSettings.totalItems !== totalItems
   ) {
-    await db.setCodingjobProp(codingjob, "unitSettings", {
-      ...codingjob.unitSettings,
+    await db.setCodingjobProp(codingjob, "codebook.unitSettings", {
+      ...codingjob.codebook.unitSettings,
       n: totalItems,
       totalItems,
     });
   }
 };
+
+const Preview = React.memo(
+  ({ codingjob, jobItems }) => {
+    const [jobItem, setJobItem] = useState(null);
+
+    useEffect(() => {
+      if (jobItems && jobItems.length > 0) {
+        setJobItem({ ...jobItems[0], ROW_ID: "0" });
+      } else setJobItem(null);
+    }, [jobItems, setJobItem]);
+
+    return (
+      <>
+        <Grid.Column width={5}>
+          <Header textAlign="center">Selected units</Header>
+          <Dimmer inverted active={jobItems === null}>
+            <Loader />
+          </Dimmer>
+          <SelectionTable
+            columns={getTableColumns(codingjob?.codebook?.unitSettings)}
+            selectedRow={jobItem}
+            setSelectedRow={setJobItem}
+            data={jobItems || []}
+            defaultSize={10}
+          />
+          {/* <ItemDetails items={jobItems || []} /> */}
+        </Grid.Column>
+        <Grid.Column width={6}>
+          <Header textAlign="center">Unit preview</Header>
+
+          <Dimmer inverted active={jobItem === null}>
+            <Loader />
+          </Dimmer>
+          <Document
+            item={jobItem}
+            codebook={{ ...codingjob.codebook }}
+            settings={previewDocumentSettings}
+          />
+        </Grid.Column>
+      </>
+    );
+  },
+  (p, n) => {
+    for (let key of Object.keys(p)) {
+      if (p[key] !== n[key]) console.log(key);
+    }
+  }
+);
 
 const ItemDetails = ({ items }) => {
   const mode = useSelector((state) => state.mode);
@@ -175,12 +221,7 @@ const ItemDetails = ({ items }) => {
 
   const hasCodes = Object.keys(data.codes).length > 0;
 
-  return (
-    <Grid columns={2}>
-      <Grid.Column width={hasCodes ? 8 : 16}>{totalsTable()}</Grid.Column>
-      <Grid.Column>{codesTable()}</Grid.Column>
-    </Grid>
-  );
+  return <div style={{ position: "absolute", bottom: "1em" }}>{codesTable()}</div>;
 };
 
-export default React.memo(SetCodingUnit);
+export default React.memo(ManageCodingUnits);

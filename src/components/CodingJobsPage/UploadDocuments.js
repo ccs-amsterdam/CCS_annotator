@@ -191,6 +191,8 @@ const SubmitForm = ({ type, data, codingjob, fileRef, columns }) => {
       let preparedData = csvToJson(data, fields);
       if (type === "tokens") preparedData = tokensToDocumentList(preparedData);
       await db.createDocuments(codingjob, preparedData);
+      await db.setCodingjobProp(codingjob, "unitSettings");
+
       fileRef.current.removeFile();
       //dispatch(selectCodingjob(codingjob));
       setLoading(false);
