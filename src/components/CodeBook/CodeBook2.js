@@ -1,7 +1,7 @@
 import db from "apis/dexie";
 import { randomColor } from "randomcolor";
 import React, { useEffect, useState } from "react";
-import { Checkbox, Icon, Search, Table } from "semantic-ui-react";
+import { Checkbox, Icon, Table } from "semantic-ui-react";
 import { codeBookEdgesToMap } from "util/codebook";
 import EditCodePopup from "./EditCodePopup";
 

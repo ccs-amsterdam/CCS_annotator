@@ -7,7 +7,11 @@ import { triggerCodeselector } from "actions";
 import { getColor, getColorGradient } from "util/tokenDesign";
 import { List, Popup } from "semantic-ui-react";
 
-const Token = React.forwardRef(({ token, codebook, settings, annotation }, ref) => {
+const Token = React.forwardRef(({ token, itemBundle }, ref) => {
+  const codebook = itemBundle.codebook;
+  const settings = itemBundle.settings;
+  const annotation = itemBundle.item.annotation;
+
   const selected = useSelector((state) => {
     if (state.tokenSelection.length === 0) return false;
 

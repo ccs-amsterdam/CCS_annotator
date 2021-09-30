@@ -4,8 +4,6 @@ import { Grid, Header } from "semantic-ui-react";
 import UploadDocuments from "./UploadDocuments";
 import DocumentTable from "components/CodingjobManager/DocumentTable";
 
-import db from "apis/dexie";
-
 const ManageDocuments = ({ codingjob }) => {
   return (
     <div style={{ paddingLeft: "1em" }}>

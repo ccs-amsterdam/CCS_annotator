@@ -5,12 +5,10 @@ import {
   Radio,
   Checkbox,
   Input,
-  Segment,
   Dropdown,
   Popup,
   Button,
   Grid,
-  ButtonGroup,
 } from "semantic-ui-react";
 import Help from "components/Help";
 import CodeBook from "components/CodeBook/CodeBook2";
@@ -57,13 +55,16 @@ const UnitSettings = ({ codingjob }) => {
 const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
   const radioButton = (value, label, annotated, jump) => {
     const codingUnit = annotated ? "per annotation" : "all";
+    let checked = unitSettings.textUnit === value && unitSettings.value === codingUnit;
+    //if (value === "span" && unitSettings.value === "per annotation") checked = true;
+    //const disabled = annotated && value !== "span" && unitSettings.value !== "per annotation";
 
     return (
       <Form.Field>
         <Radio
           value={value}
           label={label}
-          checked={unitSettings.textUnit === value && unitSettings.value === codingUnit}
+          checked={checked}
           onChange={(e, d) =>
             setUnitSettings({
               ...unitSettings,
@@ -73,7 +74,7 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
               totalItems: null,
             })
           }
-          style={{marginLeft: jump ? '1em' : '0em'}}
+          style={{ marginLeft: jump ? "1em" : "0em" }}
         />
       </Form.Field>
     );
@@ -90,9 +91,9 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
         {radioButton("paragraph", "Paragraph", false)}
         {radioButton("sentence", "Sentence", false)}
         {radioButton("span", "Span annotation", true)}
-        {/* {radioButton("document", "incl. document", true, true)}
+        {radioButton("document", "incl. document", true, true)}
         {radioButton("paragraph", "incl.  paragraph", true, true)}
-        {radioButton("sentence", "incl.  sentence", true, true)} */}
+        {radioButton("sentence", "incl.  sentence", true, true)}
       </Form.Group>
     </Form>
   );
@@ -351,9 +352,9 @@ const SelectValidCodes = ({ codingjob }) => {
   if (codingjob.codebook.unitSettings.textUnit !== "span") return null;
 
   const unitSettings = codingjob.codebook.unitSettings;
-  const setUnitSettings = (us) => {
-    db.setCodingjobProp(codingjob, "codebook.unitSettings", us);
-  };
+  // const setUnitSettings = (us) => {
+  //   db.setCodingjobProp(codingjob, "codebook.unitSettings", us);
+  // };
 
   if (!unitSettings) return null;
   return (

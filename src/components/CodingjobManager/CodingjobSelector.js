@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Header, Icon, Button, Segment, Modal, Container } from "semantic-ui-react";
-import { selectCodingjob } from "actions";
+import React from "react";
+import { Header, Button, Segment, Container, Grid } from "semantic-ui-react";
 
 import SelectionTable from "./SelectionTable";
 import CreateCodingjob from "./CreateCodingjob";
@@ -35,19 +34,9 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob, open, setOpen, set
   ];
 
   return (
-    <Modal
-      centered={false}
-      dimmer="blurring"
-      open={open}
-      onClose={() => {
-        if (codingjob) setMenuItem("documents");
-        setOpen(false);
-      }}
-      style={{ width: "50em" }}
-      closeOnDimmerClick={true}
-    >
-      <Header>Select Codingjob</Header>
-      <Modal.Content>
+    <Grid>
+      <Grid.Column width={6}>
+        <Header>Select Codingjob</Header>
         <Segment style={{ border: "0" }}>
           <Button.Group widths="2" size="mini">
             <CreateCodingjob setSelectedCodingjob={setSelectedCodingjob} />
@@ -64,19 +53,8 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob, open, setOpen, set
             />
           </Container>
         </Segment>
-      </Modal.Content>
-      <Modal.Actions>
-        <Button
-          compact
-          textAlign="center"
-          color="green"
-          disabled={codingjob === null}
-          onClick={() => setMenuItem("documents")}
-        >
-          <Icon name="play" /> Open selected codingjob
-        </Button>
-      </Modal.Actions>
-    </Modal>
+      </Grid.Column>
+    </Grid>
   );
 };
 

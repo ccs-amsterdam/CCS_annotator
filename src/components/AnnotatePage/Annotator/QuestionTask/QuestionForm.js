@@ -7,19 +7,19 @@ import { setAnnotations } from "actions";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const QuestionForm = ({ taskItem }) => {
-  const annotations = useSelector(state => state.annotations);
-  const settings = useSelector(state => state.itemSettings.questionForm);
-  const codeMap = useSelector(state => state.codeMap);
+const QuestionForm = ({ item }) => {
+  const annotations = useSelector((state) => state.annotations);
+  const settings = useSelector((state) => state.itemSettings.questionForm);
+  const codeMap = useSelector((state) => state.codeMap);
   const dispatch = useDispatch();
   if (!settings) return null;
 
-  // rawQuestion is only the text. question is the jsx
-  const [rawQuestion, question] = prepareQuestion(taskItem, settings, codeMap);
-  const currentAnswer = getCurrentAnswer(taskItem, annotations, rawQuestion);
+  // rawQuestion is only the text (used for saving results). question is the jsx
+  const [rawQuestion, question] = prepareQuestion(item, settings, codeMap);
+  const currentAnswer = getCurrentAnswer(item, annotations, rawQuestion);
 
-  const onSelect = answer => {
-    setNewAnswer(taskItem, annotations, rawQuestion, answer, dispatch);
+  const onSelect = (answer) => {
+    setNewAnswer(item, annotations, rawQuestion, answer, dispatch);
   };
 
   return (
@@ -48,9 +48,8 @@ const QuestionForm = ({ taskItem }) => {
   );
 };
 
-const setNewAnswer = (taskItem, annotations, rawQuestion, answer, dispatch) => {
+const setNewAnswer = (item, annotations, rawQuestion, answer, dispatch) => {
   const newAnnotations = { ...annotations };
-  const item = taskItem.item;
   const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
 
   if (!newAnnotations[item.textUnit][item.unitIndex])
@@ -61,9 +60,8 @@ const setNewAnswer = (taskItem, annotations, rawQuestion, answer, dispatch) => {
   dispatch(setAnnotations({ ...newAnnotations }));
 };
 
-const getCurrentAnswer = (taskItem, annotations, rawQuestion) => {
+const getCurrentAnswer = (item, annotations, rawQuestion) => {
   const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
-  const item = taskItem.item;
   return annotations[item.textUnit]?.[item.unitIndex]?.[root]?.answer;
 };
 
@@ -87,7 +85,7 @@ const showCurrent = (currentAnswer, codeMap) => {
   );
 };
 
-const getOptions = codeMap => {
+const getOptions = (codeMap) => {
   return Object.keys(codeMap).reduce((options, code) => {
     if (!codeMap[code].active) return options;
     if (!codeMap[code].activeParent) return options;
@@ -103,13 +101,13 @@ const getOptions = codeMap => {
   }, []);
 };
 
-const prepareQuestion = (taskItem, settings, codeMap) => {
+const prepareQuestion = (item, settings, codeMap) => {
   let question = settings.question;
   let rawQuestion = settings.question;
 
   if (question.search("\\[code\\]") >= 0) {
-    if (taskItem.item.annotation) {
-      let code = taskItem.item.annotation.group;
+    if (item.annotation) {
+      let code = item.annotation.group;
       const codeTag = `{{lightyellow###${code}}}`; // add optional color from itemSettings
       question = question.replace("[code]", codeTag);
       rawQuestion = rawQuestion.replace("[code]", code);
@@ -117,8 +115,8 @@ const prepareQuestion = (taskItem, settings, codeMap) => {
   }
 
   if (question.search("\\[group\\]") >= 0) {
-    if (taskItem.item.annotation) {
-      let code = taskItem.item.nnotation.group;
+    if (item.annotation) {
+      let code = item.annotation.group;
       if (codeMap[code].foldToParent) code = codeMap[code].foldToParent;
       const codeTag = `{{yellow###${code}}}`; // add optional color from itemSettings
       question = question.replace("[group]", codeTag);
@@ -126,28 +124,28 @@ const prepareQuestion = (taskItem, settings, codeMap) => {
     }
   }
 
-  if (question.search("\\[text\\]") >= 0) {
-    if (taskItem.item.annotation?.span != null) {
-      const text = taskItem.tokens.reduce((str, token) => {
-        const i = token.index;
-        const [from, to] = taskItem.item.annotation.span;
-        if (i === from && i === to) str += token.text;
-        if (i === from && i < to) str += token.text + token.post;
-        if (i > from && i < to) str += token.pre + token.text + token.post;
-        if (i > from && i === to) str += token.text + token.post;
-        return str;
-      }, "");
-      const textTag = `{{lightblue###${text}}}`; // add optional color from itemSettings
+  // if (question.search("\\[text\\]") >= 0) {
+  //   if (item.annotation?.span != null) {
+  //     const text = tokens.reduce((str, token) => {
+  //       const i = token.index;
+  //       const [from, to] = item.annotation.span;
+  //       if (i === from && i === to) str += token.text;
+  //       if (i === from && i < to) str += token.text + token.post;
+  //       if (i > from && i < to) str += token.pre + token.text + token.post;
+  //       if (i > from && i === to) str += token.text + token.post;
+  //       return str;
+  //     }, "");
+  //     const textTag = `{{lightblue###${text}}}`; // add optional color from itemSettings
 
-      question = question.replace("[text]", textTag);
-      rawQuestion = rawQuestion.replace("[code]", text);
-    }
-  }
+  //     question = question.replace("[text]", textTag);
+  //     rawQuestion = rawQuestion.replace("[code]", text);
+  //   }
+  // }
 
   return [rawQuestion, markedString(question)];
 };
 
-const markedString = text => {
+const markedString = (text) => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");
@@ -172,7 +170,7 @@ const markedString = text => {
 
 const SearchBoxDropdown = ({ callback }) => {
   const ref = useRef();
-  const options = useSelector(state => getOptions(state.codeMap));
+  const options = useSelector((state) => getOptions(state.codeMap));
 
   return (
     <Ref innerRef={ref}>
@@ -181,7 +179,7 @@ const SearchBoxDropdown = ({ callback }) => {
         placeholder={"<type to search>"}
         searchInput={{ autoFocus: true }}
         style={{ minWidth: "12em" }}
-        options={options.map(option => {
+        options={options.map((option) => {
           return {
             key: option.code,
             value: option.code,
@@ -213,13 +211,13 @@ const ButtonSelection = ({ callback }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const options = useSelector(state => getOptions(state.codeMap));
-  const eventsBlocked = useSelector(state => state.eventsBlocked);
+  const options = useSelector((state) => getOptions(state.codeMap));
+  const eventsBlocked = useSelector((state) => state.eventsBlocked);
 
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const nbuttons = options.length;
 
       // any arrowkey

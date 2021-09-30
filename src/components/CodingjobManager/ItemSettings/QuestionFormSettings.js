@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 
-import { Popup, Button, Form, Radio, Icon, TextArea } from "semantic-ui-react";
+import { Button, Form, Radio, TextArea } from "semantic-ui-react";
 
-import { blockEvents } from "actions";
 import Help from "components/Help";
 
 const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) => {
-  const dispatch = useDispatch();
   const [delayedQuestion, setDelayedQuestion] = useState("");
   const [warn, setWarn] = useState([]);
 
@@ -38,6 +35,7 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
     setDelayedQuestion(questionForm.question);
   }, [setDelayedQuestion, questionForm, setWarn, unitSelection]);
 
+  console.log(warn);
   if (!questionForm) return null;
 
   return (
@@ -89,18 +87,6 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
         </Form.Field>
       </Form.Group>
     </Form>
-  );
-};
-
-const buttonStyle = { paddingTop: 0, font: "Serif", fontStyle: "normal" };
-
-const buttonLabel = (text, type) => {
-  return (
-    <span>
-      <font style={{ fontSize: 9 }}>{type}:</font>
-      <br />
-      {text}
-    </span>
   );
 };
 

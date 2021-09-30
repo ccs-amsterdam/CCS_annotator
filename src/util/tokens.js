@@ -2,6 +2,13 @@ import nlp from "compromise";
 import paragraphs from "compromise-paragraphs";
 nlp.extend(paragraphs);
 
+/**
+ * Tokenize a document, but allowing for multiple text fields to be concatenated as different sections.
+ * @param {*} text_fields  An array of objects, where each object has the structure {name, value}. 'name' becomes the name of the section, 'value' is the text
+ *                         Optionally can also have a textPart {name, value, textPart}, which can have the values ('contextBefore','textUnit','contextAfter').
+ *                         This can be used to set the coding/context unit immediately when parsing (which is now used when creating an itemBundle on the fly)
+ * @returns
+ */
 export const parseTokens = (text_fields) => {
   const tokens = [];
   let token = null;
@@ -11,7 +18,8 @@ export const parseTokens = (text_fields) => {
   let t = null;
   let text = null;
   for (let text_field of text_fields) {
-    let section = text_field.name;
+    let section = text_field.name || "text";
+    let textPart = text_field.textPart;
     text = text_field.value;
     t = nlp.tokenize(text).paragraphs().json({ offset: true });
     // map to single array.
@@ -32,6 +40,7 @@ export const parseTokens = (text_fields) => {
               text: token.text,
               pre: token.pre,
               post: token.post,
+              ...(textPart && { textPart }), // only adds textPart if not undefined
             });
             tokenIndex++;
           }
@@ -214,4 +223,3 @@ export const importTokenAnnotations = (tokens, codes) => {
 
   return annotations;
 };
-

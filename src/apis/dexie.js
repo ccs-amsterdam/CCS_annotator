@@ -1,8 +1,8 @@
 import Dexie from "dexie";
 import hash from "object-hash";
-import { importTokens, importTokenAnnotations, parseTokens } from "util/tokens";
-import { importAnnotations, importSpanAnnotations } from "util/annotations";
+
 import { drawRandom } from "util/sample";
+import { prepareDocumentBatch } from "util/createDocuments";
 
 class AnnotationDB {
   constructor() {
@@ -132,68 +132,12 @@ class AnnotationDB {
       await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
     );
 
-    let duplicates = 0;
-    let codes = {};
-    const preparedDocuments = documentList.reduce((result, document) => {
-      const doc_uid = hash([document, codingjob]); // codingjob included for doc_uid (unique id) hash
-      if (!ids.has(doc_uid)) {
-        ids.add(doc_uid);
-
-        if (document.tokens) {
-          document.tokens = importTokens(document.tokens);
-        } else {
-          document.tokens = parseTokens(document.text_fields);
-        }
-        if (document.tokens.length > 0) {
-          document.n_paragraphs = document.tokens[document.tokens.length - 1].paragraph;
-          document.n_sentences = document.tokens[document.tokens.length - 1].sentence;
-        } else {
-          document.n_paragraphs = 0;
-          document.n_sentences = 0;
-        }
-
-        console.log(document);
-        if (document.annotations) {
-          document.annotations = importAnnotations(document.annotations, document.tokens);
-        } else document.annotations = { document: {}, paragraph: {}, sentence: {}, span: {} };
-
-        const tokenAnnotations = importTokenAnnotations(document.tokens, codes); // also fills codes
-        if (tokenAnnotations.length > 0)
-          document.annotations.span = importSpanAnnotations(
-            document.annotations.span,
-            tokenAnnotations,
-            document.tokens
-          );
-
-        result.push({
-          doc_uid: doc_uid,
-          job_id: codingjob.job_id,
-          ...document,
-        });
-      } else {
-        duplicates++;
-      }
-      return result;
-    }, []);
-
-    if (!silent) {
-      let message = `Created ${documentList.length - duplicates} new documents in codingjob ${
-        codingjob.name
-      }.`;
-      if (duplicates > 0) message = message + ` Ignored ${duplicates} duplicates`;
-      alert(message);
-    }
-
-    codes = Object.keys(codes).reduce((a, code) => {
-      if (codes[code].length === 1) {
-        if (codes[code][0] !== "") a.push({ code, parent: codes[code][0], active: true });
-      } else {
-        for (let parent of codes[code]) {
-          if (parent !== "") a.push({ code: `${code} (${parent})`, parent, active: true });
-        }
-      }
-      return a;
-    }, []);
+    const [preparedDocuments, codes] = prepareDocumentBatch(
+      documentList,
+      ids,
+      codingjob.job_id,
+      silent
+    );
 
     this.writeCodes(codingjob, codes, true);
 
@@ -249,7 +193,6 @@ class AnnotationDB {
       );
     }
 
-    console.log(unitSelection);
     if (unitSelection.value.includes("annotation")) {
       // The annotation options are 'per annotation' and 'has annotation'.
       // The latter is currently not used, but leaving it here for now

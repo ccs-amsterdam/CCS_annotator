@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useSelector } from "react-redux";
+import React, { useState } from "react";
 
 import { Container, Segment, Step } from "semantic-ui-react";
 

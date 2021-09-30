@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { selectCodingjob, setCodingjobs } from "actions";
+
 import { Button, Header, Icon, Modal, Dimmer, Loader } from "semantic-ui-react";
 import db from "apis/dexie";
 

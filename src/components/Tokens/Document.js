@@ -6,8 +6,11 @@ import { codeBookEdgesToMap } from "util/codebook";
 import Tokens from "./Tokens";
 import { selectTokens } from "util/selectTokens";
 import AnnotateNavigation from "./AnnotateNavigation";
+import { prepareDocumentBatch } from "util/createDocuments";
 
 const defaultSettings = {
+  // These are not part of the codebook, because they depend on the type of task
+  // (so they results from certain codebook settings, but the user doesn't need to see this)
   height: 75,
   textUnitPosition: 1 / 4,
   showAnnotations: false,
@@ -20,19 +23,17 @@ const Document = ({ item, codebook, settings = defaultSettings }) => {
   useEffect(() => {
     if (!item) return null;
     setItemBundle(null);
-    prepareItemBundle(item, codebook, setItemBundle);
-  }, [item, codebook, setItemBundle]);
+    prepareItemBundle(item, codebook, settings, setItemBundle);
+  }, [item, codebook, settings, setItemBundle]);
 
   if (!item || !itemBundle) return null;
   return (
     <>
-      <Tokens taskItem={itemBundle} settings={settings} />
+      <Tokens itemBundle={itemBundle} />
       <ManageAnnotations taskItem={itemBundle} saveAnnotations={settings.saveAnnotations} />
       {settings.canAnnotate ? <AnnotateNavigation tokens={itemBundle.tokens} /> : null}
     </>
   );
-
-  return <div></div>;
 };
 
 /**
@@ -40,33 +41,57 @@ const Document = ({ item, codebook, settings = defaultSettings }) => {
  * The bundle contains everything the annotator needs, including codebook settings
  *
  * @param {*} item
- * @param {*} itemSettings
+ * @param {*} codebook
+ * @param {*} settings
  * @param {*} setItemBundle
- * @param {*} codeMap
  * @returns
  */
-const prepareItemBundle = async (item, codebook, setItemBundle) => {
+const prepareItemBundle = async (item, codebook, settings, setItemBundle) => {
   // if codeMap is not yet made, first add it to the codebook object
   // (this way it only needs to be made if codebook changes)
   if (!codebook.codeMap) codebook.codeMap = codeBookEdgesToMap(codebook.codes || []);
-
   // Note that every item must exist as a document in the indexedDb, even if it's only opened once for annotation servers that pass
   // one item at a time. This ensures safe and smooth annotating (e.g., broken connection, refreshing page)
   // (NOTE TO SELF: Before <Document>, the codebook and item must therefore have been processed and stored)
-  let itemBundle = await db.getDocument(item.doc_uid); // get document information (text/tokens, annotations)
+  let itemBundle;
+  if (item.doc_uid) itemBundle = await db.getDocument(item.doc_uid); // get document information (text/tokens, annotations)
+  if (!itemBundle) itemBundle = prepareTempItem(item);
   if (!itemBundle) return;
+
+  if (codebook.unitSettings) {
+    // if full document is retrieved, use codingUnit and contextUnit to select the coding/context tokens
+    const { contextUnit, contextWindow } = codebook.unitSettings;
+    itemBundle.tokens = selectTokens(itemBundle.tokens, item, contextUnit, contextWindow);
+    itemBundle.textUnitSpan = getUnitSpan(itemBundle);
+  }
 
   itemBundle.item = item; // add item information
   itemBundle.writable = false; // this prevents overwriting annotations before they have been loaded (in <ManageAnnotations>)
-
-  // Mark tokens as coding / context unit, and remove unused tokens.
-  const { contextUnit, contextWindow } = codebook.unitSettings;
-  itemBundle.tokens = selectTokens(itemBundle.tokens, item, contextUnit, contextWindow);
-
-  itemBundle.textUnitSpan = getUnitSpan(itemBundle);
-
   itemBundle.codebook = codebook;
+  itemBundle.settings = settings;
   if (itemBundle) setItemBundle(itemBundle);
+};
+
+/**
+ * If an item does not exist in the indexedDB, prepare it on the fly
+ * This does mean that annotations will also not be saved in the indexedDB,
+ * so any results should immediately be send to a server via the 'returnAddress'
+ *
+ * The preparation is flexible, and allows the items to have several forms.
+ * If the item does not yet have tokens, but it does have "text", it will be tokenized
+ * @param {*} item
+ * @param {*} codebook
+ */
+const prepareTempItem = (item, codebook) => {
+  const text_fields = [];
+  if (item.contextBefore)
+    text_fields.push({ name: "text", textPart: "contextBefore", value: item.contextBefore });
+  if (item.text) text_fields.push({ name: "text", textPart: "textUnit", value: item.text });
+  if (item.contextAfter)
+    text_fields.push({ name: "text", textPart: "contextAfter", value: item.contextAfter });
+
+  const [documents] = prepareDocumentBatch([{ text_fields }]); // returns [documents, codes], so destructure it
+  return documents[0];
 };
 
 /**

@@ -14,7 +14,6 @@ const CreateCodingjob = ({ setSelectedCodingjob }) => {
 
     try {
       await db.createCodingjob(codingjobName);
-      const codingjobs = await db.listCodingjobs();
       setSelectedCodingjob(null);
       setStatus("inactive");
     } catch (e) {

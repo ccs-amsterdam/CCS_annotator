@@ -1,9 +1,8 @@
 import db from "apis/dexie";
 import SelectionTable from "./SelectionTable";
-import React, { useEffect, useRef, useState } from "react";
-import { Grid, Table, Header, Dimmer, Loader } from "semantic-ui-react";
-import { getColor } from "util/tokenDesign";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { Grid, Header, Dimmer, Loader } from "semantic-ui-react";
+
 import UnitSettings from "./ItemSettings/UnitSettings";
 import Document from "components/Tokens/Document";
 
@@ -71,7 +70,7 @@ const ManageCodingUnits = ({ codingjob }) => {
           <UnitSettings codingjob={codingjob} />
         </Grid.Column>
 
-        <Preview codingjob={codingjob} jobItems={jobItems} />
+        <PreviewUnits codingjob={codingjob} jobItems={jobItems} />
       </Grid>
     </div>
   );
@@ -93,7 +92,7 @@ const getJobItems = async (codingjob, setJobItems) => {
   }
 };
 
-const Preview = React.memo(
+const PreviewUnits = React.memo(
   ({ codingjob, jobItems }) => {
     const [jobItem, setJobItem] = useState(null);
 
@@ -140,88 +139,5 @@ const Preview = React.memo(
     }
   }
 );
-
-const ItemDetails = ({ items }) => {
-  const mode = useSelector((state) => state.mode);
-  const codeMap = useSelector((state) => state.codeMap);
-
-  const docs = {};
-  const codes = {};
-  for (let item of items) {
-    if (!docs[item.docIndex]) docs[item.docIndex] = 0;
-    docs[item.docIndex]++;
-
-    if (item.group) {
-      if (!codes[item.group]) codes[item.group] = 0;
-      codes[item.group]++;
-    }
-  }
-  const data = { docs, codes };
-
-  const totalsTable = () => {
-    const totalCodes = () => {
-      const n = Object.keys(data.codes).length;
-      if (n === 0) return null;
-      return (
-        <Table.Row>
-          <Table.Cell>
-            <Header as="h5">unique codes</Header>
-          </Table.Cell>
-          <Table.Cell>{n}</Table.Cell>
-        </Table.Row>
-      );
-    };
-
-    return (
-      <Table basic="very" celled compact>
-        <Table.Body>
-          <Table.Row>
-            <Table.Cell>
-              <Header as="h5">total units</Header>
-            </Table.Cell>
-            <Table.Cell>{items.length}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>
-              <Header as="h5">unique documents</Header>
-            </Table.Cell>
-            <Table.Cell>{Object.keys(data.docs).length}</Table.Cell>
-          </Table.Row>
-          {totalCodes()}
-        </Table.Body>
-      </Table>
-    );
-  };
-
-  const codesTable = () => {
-    if (Object.keys(data.codes).length === 0) return null;
-    return (
-      <Table fixed compact>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell width={13}>code</Table.HeaderCell>
-            <Table.HeaderCell>n</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {Object.keys(data.codes).map((code, i) => {
-            return (
-              <Table.Row key={i} style={{ backgroundColor: getColor(code, codeMap) }}>
-                <Table.Cell>{code}</Table.Cell>
-                <Table.Cell>{data.codes[code]}</Table.Cell>
-              </Table.Row>
-            );
-          })}
-        </Table.Body>
-      </Table>
-    );
-  };
-
-  if (mode !== "design") return null;
-
-  const hasCodes = Object.keys(data.codes).length > 0;
-
-  return <div style={{ position: "absolute", bottom: "1em" }}>{codesTable()}</div>;
-};
 
 export default React.memo(ManageCodingUnits);

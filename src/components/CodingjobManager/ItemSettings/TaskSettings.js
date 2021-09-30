@@ -1,9 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { Icon, Form, Radio, Menu, Header, Button, Grid, ButtonGroup } from "semantic-ui-react";
-import Help from "components/Help";
-import CodeBook from "components/CodeBook/CodeBook2";
+import React from "react";
+import { Icon, Form, Radio, Menu, Header, Grid } from "semantic-ui-react";
+
 import QuestionFormSettings from "./QuestionFormSettings";
 import db from "apis/dexie";
+
+const questionDefaultSettings = {
+  type: "select code",
+  question: "[Enter the question to the coder here...]",
+  options: ["Some", "example", "options"],
+  colors: ["red", "white", "blue"],
+};
 
 const defaultTaskSettings = {
   // contains the type of task (annotate, question) and settings for this task
@@ -15,7 +21,7 @@ const defaultTaskSettings = {
   rowSize: 5,
 
   // question type settings
-  questions: [],
+  questions: [questionDefaultSettings],
 };
 
 const TaskSettings = ({ codingjob, questionIndex, setQuestionIndex }) => {
@@ -41,13 +47,6 @@ const TaskSettings = ({ codingjob, questionIndex, setQuestionIndex }) => {
       ) : null}
     </div>
   );
-};
-
-const questionDefaultSettings = {
-  type: "select code",
-  question: "[Enter the question to the coder here...]",
-  options: ["Some", "example", "options"],
-  colors: ["red", "white", "blue"],
 };
 
 const QuestionList = ({
@@ -82,7 +81,7 @@ const QuestionList = ({
 
   const questionMenu = () => {
     const qlist = questionMap();
-    if (qlist.length === 0) return null;
+    //if (qlist.length === 0) return null;
     return (
       <Grid>
         <Grid.Column width={3}>
@@ -99,12 +98,19 @@ const QuestionList = ({
                   />
                 );
               })}
+            <Menu.Item
+              name="Add question"
+              style={{ paddingLeft: "0.3em", background: "lightblue" }}
+              onClick={onAdd}
+            />
           </Menu>
         </Grid.Column>
 
         <Grid.Column width={10}>
           <br />
-          <Header textAlign="center">{`Question ${questionIndex + 1}`}</Header>
+          {qlist.length > 0 ? (
+            <Header textAlign="center">{`Question ${questionIndex + 1}`}</Header>
+          ) : null}
           {qlist[questionIndex]}
         </Grid.Column>
       </Grid>
@@ -113,9 +119,6 @@ const QuestionList = ({
 
   return (
     <>
-      <Button style={{ marginTop: "4em" }} onClick={onAdd}>
-        Add Question
-      </Button>
       {questionMenu()}
       {/* <QuestionFormSettings
         taskSettings={taskSettings}

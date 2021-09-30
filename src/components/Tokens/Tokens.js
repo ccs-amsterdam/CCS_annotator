@@ -3,31 +3,31 @@ import { Ref } from "semantic-ui-react";
 import { scrollToMiddle } from "util/scroll";
 import Token from "./Token";
 
-const Tokens = ({ taskItem, settings }) => {
+const Tokens = ({ itemBundle }) => {
   const [text, setText] = useState({});
   const containerRef = useRef(null);
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = taskItem.tokens.find((token) => token.textPart === "textUnit");
+    const firstTextUnitToken = itemBundle.tokens.find((token) => token.textPart === "textUnit");
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(
         containerRef.current,
         firstTextUnitToken.ref.current,
-        settings.textUnitPosition
+        itemBundle.settings.textUnitPosition
       );
     }
   });
 
   useEffect(() => {
-    prepareTokens(taskItem, setText);
-  }, [taskItem]);
+    prepareTokens(itemBundle, setText);
+  }, [itemBundle]);
 
-  if (taskItem === null) return null;
+  if (itemBundle === null) return null;
 
   // const documentAnnotateButton = () => {
-  //   if (taskItem.codebook.taskType === "question") return;
-  //   if (taskItem.codebook.textUnit !== "document") return;
+  //   if (itemBundle.codebook.taskType === "question") return;
+  //   if (itemBundle.codebook.textUnit !== "document") return;
   //   return (
   //     <AnnotatedTextUnit
   //       unit="document"npm
@@ -52,7 +52,7 @@ const Tokens = ({ taskItem, settings }) => {
   // };
 
   return (
-    <div style={{ display: "flex", maxHeight: `${settings.height}vh` }}>
+    <div style={{ display: "flex", height: `${itemBundle.settings.height}vh` }}>
       {/* <div style={{ flex: "1 3%" }}>{documentAnnotateButton()}</div> */}
 
       <Ref innerRef={containerRef}>
@@ -63,6 +63,7 @@ const Tokens = ({ taskItem, settings }) => {
             overflowY: "auto",
           }}
           textAlign="justified"
+          verticalAlign="center"
         >
           <div>{text["text"]}</div>
         </div>
@@ -71,14 +72,16 @@ const Tokens = ({ taskItem, settings }) => {
   );
 };
 
-const prepareTokens = async (taskItem, setText, settings) => {
-  if (!taskItem.tokens) return null;
-  setText(renderText(taskItem.tokens, taskItem.item.annotation, taskItem.codebook, settings));
-  // assignment by reference: renderText also adds a react ref to each token in taskItem.tokens
+const prepareTokens = async (itemBundle, setText) => {
+  if (!itemBundle.tokens) return null;
+  setText(renderText(itemBundle));
+  // !! assignment by reference: renderText also adds a react ref to each token in itemBundle.tokens
 };
 
-const renderText = (tokens, itemAnnotation, codebook, settings) => {
+const renderText = (itemBundle) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
+  const tokens = itemBundle.tokens;
+  console.log(tokens);
 
   let section = [];
   let paragraph = [];
@@ -94,7 +97,7 @@ const renderText = (tokens, itemAnnotation, codebook, settings) => {
 
     if (tokens[i].sentence !== sentence_nr) {
       if (sentence.length > 0)
-        paragraph.push(renderSentence(i, sentence_nr, sentence, codebook, tokens[i - 1].textPart));
+        paragraph.push(renderSentence(i, sentence_nr, sentence, itemBundle, textPart));
       sentence = [];
     }
     if (tokens[i].paragraph !== paragraph_nr) {
@@ -106,8 +109,8 @@ const renderText = (tokens, itemAnnotation, codebook, settings) => {
             paragraph,
             paragraph_nr !== currentParagraph,
             tokens[i].paragraph !== paragraph_nr,
-            codebook,
-            tokens[i - 1].textPart
+            itemBundle,
+            textPart
           )
         );
         currentParagraph = tokens[i].paragraph;
@@ -126,32 +129,22 @@ const renderText = (tokens, itemAnnotation, codebook, settings) => {
     section_name = tokens[i].section;
     textPart = tokens[i].textPart;
 
-    if (tokens[i].textPart === "textUnit") tokens[i].ref = React.createRef();
-    sentence.push(renderToken(tokens[i], codebook, settings, itemAnnotation, tokens[i].textPart));
+    if (textPart === "textUnit") tokens[i].ref = React.createRef();
+    sentence.push(renderToken(tokens[i], itemBundle, textPart));
   }
 
   if (sentence.length > 0)
-    paragraph.push(
-      renderSentence("last", sentence_nr, sentence, codebook, tokens[tokens.length - 1].textPart)
-    );
+    paragraph.push(renderSentence("last", sentence_nr, sentence, itemBundle, textPart));
   if (paragraph.length > 0)
     section.push(
-      renderParagraph(
-        "last",
-        paragraph_nr,
-        paragraph,
-        true,
-        false,
-        codebook,
-        tokens[tokens.length - 1].textPart
-      )
+      renderParagraph("last", paragraph_nr, paragraph, true, false, itemBundle, textPart)
     );
   if (section.length > 0)
     text["text"].push(renderSection("last_" + section_name, section, section_name));
   return text;
 };
 
-const renderSection = (paragraph_nr, paragraphs, section, codebook, textPart) => {
+const renderSection = (paragraph_nr, paragraphs, section) => {
   const fontstyle = (paragraphs) => {
     if (section === "title") return <h2 key={paragraph_nr}>{paragraphs}</h2>;
     return paragraphs;
@@ -165,11 +158,11 @@ const renderSection = (paragraph_nr, paragraphs, section, codebook, textPart) =>
   );
 };
 
-const renderParagraph = (position, paragraph_nr, sentences, start, end, codebook, textPart) => {
+const renderParagraph = (position, paragraph_nr, sentences, start, end, itemBundle, textPart) => {
   // const paragraphAnnotateButton = () => {
-  //   if (codebook.taskType === "question") return;
+  //   if (itemBundle.codebook.taskType === "question") return;
   //   if (textPart !== "textUnit") return null;
-  //   if (codebook.textUnit !== "document" && codebook.textUnit !== "paragraph") return null;
+  //   if (itemBundle.codebook.textUnit !== "document" && itemBundle.codebook.textUnit !== "paragraph") return null;
   //   return (
   //     <AnnotatedTextUnit
   //       unit="paragraph"
@@ -208,9 +201,9 @@ const renderParagraph = (position, paragraph_nr, sentences, start, end, codebook
   );
 };
 
-const renderSentence = (position, sentence_nr, tokens, codebook, textPart) => {
+const renderSentence = (position, sentence_nr, tokens, itemBundle, textPart) => {
   // const sentenceAnnotateButton = () => {
-  //   if (codebook.taskType === "question") return;
+  //   if (itemBundle.codebook.taskType === "question") return;
   //   if (textPart !== "textUnit") return null;
   //   return (
   //     <AnnotatedTextUnit
@@ -235,7 +228,7 @@ const renderSentence = (position, sentence_nr, tokens, codebook, textPart) => {
   );
 };
 
-const renderToken = (token, codebook, settings, annotation, textPart) => {
+const renderToken = (token, itemBundle, textPart) => {
   if (textPart === "textUnit")
     return (
       <span
@@ -244,26 +237,12 @@ const renderToken = (token, codebook, settings, annotation, textPart) => {
           fontSize: "1.2em",
         }}
       >
-        <Token
-          ref={token.ref}
-          key={token.index}
-          token={token}
-          codebook={codebook}
-          settings={settings}
-          annotation={annotation}
-        />
+        <Token ref={token.ref} key={token.index} token={token} itemBundle={itemBundle} />
       </span>
     );
   return (
     <span style={{ color: "lightblue" }}>
-      <Token
-        ref={token.ref}
-        key={token.index}
-        token={token}
-        codebook={codebook}
-        settings={settings}
-        annotation={annotation}
-      />
+      <Token ref={token.ref} key={token.index} token={token} itemBundle={itemBundle} />
     </span>
   );
 };
