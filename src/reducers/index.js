@@ -152,7 +152,7 @@ const codeHistory = (state = [], action) => {
     case "RESET_CODE_HISTORY":
       return [];
     case "APPEND_CODE_HISTORY":
-      let newstate = state.filter((v) => v !== action.code).slice(0, action.n - 1);
+      let newstate = state.filter(v => v !== action.code).slice(0, action.n - 1);
       newstate.unshift(action.code);
       return newstate;
     case "RESET_DB":
@@ -180,6 +180,15 @@ const showSidebar = (state = false, action) => {
   }
 };
 
+const questionIndex = (state = 0, action) => {
+  switch (action.type) {
+    case "SET_QUESTION_INDEX":
+      return action.questionIndex;
+    default:
+      return state;
+  }
+};
+
 const rootReducer = combineReducers({
   mode,
   eventsBlocked,
@@ -193,6 +202,7 @@ const rootReducer = combineReducers({
   codeHistory,
   itemSettings,
   showSidebar,
+  questionIndex,
 });
 
 export default rootReducer;

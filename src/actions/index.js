@@ -1,4 +1,4 @@
-export const setMode = (mode) => {
+export const setMode = mode => {
   return {
     type: "SET_MODE",
     mode: mode,
@@ -11,28 +11,28 @@ export const resetDB = () => {
   };
 };
 
-export const blockEvents = (block) => {
+export const blockEvents = block => {
   return {
     type: "BLOCK_EVENTS",
     block,
   };
 };
 
-export const selectCodingjob = (codingjob) => {
+export const selectCodingjob = codingjob => {
   return {
     type: "SELECT_CODINGJOB",
     codingjob,
   };
 };
 
-export const setCodingjobs = (codingjobs) => {
+export const setCodingjobs = codingjobs => {
   return {
     type: "SET_CODINGJOBS",
     codingjobs,
   };
 };
 
-export const setCurrentToken = (index) => {
+export const setCurrentToken = index => {
   return {
     type: "SET_CURRENT_TOKEN",
     index,
@@ -64,7 +64,7 @@ export const triggerCodeselector = (from, unit, index, code) => {
   };
 };
 
-export const setAnnotations = (annotations) => {
+export const setAnnotations = annotations => {
   return {
     type: "SET_ANNOTATIONS",
     annotations,
@@ -89,14 +89,14 @@ export const toggleAnnotation = (unit, index, group, annotation) => {
   };
 };
 
-export const toggleSpanAnnotations = (spanAnnotation) => {
+export const toggleSpanAnnotations = spanAnnotation => {
   return {
     type: "TOGGLE_SPAN_ANNOTATIONS",
     spanAnnotation,
   };
 };
 
-export const rmSpanAnnotations = (spanAnnotation) => {
+export const rmSpanAnnotations = spanAnnotation => {
   return {
     type: "RM_SPAN_ANNOTATIONS",
     spanAnnotation,
@@ -109,7 +109,7 @@ export const clearAnnotations = () => {
   };
 };
 
-export const setCodeMap = (codes) => {
+export const setCodeMap = codes => {
   return {
     type: "SET_CODE_MAP",
     codes,
@@ -130,16 +130,23 @@ export const appendCodeHistory = (code, n = 20) => {
   };
 };
 
-export const setItemSettings = (itemSettings) => {
+export const setItemSettings = itemSettings => {
   return {
     type: "SET_ITEM_SETTINGS",
     itemSettings,
   };
 };
 
-export const setShowSidebar = (show) => {
+export const setShowSidebar = show => {
   return {
     type: "SET_SHOW_SIDEBAR",
     show,
+  };
+};
+
+export const setQuestionIndex = questionIndex => {
+  return {
+    type: "SET_QUESTION_INDEX",
+    questionIndex,
   };
 };

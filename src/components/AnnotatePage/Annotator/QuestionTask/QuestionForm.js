@@ -1,25 +1,41 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Header, Button, Dropdown, Ref, Segment } from "semantic-ui-react";
+import { Header, Button, Dropdown, Ref, Segment, Step } from "semantic-ui-react";
 import { getColor } from "util/tokenDesign";
 import { moveUp, moveDown } from "util/refNavigation";
 import { setAnnotations } from "actions";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const QuestionForm = ({ item }) => {
-  const annotations = useSelector((state) => state.annotations);
-  const settings = useSelector((state) => state.itemSettings.questionForm);
-  const codeMap = useSelector((state) => state.codeMap);
+const QuestionForm = ({ itemBundle, preview }) => {
+  const questionIndex = useSelector(state => state.questionIndex);
   const dispatch = useDispatch();
-  if (!settings) return null;
+
+  if (!itemBundle?.codebook?.taskSettings?.questions) return null;
+  const questions = itemBundle.codebook.taskSettings.questions;
+  const settings = questions[questionIndex]; // settings of current question
 
   // rawQuestion is only the text (used for saving results). question is the jsx
-  const [rawQuestion, question] = prepareQuestion(item, settings, codeMap);
-  const currentAnswer = getCurrentAnswer(item, annotations, rawQuestion);
+  const [rawQuestion, question] = prepareQuestion(itemBundle, settings);
+  const currentAnswer = getCurrentAnswer(itemBundle);
 
-  const onSelect = (answer) => {
-    setNewAnswer(item, annotations, rawQuestion, answer, dispatch);
+  const onSelect = answer => {
+    setNewAnswer(itemBundle, rawQuestion, answer, dispatch);
+  };
+
+  const questionIndexStep = () => {
+    if (questions.length === 1) return null;
+    return (
+      <Step.Group style={{ margin: "-1em", padding: "0.1em" }}>
+        {questions.map((q, i) => {
+          return (
+            <Step active={i === questionIndex} style={{ padding: "0.3em" }}>
+              {questions[i].name}
+            </Step>
+          );
+        })}
+      </Step.Group>
+    );
   };
 
   return (
@@ -29,11 +45,13 @@ const QuestionForm = ({ item }) => {
         flexFlow: "column",
         height: "100%",
         border: "0",
+        padding: "1em",
         backgroundColor: currentAnswer == null ? "#bcbcf133" : "#b7f5b794",
       }}
     >
+      {questionIndexStep()}
       <Header textAlign="center">{question}</Header>
-      {showCurrent(currentAnswer, codeMap)}
+      {showCurrent(currentAnswer, itemBundle.codeMap)}
       <Segment
         style={{
           flex: "1 1 auto",
@@ -42,27 +60,31 @@ const QuestionForm = ({ item }) => {
         }}
       >
         {settings.type === "search code" ? <SearchBoxDropdown callback={onSelect} /> : null}
-        {settings.type === "select code" ? <ButtonSelection callback={onSelect} /> : null}
+        {settings.type === "select code" ? (
+          <ButtonSelection callback={onSelect} preview={preview} />
+        ) : null}
       </Segment>
     </Segment>
   );
 };
 
-const setNewAnswer = (item, annotations, rawQuestion, answer, dispatch) => {
-  const newAnnotations = { ...annotations };
+const setNewAnswer = (itemBundle, rawQuestion, answer, dispatch) => {
+  const newAnnotations = { ...itemBundle.annotations };
   const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
 
-  if (!newAnnotations[item.textUnit][item.unitIndex])
-    newAnnotations[item.textUnit][item.unitIndex] = {};
+  const textUnit = itemBundle.item.textUnit;
+  const unitIndex = itemBundle.item.unitIndex;
 
-  newAnnotations[item.textUnit][item.unitIndex][root] = { question: rawQuestion, answer: answer };
+  if (!newAnnotations[textUnit][unitIndex]) newAnnotations[textUnit][unitIndex] = {};
+
+  newAnnotations[textUnit][unitIndex][root] = { question: rawQuestion, answer: answer };
 
   dispatch(setAnnotations({ ...newAnnotations }));
 };
 
-const getCurrentAnswer = (item, annotations, rawQuestion) => {
+const getCurrentAnswer = itemBundle => {
   const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
-  return annotations[item.textUnit]?.[item.unitIndex]?.[root]?.answer;
+  return itemBundle.annotations[itemBundle.textUnit]?.[itemBundle.unitIndex]?.[root]?.answer;
 };
 
 const showCurrent = (currentAnswer, codeMap) => {
@@ -85,7 +107,7 @@ const showCurrent = (currentAnswer, codeMap) => {
   );
 };
 
-const getOptions = (codeMap) => {
+const getOptions = codeMap => {
   return Object.keys(codeMap).reduce((options, code) => {
     if (!codeMap[code].active) return options;
     if (!codeMap[code].activeParent) return options;
@@ -101,13 +123,13 @@ const getOptions = (codeMap) => {
   }, []);
 };
 
-const prepareQuestion = (item, settings, codeMap) => {
+const prepareQuestion = (itemBundle, settings) => {
   let question = settings.question;
   let rawQuestion = settings.question;
 
   if (question.search("\\[code\\]") >= 0) {
-    if (item.annotation) {
-      let code = item.annotation.group;
+    if (itemBundle.annotation) {
+      let code = itemBundle.annotation.group;
       const codeTag = `{{lightyellow###${code}}}`; // add optional color from itemSettings
       question = question.replace("[code]", codeTag);
       rawQuestion = rawQuestion.replace("[code]", code);
@@ -115,9 +137,9 @@ const prepareQuestion = (item, settings, codeMap) => {
   }
 
   if (question.search("\\[group\\]") >= 0) {
-    if (item.annotation) {
-      let code = item.annotation.group;
-      if (codeMap[code].foldToParent) code = codeMap[code].foldToParent;
+    if (itemBundle.annotation) {
+      let code = itemBundle.annotation.group;
+      if (itemBundle.codeMap[code].foldToParent) code = itemBundle.codeMap[code].foldToParent;
       const codeTag = `{{yellow###${code}}}`; // add optional color from itemSettings
       question = question.replace("[group]", codeTag);
       rawQuestion = rawQuestion.replace("[code]", code);
@@ -145,7 +167,7 @@ const prepareQuestion = (item, settings, codeMap) => {
   return [rawQuestion, markedString(question)];
 };
 
-const markedString = (text) => {
+const markedString = text => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");
@@ -170,7 +192,7 @@ const markedString = (text) => {
 
 const SearchBoxDropdown = ({ callback }) => {
   const ref = useRef();
-  const options = useSelector((state) => getOptions(state.codeMap));
+  const options = useSelector(state => getOptions(state.codeMap));
 
   return (
     <Ref innerRef={ref}>
@@ -179,7 +201,7 @@ const SearchBoxDropdown = ({ callback }) => {
         placeholder={"<type to search>"}
         searchInput={{ autoFocus: true }}
         style={{ minWidth: "12em" }}
-        options={options.map((option) => {
+        options={options.map(option => {
           return {
             key: option.code,
             value: option.code,
@@ -207,17 +229,17 @@ const SearchBoxDropdown = ({ callback }) => {
   );
 };
 
-const ButtonSelection = ({ callback }) => {
+const ButtonSelection = ({ callback, preview }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const options = useSelector((state) => getOptions(state.codeMap));
-  const eventsBlocked = useSelector((state) => state.eventsBlocked);
+  const options = useSelector(state => getOptions(state.codeMap));
+  const eventsBlocked = useSelector(state => state.eventsBlocked);
 
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const nbuttons = options.length;
 
       // any arrowkey
@@ -262,14 +284,14 @@ const ButtonSelection = ({ callback }) => {
   );
 
   useEffect(() => {
-    if (!eventsBlocked) {
+    if (!eventsBlocked && !preview) {
       window.addEventListener("keydown", onKeydown);
     } else window.removeEventListener("keydown", onKeydown);
 
     return () => {
       window.removeEventListener("keydown", onKeydown);
     };
-  }, [onKeydown, eventsBlocked]);
+  }, [onKeydown, eventsBlocked, preview]);
 
   const mapButtons = () => {
     return options.map((option, i) => {

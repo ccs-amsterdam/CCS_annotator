@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import TaskSettings from "./ItemSettings/TaskSettings";
 import { Grid, Header, Segment } from "semantic-ui-react";
 import QuestionTask from "components/AnnotatePage/Annotator/QuestionTask/QuestionTask";
@@ -7,24 +7,19 @@ const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false
   // this prevents actually loading the data until unitSettings has loaded
   // the unitSettings stored in the codingjob
-  const [questionIndex, setQuestionIndex] = useState(0);
 
   if (!codingjob) return null;
 
   return (
     <div>
-      <Grid stackable columns={2}>
+      <Grid celled="internally" columns={2}>
         <Grid.Column verticalAlign="top" stretched width={8}>
           <Header textAlign="center">Settings</Header>
-          <TaskSettings
-            codingjob={codingjob}
-            questionIndex={questionIndex}
-            setQuestionIndex={setQuestionIndex}
-          />
+          <TaskSettings codingjob={codingjob} />
         </Grid.Column>
         <Grid.Column width={8}>
           <Header textAlign="center">Preview</Header>
-          <PreviewTask codingjob={codingjob} questionIndex={questionIndex} />
+          <PreviewTask codingjob={codingjob} />
         </Grid.Column>
       </Grid>
     </div>
@@ -32,7 +27,7 @@ const ManageTask = ({ codingjob }) => {
 };
 
 const PreviewTask = React.memo(({ codingjob, questionIndex }) => {
-  const renderTaskPreview = (type) => {
+  const renderTaskPreview = type => {
     switch (type) {
       case "question":
         return <PreviewQuestionTask codingjob={codingjob} questionIndex={questionIndex} />;
@@ -55,7 +50,7 @@ const questionPreviewItem = {
   annotation: { span: [52, 54] },
 };
 
-const PreviewQuestionTask = React.memo(({ codingjob, questionIndex }) => {
+const PreviewQuestionTask = React.memo(({ codingjob }) => {
   let item = {
     ...questionPreviewItem,
     textUnit: codingjob.codebook.unitSettings.textUnit,
@@ -63,14 +58,10 @@ const PreviewQuestionTask = React.memo(({ codingjob, questionIndex }) => {
   };
   if (item.textUnit === "paragraph") item.unitIndex = 1;
   if (item.textUnit === "sentence") item.unitIndex = 3;
-  return (
-    <Segment style={{ border: "0" }}>
-      <QuestionTask item={item} codebook={codingjob.codebook} />
-    </Segment>
-  );
+  return <QuestionTask item={item} codebook={codingjob.codebook} preview={true} />;
 });
 
-const PreviewAnnotateTask = ({ codingjob, questionIndex }) => {
+const PreviewAnnotateTask = ({ codingjob }) => {
   return <Segment style={{ border: "0" }}>annotate task</Segment>;
 };
 

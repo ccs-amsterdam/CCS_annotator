@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from "react";
 
-import { Button, Form, Radio, TextArea } from "semantic-ui-react";
+import { Form, Radio, TextArea } from "semantic-ui-react";
 
 import Help from "components/Help";
 
 const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) => {
-  const [delayedQuestion, setDelayedQuestion] = useState("");
+  const [delayed, setDelayed] = useState("");
   const [warn, setWarn] = useState([]);
+
+  useEffect(() => {
+    if (!delayed) return;
+    if (questionForm.name === delayed.name && questionForm.question === delayed.question) return;
+    const timer = setTimeout(() => {
+      setQuestionForm({ ...questionForm, name: delayed.name, question: delayed.question });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [delayed, questionForm, setQuestionForm]);
 
   useEffect(() => {
     let newWarn = [];
@@ -32,15 +41,23 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
     }
 
     setWarn(newWarn);
-    setDelayedQuestion(questionForm.question);
-  }, [setDelayedQuestion, questionForm, setWarn, unitSelection]);
-
+    setDelayed({ name: questionForm.name, question: questionForm.question });
+  }, [setDelayed, questionForm, setWarn, unitSelection]);
   console.log(warn);
+
   if (!questionForm) return null;
 
   return (
     <Form>
       <Form.Group grouped>
+        <label>Name</label>
+        <Form.Field>
+          <TextArea
+            rows={1}
+            value={delayed.name}
+            onChange={(e, d) => setDelayed({ ...delayed, name: d.value })}
+          />
+        </Form.Field>{" "}
         <label>
           Question
           <Help
@@ -54,16 +71,10 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
           />
         </label>
         <Form.Field>
-          <TextArea value={delayedQuestion} onChange={(e, d) => setDelayedQuestion(d.value)} />
-        </Form.Field>
-        <Form.Field>
-          <Button
-            fluid
-            disabled={questionForm.question === delayedQuestion}
-            onClick={() => setQuestionForm({ ...questionForm, question: delayedQuestion })}
-          >
-            Apply changes
-          </Button>
+          <TextArea
+            value={delayed.question}
+            onChange={(e, d) => setDelayed({ ...delayed, question: d.value })}
+          />
         </Form.Field>
       </Form.Group>
 

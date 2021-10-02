@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { Container, Segment, Step } from "semantic-ui-react";
+import { Segment, Step } from "semantic-ui-react";
 
 import ManageDocuments from "./ManageDocuments";
 import db from "apis/dexie";
@@ -17,7 +17,7 @@ const CodingjobManager = () => {
   const codingjob = useLiveQuery(() => {
     // retrieve codingjob from Dexie whenever selectedCodingjob changes OR dexie is updated
     if (selectedCodingjob) {
-      return db.idb.codingjobs.get(selectedCodingjob.job_id).then((cj) => {
+      return db.idb.codingjobs.get(selectedCodingjob.job_id).then(cj => {
         return { ...cj, ROW_ID: selectedCodingjob.ROW_ID };
       });
     }
@@ -25,10 +25,13 @@ const CodingjobManager = () => {
 
   const nDocuments = useLiveQuery(() => {
     if (!codingjob) return 0;
-    return db.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    return db.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .count();
   }, [codingjob]);
 
-  const renderSwitch = (menuItem) => {
+  const renderSwitch = menuItem => {
     switch (menuItem) {
       case "codingjobs":
         return (
@@ -51,7 +54,7 @@ const CodingjobManager = () => {
     }
   };
   return (
-    <Container style={{ margin: "1em" }}>
+    <div style={{ margin: "1em" }}>
       <Step.Group ordered size="tiny">
         <Step
           title="Codingjob"
@@ -96,7 +99,7 @@ const CodingjobManager = () => {
       <Segment style={{ border: "0" }} attached="bottom">
         {renderSwitch(menuItem)}
       </Segment>
-    </Container>
+    </div>
   );
 };
 

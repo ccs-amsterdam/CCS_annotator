@@ -1,10 +1,13 @@
 import React from "react";
-import { Icon, Form, Radio, Menu, Header, Grid } from "semantic-ui-react";
+import { useSelector, useDispatch } from "react-redux";
+import { setQuestionIndex } from "actions";
+import { Icon, Form, Radio, Menu, Header, Grid, Divider } from "semantic-ui-react";
 
 import QuestionFormSettings from "./QuestionFormSettings";
 import db from "apis/dexie";
 
 const questionDefaultSettings = {
+  name: "Question name",
   type: "select code",
   question: "[Enter the question to the coder here...]",
   options: ["Some", "example", "options"],
@@ -24,10 +27,10 @@ const defaultTaskSettings = {
   questions: [questionDefaultSettings],
 };
 
-const TaskSettings = ({ codingjob, questionIndex, setQuestionIndex }) => {
+const TaskSettings = ({ codingjob }) => {
   const unitSettings = codingjob?.codebook?.unitSettings;
   const taskSettings = codingjob?.codebook?.taskSettings || defaultTaskSettings;
-  const setTaskSettings = (us) => {
+  const setTaskSettings = us => {
     db.setCodingjobProp(codingjob, "codebook.taskSettings", us);
   };
 
@@ -36,26 +39,23 @@ const TaskSettings = ({ codingjob, questionIndex, setQuestionIndex }) => {
   return (
     <div style={{ verticalAlign: "top", float: "top" }}>
       <TypeForm taskSettings={taskSettings} setTaskSettings={setTaskSettings} />
+      <Divider />
       {taskSettings.type === "question" ? (
         <QuestionList
           taskSettings={taskSettings}
           setTaskSettings={setTaskSettings}
           unitSettings={unitSettings}
-          questionIndex={questionIndex}
-          setQuestionIndex={setQuestionIndex}
         />
       ) : null}
     </div>
   );
 };
 
-const QuestionList = ({
-  taskSettings,
-  setTaskSettings,
-  unitSettings,
-  questionIndex,
-  setQuestionIndex,
-}) => {
+const QuestionList = ({ taskSettings, setTaskSettings, unitSettings }) => {
+  // question index via redux, so that it can be linked with question index in the question task preview
+  const questionIndex = useSelector(state => state.questionIndex);
+  const dispatch = useDispatch();
+
   const onAdd = () => {
     const questions = taskSettings.questions;
     questions.push(questionDefaultSettings);
@@ -64,7 +64,7 @@ const QuestionList = ({
 
   const questionMap = () => {
     return taskSettings.questions.map((question, i) => {
-      const setQuestionForm = (value) => {
+      const setQuestionForm = value => {
         const newTaskSettings = { ...taskSettings };
         newTaskSettings.questions[i] = value;
         setTaskSettings(newTaskSettings);
@@ -86,27 +86,28 @@ const QuestionList = ({
       <Grid>
         <Grid.Column width={3}>
           <br />
-          <Menu vertical style={{ width: "5em" }}>
+          <Menu vertical style={{ width: "3em" }}>
             {Array(taskSettings.questions.length)
               .fill(0)
               .map((v, i) => {
                 return (
                   <Menu.Item
+                    style={{ paddingLeft: "0.5em", paddingRight: "0.3em" }}
                     name={`Q ${i + 1}`}
                     active={questionIndex === i}
-                    onClick={(e, d) => setQuestionIndex(i)}
+                    onClick={(e, d) => dispatch(setQuestionIndex(i))}
                   />
                 );
               })}
             <Menu.Item
-              name="Add question"
-              style={{ paddingLeft: "0.3em", background: "lightblue" }}
+              icon="plus"
+              style={{ paddingBottom: "2em", background: "lightblue" }}
               onClick={onAdd}
             />
           </Menu>
         </Grid.Column>
 
-        <Grid.Column width={10}>
+        <Grid.Column width={13}>
           <br />
           {qlist.length > 0 ? (
             <Header textAlign="center">{`Question ${questionIndex + 1}`}</Header>

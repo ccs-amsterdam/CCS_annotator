@@ -5,8 +5,9 @@ import { Grid, Header, Dimmer, Loader } from "semantic-ui-react";
 
 import UnitSettings from "./ItemSettings/UnitSettings";
 import Document from "components/Tokens/Document";
+import useItemBundle from "hooks/useItemBundle";
 
-const getTableColumns = (unitSettings) => {
+const getTableColumns = unitSettings => {
   if (!unitSettings) return [];
 
   const columns = [
@@ -63,7 +64,7 @@ const ManageCodingUnits = ({ codingjob }) => {
 
   return (
     <div>
-      <Grid stackable columns={5}>
+      <Grid celled="internally" columns={5}>
         <Grid.Column verticalAlign="top" stretched width={5}>
           <Header textAlign="center">Settings</Header>
 
@@ -118,18 +119,7 @@ const PreviewUnits = React.memo(
           />
           {/* <ItemDetails items={jobItems || []} /> */}
         </Grid.Column>
-        <Grid.Column width={6}>
-          <Header textAlign="center">Unit preview</Header>
-
-          <Dimmer inverted active={jobItem === null}>
-            <Loader />
-          </Dimmer>
-          <Document
-            item={jobItem}
-            codebook={{ ...codingjob.codebook }}
-            settings={previewDocumentSettings}
-          />
-        </Grid.Column>
+        <PreviewDocument item={jobItem} codebook={{ ...codingjob.codebook }} />
       </>
     );
   },
@@ -139,5 +129,25 @@ const PreviewUnits = React.memo(
     }
   }
 );
+
+const PreviewDocument = ({ item, codebook }) => {
+  const itemBundle = useItemBundle(item, codebook, previewDocumentSettings);
+
+  const renderDocument = () => {
+    if (!item || !itemBundle) return null;
+    return (
+      <>
+        <Header textAlign="center">Unit preview</Header>
+
+        <Dimmer inverted active={item === null}>
+          <Loader />
+        </Dimmer>
+        <Document itemBundle={itemBundle} />
+      </>
+    );
+  };
+
+  return <Grid.Column width={6}>{renderDocument()}</Grid.Column>;
+};
 
 export default React.memo(ManageCodingUnits);
