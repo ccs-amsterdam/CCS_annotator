@@ -11,32 +11,6 @@ export const demo_codebook = {
     { code: "Jesse Klaver", parent: "Groenlinks", active: true },
     { code: "Climate change", parent: "Issue", active: true },
   ],
-  relations: [],
-
-  code_annotations: {
-    coding_unit: "code", // code, relation
-    context_unit: {
-      paragraph_window: [0, 0],
-      sentence_window: [1, 1],
-      word_window: [20, 20],
-    },
-    sampling: {
-      max_per_document: null,
-      random_documents: true,
-      random_order: true,
-    },
-
-    tasks: [
-      {
-        header: "Issue identification",
-        codes_parent: "Issue",
-        instruction: 'Does "[text]" refer to the issue "[code]"?',
-        options: ["yes", "no"],
-      },
-    ],
-  },
-
-  relation_annotations: {},
 };
 
 export const demo_articles = [

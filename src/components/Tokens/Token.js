@@ -19,7 +19,6 @@ const Token = React.forwardRef(({ token, itemBundle }, ref) => {
     if (from > to) [to, from] = [from, to];
     return token.arrayIndex >= from && token.arrayIndex <= to;
   });
-  //const settings = useSelector((state) => state.itemSettings);
 
   let tokenClass = "token";
 
@@ -56,7 +55,7 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
   // annotations changed (somehow 'annotations' doesn't trigger this)
   useSelector((state) => JSON.stringify(state.annotations.span[token.index]));
 
-  if (annotations) {
+  if (annotations && codeMap) {
     annotations = { ...annotations };
     for (let code of Object.keys(annotations)) {
       if (!codeMap[code]) continue;
@@ -144,7 +143,11 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
 
 const ShowCodeOnHover = ({ codes, colors, children }) => {
   return (
-    <Popup trigger={children} style={{ padding: "0.3em", paddingBottom: "0.5em" }}>
+    <Popup
+      trigger={children}
+      mouseLeaveDelay={0} // just don't use mouse leave
+      style={{ padding: "0.3em", paddingBottom: "0.5em" }}
+    >
       <List>
         {codes.map((code, i) => (
           <List.Item key={i} style={{ backgroundColor: colors[i], padding: "0.3em" }}>

@@ -16,8 +16,6 @@ const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 const CodeSelector = React.memo(
   ({ children, codebook, annotations, unit, currentCode, newSelection }) => {
     const [current, setCurrent] = useState(newSelection ? "UNASSIGNED" : currentCode);
-
-    // Placeholder: should be managed in state
     const dispatch = useDispatch();
 
     // When codeselector opens, disable events for spanannotationsnavigation
@@ -57,25 +55,14 @@ const CodeSelectorPopup = ({
 }) => {
   // separate popup from CodeSelector, because it would rerender CodeSelector,
   // which messes up the useEffect that cleans up after close
-  const itemSettings = codebook.codeSelectorSettings;
-  console.log(codebook.codeMap);
+  const itemSettings = codebook?.taskSettings?.annotate;
   const codeMap = Object.keys(codebook.codeMap).reduce((obj, key) => {
     if (!newSelection && current && annotations[key]) return obj;
     if (!codebook.codeMap[key].active || !codebook.codeMap[key].activeParent) return obj;
     obj[key] = codebook.codeMap[key];
     return obj;
   }, {});
-  console.log(codeMap);
-  // const codeMap = useSelector((state) => {
-  //   let activeCodeMap = {};
-  //   for (let key of Object.keys(state.codeMap)) {
-  //     if (!newSelection && current && annotations[key]) continue;
-  //     if (!state.codeMap[key].active || !state.codeMap[key].activeParent) continue;
 
-  //     activeCodeMap[key] = state.codeMap[key];
-  //   }
-  //   return activeCodeMap;
-  // });
   const codeHistory = useSelector((state) => state.codeHistory);
   const dispatch = useDispatch();
 
@@ -136,6 +123,7 @@ const CodeSelectorPopup = ({
       <div style={{ margin: "1em", border: "0px" }}>
         <CurrentCodePage
           current={current}
+          itemSettings={itemSettings}
           annotations={annotations}
           codeMap={codeMap}
           setCurrent={setCurrent}
@@ -153,7 +141,7 @@ const CodeSelectorPopup = ({
   );
 };
 
-const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
+const CurrentCodePage = ({ current, itemSettings, annotations, codeMap, setCurrent }) => {
   const annotationCodes = Object.keys(annotations);
 
   const onButtonSelect = (value) => {
@@ -173,6 +161,7 @@ const CurrentCodePage = ({ current, annotations, codeMap, setCurrent }) => {
       <ButtonSelection
         key={"currentCodePageButtons"}
         active={true}
+        itemSettings={itemSettings}
         options={getOptions(annotationCodes)}
         canDelete={false}
         callback={onButtonSelect}
@@ -217,9 +206,7 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
   };
 
   const getOptions = (codeHistory, n) => {
-    const settings = itemSettings?.codeSelector;
-
-    if (settings && settings.type === "all") {
+    if (itemSettings && itemSettings.buttonMode === "all") {
       return Object.keys(codeMap).reduce((options, code) => {
         options.push({ label: code, color: getColor(code, codeMap) });
         return options;
@@ -234,8 +221,8 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
   };
 
   const searchBoxDropdown = () => {
-    const settings = itemSettings?.codeSelector;
-    if (settings && settings.type !== "recent" && !settings.searchBox) return null;
+    if (itemSettings && itemSettings.buttonMode !== "recent" && !itemSettings.searchBox)
+      return null;
     return (
       <>
         <Grid>
@@ -295,6 +282,7 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
       <ButtonSelection
         key={"newCodePageButtons"}
         active={focusOnButtons}
+        itemSettings={itemSettings}
         options={getOptions(codeHistory, 5)}
         canDelete={true}
         callback={onButtonSelect}
@@ -304,14 +292,13 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
   );
 };
 
-const ButtonSelection = ({ active, options, canDelete, callback }) => {
+const ButtonSelection = ({ active, options, itemSettings, canDelete, callback }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const itemSettings = useSelector((state) => state.itemSettings);
   const [selected, setSelected] = useState(0);
 
-  const rowSize = itemSettings?.codeSelector?.rowSize || 5;
+  const rowSize = itemSettings?.annotate?.rowSize || 5;
 
   const onKeydown = React.useCallback(
     (event) => {

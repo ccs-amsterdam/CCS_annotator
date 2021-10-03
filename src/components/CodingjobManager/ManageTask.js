@@ -1,38 +1,50 @@
-import React from "react";
-import TaskSettings from "./ItemSettings/TaskSettings";
-import { Grid, Header, Segment } from "semantic-ui-react";
-import QuestionTask from "components/AnnotatePage/Annotator/QuestionTask/QuestionTask";
+import React, { useState } from "react";
+import TaskSettings from "./Settings/TaskSettings";
+import { Grid, Header } from "semantic-ui-react";
+import QuestionTask from "components/Annotator/Annotator/QuestionTask/QuestionTask";
+import AnnotateTask from "components/Annotator/Annotator/AnnotateTask/AnnotateTask";
+import useJobItems from "hooks/useJobItems";
+import ItemSelector from "components/CodingjobManager/ItemSelector";
 
 const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false
   // this prevents actually loading the data until unitSettings has loaded
   // the unitSettings stored in the codingjob
+  const jobItems = useJobItems(codingjob);
 
   if (!codingjob) return null;
+  let cwidths = [8, 8];
+  if (codingjob.codebook?.taskSettings?.type) {
+    if (codingjob.codebook.taskSettings.type === "annotate") cwidths = [4, 12];
+    if (codingjob.codebook.taskSettings.type === "question") cwidths = [6, 4];
+  }
 
   return (
     <div>
-      <Grid celled="internally" columns={2}>
-        <Grid.Column verticalAlign="top" stretched width={8}>
-          <Header textAlign="center">Settings</Header>
+      <Grid columns={2}>
+        <Grid.Column verticalAlign="top" stretched width={cwidths[0]}>
+          <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+            Settings
+          </Header>
           <TaskSettings codingjob={codingjob} />
         </Grid.Column>
-        <Grid.Column width={8}>
-          <Header textAlign="center">Preview</Header>
-          <PreviewTask codingjob={codingjob} />
+        <Grid.Column center width={cwidths[1]}>
+          <PreviewTask codingjob={codingjob} jobItems={jobItems} />
         </Grid.Column>
       </Grid>
     </div>
   );
 };
 
-const PreviewTask = React.memo(({ codingjob, questionIndex }) => {
-  const renderTaskPreview = type => {
+const PreviewTask = React.memo(({ codingjob, jobItems }) => {
+  if (!jobItems) return null;
+
+  const renderTaskPreview = (type) => {
     switch (type) {
       case "question":
-        return <PreviewQuestionTask codingjob={codingjob} questionIndex={questionIndex} />;
+        return <PreviewQuestionTask codingjob={codingjob} jobItems={jobItems} />;
       case "annotate":
-        return <PreviewAnnotateTask codingjob={codingjob} questionIndex={questionIndex} />;
+        return <PreviewAnnotateTask codingjob={codingjob} jobItems={jobItems} />;
       default:
         return null;
     }
@@ -42,27 +54,54 @@ const PreviewTask = React.memo(({ codingjob, questionIndex }) => {
   return renderTaskPreview(codingjob.codebook.taskSettings.type);
 });
 
-const questionPreviewItem = {
-  text: `This is the first sentence of the first paragraph! And here is a second sentence.\n\n
-           Now this here is the second paragraph, and if your coding unit is at the paragraph level, this is your paragrarph. 
-           And then this sentence here would be your sentence if your coding unit is sentence, with THIS RIGHT HERE being the span annotation.\n\n
-           And finally there's the third paragraph. Not much to say about this one`,
-  annotation: { span: [52, 54] },
-};
+const PreviewQuestionTask = React.memo(({ codingjob, jobItems }) => {
+  const [jobItem, setJobItem] = useState(null);
 
-const PreviewQuestionTask = React.memo(({ codingjob }) => {
-  let item = {
-    ...questionPreviewItem,
-    textUnit: codingjob.codebook.unitSettings.textUnit,
-    unitIndex: 0,
-  };
-  if (item.textUnit === "paragraph") item.unitIndex = 1;
-  if (item.textUnit === "sentence") item.unitIndex = 3;
-  return <QuestionTask item={item} codebook={codingjob.codebook} preview={true} />;
+  return (
+    <>
+      <Header textAlign="center" style={{ width: "400px", background: "#1B1C1D", color: "white" }}>
+        Preview
+        <ItemSelector items={jobItems} setItem={setJobItem} />
+      </Header>
+
+      <div
+        style={{
+          padding: "0",
+          width: "400px",
+          height: "800px",
+        }}
+      >
+        <div style={{ padding: "0em", paddingTop: "1em", height: "100%", border: "1px solid" }}>
+          <QuestionTask item={jobItem} codebook={codingjob.codebook} preview={true} />
+        </div>
+      </div>
+    </>
+  );
 });
 
-const PreviewAnnotateTask = ({ codingjob }) => {
-  return <Segment style={{ border: "0" }}>annotate task</Segment>;
+const PreviewAnnotateTask = ({ codingjob, jobItems }) => {
+  const [jobItem, setJobItem] = useState(null);
+
+  return (
+    <>
+      <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+        Preview
+      </Header>
+      <ItemSelector items={jobItems} setItem={setJobItem} />
+
+      <div
+        style={{
+          padding: "0",
+          width: "100%",
+          height: "50%",
+        }}
+      >
+        <div style={{ padding: "0", height: "100%", border: "1px solid" }}>
+          <AnnotateTask item={jobItem} codebook={codingjob.codebook} preview={true} />
+        </div>
+      </div>
+    </>
+  );
 };
 
 export default React.memo(ManageTask);

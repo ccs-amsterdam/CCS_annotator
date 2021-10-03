@@ -41,8 +41,10 @@ const importAnnotations = (taskItem, dispatch) => {
 };
 
 const writeAnnotations = (taskItem, annotations, saveAnnotations, callback) => {
-  if (saveAnnotations) db.writeAnnotations({ doc_uid: taskItem.doc_uid }, annotations);
-  if (callback) callback(taskItem, annotations);
+  if (saveAnnotations) {
+    db.writeAnnotations({ doc_uid: taskItem.doc_uid }, annotations);
+    if (callback) callback(taskItem, annotations);
+  }
 };
 
 export default ManageAnnotations;

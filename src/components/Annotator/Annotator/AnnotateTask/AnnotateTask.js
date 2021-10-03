@@ -1,60 +1,56 @@
-import React, { useState } from "react";
-import { Container, Grid, Header, List, ListItem, Menu, Table } from "semantic-ui-react";
-import AnnotateNavigation from "./AnnotateNavigation";
+import React, { useState, useEffect } from "react";
+import { Container, Grid, Header, List, ListItem, Table } from "semantic-ui-react";
 import AnnotateTable from "./AnnotateTable";
-import Tokens from "components/Tokens/Tokens.js";
+import Document from "components/Tokens/Document";
+import useItemBundle from "hooks/useItemBundle";
+import { codeBookEdgesToMap } from "util/codebook";
 
-const gridStyle = { height: "100%", paddingTop: "0" };
-const gridStyleTop = { height: "35vh" };
-const gridStyleBottom = { overflowY: "auto", height: "45vh" };
+const documentSettings = {
+  textUnitPosition: 1 / 4,
+  showAnnotations: true,
+  canAnnotate: true,
+};
 
-const AnnotateTask = ({ taskItem }) => {
-  const [menuItem, setMenuItem] = useState("help");
+const AnnotateTask = ({ item, codebook, preview = false }) => {
+  const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
+  const [codeMap, setCodeMap] = useState(null);
 
-  if (taskItem === null) return null;
+  useEffect(() => {
+    // settings is an array with the settings for each question
+    // This needs a little preprocessing, so we only update it when codebook changes (not per item)
+    if (!codebook?.taskSettings?.annotate?.codes) return null;
+    setCodeMap(codeBookEdgesToMap(codebook.taskSettings.annotate.codes));
+  }, [codebook, setCodeMap]);
 
-  const renderSwitch = (activeItem) => {
-    switch (activeItem) {
-      case "help":
-        return <Instructions />;
-      case "settings":
-        return <SpanSettings />;
-      default:
-        return null;
-    }
-  };
+  if (itemBundle === null || codeMap === null) return null;
 
   return (
-    <Grid style={gridStyle} verticalAlign={"top"}>
-      <Grid.Column width={8} style={{ paddingRight: "0em", maxWidth: "700px" }}>
-        <Tokens taskItem={taskItem} height={75} textUnitPosition={1 / 4} />
+    <Grid
+      style={{ height: "100%", width: "100%", paddingTop: "0" }}
+      verticalAlign={"top"}
+      columns={2}
+    >
+      <Grid.Column width={8} style={{ paddingRight: "0em", height: "100%" }}>
+        <Document itemBundle={itemBundle} codeMap={codeMap} />
       </Grid.Column>
-      <Grid.Column width={8} style={{ paddingRight: "3em", maxWidth: "500px" }}>
-        <Grid.Row style={gridStyleTop}>
-          <AnnotateTable taskItem={taskItem} />
+      <Grid.Column
+        width={8}
+        style={{ paddingRight: "0em", marginTop: "1em", height: "100%", overflow: "auto" }}
+      >
+        <Grid.Row style={{ height: "60%" }}>
+          <AnnotateTable itemBundle={itemBundle} codeMap={codeMap} />
         </Grid.Row>
-        <Grid.Row style={gridStyleBottom}>
-          <Menu pointing secondary size="mini">
-            <Menu.Item
-              name="help"
-              active={menuItem === "help"}
-              onClick={(e, d) => setMenuItem(d.name)}
-            />
-            <Menu.Item
-              name="settings"
-              active={menuItem === "settings"}
-              onClick={(e, d) => setMenuItem(d.name)}
-            />
-          </Menu>
-          {renderSwitch(menuItem)}
+        <Grid.Row style={{ overflow: "auto", height: "40%" }}>
+          <Instructions codebook={codebook} />
         </Grid.Row>
-        <AnnotateNavigation tokens={taskItem.tokens} />
       </Grid.Column>
     </Grid>
   );
 };
 
-const Instructions = () => {
+const Instructions = ({ codebook }) => {
+  const settings = codebook?.taskSettings?.annotate;
+  if (!settings) return null;
   return (
     <Container style={{ paddingTop: "2em" }}>
       <Header as="h2" align="center">
@@ -114,11 +110,13 @@ const Instructions = () => {
             </Table.HeaderCell>
             <Table.HeaderCell colSpan="2">
               <List as="ul">
+                {settings.searchBox || settings.buttonMode === "recent" ? (
+                  <ListItem as="li">
+                    <i>text input</i> automatically opens dropdown{" "}
+                  </ListItem>
+                ) : null}
                 <ListItem as="li">
-                  <i>text input</i> automatically opens dropdown{" "}
-                </ListItem>
-                <ListItem as="li">
-                  select recent codes with <i>arrow keys</i> and <i>Enter</i>
+                  navigate buttons with <i>arrow keys</i>, select with <i>spacebar</i>
                 </ListItem>
                 <ListItem as="li">
                   use <i>escape</i> to close popup and <i>delete</i> to remove code
@@ -130,10 +128,6 @@ const Instructions = () => {
       </Table>
     </Container>
   );
-};
-
-const SpanSettings = () => {
-  return <div>stuff</div>;
 };
 
 export default React.memo(AnnotateTask);

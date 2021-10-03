@@ -1,10 +1,19 @@
-import db from "apis/dexie";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { blockEvents } from "actions";
 import { Button, ButtonGroup, Dropdown, Form, Icon, Input, Popup } from "semantic-ui-react";
 
-const EditCodePopup = ({ children, codingjob, codeMap, code, codes, setChangeColor, settings }) => {
+const EditCodePopup = ({ children, codeMap, code, codes, setCodes, setChangeColor }) => {
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
+
+  useEffect(() => {
+    dispatch(blockEvents(open));
+    return () => {
+      dispatch(blockEvents(false));
+    };
+  }, [dispatch, open]);
 
   const buttonContent = () => {
     return (
@@ -12,7 +21,9 @@ const EditCodePopup = ({ children, codingjob, codeMap, code, codes, setChangeCol
         {changeColorPopup()}
         <Button icon="plus" compact size="mini" onClick={() => addCodePopup(false)} />
         <Button icon="minus" compact size="mini" onClick={rmCodePopup} />
-        <Button icon="shuffle" compact size="mini" onClick={moveCodePopup} />
+        <Button icon="edit" compact size="mini" onClick={moveCodePopup} />
+        <Button icon="arrow up" compact size="mini" onClick={() => changePosition("up")} />
+        <Button icon="arrow down" compact size="mini" onClick={() => changePosition("down")} />
       </ButtonGroup>
     );
   };
@@ -40,10 +51,10 @@ const EditCodePopup = ({ children, codingjob, codeMap, code, codes, setChangeCol
   const addCodePopup = (root) => {
     setPopupContent(
       <AddCodePopup
-        codingjob={codingjob}
         codeMap={codeMap}
         code={root ? "" : code.code}
         codes={codes}
+        setCodes={setCodes}
         setOpen={setOpen}
       />
     );
@@ -52,10 +63,10 @@ const EditCodePopup = ({ children, codingjob, codeMap, code, codes, setChangeCol
   const rmCodePopup = () => {
     setPopupContent(
       <RmCodePopup
-        codingjob={codingjob}
         codeMap={codeMap}
         code={code.code}
         codes={codes}
+        setCodes={setCodes}
         setOpen={setOpen}
       />
     );
@@ -64,25 +75,26 @@ const EditCodePopup = ({ children, codingjob, codeMap, code, codes, setChangeCol
   const moveCodePopup = () => {
     setPopupContent(
       <MoveCodePopup
-        codingjob={codingjob}
         codeMap={codeMap}
         code={code.code}
         codes={codes}
+        setCodes={setCodes}
         setOpen={setOpen}
       />
     );
   };
 
-  if (settings && !settings.can_edit_codes) {
-    return children;
-  }
+  const changePosition = (direction) => {
+    movePosition(codes, code, direction, setCodes);
+    setOpen(false);
+  };
 
   return (
     <Popup
       flowing
       hoverable
       wide
-      position="bottom center"
+      position="top right"
       onClose={() => {
         setPopupContent(buttonContent());
         setOpen(false);
@@ -101,7 +113,7 @@ const EditCodePopup = ({ children, codingjob, codeMap, code, codes, setChangeCol
             compact
             size="mini"
           >
-            Create new root
+            Create new
           </Button>
         ) : (
           <span
@@ -120,11 +132,37 @@ const EditCodePopup = ({ children, codingjob, codeMap, code, codes, setChangeCol
   );
 };
 
-const AddCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
+const movePosition = (codes, code, direction, setCodes) => {
+  const a = codes.findIndex((c) => c.code === code.code); // position of selected code
+  let b = null; // position of switchSibling
+
+  const codeParent = codes[a].parent;
+  for (let i = 0; i < codes.length; i++) {
+    if (i === a) continue;
+    if (codes[i].parent !== codeParent) continue;
+
+    if (direction === "down") {
+      if (i > a && (b === null || b > i)) b = i;
+    }
+    if (direction === "up") {
+      if (i < a && (b === null || b < i)) b = i;
+    }
+  }
+  if (b === null) return null;
+
+  const newCodes = [...codes];
+  const temp = newCodes[a];
+  newCodes[a] = newCodes[b];
+  newCodes[b] = temp;
+
+  setCodes(newCodes);
+};
+
+const AddCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
   const [alreadyExists, setAlreadyExists] = useState(false);
   const [textInput, setTextInput] = useState("");
 
-  const addCode = async (newCode) => {
+  const addCode = (newCode) => {
     if (newCode === "") return null;
     if (codeMap[newCode]) {
       setAlreadyExists(true);
@@ -133,15 +171,20 @@ const AddCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
 
     const updatedCodes = [...codes];
     updatedCodes.push({ code: newCode, parent: code, active: true });
-    await db.writeCodes(codingjob, updatedCodes);
-    // setCodes(updatedCodes);
+    setCodes(updatedCodes);
     setOpen(false);
   };
 
   return (
     <div style={{ margin: "1em" }}>
       <p>
-        Add code under <b>{code === "" ? "Root" : code}</b>
+        {code === "" ? (
+          "Create new code"
+        ) : (
+          <>
+            Add code under <b>{code}</b>
+          </>
+        )}
         <Button floated="right" compact size="mini" icon="delete" onClick={() => setOpen(false)} />
       </p>
       <Form onSubmit={() => addCode(textInput)}>
@@ -167,8 +210,8 @@ const AddCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
   );
 };
 
-const RmCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
-  const rmCode = async (keepChildren) => {
+const RmCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
+  const rmCode = (keepChildren) => {
     let updatedCodes = codes.filter((ucode) => ucode.code !== code);
 
     const children = [];
@@ -182,11 +225,9 @@ const RmCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
       });
     }
 
-    const removeCodes = [code, ...children];
-    await db.writeCodes(codingjob, updatedCodes);
-    await db.modifyAnnotations(codingjob, removeCodes, null);
+    //const removeCodes = [code, ...children];
 
-    // setCodes(updatedCodes);
+    setCodes(updatedCodes);
     setOpen(false);
   };
 
@@ -216,13 +257,13 @@ const RmCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
   );
 };
 
-const MoveCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
+const MoveCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
   const [newParent, setNewParent] = useState(codeMap[code].parent);
   const [textInput, setTextInput] = useState(code);
 
   const parentOptions = ["ROOT", ...getAllParentOptions(codeMap, code)]; // fills parents array
 
-  const mvCode = async (newCode, newParent) => {
+  const mvCode = (newCode, newParent) => {
     if (newCode !== code) {
       if (newCode === "") return null;
       if (codeMap[newCode]) return null;
@@ -242,12 +283,7 @@ const MoveCodePopup = ({ codingjob, codeMap, code, codes, setOpen }) => {
     if (codeIsNew) codes.push({ code: newCode, parent: newParent, active: true });
     codes = codes.filter((code) => code.parent !== "ROOT");
 
-    // update codingjob in db
-    await db.writeCodes(codingjob, updatedCodes);
-    // update all annotations
-    await db.modifyAnnotations(codingjob, [code], newCode);
-
-    // setCodes(updatedCodes);
+    setCodes(updatedCodes);
     setOpen(false);
   };
 

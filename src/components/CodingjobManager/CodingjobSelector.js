@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Header, Button, Segment, Container, Grid } from "semantic-ui-react";
 
 import SelectionTable from "./SelectionTable";
@@ -19,11 +19,11 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob, open, setOpen, set
   //     });
   // }, [setCodingjob, selectedCodingjob]);
 
-  // useEffect(() => {
-  //   if (!codingjob && codingjobs) {
-  //     setSelectedCodingjob(codingjobs.length > 0 ? { ...codingjobs[0], ROW_ID: "0" } : null);
-  //   }
-  // }, [codingjob, codingjobs]);
+  useEffect(() => {
+    if (!codingjob && codingjobs) {
+      setSelectedCodingjob(codingjobs.length > 0 ? { ...codingjobs[0], ROW_ID: "0" } : null);
+    }
+  }, [codingjob, codingjobs, setSelectedCodingjob]);
 
   const tableColumns = [
     {
@@ -36,7 +36,9 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob, open, setOpen, set
   return (
     <Grid>
       <Grid.Column width={6}>
-        <Header>Select Codingjob</Header>
+        <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+          Select Codingjob
+        </Header>
         <Segment style={{ border: "0" }}>
           <Button.Group widths="2" size="mini">
             <CreateCodingjob setSelectedCodingjob={setSelectedCodingjob} />

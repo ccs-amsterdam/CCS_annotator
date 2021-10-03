@@ -52,7 +52,7 @@ const Tokens = ({ itemBundle }) => {
   // };
 
   return (
-    <div style={{ display: "flex", height: `${itemBundle.settings.height}vh` }}>
+    <div style={{ display: "flex", height: "100%" }}>
       {/* <div style={{ flex: "1 3%" }}>{documentAnnotateButton()}</div> */}
 
       <Ref innerRef={containerRef}>
@@ -60,12 +60,12 @@ const Tokens = ({ itemBundle }) => {
           style={{
             flex: "1 97%",
             width: "100%",
+            maxHeight: "100%",
             overflowY: "auto",
+            textAlign: "justify",
           }}
-          textAlign="justified"
-          verticalAlign="center"
         >
-          <div>{text["text"]}</div>
+          <div style={{ padding: "2em" }}>{text["text"]}</div>
         </div>
       </Ref>
     </div>
@@ -81,7 +81,6 @@ const prepareTokens = async (itemBundle, setText) => {
 const renderText = (itemBundle) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
   const tokens = itemBundle.tokens;
-  console.log(tokens);
 
   let section = [];
   let paragraph = [];

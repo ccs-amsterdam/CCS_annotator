@@ -7,11 +7,11 @@ import "components/spanAnnotationsStyle.css";
 
 const COLWIDTHS = [4, 2, 2]; // for offset and text
 
-const AnnotateTable = ({ taskItem }) => {
-  const annotations = useSelector(state => state.annotations);
+const AnnotateTable = ({ itemBundle, codeMap }) => {
+  const annotations = useSelector((state) => state.annotations);
 
-  if (!taskItem.tokens || taskItem.tokens.length === 0) return null;
-  if (!taskItem.writable) return null;
+  if (!itemBundle.tokens || itemBundle.tokens.length === 0) return null;
+  if (!itemBundle.writable) return null;
 
   return (
     <Table
@@ -34,13 +34,13 @@ const AnnotateTable = ({ taskItem }) => {
         </Table.Row>
       </Table.Header>
       <Table.Body className="annotations-tbody">
-        {annotationRows(taskItem.tokens, annotations.span)}
+        {annotationRows(itemBundle.tokens, codeMap, annotations.span)}
       </Table.Body>
     </Table>
   );
 };
 
-const annotationRows = (tokens, annotations) => {
+const annotationRows = (tokens, codeMap, annotations) => {
   const rows = [];
   let text = null;
   let annotation = null;
@@ -81,6 +81,7 @@ const annotationRows = (tokens, annotations) => {
         <AnnotationRow
           key={tokenIndex + code}
           tokens={tokens}
+          codeMap={codeMap}
           annotation={annotation}
           code={code}
           text={text}
@@ -93,9 +94,8 @@ const annotationRows = (tokens, annotations) => {
   return rows;
 };
 
-const AnnotationRow = ({ tokens, annotation, code, text, offset }) => {
-  const codeMap = useSelector(state => state.codeMap);
-  const infocus = useSelector(state => {
+const AnnotationRow = ({ tokens, codeMap, annotation, code, text, offset }) => {
+  const infocus = useSelector((state) => {
     let currentIndex = tokens[state.currentToken]?.index; // currentToken is the arrayIndex
     if (currentIndex === null) return null;
     return currentIndex >= annotation.span[0] && currentIndex <= annotation.span[1];

@@ -1,26 +1,21 @@
-import db from "apis/dexie";
-import { randomColor } from "randomcolor";
 import React, { useEffect, useState } from "react";
 import { Checkbox, Icon, Table } from "semantic-ui-react";
-import { codeBookEdgesToMap } from "util/codebook";
+import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
 import EditCodePopup from "./EditCodePopup";
+
+// NOTE TO SELF: make toggle on/off and edit optional. Toggle on/off makes sense for
+// imported annotations. Edit for making a codebook
+// problem: how to deal with renaming existing codes (needs update of annotations: see db.modifyAnnotations)
 
 /**
  * Display an editable codebook that interacts with codingjob.codebook.codes
  */
-const CodeBook = ({ codingjob, height = "80vh" }) => {
+const CodeBook = ({ codes, setCodes, height = "80vh" }) => {
   const [codeMap, setCodeMap] = useState({});
   const [codeTreeArray, setCodeTreeArray] = useState([]);
-  const [settings, setSettings] = useState(null);
-  const [codes, setCodes] = useState([]);
   const [changeColor, setChangeColor] = useState(null);
 
   const showColors = true;
-
-  useEffect(() => {
-    if (!codingjob) return null;
-    loadCodes(codingjob, setCodes, setSettings);
-  }, [codingjob]);
 
   useEffect(() => {
     if (!codes || codes.length === 0) {
@@ -35,12 +30,12 @@ const CodeBook = ({ codingjob, height = "80vh" }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (changeColor) {
-        changeCodeColor(codingjob, changeColor.code, changeColor.color, codes, setCodes);
+        changeCodeColor(changeColor.code, changeColor.color, codes, setCodes);
       }
       setChangeColor(null);
     }, 500);
     return () => clearTimeout(timer);
-  }, [codingjob, codes, setCodes, changeColor, setChangeColor]);
+  }, [codes, setCodes, changeColor, setChangeColor]);
 
   const formatCode = (code) => {
     const color = code.active == null || code.active ? "black" : "grey";
@@ -51,12 +46,14 @@ const CodeBook = ({ codingjob, height = "80vh" }) => {
   };
 
   return (
-    <Table singleLine columns={2} textAlign="left" style={{ border: "0", boxShadow: "0" }}>
+    <Table
+      singleLine
+      columns={2}
+      textAlign="left"
+      style={{ border: "0", boxShadow: "0", width: "100%" }}
+    >
       <Table.Header className="codes-thead"></Table.Header>
-      <Table.Body
-        style={{ height: height, margin: "0", border: "1px solid" }}
-        className="codes-tbody"
-      >
+      <Table.Body style={{ height: height, margin: "0" }} className="codes-tbody">
         <Table.Row className="codes-tr">
           <Table.HeaderCell textAlign="center">
             <Icon name="shutdown" />
@@ -70,9 +67,11 @@ const CodeBook = ({ codingjob, height = "80vh" }) => {
             <Table.Row
               className="codes-tr"
               key={i}
-              style={{
-                backgroundColor: code.level === 0 ? "lightgrey" : null,
-              }}
+              style={
+                {
+                  // backgroundColor: code.level === 0 ? "lightgrey" : null,
+                }
+              }
             >
               <Table.Cell
                 className="codes-td"
@@ -89,7 +88,7 @@ const CodeBook = ({ codingjob, height = "80vh" }) => {
                     checked={code.active && code.activeParent}
                     style={{ transform: "scale(0.6)", width: "1.5em" }}
                     onChange={(e, d) => {
-                      toggleActiveCode(codingjob, codes, code.code, d.checked, setCodes);
+                      toggleActiveCode(codes, code.code, d.checked, setCodes);
                     }}
                   />
                 )}
@@ -99,18 +98,16 @@ const CodeBook = ({ codingjob, height = "80vh" }) => {
                 className="codes-td"
                 style={{
                   borderTop: code.level === 0 ? "1px solid black" : null,
-                  borderBottom: code.level === 0 ? "1px solid black" : null,
+                  //borderBottom: code.level === 0 ? "1px solid black" : null,
                 }}
               >
                 <span style={{ ...formatCode(code), marginLeft: `${2 * code.level}em` }}>
                   <EditCodePopup
-                    codingjob={codingjob}
                     codeMap={codeMap}
                     code={code}
                     codes={codes}
                     setCodes={setCodes}
                     setChangeColor={setChangeColor}
-                    settings={settings}
                   >
                     <Icon name="cog" style={{ marginRight: "0.5em", cursor: "pointer" }} />
                   </EditCodePopup>
@@ -126,7 +123,6 @@ const CodeBook = ({ codingjob, height = "80vh" }) => {
                         }}
                         onClick={() =>
                           toggleFoldCode(
-                            codingjob,
                             codes,
                             code.code,
                             code.folded != null && code.folded,
@@ -148,13 +144,11 @@ const CodeBook = ({ codingjob, height = "80vh" }) => {
           );
         })}
         <EditCodePopup
-          codingjob={codingjob}
           codeMap={codeMap}
           code={""}
           codes={codes}
           setCodes={setCodes}
           setChangeColor={setChangeColor}
-          settings={settings}
         >
           <Icon name="cog" style={{ marginLeft: "0.7em", cursor: "pointer" }} />
         </EditCodePopup>
@@ -163,35 +157,15 @@ const CodeBook = ({ codingjob, height = "80vh" }) => {
   );
 };
 
-const changeCodeColor = async (codingjob, code, color, codes, setCodes) => {
+const changeCodeColor = (code, color, codes, setCodes) => {
   let updatedCodes = codes.map((ucode) => {
     if (ucode.code === code) ucode.color = color;
     return ucode;
   });
-  await db.writeCodes(codingjob, updatedCodes);
   setCodes(updatedCodes);
 };
 
-const loadCodes = async (codingjob, setCodes, setSettings) => {
-  const cj = await db.getCodingjob(codingjob);
-
-  if (cj.codebook) {
-    const cb = cj.codebook;
-    if (cb && cb.codes && cb.codes.length > 0) {
-      setCodes(cb.codes);
-    } else {
-      setCodes([]);
-    }
-    if (cb && cb.settings) {
-      setSettings(cb.settings);
-    }
-  } else {
-    setCodes([]);
-    setSettings(null);
-  }
-};
-
-const toggleActiveCode = async (codingjob, codes, code, active, setCodes) => {
+const toggleActiveCode = (codes, code, active, setCodes) => {
   let updatedCodes = [...codes];
 
   const selectedCode = updatedCodes.find((ucode) => ucode.code === code);
@@ -202,11 +176,10 @@ const toggleActiveCode = async (codingjob, codes, code, active, setCodes) => {
     selectedCode.active = active;
   } else updatedCodes.push({ code: code, parent: "", active: true });
 
-  await db.writeCodes(codingjob, updatedCodes);
   setCodes(updatedCodes);
 };
 
-const toggleFoldCode = async (codingjob, codes, code, folded, setCodes) => {
+const toggleFoldCode = (codes, code, folded, setCodes) => {
   let updatedCodes = [...codes];
 
   const selectedCode = updatedCodes.find((ucode) => ucode.code === code);
@@ -217,38 +190,7 @@ const toggleFoldCode = async (codingjob, codes, code, folded, setCodes) => {
     selectedCode.folded = !folded;
   } else updatedCodes.push({ code: code, parent: "", active: true, folded: !folded });
 
-  await db.writeCodes(codingjob, updatedCodes);
   setCodes(updatedCodes);
-};
-
-const getCodeTreeArray = (codeMap, showColors) => {
-  let parents = Object.keys(codeMap).filter(
-    (code) => !codeMap[code].parent || codeMap[code].parent === ""
-  );
-  const codeTreeArray = [];
-  fillCodeTreeArray(codeMap, parents, codeTreeArray, [], showColors);
-  return codeTreeArray.map((object, i) => ({ ...object, i: i }));
-};
-
-const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColors) => {
-  for (const code of parents) {
-    let newcodeTrail = [...codeTrail];
-    newcodeTrail.push(code);
-
-    codeTreeArray.push({
-      ...codeMap[code],
-      code: code,
-      codeTrail: codeTrail,
-      level: codeTrail.length,
-      color: codeMap[code].color
-        ? codeMap[code].color
-        : randomColor({ seed: code, luminosity: "light" }),
-    });
-
-    if (codeMap[code].children) {
-      fillCodeTreeArray(codeMap, codeMap[code].children, codeTreeArray, newcodeTrail, showColors);
-    }
-  }
 };
 
 export default CodeBook;

@@ -1,71 +1,125 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Header, Button, Dropdown, Ref, Segment, Step } from "semantic-ui-react";
-import { getColor } from "util/tokenDesign";
+import { Header, Button, Dropdown, Ref, Segment } from "semantic-ui-react";
 import { moveUp, moveDown } from "util/refNavigation";
-import { setAnnotations } from "actions";
+import { setAnnotations, setQuestionIndex } from "actions";
+import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const QuestionForm = ({ itemBundle, preview }) => {
-  const questionIndex = useSelector(state => state.questionIndex);
+const QuestionForm = ({ itemBundle, codebook, preview }) => {
+  const questionIndex = useSelector((state) => state.questionIndex);
+  const [settings, setSettings] = useState();
+
   const dispatch = useDispatch();
 
-  if (!itemBundle?.codebook?.taskSettings?.questions) return null;
-  const questions = itemBundle.codebook.taskSettings.questions;
-  const settings = questions[questionIndex]; // settings of current question
+  useEffect(() => {
+    // settings is an array with the settings for each question
+    // This needs a little preprocessing, so we only update it when codebook changes (not per item)
+    if (!codebook?.taskSettings?.questions) return null;
+    setSettings(prepareSettings(codebook));
+  }, [codebook, setSettings]);
+
+  if (!settings) return null;
 
   // rawQuestion is only the text (used for saving results). question is the jsx
-  const [rawQuestion, question] = prepareQuestion(itemBundle, settings);
+  const [rawQuestion, question] = prepareQuestion(itemBundle, settings[questionIndex]);
   const currentAnswer = getCurrentAnswer(itemBundle);
 
-  const onSelect = answer => {
+  const onSelect = (answer) => {
     setNewAnswer(itemBundle, rawQuestion, answer, dispatch);
   };
 
   const questionIndexStep = () => {
-    if (questions.length === 1) return null;
+    if (settings.length === 1) return null;
     return (
-      <Step.Group style={{ margin: "-1em", padding: "0.1em" }}>
-        {questions.map((q, i) => {
+      <Button.Group style={{ marginLeft: "1em", marginTop: "0", float: "right" }}>
+        {settings.map((q, i) => {
           return (
-            <Step active={i === questionIndex} style={{ padding: "0.3em" }}>
-              {questions[i].name}
-            </Step>
+            <Button
+              active={i === questionIndex}
+              onClick={() => dispatch(setQuestionIndex(i))}
+              style={{ padding: "0.2em", minWidth: "1.3em", background: "grey", color: "white" }}
+            >
+              {i + 1}
+            </Button>
           );
         })}
-      </Step.Group>
+      </Button.Group>
     );
   };
 
   return (
-    <Segment
+    <div
       style={{
         display: "flex",
         flexFlow: "column",
         height: "100%",
-        border: "0",
+        maxHeight: "100%",
         padding: "1em",
-        backgroundColor: currentAnswer == null ? "#bcbcf133" : "#b7f5b794",
+        margin: "1em",
+        color: "white",
+        borderTop: "5px double grey",
+        backgroundColor: currentAnswer == null ? "#1B1C1D" : "#1B1C1D",
       }}
     >
-      {questionIndexStep()}
-      <Header textAlign="center">{question}</Header>
-      {showCurrent(currentAnswer, itemBundle.codeMap)}
+      <div style={{ width: "100%" }}>
+        {questionIndexStep()}
+        <div style={{}}>
+          <Header as="h2" style={{ color: "white" }}>
+            {settings[questionIndex].name}
+          </Header>
+        </div>
+      </div>
+      <p>{question}</p>
+      {showCurrent(currentAnswer)}
       <Segment
         style={{
           flex: "1 1 auto",
           padding: "0.1em",
           overflowX: "auto",
+          height: "100%",
         }}
       >
-        {settings.type === "search code" ? <SearchBoxDropdown callback={onSelect} /> : null}
-        {settings.type === "select code" ? (
-          <ButtonSelection callback={onSelect} preview={preview} />
+        {settings[questionIndex].type === "search code" ? (
+          <SearchBoxDropdown options={settings[questionIndex].options} callback={onSelect} />
+        ) : null}
+        {settings[questionIndex].type === "select code" ? (
+          <ButtonSelection
+            options={settings[questionIndex].options}
+            callback={onSelect}
+            preview={preview}
+          />
         ) : null}
       </Segment>
-    </Segment>
+    </div>
   );
+};
+
+const prepareSettings = (codebook) => {
+  const questions = codebook.taskSettings.questions;
+
+  return questions.map((question) => {
+    const codeMap = codeBookEdgesToMap(question.codes);
+    const cta = getCodeTreeArray(codeMap);
+    return { ...question, options: getOptions(cta) }; // note that it's important that this deep copies question
+  });
+};
+
+const getOptions = (cta) => {
+  return cta.reduce((options, code) => {
+    if (!code.active) return options;
+    if (!code.activeParent) return options;
+    let tree = code.tree.join(" - ");
+    //if (tree === "") tree = "Root";
+    options.push({
+      //ref: React.createRef(),
+      code: code.code,
+      tree: tree,
+      color: code.color,
+    });
+    return options;
+  }, []);
 };
 
 const setNewAnswer = (itemBundle, rawQuestion, answer, dispatch) => {
@@ -82,18 +136,18 @@ const setNewAnswer = (itemBundle, rawQuestion, answer, dispatch) => {
   dispatch(setAnnotations({ ...newAnnotations }));
 };
 
-const getCurrentAnswer = itemBundle => {
+const getCurrentAnswer = (itemBundle) => {
   const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
   return itemBundle.annotations[itemBundle.textUnit]?.[itemBundle.unitIndex]?.[root]?.answer;
 };
 
-const showCurrent = (currentAnswer, codeMap) => {
+const showCurrent = (currentAnswer) => {
   if (currentAnswer == null) return null;
   return (
     <div style={{ backgroundColor: "white" }}>
       <Segment
         style={{
-          backgroundColor: getColor(currentAnswer, codeMap),
+          backgroundColor: currentAnswer,
           padding: "0.2em",
           margin: "0",
           textAlign: "center",
@@ -105,22 +159,6 @@ const showCurrent = (currentAnswer, codeMap) => {
       </Segment>
     </div>
   );
-};
-
-const getOptions = codeMap => {
-  return Object.keys(codeMap).reduce((options, code) => {
-    if (!codeMap[code].active) return options;
-    if (!codeMap[code].activeParent) return options;
-    let tree = codeMap[code].tree.join(" - ");
-    if (tree === "") tree = "Root";
-    options.push({
-      ref: React.createRef(),
-      code: code,
-      tree: tree,
-      color: getColor(code, codeMap),
-    });
-    return options;
-  }, []);
 };
 
 const prepareQuestion = (itemBundle, settings) => {
@@ -136,15 +174,15 @@ const prepareQuestion = (itemBundle, settings) => {
     }
   }
 
-  if (question.search("\\[group\\]") >= 0) {
-    if (itemBundle.annotation) {
-      let code = itemBundle.annotation.group;
-      if (itemBundle.codeMap[code].foldToParent) code = itemBundle.codeMap[code].foldToParent;
-      const codeTag = `{{yellow###${code}}}`; // add optional color from itemSettings
-      question = question.replace("[group]", codeTag);
-      rawQuestion = rawQuestion.replace("[code]", code);
-    }
-  }
+  // if (question.search("\\[group\\]") >= 0) {
+  //   if (itemBundle.annotation) {
+  //     let code = itemBundle.annotation.group;
+  //     if (itemBundle.codeMap[code].foldToParent) code = itemBundle.codeMap[code].foldToParent;
+  //     const codeTag = `{{yellow###${code}}}`; // add optional color from itemSettings
+  //     question = question.replace("[group]", codeTag);
+  //     rawQuestion = rawQuestion.replace("[code]", code);
+  //   }
+  // }
 
   // if (question.search("\\[text\\]") >= 0) {
   //   if (item.annotation?.span != null) {
@@ -167,7 +205,7 @@ const prepareQuestion = (itemBundle, settings) => {
   return [rawQuestion, markedString(question)];
 };
 
-const markedString = text => {
+const markedString = (text) => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");
@@ -190,9 +228,8 @@ const markedString = text => {
   );
 };
 
-const SearchBoxDropdown = ({ callback }) => {
+const SearchBoxDropdown = React.memo(({ options, callback }) => {
   const ref = useRef();
-  const options = useSelector(state => getOptions(state.codeMap));
 
   return (
     <Ref innerRef={ref}>
@@ -201,7 +238,7 @@ const SearchBoxDropdown = ({ callback }) => {
         placeholder={"<type to search>"}
         searchInput={{ autoFocus: true }}
         style={{ minWidth: "12em" }}
-        options={options.map(option => {
+        options={options.map((option) => {
           return {
             key: option.code,
             value: option.code,
@@ -227,19 +264,18 @@ const SearchBoxDropdown = ({ callback }) => {
       />
     </Ref>
   );
-};
+});
 
-const ButtonSelection = ({ callback, preview }) => {
+const ButtonSelection = React.memo(({ options, callback, preview }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const options = useSelector(state => getOptions(state.codeMap));
-  const eventsBlocked = useSelector(state => state.eventsBlocked);
+  const eventsBlocked = useSelector((state) => state.eventsBlocked);
 
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const nbuttons = options.length;
 
       // any arrowkey
@@ -332,10 +368,16 @@ const ButtonSelection = ({ callback, preview }) => {
   };
 
   return (
-    <div style={{ display: "table-cell", verticalAlign: "middle", textAlign: "center" }}>
+    <div
+      style={{
+        display: "table-cell",
+        verticalAlign: "middle",
+        textAlign: "center",
+      }}
+    >
       {mapButtons()}
     </div>
   );
-};
+});
 
 export default QuestionForm;

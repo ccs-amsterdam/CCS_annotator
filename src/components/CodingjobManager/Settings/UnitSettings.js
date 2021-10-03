@@ -11,7 +11,7 @@ import {
   Grid,
 } from "semantic-ui-react";
 import Help from "components/Help";
-import CodeBook from "components/CodeBook/CodeBook2";
+import CodeBook from "components/CodeBook/CodeBookEditor";
 import db from "apis/dexie";
 
 const defaultUnitSettings = {
@@ -30,7 +30,7 @@ const defaultUnitSettings = {
 
 const UnitSettings = ({ codingjob }) => {
   const unitSettings = codingjob?.codebook?.unitSettings || defaultUnitSettings;
-  const setUnitSettings = us => {
+  const setUnitSettings = (us) => {
     db.setCodingjobProp(codingjob, "codebook.unitSettings", us);
   };
 
@@ -100,7 +100,7 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
 };
 
 const ContextUnitForm = ({ unitSettings, setUnitSettings }) => {
-  const setContextWindow = value => {
+  const setContextWindow = (value) => {
     setUnitSettings({
       ...unitSettings,
       contextWindow: value,
@@ -177,7 +177,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
   // };
 
   const onChangeSeed = (e, d) => {
-    setDelayed(current => ({ ...current, seed: Number(d.value) }));
+    setDelayed((current) => ({ ...current, seed: Number(d.value) }));
   };
 
   const onChangeShuffle = (e, d) => {
@@ -195,7 +195,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
     let value = Number(d.value);
     //value = value > n ? Math.min(totalItems, value + 4) : Math.max(0, value - 4);
     setPct(Math.round((100 * value) / totalItems));
-    setDelayed(current => ({ ...current, n: value }));
+    setDelayed((current) => ({ ...current, n: value }));
   };
 
   const onChangePCT = (e, d) => {
@@ -204,7 +204,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
     let valueN = Math.ceil((value / 100) * totalItems);
     if (valueN >= 0) {
       setPct(value);
-      setDelayed(current => ({ ...current, n: valueN }));
+      setDelayed((current) => ({ ...current, n: valueN }));
     }
   };
 

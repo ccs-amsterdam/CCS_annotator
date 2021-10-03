@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 
 import db from "apis/dexie";
-import { codeBookEdgesToMap } from "util/codebook";
 import { selectTokens } from "util/selectTokens";
 import { prepareDocumentBatch } from "util/createDocuments";
 
@@ -12,7 +11,6 @@ const defaultSettings = {
   textUnitPosition: 1 / 4,
   showAnnotations: false,
   canAnnotate: true,
-  saveAnnotations: true,
 };
 
 /**
@@ -22,14 +20,14 @@ const defaultSettings = {
  * @param {*} codebook
  * @param {*} settings
  */
-const useItemBundle = (item, codebook, settings = defaultSettings) => {
+const useItemBundle = (item, codebook, settings = defaultSettings, preview) => {
   const [itemBundle, setItemBundle] = useState(null);
 
   useEffect(() => {
     if (!item) return null;
     //setItemBundle(null);
-    prepareItemBundle(item, codebook, settings, setItemBundle);
-  }, [item, codebook, settings, setItemBundle]);
+    prepareItemBundle(item, codebook, settings, preview, setItemBundle);
+  }, [item, codebook, settings, setItemBundle, preview]);
 
   //if (!item || !itemBundle) return null;
   return itemBundle;
@@ -45,10 +43,7 @@ const useItemBundle = (item, codebook, settings = defaultSettings) => {
  * @param {*} setItemBundle
  * @returns
  */
-const prepareItemBundle = async (item, codebook, settings, setItemBundle) => {
-  // if codeMap is not yet made, first add it to the codebook object
-  // (this way it only needs to be made if codebook changes)
-  if (!codebook.codeMap) codebook.codeMap = codeBookEdgesToMap(codebook.codes || []);
+const prepareItemBundle = async (item, codebook, settings, preview, setItemBundle) => {
   // Note that every item must exist as a document in the indexedDb, even if it's only opened once for annotation servers that pass
   // one item at a time. This ensures safe and smooth annotating (e.g., broken connection, refreshing page)
   // (NOTE TO SELF: Before <Document>, the codebook and item must therefore have been processed and stored)
@@ -68,6 +63,7 @@ const prepareItemBundle = async (item, codebook, settings, setItemBundle) => {
   itemBundle.writable = false; // this prevents overwriting annotations before they have been loaded (in <ManageAnnotations>)
   itemBundle.codebook = codebook;
   itemBundle.settings = settings;
+  itemBundle.settings.saveAnnotations = !preview;
   if (itemBundle) setItemBundle(itemBundle);
 };
 
@@ -97,9 +93,9 @@ const prepareTempItem = (item, codebook) => {
  * Gets the char span for the coding unit.
  * Needed for tokenization agnostic storing of annotations
  */
-const getUnitSpan = itemBundle => {
-  const firstUnitToken = itemBundle.tokens.find(token => token.textPart === "textUnit");
-  let lastUnitToken = itemBundle.tokens.find(token => token.textPart === "contextAfter");
+const getUnitSpan = (itemBundle) => {
+  const firstUnitToken = itemBundle.tokens.find((token) => token.textPart === "textUnit");
+  let lastUnitToken = itemBundle.tokens.find((token) => token.textPart === "contextAfter");
   if (lastUnitToken == null) lastUnitToken = itemBundle.tokens[itemBundle.tokens.length - 1];
   return [firstUnitToken.offset, lastUnitToken.offset + lastUnitToken.length];
 };

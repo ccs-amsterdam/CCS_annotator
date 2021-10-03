@@ -4,8 +4,9 @@ import ManageAnnotations from "./ManageAnnotations";
 import Tokens from "./Tokens";
 import AnnotateNavigation from "./AnnotateNavigation";
 
-const Document = ({ itemBundle }) => {
+const Document = ({ itemBundle, codeMap }) => {
   if (!itemBundle) return null;
+  if (codeMap) itemBundle.codebook.codeMap = codeMap;
   return (
     <>
       <Tokens itemBundle={itemBundle} />

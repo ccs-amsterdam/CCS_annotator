@@ -8,11 +8,17 @@ const ManageDocuments = ({ codingjob }) => {
   return (
     <div style={{ paddingLeft: "1em" }}>
       <Grid columns={2}>
-        <Grid.Column stretched width={8}>
+        <Grid.Column width={8}>
+          <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+            Document list
+          </Header>
+
           <DocumentTable codingjob={codingjob} />
         </Grid.Column>
         <Grid.Column width={8}>
-          <Header textAlign="center">Upload Documents</Header>
+          <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+            Upload Documents
+          </Header>
           <UploadDocuments codingjob={codingjob} />
         </Grid.Column>
       </Grid>

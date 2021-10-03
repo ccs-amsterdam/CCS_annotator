@@ -1,13 +1,13 @@
-import db from "apis/dexie";
 import SelectionTable from "./SelectionTable";
 import React, { useEffect, useState } from "react";
 import { Grid, Header, Dimmer, Loader } from "semantic-ui-react";
 
-import UnitSettings from "./ItemSettings/UnitSettings";
+import UnitSettings from "./Settings/UnitSettings";
 import Document from "components/Tokens/Document";
 import useItemBundle from "hooks/useItemBundle";
+import useJobItems from "hooks/useJobItems";
 
-const getTableColumns = unitSettings => {
+const getTableColumns = (unitSettings) => {
   if (!unitSettings) return [];
 
   const columns = [
@@ -48,17 +48,7 @@ const previewDocumentSettings = {
 };
 
 const ManageCodingUnits = ({ codingjob }) => {
-  const [jobItems, setJobItems] = useState(null);
-
-  // When a new codingjob is loaded, set codingjobLoaded ref to false
-  // this prevents actually loading the data until unitSettings has loaded
-  // the unitSettings stored in the codingjob
-
-  useEffect(() => {
-    if (!codingjob?.codebook?.unitSettings) return null;
-    setJobItems(null);
-    getJobItems(codingjob, setJobItems);
-  }, [codingjob, setJobItems]);
+  const jobItems = useJobItems(codingjob);
 
   if (!codingjob) return null;
 
@@ -66,7 +56,9 @@ const ManageCodingUnits = ({ codingjob }) => {
     <div>
       <Grid celled="internally" columns={5}>
         <Grid.Column verticalAlign="top" stretched width={5}>
-          <Header textAlign="center">Settings</Header>
+          <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+            Settings
+          </Header>
 
           <UnitSettings codingjob={codingjob} />
         </Grid.Column>
@@ -77,58 +69,37 @@ const ManageCodingUnits = ({ codingjob }) => {
   );
 };
 
-const getJobItems = async (codingjob, setJobItems) => {
-  let [totalItems, items] = await db.getCodingjobItems(codingjob);
-  setJobItems(items);
-  if (
-    codingjob.codebook.unitSettings.n === null ||
-    codingjob.codebook.unitSettings.n == null ||
-    codingjob.codebook.unitSettings.totalItems !== totalItems
-  ) {
-    await db.setCodingjobProp(codingjob, "codebook.unitSettings", {
-      ...codingjob.codebook.unitSettings,
-      n: totalItems,
-      totalItems,
-    });
-  }
-};
+const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
+  const [jobItem, setJobItem] = useState(null);
 
-const PreviewUnits = React.memo(
-  ({ codingjob, jobItems }) => {
-    const [jobItem, setJobItem] = useState(null);
+  useEffect(() => {
+    if (jobItems && jobItems.length > 0) {
+      setJobItem({ ...jobItems[0], ROW_ID: "0" });
+    } else setJobItem(null);
+  }, [jobItems, setJobItem]);
 
-    useEffect(() => {
-      if (jobItems && jobItems.length > 0) {
-        setJobItem({ ...jobItems[0], ROW_ID: "0" });
-      } else setJobItem(null);
-    }, [jobItems, setJobItem]);
-
-    return (
-      <>
-        <Grid.Column width={5}>
-          <Header textAlign="center">Selected units</Header>
-          <Dimmer inverted active={jobItems === null}>
-            <Loader />
-          </Dimmer>
-          <SelectionTable
-            columns={getTableColumns(codingjob?.codebook?.unitSettings)}
-            selectedRow={jobItem}
-            setSelectedRow={setJobItem}
-            data={jobItems || []}
-            defaultSize={10}
-          />
-          {/* <ItemDetails items={jobItems || []} /> */}
-        </Grid.Column>
-        <PreviewDocument item={jobItem} codebook={{ ...codingjob.codebook }} />
-      </>
-    );
-  },
-  (p, n) => {
-    for (let key of Object.keys(p)) {
-      if (p[key] !== n[key]) console.log(key);
-    }
-  }
-);
+  return (
+    <>
+      <Grid.Column width={5}>
+        <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+          Selected units
+        </Header>
+        <Dimmer inverted active={jobItems === null}>
+          <Loader />
+        </Dimmer>
+        <SelectionTable
+          columns={getTableColumns(codingjob?.codebook?.unitSettings)}
+          selectedRow={jobItem}
+          setSelectedRow={setJobItem}
+          data={jobItems || []}
+          defaultSize={10}
+        />
+        {/* <ItemDetails items={jobItems || []} /> */}
+      </Grid.Column>
+      <PreviewDocument item={jobItem} codebook={{ ...codingjob.codebook }} />
+    </>
+  );
+});
 
 const PreviewDocument = ({ item, codebook }) => {
   const itemBundle = useItemBundle(item, codebook, previewDocumentSettings);
@@ -137,7 +108,9 @@ const PreviewDocument = ({ item, codebook }) => {
     if (!item || !itemBundle) return null;
     return (
       <>
-        <Header textAlign="center">Unit preview</Header>
+        <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+          Unit preview
+        </Header>
 
         <Dimmer inverted active={item === null}>
           <Loader />

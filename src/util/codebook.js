@@ -1,24 +1,42 @@
 import randomColor from "randomcolor";
 
-export const codeBookEdgesToMap = (codes) => {
-  const sortFun = (a, b) => {
-    if (a.order && b.order && a.order !== b.order) return a.order - b.order;
+export const standardizeCodes = (codes) => {
+  return codes.map((code, i) => {
+    if (typeof code !== "object") code = { code };
+    if (code.active == null) code.active = true;
+    if (code.tree == null) code.tree = [];
+    if (code.parent == null) code.parent = "";
+    if (code.color == null) code.color = randomColor({ seed: code.code, luminosity: "light" });
+    return code;
+  });
+};
 
-    let labelA = a.code.toUpperCase(); // ignore upper and lowercase
-    let labelB = b.code.toUpperCase(); // ignore upper and lowercase
-    if (labelA < labelB) {
-      return -1;
-    }
-    if (labelA > labelB) {
-      return 1;
-    }
-    return 0;
-  };
+export const codeBookEdgesToMap = (codes) => {
+  // const sortFun = (a, b) => {
+  //   if (a.order && b.order && a.order !== b.order) return a.order - b.order;
+
+  //   let labelA = a.code.toUpperCase(); // ignore upper and lowercase
+  //   let labelB = b.code.toUpperCase(); // ignore upper and lowercase
+  //   if (labelA < labelB) {
+  //     return -1;
+  //   }
+  //   if (labelA > labelB) {
+  //     return 1;
+  //   }
+  //   return 0;
+  // };
+
+  const standardizedCodes = standardizeCodes(codes);
 
   // the payload is an array of objects, but for efficients operations
   // in the annotator we convert it to an object with the codes as keys
-  const codeMap = codes.sort(sortFun).reduce((result, code) => {
-    result[code.code] = { ...code, children: [], totalChildren: 0, totalActiveChildren: 0 };
+  const codeMap = standardizedCodes.reduce((result, code) => {
+    result[code.code] = {
+      ...code,
+      children: [],
+      totalChildren: 0,
+      totalActiveChildren: 0,
+    };
     return result;
   }, {});
 
@@ -38,9 +56,6 @@ export const codeBookEdgesToMap = (codes) => {
   }
 
   for (const code of Object.keys(codeMap)) {
-    if (!codeMap[code].color)
-      codeMap[code].color = randomColor({ seed: code, luminosity: "light" });
-
     [codeMap[code].tree, codeMap[code].activeParent, codeMap[code].foldToParent] = parentData(
       codeMap,
       code
@@ -59,7 +74,49 @@ export const codeBookEdgesToMap = (codes) => {
   return codeMap;
 };
 
-const parentData = (codes, code) => {
+export const getCodeTreeArray = (codeMap, showColors) => {
+  let parents = Object.keys(codeMap).filter(
+    (code) => !codeMap[code].parent || codeMap[code].parent === ""
+  );
+  const codeTreeArray = [];
+  fillCodeTreeArray(codeMap, parents, codeTreeArray, [], showColors);
+  return codeTreeArray.map((object, i) => ({ ...object, i: i }));
+};
+
+const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColors) => {
+  for (const code of parents) {
+    let newcodeTrail = [...codeTrail];
+    newcodeTrail.push(code);
+
+    codeTreeArray.push({
+      ...codeMap[code],
+      code: code,
+      codeTrail: codeTrail,
+      level: codeTrail.length,
+      color: codeMap[code].color
+        ? codeMap[code].color
+        : randomColor({ seed: code, luminosity: "light" }),
+    });
+
+    if (codeMap[code].children) {
+      fillCodeTreeArray(codeMap, codeMap[code].children, codeTreeArray, newcodeTrail, showColors);
+    }
+  }
+};
+
+// const sortCodes = (codes, codeMap) => {
+//   const sortFun = (a, b) => {
+//     if (a.order && b.order && a.order !== b.order) return a.order - b.order;
+//     return 0;
+//   };
+//   console.log(codeMap);
+//   console.log(codes);
+//   const codeWithOrder = codes.map((code) => ({ code, order: codeMap[code]?.order }));
+//   console.log(codeWithOrder);
+//   return codeWithOrder.sort(sortFun).map((code) => code.code);
+// };
+
+const parentData = (codeMap, code) => {
   // get array of parents from highest to lowers (tree)
   // look at parents to see if one is not active (activeParent).
   //    (this only matters if the same parent is folded, otherwise only the parent code itself is inactive)
@@ -68,16 +125,16 @@ const parentData = (codes, code) => {
   let activeParent = true;
   let foldToParent = "";
 
-  let parent = codes[code].parent;
+  let parent = codeMap[code].parent;
   while (parent) {
     parents.push(parent);
-    if (codes[parent].folded != null && codes[parent].folded) {
+    if (codeMap[parent].folded != null && codeMap[parent].folded) {
       foldToParent = parent; // this ends up being the highest level folded parent
 
       // code is inactive if only one of the folded parents is inactive
-      if (codes[parent].active != null && !codes[parent].active) activeParent = false;
+      if (codeMap[parent].active != null && !codeMap[parent].active) activeParent = false;
     }
-    parent = codes[parent].parent;
+    parent = codeMap[parent].parent;
   }
   return [parents.reverse(), activeParent, foldToParent];
 };

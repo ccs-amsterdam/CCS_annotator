@@ -1,43 +1,10 @@
 import { combineReducers } from "redux";
 import { toggleAnnotation, toggleSpanAnnotations } from "../util/annotations";
 
-const mode = (state = "design", action) => {
-  switch (action.type) {
-    case "SET_MODE":
-      return action.mode;
-    case "RESET_DB":
-      return "design";
-    default:
-      return state;
-  }
-};
-
 const eventsBlocked = (state = false, action) => {
   switch (action.type) {
     case "BLOCK_EVENTS":
       return action.block;
-    default:
-      return state;
-  }
-};
-
-const codingjob = (state = null, action) => {
-  switch (action.type) {
-    case "SELECT_CODINGJOB":
-      return action.codingjob;
-    case "RESET_DB":
-      return null;
-    default:
-      return state;
-  }
-};
-
-const codingjobs = (state = [], action) => {
-  switch (action.type) {
-    case "SET_CODINGJOBS":
-      return action.codingjobs;
-    case "RESET_DB":
-      return [];
     default:
       return state;
   }
@@ -136,45 +103,16 @@ const annotations = (state = { ...emptyAnnotations }, action) => {
   }
 };
 
-const codeMap = (state = {}, action) => {
-  switch (action.type) {
-    case "SET_CODE_MAP":
-      return action.codes;
-    case "RESET_DB":
-      return {};
-    default:
-      return state;
-  }
-};
-
 const codeHistory = (state = [], action) => {
   switch (action.type) {
     case "RESET_CODE_HISTORY":
       return [];
     case "APPEND_CODE_HISTORY":
-      let newstate = state.filter(v => v !== action.code).slice(0, action.n - 1);
+      let newstate = state.filter((v) => v !== action.code).slice(0, action.n - 1);
       newstate.unshift(action.code);
       return newstate;
     case "RESET_DB":
       return [];
-    default:
-      return state;
-  }
-};
-
-const itemSettings = (state = {}, action) => {
-  switch (action.type) {
-    case "SET_ITEM_SETTINGS":
-      return action.itemSettings;
-    default:
-      return state;
-  }
-};
-
-const showSidebar = (state = false, action) => {
-  switch (action.type) {
-    case "SET_SHOW_SIDEBAR":
-      return action.show;
     default:
       return state;
   }
@@ -190,18 +128,12 @@ const questionIndex = (state = 0, action) => {
 };
 
 const rootReducer = combineReducers({
-  mode,
   eventsBlocked,
-  codingjob,
-  codingjobs,
   currentToken,
   codeSelectorTrigger,
   tokenSelection,
   annotations,
-  codeMap,
   codeHistory,
-  itemSettings,
-  showSidebar,
   questionIndex,
 });
 

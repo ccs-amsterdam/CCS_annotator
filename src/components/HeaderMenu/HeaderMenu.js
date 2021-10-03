@@ -5,8 +5,6 @@ import db from "apis/dexie";
 
 import Reset from "./Reset";
 import Persist from "./Persist";
-import CodebookSidebar from "./CodebookSidebar";
-import PreviewMode from "./PreviewMode";
 
 // This is the index file of HeaderMenu, but importing via index
 // breaks. Probably due to the withRouter()
@@ -35,17 +33,8 @@ const HeaderMenu = ({ items, homepage, children }) => {
       <Sidebar as={Menu} inverted animation="push" visible={true} direction={"top"} size="mini">
         {menuItems}
         <Menu.Menu position="right">
-          {location.pathname.includes("annotate") ? (
-            <>
-              <PreviewMode />
-              <CodebookSidebar />
-            </>
-          ) : (
-            <>
-              <Persist />
-              <Reset homepage={homepage} />
-            </>
-          )}
+          <Persist />
+          <Reset homepage={homepage} />
         </Menu.Menu>
       </Sidebar>
       <Sidebar.Pusher>{children}</Sidebar.Pusher>
