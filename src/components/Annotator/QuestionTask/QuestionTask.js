@@ -5,7 +5,7 @@ import Document from "components/Tokens/Document";
 import useItemBundle from "hooks/useItemBundle";
 
 const documentSettings = {
-  textUnitPosition: 1 / 4,
+  textUnitPosition: 2 / 4,
   showAnnotations: false,
   canAnnotate: false,
 };

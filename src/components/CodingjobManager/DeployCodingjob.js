@@ -3,9 +3,7 @@ import React, { useState, useEffect } from "react";
 import DeploySettings from "./Settings/DeploySettings";
 import useJobItems from "hooks/useJobItems";
 import { selectTokens } from "util/selectTokens";
-import { Dimmer, Grid, Header, Loader, Button, Segment } from "semantic-ui-react";
-import { useLiveQuery } from "dexie-react-hooks";
-import SelectionTable from "./SelectionTable";
+import { Grid, Header, Button } from "semantic-ui-react";
 import fileDownload from "js-file-download";
 
 import objectHash from "object-hash";
@@ -42,7 +40,10 @@ const DeployCodingjob = ({ codingjob }) => {
 const DownloadButton = ({ codingjobPackage }) => {
   const onDownload = async () => {
     const now = new Date();
-    const datestring = now.toISOString().slice(0, 19).replace(/T/g, " ");
+    const datestring = now
+      .toISOString()
+      .slice(0, 19)
+      .replace(/T/g, " ");
     const json = [JSON.stringify(codingjobPackage)];
     const blob = new Blob(json, { type: "text/plain;charset=utf-8" });
 

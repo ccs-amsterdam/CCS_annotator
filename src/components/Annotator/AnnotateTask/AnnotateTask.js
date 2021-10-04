@@ -52,12 +52,12 @@ const Instructions = ({ codebook }) => {
   const settings = codebook?.taskSettings?.annotate;
   if (!settings) return null;
   return (
-    <Container style={{ paddingTop: "2em" }}>
-      <Header as="h2" align="center">
+    <Container style={{ paddingTop: "2em", fontSize: "10px" }}>
+      <Header as="h4" align="center">
         Edit span annotations
       </Header>
       <p align="center">Assign codes to words or phrases. A word can have multiple codes.</p>
-      <Table unstackable compact size="small">
+      <Table unstackable compact="very" size="tiny">
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell></Table.HeaderCell>

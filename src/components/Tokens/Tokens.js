@@ -52,7 +52,7 @@ const Tokens = ({ itemBundle }) => {
   // };
 
   return (
-    <div style={{ display: "flex", height: "100%" }}>
+    <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
       {/* <div style={{ flex: "1 3%" }}>{documentAnnotateButton()}</div> */}
 
       <Ref innerRef={containerRef}>
@@ -65,7 +65,9 @@ const Tokens = ({ itemBundle }) => {
             textAlign: "justify",
           }}
         >
+          {/* <div style={{ height: "10em" }} /> */}
           <div style={{ padding: "20px" }}>{text["text"]}</div>
+          {/* <div style={{ height: "10em" }} /> */}
         </div>
       </Ref>
     </div>

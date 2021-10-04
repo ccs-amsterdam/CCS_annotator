@@ -16,7 +16,7 @@ const ManageTask = ({ codingjob }) => {
   let cwidths = [8, 8];
   if (codingjob.codebook?.taskSettings?.type) {
     if (codingjob.codebook.taskSettings.type === "annotate") cwidths = [4, 12];
-    if (codingjob.codebook.taskSettings.type === "questions") cwidths = [4, 4];
+    if (codingjob.codebook.taskSettings.type === "questions") cwidths = [6, 6];
   }
 
   return (
@@ -68,7 +68,7 @@ const PreviewQuestionTask = React.memo(({ codingjob, jobItems }) => {
         style={{
           padding: "0",
           width: "400px",
-          height: "800px",
+          height: "calc(100vh - 250px)",
         }}
       >
         <div style={{ padding: "0em", paddingTop: "1em", height: "100%", border: "1px solid" }}>
@@ -93,7 +93,7 @@ const PreviewAnnotateTask = ({ codingjob, jobItems }) => {
         style={{
           padding: "0",
           width: "100%",
-          height: "60%",
+          height: "calc(100vh - 250px)",
         }}
       >
         <div style={{ padding: "0", height: "100%", border: "1px solid" }}>

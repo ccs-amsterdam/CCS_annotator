@@ -18,7 +18,7 @@ const CodingjobManager = () => {
   const codingjob = useLiveQuery(() => {
     // retrieve codingjob from Dexie whenever selectedCodingjob changes OR dexie is updated
     if (selectedCodingjob) {
-      return db.idb.codingjobs.get(selectedCodingjob.job_id).then((cj) => {
+      return db.idb.codingjobs.get(selectedCodingjob.job_id).then(cj => {
         return { ...cj, ROW_ID: selectedCodingjob.ROW_ID };
       });
     }
@@ -26,10 +26,13 @@ const CodingjobManager = () => {
 
   const nDocuments = useLiveQuery(() => {
     if (!codingjob) return 0;
-    return db.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    return db.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .count();
   }, [codingjob]);
 
-  const renderSwitch = (menuItem) => {
+  const renderSwitch = menuItem => {
     switch (menuItem) {
       case "codingjobs":
         return (
@@ -48,8 +51,8 @@ const CodingjobManager = () => {
     }
   };
   return (
-    <div style={{ margin: "1em" }}>
-      <Step.Group ordered size="tiny">
+    <div style={{ margin: "1em", overflow: "auto" }}>
+      <Step.Group ordered unstackable size="tiny">
         <Step
           title="Codingjob"
           description={codingjob ? codingjob.name : "none selected"}

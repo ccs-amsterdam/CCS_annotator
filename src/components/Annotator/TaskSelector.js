@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-import axios from "axios";
-import hash from "object-hash";
-
 import db from "apis/dexie";
-import { useHistory, useLocation } from "react-router";
-import { selectCodingjob, setCodingjobs } from "actions";
+import { useHistory } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Grid, Header, Button } from "semantic-ui-react";
 
@@ -29,7 +25,7 @@ const TaskSelector = () => {
 
   const tasks = useLiveQuery(async () => {
     let arr = await db.idb.tasks.toCollection().primaryKeys();
-    arr = arr.map((a) => ({ url: a[0], last_modified: a[1] }));
+    arr = arr.map(a => ({ url: a[0], last_modified: a[1] }));
     if (arr) arr.sort((a, b) => b.last_modified - a.last_modified);
     return arr;
   });
@@ -41,11 +37,11 @@ const TaskSelector = () => {
     }
   }, [taskKey, tasks, setTaskKey]);
 
-  const uploadFile = (e) => {
+  const uploadFile = e => {
     const fileReader = new FileReader();
     const url = e.target.files[0].name;
     fileReader.readAsText(e.target.files[0], "UTF-8");
-    fileReader.onload = (e) => {
+    fileReader.onload = e => {
       uploadTask(JSON.parse(e.target.result), url);
     };
   };
