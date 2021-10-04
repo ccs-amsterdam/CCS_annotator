@@ -39,10 +39,10 @@ const TaskSettings = ({ codingjob }) => {
   if (!taskSettings || !unitSettings) return null;
 
   return (
-    <div style={{ verticalAlign: "top", float: "top" }}>
+    <div style={{ verticalAlign: "top", float: "top", paddingLeft: "1em" }}>
       <TypeForm taskSettings={taskSettings} setTaskSettings={setTaskSettings} />
       <Divider />
-      {taskSettings.type === "question" ? (
+      {taskSettings.type === "questions" ? (
         <QuestionTaskSettings
           taskSettings={taskSettings}
           setTaskSettings={setTaskSettings}
@@ -87,7 +87,7 @@ const TypeForm = ({ taskSettings, setTaskSettings }) => {
       </Form.Group>
       <Form.Group grouped widths="equal">
         {radioButton("annotate", "Annotate")}
-        {radioButton("question", "Question")}
+        {radioButton("questions", "Question")}
       </Form.Group>
     </Form>
   );

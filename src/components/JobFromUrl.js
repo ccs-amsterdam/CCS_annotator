@@ -24,14 +24,14 @@ const openExternalJob = async (jobURL, dispatch) => {
   const response = await axios.get(jobURL);
   const data = response.data;
   let job = { name: data.details.name, job_id: hash(data) };
-  job = await db.getCodingjob(job);
+  job = await db.idb.codingjobs.get(job.job_id);
   if (!job) {
     await db.createCodingjob(data.details.name, hash(data));
     await db.createDocuments(job, data.documents, true);
     await db.writeCodebook(job, data.codebook);
   }
   const codingjobs = await db.listCodingjobs();
-  const cj = await db.getCodingjob(job);
+  const cj = await db.idb.codingjobs.get(job.job_id);
   dispatch(selectCodingjob(cj));
   dispatch(setCodingjobs(codingjobs));
 };

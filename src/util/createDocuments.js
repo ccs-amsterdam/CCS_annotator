@@ -25,35 +25,10 @@ export const prepareDocumentBatch = (
     if (!ids.has(doc_uid)) {
       ids.add(doc_uid);
 
-      if (document.tokens) {
-        document.tokens = importTokens(document.tokens);
-      } else {
-        document.tokens = parseTokens(document.text_fields);
-      }
-      if (document.tokens.length > 0) {
-        document.n_paragraphs = document.tokens[document.tokens.length - 1].paragraph;
-        document.n_sentences = document.tokens[document.tokens.length - 1].sentence;
-      } else {
-        document.n_paragraphs = 0;
-        document.n_sentences = 0;
-      }
-
-      if (document.annotations) {
-        document.annotations = importAnnotations(document.annotations, document.tokens);
-      } else document.annotations = { document: {}, paragraph: {}, sentence: {}, span: {} };
-
-      const tokenAnnotations = importTokenAnnotations(document.tokens, codes); // also fills codes
-      if (tokenAnnotations.length > 0)
-        document.annotations.span = importSpanAnnotations(
-          document.annotations.span,
-          tokenAnnotations,
-          document.tokens
-        );
-
       result.push({
         doc_uid: doc_uid,
         job_id: job_id,
-        ...document,
+        ...prepareDocument(document, codes),
       });
     } else {
       duplicates++;
@@ -79,4 +54,33 @@ export const prepareDocumentBatch = (
   }, []);
 
   return [preparedDocuments, codes];
+};
+
+export const prepareDocument = (document, codes = {}) => {
+  if (document.tokens) {
+    document.tokens = importTokens(document.tokens);
+  } else {
+    document.tokens = parseTokens(document.text_fields, document.offset, document.unitRange);
+  }
+  if (document.tokens.length > 0) {
+    document.n_paragraphs = document.tokens[document.tokens.length - 1].paragraph;
+    document.n_sentences = document.tokens[document.tokens.length - 1].sentence;
+  } else {
+    document.n_paragraphs = 0;
+    document.n_sentences = 0;
+  }
+
+  if (document.annotations) {
+    document.annotations = importAnnotations(document.annotations, document.tokens);
+  } else document.annotations = { document: {}, paragraph: {}, sentence: {}, span: {} };
+
+  const tokenAnnotations = importTokenAnnotations(document.tokens, codes); // also fills codes
+  if (tokenAnnotations.length > 0)
+    document.annotations.span = importSpanAnnotations(
+      document.annotations.span,
+      tokenAnnotations,
+      document.tokens
+    );
+
+  return document;
 };

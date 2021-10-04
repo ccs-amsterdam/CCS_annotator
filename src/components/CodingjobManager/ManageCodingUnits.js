@@ -55,7 +55,7 @@ const ManageCodingUnits = ({ codingjob }) => {
   return (
     <div>
       <Grid celled="internally" columns={5}>
-        <Grid.Column verticalAlign="top" stretched width={5}>
+        <Grid.Column verticalAlign="top" stretched width={4}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Settings
           </Header>

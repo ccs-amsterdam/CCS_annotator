@@ -36,7 +36,7 @@ const UnitSettings = ({ codingjob }) => {
 
   if (!unitSettings) return null;
   return (
-    <div style={{ verticalAlign: "top", float: "top" }}>
+    <div style={{ verticalAlign: "top", float: "top", paddingLeft: "1em" }}>
       <Grid verticalAlign="top" style={{ verticalAlign: "top", paddingTop: "1em" }}>
         <CodingUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
         <br />

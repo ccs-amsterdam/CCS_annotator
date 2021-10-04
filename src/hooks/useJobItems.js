@@ -15,7 +15,6 @@ const useJobItems = (codingjob) => {
   // the unitSettings stored in the codingjob
 
   useEffect(() => {
-    console.log(codingjob);
     if (!codingjob?.codebook?.unitSettings) return null;
     setJobItems(null);
     getJobItems(codingjob, setJobItems);
@@ -43,8 +42,6 @@ const getJobItems = async (codingjob, setJobItems) => {
 };
 
 const getItemsFromDB = async (codingjob) => {
-  codingjob = await db.getCodingjob(codingjob);
-  console.log(codingjob);
   if (!codingjob?.codebook?.unitSettings) return null;
   const textUnit = codingjob.codebook.unitSettings.textUnit;
   const unitSelection = codingjob.codebook.unitSettings;

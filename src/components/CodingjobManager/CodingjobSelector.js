@@ -7,17 +7,8 @@ import DeleteCodingjob from "./DeleteCodingjob";
 import db from "apis/dexie";
 import { useLiveQuery } from "dexie-react-hooks";
 
-const CodingjobSelector = ({ codingjob, setSelectedCodingjob, open, setOpen, setMenuItem }) => {
-  const codingjobs = useLiveQuery(() => db.listCodingjobs());
-  // //const [selectedCodingjob, setSelectedCodingjob] = useState(codingjob);
-
-  // useEffect(() => {
-  //   if (selectedCodingjob === null) setCodingjob(null);
-  //   if (selectedCodingjob && setCodingjob)
-  //     db.getCodingjob(selectedCodingjob).then((cj) => {
-  //       setCodingjob({ ...cj, ROW_ID: selectedCodingjob.ROW_ID });
-  //     });
-  // }, [setCodingjob, selectedCodingjob]);
+const CodingjobSelector = ({ codingjob, setSelectedCodingjob }) => {
+  const codingjobs = useLiveQuery(() => db.idb.codingjobs.toArray());
 
   useEffect(() => {
     if (!codingjob && codingjobs) {

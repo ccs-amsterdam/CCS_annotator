@@ -71,7 +71,7 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
           </Menu>
         </Grid.Column>
 
-        <Grid.Column width={10}>
+        <Grid.Column width={12}>
           <br />
           {qlist.length > 0 ? (
             <Header textAlign="center">{`Question ${questionIndex + 1}`}</Header>

@@ -1,7 +1,4 @@
 export const demo_codebook = {
-  settings: {
-    can_edit_codes: true,
-  },
   codes: [
     { code: "VVD", parent: "Actor", active: true },
     { code: "D66", parent: "Actor", active: true },

@@ -28,9 +28,17 @@ const HeaderMenu = ({ items, homepage, children }) => {
     );
   });
 
+  if (location.pathname === "/annotator") return children;
   return (
     <Sidebar.Pushable style={{ height: "100vh" }}>
-      <Sidebar as={Menu} inverted animation="push" visible={true} direction={"top"} size="mini">
+      <Sidebar
+        as={Menu}
+        inverted
+        animation="push"
+        visible={location.pathname !== "/annotator"}
+        direction={"top"}
+        size="mini"
+      >
         {menuItems}
         <Menu.Menu position="right">
           <Persist />

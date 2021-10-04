@@ -5,21 +5,20 @@ nlp.extend(paragraphs);
 /**
  * Tokenize a document, but allowing for multiple text fields to be concatenated as different sections.
  * @param {*} text_fields  An array of objects, where each object has the structure {name, value}. 'name' becomes the name of the section, 'value' is the text
- *                         Optionally can also have a textPart {name, value, textPart}, which can have the values ('contextBefore','textUnit','contextAfter').
- *                         This can be used to set the coding/context unit immediately when parsing (which is now used when creating an itemBundle on the fly)
+ * @param {*} offset       Optionally, an object with starting values for paragraph, sentence and tokenIndex, for if text_fields contains a known subset of a text
+ * @param {*} unitRange    Optionally, a length 2 array containing the start and end of the codingunit.
  * @returns
  */
-export const parseTokens = (text_fields) => {
+export const parseTokens = (text_fields, offset, unitRange) => {
   const tokens = [];
   let token = null;
-  let paragraph = 0;
-  let sentence = 0;
-  let tokenIndex = 0;
+  let paragraph = offset ? offset.paragraph : 0; // offset can be used if position in original article is known
+  let sentence = offset ? offset.sentence : 0;
+  let tokenIndex = offset ? offset.tokenIndex : 0;
   let t = null;
   let text = null;
   for (let text_field of text_fields) {
     let section = text_field.name || "text";
-    let textPart = text_field.textPart;
     text = text_field.value;
     t = nlp.tokenize(text).paragraphs().json({ offset: true });
     // map to single array.
@@ -30,9 +29,9 @@ export const parseTokens = (text_fields) => {
           // I've only found cases where lenght is 1, but I'll map it just in case
           for (let term = 0; term < t[par].sentences[sent][sent2].terms.length; term++) {
             token = t[par].sentences[sent][sent2].terms[term];
-            tokens.push({
+            const tokenobj = {
               section: section,
-              offset: token.offset.start,
+              offset: offset ? token.offset.start + offset.offset : token.offset.start,
               length: token.offset.length,
               paragraph: paragraph,
               sentence: sentence,
@@ -40,8 +39,13 @@ export const parseTokens = (text_fields) => {
               text: token.text,
               pre: token.pre,
               post: token.post,
-              ...(textPart && { textPart }), // only adds textPart if not undefined
-            });
+            };
+            if (unitRange) {
+              tokenobj.textPart = "textUnit";
+              if (token.offset.start < unitRange[0]) tokenobj.textPart = "contextBefore";
+              if (token.offset.end > unitRange[1]) tokenobj.textPart = "contextAfter";
+            }
+            tokens.push(tokenobj);
             tokenIndex++;
           }
         }
@@ -53,8 +57,38 @@ export const parseTokens = (text_fields) => {
   return tokens;
 };
 
+export const unparseTokens = (tokens) => {
+  // Create texts from tokens in a way that preserves information about original text and textParts (context and unit)
+  // This allows us to
+  const unitRange = [0, tokens.length];
+  const offset = {
+    paragraph: tokens[0].paragraph,
+    sentence: tokens[0].sentence,
+    tokenIndex: tokens[0].tokenIndex,
+    offset: tokens[0].offset,
+  };
+  const text_fields = [];
+
+  let text = "";
+  let section = tokens[0].section;
+  for (let token of tokens) {
+    if (unitRange[0] === 0 && token.textPart === "textUnit") unitRange[0] = token.offset;
+    if (unitRange[1] === tokens.length && token.textPart === "contextAfter")
+      unitRange[1] = token.offset - 1;
+
+    if (token.section !== section) {
+      text_fields.push({ name: section, value: text });
+      text = "";
+    }
+    text = text + token.pre + token.text + token.post;
+    section = token.section;
+  }
+  if (text.length > 0) text_fields.push({ name: section, value: text });
+
+  return { text_fields, offset, unitRange };
+};
+
 export const importTokens = (tokens) => {
-  //const indexFrom1 = tokens[0].offset && tokens[0].offset === 1;
   let paragraph = 0;
   let last_paragraph = tokens[0].paragraph;
 

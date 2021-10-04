@@ -2,22 +2,23 @@ import React, { useState } from "react";
 
 import { Segment, Step } from "semantic-ui-react";
 
-import ManageDocuments from "./ManageDocuments";
 import db from "apis/dexie";
 import { useLiveQuery } from "dexie-react-hooks";
-import ManageCodingUnits from "./ManageCodingUnits";
+
 import CodingjobSelector from "./CodingjobSelector";
+import ManageDocuments from "./ManageDocuments";
+import ManageCodingUnits from "./ManageCodingUnits";
 import ManageTask from "./ManageTask";
+import DeployCodingjob from "./DeployCodingjob";
 
 const CodingjobManager = () => {
   const [menuItem, setMenuItem] = useState("codingjobs");
-  const [openCodingjobSelector, setOpenCodingjobSelector] = useState(false);
   const [selectedCodingjob, setSelectedCodingjob] = useState(null);
 
   const codingjob = useLiveQuery(() => {
     // retrieve codingjob from Dexie whenever selectedCodingjob changes OR dexie is updated
     if (selectedCodingjob) {
-      return db.idb.codingjobs.get(selectedCodingjob.job_id).then(cj => {
+      return db.idb.codingjobs.get(selectedCodingjob.job_id).then((cj) => {
         return { ...cj, ROW_ID: selectedCodingjob.ROW_ID };
       });
     }
@@ -25,23 +26,14 @@ const CodingjobManager = () => {
 
   const nDocuments = useLiveQuery(() => {
     if (!codingjob) return 0;
-    return db.idb.documents
-      .where("job_id")
-      .equals(codingjob.job_id)
-      .count();
+    return db.idb.documents.where("job_id").equals(codingjob.job_id).count();
   }, [codingjob]);
 
-  const renderSwitch = menuItem => {
+  const renderSwitch = (menuItem) => {
     switch (menuItem) {
       case "codingjobs":
         return (
-          <CodingjobSelector
-            codingjob={codingjob}
-            setSelectedCodingjob={setSelectedCodingjob}
-            open={openCodingjobSelector}
-            setOpen={setOpenCodingjobSelector}
-            setMenuItem={setMenuItem}
-          />
+          <CodingjobSelector codingjob={codingjob} setSelectedCodingjob={setSelectedCodingjob} />
         );
       case "documents":
         return <ManageDocuments codingjob={codingjob} />;
@@ -49,6 +41,8 @@ const CodingjobManager = () => {
         return <ManageCodingUnits codingjob={codingjob} />;
       case "task":
         return <ManageTask codingjob={codingjob} />;
+      case "deploy":
+        return <DeployCodingjob codingjob={codingjob} />;
       default:
         return null;
     }
@@ -63,7 +57,6 @@ const CodingjobManager = () => {
           completed={codingjob !== null && codingjob != null}
           onClick={(e, d) => {
             setMenuItem("codingjobs");
-            setOpenCodingjobSelector(true);
           }}
         />
         <Step
@@ -88,11 +81,22 @@ const CodingjobManager = () => {
         />
         <Step
           title="Task"
-          description={"Define the task"}
+          description={codingjob?.codebook?.taskSettings?.type || "Define the task"}
           active={menuItem === "task"}
           completed={codingjob?.codebook?.taskSettings?.type}
           disabled={codingjob === null}
           onClick={(e, d) => setMenuItem("task")}
+        />
+        <Step
+          title="Deploy"
+          description={"Get (others) to work"}
+          active={menuItem === "deploy"}
+          disabled={
+            codingjob === null ||
+            !codingjob?.codebook?.unitSettings?.n ||
+            !codingjob?.codebook?.taskSettings?.type
+          }
+          onClick={(e, d) => setMenuItem("deploy")}
         />
       </Step.Group>
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 import db from "apis/dexie";
 import { selectTokens } from "util/selectTokens";
-import { prepareDocumentBatch } from "util/createDocuments";
+import { prepareDocument } from "util/createDocuments";
 
 const defaultSettings = {
   // These are not part of the codebook, because they depend on the type of task
@@ -43,7 +43,7 @@ const useItemBundle = (item, codebook, settings = defaultSettings, preview) => {
  * @param {*} setItemBundle
  * @returns
  */
-const prepareItemBundle = async (item, codebook, settings, preview, setItemBundle) => {
+export const prepareItemBundle = async (item, codebook, settings, preview, setItemBundle) => {
   // Note that every item must exist as a document in the indexedDb, even if it's only opened once for annotation servers that pass
   // one item at a time. This ensures safe and smooth annotating (e.g., broken connection, refreshing page)
   // (NOTE TO SELF: Before <Document>, the codebook and item must therefore have been processed and stored)
@@ -52,13 +52,17 @@ const prepareItemBundle = async (item, codebook, settings, preview, setItemBundl
   if (!itemBundle) itemBundle = prepareTempItem(item);
   if (!itemBundle) return;
 
+  // if (item.tokens) itemBundle.tokens = item.tokens;
+  // if (item.text_fields)
+  //   itemBundle.tokens = parseTokens(item.text_fields, item.offset, item.unitRange);
+
   if (codebook.unitSettings) {
     // if full document is retrieved, use codingUnit and contextUnit to select the coding/context tokens
     const { contextUnit, contextWindow } = codebook.unitSettings;
     itemBundle.tokens = selectTokens(itemBundle.tokens, item, contextUnit, contextWindow);
-    itemBundle.textUnitSpan = getUnitSpan(itemBundle);
   }
 
+  itemBundle.textUnitSpan = getUnitSpan(itemBundle);
   itemBundle.item = item; // add item information
   itemBundle.writable = false; // this prevents overwriting annotations before they have been loaded (in <ManageAnnotations>)
   itemBundle.codebook = codebook;
@@ -77,16 +81,10 @@ const prepareItemBundle = async (item, codebook, settings, preview, setItemBundl
  * @param {*} item
  * @param {*} codebook
  */
-const prepareTempItem = (item, codebook) => {
-  const text_fields = [];
-  if (item.contextBefore)
-    text_fields.push({ name: "text", textPart: "contextBefore", value: item.contextBefore });
-  if (item.text) text_fields.push({ name: "text", textPart: "textUnit", value: item.text });
-  if (item.contextAfter)
-    text_fields.push({ name: "text", textPart: "contextAfter", value: item.contextAfter });
-
-  const [documents] = prepareDocumentBatch([{ text_fields }]); // returns [documents, codes], so destructure it
-  return documents[0];
+const prepareTempItem = (item) => {
+  if (!item.tokens && !item.text_fields && item.text)
+    item.text_fields = [{ name: "text", value: item.text }];
+  return prepareDocument(item);
 };
 
 /**

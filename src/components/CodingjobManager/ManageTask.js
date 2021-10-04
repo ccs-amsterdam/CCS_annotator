@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import TaskSettings from "./Settings/TaskSettings";
 import { Grid, Header } from "semantic-ui-react";
-import QuestionTask from "components/Annotator/Annotator/QuestionTask/QuestionTask";
-import AnnotateTask from "components/Annotator/Annotator/AnnotateTask/AnnotateTask";
+import QuestionTask from "components/Annotator/QuestionTask/QuestionTask";
+import AnnotateTask from "components/Annotator/AnnotateTask/AnnotateTask";
 import useJobItems from "hooks/useJobItems";
 import ItemSelector from "components/CodingjobManager/ItemSelector";
 
@@ -16,7 +16,7 @@ const ManageTask = ({ codingjob }) => {
   let cwidths = [8, 8];
   if (codingjob.codebook?.taskSettings?.type) {
     if (codingjob.codebook.taskSettings.type === "annotate") cwidths = [4, 12];
-    if (codingjob.codebook.taskSettings.type === "question") cwidths = [6, 4];
+    if (codingjob.codebook.taskSettings.type === "questions") cwidths = [4, 4];
   }
 
   return (
@@ -41,7 +41,7 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
 
   const renderTaskPreview = (type) => {
     switch (type) {
-      case "question":
+      case "questions":
         return <PreviewQuestionTask codingjob={codingjob} jobItems={jobItems} />;
       case "annotate":
         return <PreviewAnnotateTask codingjob={codingjob} jobItems={jobItems} />;
@@ -93,7 +93,7 @@ const PreviewAnnotateTask = ({ codingjob, jobItems }) => {
         style={{
           padding: "0",
           width: "100%",
-          height: "50%",
+          height: "60%",
         }}
       >
         <div style={{ padding: "0", height: "100%", border: "1px solid" }}>

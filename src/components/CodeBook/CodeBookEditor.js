@@ -5,7 +5,7 @@ import EditCodePopup from "./EditCodePopup";
 
 // NOTE TO SELF: make toggle on/off and edit optional. Toggle on/off makes sense for
 // imported annotations. Edit for making a codebook
-// problem: how to deal with renaming existing codes (needs update of annotations: see db.modifyAnnotations)
+// problem: how to deal with renaming existing codes. (maybe just freeze used codes from editing)
 
 /**
  * Display an editable codebook that interacts with codingjob.codebook.codes
