@@ -9,7 +9,7 @@ const Tokens = ({ itemBundle }) => {
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = itemBundle.tokens.find((token) => token.textPart === "textUnit");
+    const firstTextUnitToken = itemBundle.tokens.find(token => token.textPart === "textUnit");
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(
         containerRef.current,
@@ -65,7 +65,7 @@ const Tokens = ({ itemBundle }) => {
             textAlign: "justify",
           }}
         >
-          <div style={{ padding: "2em" }}>{text["text"]}</div>
+          <div style={{ padding: "20px" }}>{text["text"]}</div>
         </div>
       </Ref>
     </div>
@@ -78,7 +78,7 @@ const prepareTokens = async (itemBundle, setText) => {
   // !! assignment by reference: renderText also adds a react ref to each token in itemBundle.tokens
 };
 
-const renderText = (itemBundle) => {
+const renderText = itemBundle => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
   const tokens = itemBundle.tokens;
 
@@ -144,7 +144,7 @@ const renderText = (itemBundle) => {
 };
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
-  const fontstyle = (paragraphs) => {
+  const fontstyle = paragraphs => {
     if (section === "title") return <h2 key={paragraph_nr}>{paragraphs}</h2>;
     return paragraphs;
   };
@@ -240,7 +240,7 @@ const renderToken = (token, itemBundle, textPart) => {
       </span>
     );
   return (
-    <span style={{ color: "lightblue" }}>
+    <span style={{ color: "blue" }}>
       <Token ref={token.ref} key={token.index} token={token} itemBundle={itemBundle} />
     </span>
   );

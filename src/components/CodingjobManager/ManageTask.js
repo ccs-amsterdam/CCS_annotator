@@ -39,7 +39,7 @@ const ManageTask = ({ codingjob }) => {
 const PreviewTask = React.memo(({ codingjob, jobItems }) => {
   if (!jobItems) return null;
 
-  const renderTaskPreview = (type) => {
+  const renderTaskPreview = type => {
     switch (type) {
       case "questions":
         return <PreviewQuestionTask codingjob={codingjob} jobItems={jobItems} />;

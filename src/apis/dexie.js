@@ -40,7 +40,10 @@ class AnnotationDB {
     return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
-    await this.idb.documents.where("job_id").equals(codingjob.job_id).delete();
+    await this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .delete();
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
 
@@ -98,7 +101,7 @@ class AnnotationDB {
     }
 
     // making absolutely sure no garbage is added
-    codebook.codes = codebook.codes.filter((code) => code.code !== "");
+    codebook.codes = codebook.codes.filter(code => code.code !== "");
 
     return await this.writeCodebook(codingjob, codebook);
   }
@@ -106,7 +109,10 @@ class AnnotationDB {
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
 
     const [preparedDocuments, codes] = prepareDocumentBatch(
@@ -122,7 +128,7 @@ class AnnotationDB {
   }
 
   async deleteDocuments(documents) {
-    const documentIds = documents.map((document) => document.doc_uid);
+    const documentIds = documents.map(document => document.doc_uid);
     return this.idb.documents.bulkDelete(documentIds);
   }
 
@@ -136,7 +142,10 @@ class AnnotationDB {
   }
 
   async getJobDocumentCount(codingjob) {
-    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    return this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .count();
   }
 
   async getDocuments(codingjob) {
@@ -148,7 +157,10 @@ class AnnotationDB {
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
+    return this.idb.documents
+      .where("doc_uid")
+      .equals(document.doc_uid)
+      .modify({ tokens: tokens });
   }
 
   async writeAnnotations(document, annotations) {
@@ -160,10 +172,11 @@ class AnnotationDB {
 
   // CLEANUP
   async deleteDB() {
-    await this.idb.meta.clear();
-    await this.idb.codingjobs.clear();
-    await this.idb.tasks.clear();
-    await this.idb.documents.clear();
+    await this.idb.delete();
+    // await this.idb.meta.clear();
+    // await this.idb.codingjobs.clear();
+    // await this.idb.tasks.clear();
+    // await this.idb.documents.clear();
   }
 }
 

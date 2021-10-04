@@ -13,32 +13,33 @@ const Annotator = () => {
   const [item, setItem] = useState(null);
   const location = useLocation();
 
-  console.log(task);
   useEffect(() => {
     if (location.search) {
-      const jobURL = location.search.substring(1);
+      const jobURL = decodeURI(location.search.substring(1));
       openCodingjob(jobURL, setTask);
     }
   }, [location, setTask]);
 
-  // let cwidths = [8, 8];
-  // if (task?.codebook?.taskSettings?.type) {
-  //   if (task.codebook.taskSettings.type === "annotate") cwidths = [4, 12];
-  //   if (task.codebook.taskSettings.type === "questions") cwidths = [4, 4];
-  // }
+  let colWidth = 16;
+  if (task?.codebook?.taskSettings?.type) {
+    if (task.codebook.taskSettings.type === "annotate") colWidth = 16;
+    if (task.codebook.taskSettings.type === "questions") colWidth = 8;
+  }
 
   return (
-    <Grid container>
-      <Grid.Row>
-        <Grid.Column width={10}>
+    <Grid container stackable centered style={{ margin: "0", padding: "0" }}>
+      <Grid.Row style={{ height: "40px", padding: "0" }}>
+        <div width={3}>
           <ItemSelector items={task?.items} setItem={setItem} />
-        </Grid.Column>
-        <Grid.Column width={6}>
+        </div>
+        <div width={3}>
           <ExitButton />
-        </Grid.Column>
+        </div>
       </Grid.Row>
       <Grid.Row>
-        <Task codebook={task?.codebook} item={item} />
+        <Grid.Column width={colWidth} style={{ minHeight: "90vh" }}>
+          <Task codebook={task?.codebook} item={item} />
+        </Grid.Column>
       </Grid.Row>
     </Grid>
   );
@@ -55,7 +56,9 @@ const ExitButton = () => {
 };
 
 const openCodingjob = async (jobURL, setTask) => {
+  console.log(jobURL);
   let task = await db.idb.tasks.get({ url: jobURL });
+  console.log(task);
   if (!task) {
     const response = await axios.get(jobURL);
     const data = response.data;
@@ -83,7 +86,7 @@ const openCodingjob = async (jobURL, setTask) => {
 const Task = React.memo(({ codebook, item }) => {
   if (!codebook || !item) return null;
 
-  const renderTaskPreview = (type) => {
+  const renderTaskPreview = type => {
     switch (type) {
       case "questions":
         return <QuestionTask item={item} codebook={codebook} preview={false} />;
