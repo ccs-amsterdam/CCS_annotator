@@ -20,7 +20,6 @@ const Welcome = ({ items }) => {
       if (addDemo) await create_demo_job(db);
       await db.welcome();
       await initStoragePersistence();
-      console.log(items[0].path);
       history.push(items[0].path);
     } catch (e) {
       console.log(e);

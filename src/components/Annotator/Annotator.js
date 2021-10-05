@@ -56,9 +56,7 @@ const ExitButton = () => {
 };
 
 const openCodingjob = async (jobURL, setTask) => {
-  console.log(jobURL);
   let task = await db.idb.tasks.get({ url: jobURL });
-  console.log(task);
   if (!task) {
     const response = await axios.get(jobURL);
     const data = response.data;
@@ -86,7 +84,7 @@ const openCodingjob = async (jobURL, setTask) => {
 const Task = React.memo(({ codebook, item }) => {
   if (!codebook || !item) return null;
 
-  const renderTaskPreview = type => {
+  const renderTaskPreview = (type) => {
     switch (type) {
       case "questions":
         return <QuestionTask item={item} codebook={codebook} preview={false} />;

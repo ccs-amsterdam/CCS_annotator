@@ -7,6 +7,7 @@ import useItemBundle from "hooks/useItemBundle";
 const documentSettings = {
   textUnitPosition: 2 / 4,
   showAnnotations: false,
+  centerVertical: true,
   canAnnotate: false,
 };
 

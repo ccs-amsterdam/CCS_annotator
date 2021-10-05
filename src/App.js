@@ -15,9 +15,9 @@ import TaskSelector from "components/Annotator/TaskSelector";
 // The first item will be the opening page after login
 const homepage = "/home";
 const items = [
-  { label: "Task selector", path: "/tasks", Component: TaskSelector },
-  { label: "Annotator", path: "/annotator", Component: Annotator },
-  { label: "Codingjob manager", path: "/manager", Component: CodingjobManager },
+  { label: "Task selector", path: "/tasks", Component: TaskSelector, menu: true },
+  { label: "Annotator", path: "/annotator", Component: Annotator, menu: false },
+  { label: "Codingjob manager", path: "/manager", Component: CodingjobManager, menu: true },
 ];
 
 const App = () => {

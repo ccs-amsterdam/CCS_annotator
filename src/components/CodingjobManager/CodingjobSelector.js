@@ -25,7 +25,7 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob }) => {
   ];
 
   return (
-    <Grid>
+    <Grid centered stackable columns={1}>
       <Grid.Column width={6}>
         <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
           Select Codingjob

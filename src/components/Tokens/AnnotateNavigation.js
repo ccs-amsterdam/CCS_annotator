@@ -277,12 +277,12 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
 
   if (tokens[newPosition]?.ref == null) {
     if (key === "ArrowRight") {
-      const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
+      const firstUnit = tokens.findIndex((token) => token.codingUnit);
       if (firstUnit < 0) return mover.position;
       newPosition = firstUnit;
     }
     if (key === "ArrowLeft") {
-      const firstAfterUnit = tokens.findIndex((token) => token.textPart === "contextAfter");
+      const firstAfterUnit = tokens.lastIndexOf((token) => token.codingUnit);
       if (firstAfterUnit < 0) return mover.position;
       newPosition = firstAfterUnit - 1;
     }
@@ -327,7 +327,7 @@ const moveSentence = (tokens, mover, direction = "up") => {
   // token spans, that provide information about the x and y values
 
   if (tokens[mover.position]?.ref == null || tokens[mover.startposition]?.ref == null) {
-    const firstUnit = tokens.findIndex((token) => token.textPart === "textUnit");
+    const firstUnit = tokens.findIndex((token) => token.codingUnit);
     return firstUnit < 0 ? 0 : firstUnit;
   }
 

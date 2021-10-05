@@ -10,7 +10,7 @@ import EditCodePopup from "./EditCodePopup";
 /**
  * Display an editable codebook that interacts with codingjob.codebook.codes
  */
-const CodeBook = ({ codes, setCodes, height = "80vh" }) => {
+const CodeBook = ({ codes, setCodes, height = "100%" }) => {
   const [codeMap, setCodeMap] = useState({});
   const [codeTreeArray, setCodeTreeArray] = useState([]);
   const [changeColor, setChangeColor] = useState(null);
@@ -46,114 +46,116 @@ const CodeBook = ({ codes, setCodes, height = "80vh" }) => {
   };
 
   return (
-    <Table
-      singleLine
-      columns={2}
-      textAlign="left"
-      style={{ border: "0", boxShadow: "0", width: "100%" }}
-    >
-      <Table.Header className="codes-thead"></Table.Header>
-      <Table.Body style={{ height: height, margin: "0" }} className="codes-tbody">
-        <Table.Row className="codes-tr">
-          <Table.HeaderCell textAlign="center">
-            <Icon name="shutdown" />
-          </Table.HeaderCell>
-          <Table.HeaderCell>Codebook</Table.HeaderCell>
-        </Table.Row>
-        {[...codeTreeArray].map((code, i) => {
-          if (code.foldToParent) return null;
+    <div style={{ overflow: "auto" }}>
+      <Table
+        singleLine
+        columns={2}
+        unstackable
+        textAlign="left"
+        style={{ border: "0", boxShadow: "0", width: "100%" }}
+      >
+        <Table.Header className="codes-thead"></Table.Header>
+        <Table.Body style={{ height: height, margin: "0" }} className="codes-tbody">
+          <Table.Row className="codes-tr">
+            <Table.HeaderCell textAlign="center">
+              <Icon name="shutdown" />
+            </Table.HeaderCell>
+            <Table.HeaderCell>Codebook</Table.HeaderCell>
+          </Table.Row>
+          {[...codeTreeArray].map((code, i) => {
+            if (code.foldToParent) return null;
 
-          return (
-            <Table.Row
-              className="codes-tr"
-              key={i}
-              style={
-                {
-                  // backgroundColor: code.level === 0 ? "lightgrey" : null,
+            return (
+              <Table.Row
+                className="codes-tr"
+                key={i}
+                style={
+                  {
+                    // backgroundColor: code.level === 0 ? "lightgrey" : null,
+                  }
                 }
-              }
-            >
-              <Table.Cell
-                className="codes-td"
-                width={1}
-                style={{
-                  border: "1px solid black",
-                  borderRight: code.active == null ? null : "1px solid black",
-                  backgroundColor: code.color && code.active ? code.color : "white",
-                }}
               >
-                {code.active == null ? null : (
-                  <Checkbox
-                    slider
-                    checked={code.active && code.activeParent}
-                    style={{ transform: "scale(0.6)", width: "1.5em" }}
-                    onChange={(e, d) => {
-                      toggleActiveCode(codes, code.code, d.checked, setCodes);
-                    }}
-                  />
-                )}
-              </Table.Cell>
-
-              <Table.Cell
-                className="codes-td"
-                style={{
-                  borderTop: code.level === 0 ? "1px solid black" : null,
-                  //borderBottom: code.level === 0 ? "1px solid black" : null,
-                }}
-              >
-                <span style={{ ...formatCode(code), marginLeft: `${2 * code.level}em` }}>
-                  <EditCodePopup
-                    codeMap={codeMap}
-                    code={code}
-                    codes={codes}
-                    setCodes={setCodes}
-                    setChangeColor={setChangeColor}
-                  >
-                    <Icon name="cog" style={{ marginRight: "0.5em", cursor: "pointer" }} />
-                  </EditCodePopup>
-                  {code.code}
-                  {code.totalChildren === 0 || code.active == null ? null : (
-                    <>
-                      <Icon
-                        style={{
-                          padding: "0",
-                          margin: "0",
-                          marginLeft: "1em",
-                          cursor: "pointer",
-                        }}
-                        onClick={() =>
-                          toggleFoldCode(
-                            codes,
-                            code.code,
-                            code.folded != null && code.folded,
-                            setCodes
-                          )
-                        }
-                        name={code.folded ? "caret right" : "dropdown"}
-                      />
-                      {!code.folded ? null : (
-                        <span
-                          style={{ color: "grey" }}
-                        >{`${code.totalActiveChildren}/${code.totalChildren}`}</span>
-                      )}
-                    </>
+                <Table.Cell
+                  className="codes-td"
+                  width={1}
+                  style={{
+                    border: "1px solid black",
+                    borderRight: code.active == null ? null : "1px solid black",
+                    backgroundColor: code.color && code.active ? code.color : "white",
+                  }}
+                >
+                  {code.active == null ? null : (
+                    <Checkbox
+                      checked={code.active && code.activeParent}
+                      style={{ transform: "scale(0.9)", width: "100%" }}
+                      onChange={(e, d) => {
+                        toggleActiveCode(codes, code.code, d.checked, setCodes);
+                      }}
+                    />
                   )}
-                </span>
-              </Table.Cell>
-            </Table.Row>
-          );
-        })}
-        <EditCodePopup
-          codeMap={codeMap}
-          code={""}
-          codes={codes}
-          setCodes={setCodes}
-          setChangeColor={setChangeColor}
-        >
-          <Icon name="cog" style={{ marginLeft: "0.7em", cursor: "pointer" }} />
-        </EditCodePopup>
-      </Table.Body>
-    </Table>
+                </Table.Cell>
+
+                <Table.Cell
+                  className="codes-td"
+                  style={{
+                    borderTop: code.level === 0 ? "1px solid black" : null,
+                    //borderBottom: code.level === 0 ? "1px solid black" : null,
+                  }}
+                >
+                  <span style={{ ...formatCode(code), marginLeft: `${2 * code.level}em` }}>
+                    <EditCodePopup
+                      codeMap={codeMap}
+                      code={code}
+                      codes={codes}
+                      setCodes={setCodes}
+                      setChangeColor={setChangeColor}
+                    >
+                      <Icon name="cog" style={{ marginRight: "0.5em", cursor: "pointer" }} />
+                    </EditCodePopup>
+                    {code.code}
+                    {code.totalChildren === 0 || code.active == null ? null : (
+                      <>
+                        <Icon
+                          style={{
+                            padding: "0",
+                            margin: "0",
+                            marginLeft: "1em",
+                            cursor: "pointer",
+                          }}
+                          onClick={() =>
+                            toggleFoldCode(
+                              codes,
+                              code.code,
+                              code.folded != null && code.folded,
+                              setCodes
+                            )
+                          }
+                          name={code.folded ? "caret right" : "dropdown"}
+                        />
+                        {!code.folded ? null : (
+                          <span
+                            style={{ color: "grey" }}
+                          >{`${code.totalActiveChildren}/${code.totalChildren}`}</span>
+                        )}
+                      </>
+                    )}
+                  </span>
+                </Table.Cell>
+              </Table.Row>
+            );
+          })}
+          <EditCodePopup
+            codeMap={codeMap}
+            code={""}
+            codes={codes}
+            setCodes={setCodes}
+            setChangeColor={setChangeColor}
+          >
+            <Icon name="cog" style={{ marginLeft: "0.7em", cursor: "pointer" }} />
+          </EditCodePopup>
+        </Table.Body>
+      </Table>
+    </div>
   );
 };
 

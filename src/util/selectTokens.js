@@ -17,9 +17,9 @@ export const selectTokens = (tokens, item, contextUnit, contextWindow) => {
   if (contextUnit === "none") tokenContext = tokenRange;
 
   for (let i = 0; i < tokens.length; i++) {
-    tokens[i].textPart = "textUnit";
-    if (tokens[i].index < tokenRange[0]) tokens[i].textPart = "contextBefore";
-    if (tokens[i].index > tokenRange[1]) tokens[i].textPart = "contextAfter";
+    tokens[i].codingUnit = true;
+    if (tokens[i].index < tokenRange[0]) tokens[i].codingUnit = false;
+    if (tokens[i].index > tokenRange[1]) tokens[i].codingUnit = false;
     if (tokens[i].index < tokenContext[0]) continue;
     if (tokens[i].index > tokenContext[1]) break;
     newTokens.push(tokens[i]);
@@ -30,9 +30,9 @@ export const selectTokens = (tokens, item, contextUnit, contextWindow) => {
 const getTokenRange = (tokens, field, startValue, endValue) => {
   const range = [tokens[0].index, tokens[tokens.length - 1].index];
 
-  const start = tokens.find(token => token[field] === startValue);
+  const start = tokens.find((token) => token[field] === startValue);
   if (start) range[0] = start.index;
-  const end = tokens.find(token => token[field] === endValue + 1);
+  const end = tokens.find((token) => token[field] === endValue + 1);
   if (end) range[1] = end.index - 1;
 
   return range;

@@ -98,7 +98,6 @@ const getItemsFromDB = async (codingjob) => {
       const noDuplicates = unitSelection.value === "has annotation";
 
       const all = await allJobItems(codingjob, textUnit, done, noDuplicates);
-      console.log(all);
       let sampleN = Math.ceil(cjIndices.length * (unitSelection.annotationMix / 100));
       let addSample = drawRandom(
         all,

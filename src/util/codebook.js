@@ -104,18 +104,6 @@ const fillCodeTreeArray = (codeMap, parents, codeTreeArray, codeTrail, showColor
   }
 };
 
-// const sortCodes = (codes, codeMap) => {
-//   const sortFun = (a, b) => {
-//     if (a.order && b.order && a.order !== b.order) return a.order - b.order;
-//     return 0;
-//   };
-//   console.log(codeMap);
-//   console.log(codes);
-//   const codeWithOrder = codes.map((code) => ({ code, order: codeMap[code]?.order }));
-//   console.log(codeWithOrder);
-//   return codeWithOrder.sort(sortFun).map((code) => code.code);
-// };
-
 const parentData = (codeMap, code) => {
   // get array of parents from highest to lowers (tree)
   // look at parents to see if one is not active (activeParent).

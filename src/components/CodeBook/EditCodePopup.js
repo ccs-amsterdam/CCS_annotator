@@ -113,7 +113,7 @@ const EditCodePopup = ({ children, codeMap, code, codes, setCodes, setChangeColo
             compact
             size="mini"
           >
-            Create new
+            Add code
           </Button>
         ) : (
           <span

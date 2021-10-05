@@ -9,13 +9,9 @@ const Tokens = ({ itemBundle }) => {
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = itemBundle.tokens.find(token => token.textPart === "textUnit");
+    const firstTextUnitToken = itemBundle.tokens.find((token) => token.codingUnit);
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
-      scrollToMiddle(
-        containerRef.current,
-        firstTextUnitToken.ref.current,
-        itemBundle.settings.textUnitPosition
-      );
+      scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, 1 / 4);
     }
   });
 
@@ -35,7 +31,6 @@ const Tokens = ({ itemBundle }) => {
   //       style={{
   //         float: "left",
   //         padding: "2em 1em",
-  //         //margin: `${settings.height / 2}vh 0 0 -3em`,  // float document button halfway
   //         margin: `0 0 0 -3em`,
   //         borderRadius: "25px 0px 0px 25px",
 
@@ -52,7 +47,13 @@ const Tokens = ({ itemBundle }) => {
   // };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: itemBundle.settings.centerVertical ? "center" : null,
+        height: "100%",
+      }}
+    >
       {/* <div style={{ flex: "1 3%" }}>{documentAnnotateButton()}</div> */}
 
       <Ref innerRef={containerRef}>
@@ -80,14 +81,14 @@ const prepareTokens = async (itemBundle, setText) => {
   // !! assignment by reference: renderText also adds a react ref to each token in itemBundle.tokens
 };
 
-const renderText = itemBundle => {
+const renderText = (itemBundle) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
   const tokens = itemBundle.tokens;
 
   let section = [];
   let paragraph = [];
   let sentence = [];
-  let textPart = tokens[0].textPart;
+  let codingUnit = tokens[0].codingUnit;
   let section_name = tokens[0].section;
   let paragraph_nr = tokens[0].paragraph;
   let sentence_nr = tokens[0].sentence;
@@ -98,7 +99,7 @@ const renderText = itemBundle => {
 
     if (tokens[i].sentence !== sentence_nr) {
       if (sentence.length > 0)
-        paragraph.push(renderSentence(i, sentence_nr, sentence, itemBundle, textPart));
+        paragraph.push(renderSentence(i, sentence_nr, sentence, itemBundle, codingUnit));
       sentence = [];
     }
     if (tokens[i].paragraph !== paragraph_nr) {
@@ -111,7 +112,7 @@ const renderText = itemBundle => {
             paragraph_nr !== currentParagraph,
             tokens[i].paragraph !== paragraph_nr,
             itemBundle,
-            textPart
+            codingUnit
           )
         );
         currentParagraph = tokens[i].paragraph;
@@ -128,17 +129,17 @@ const renderText = itemBundle => {
     paragraph_nr = tokens[i].paragraph;
     sentence_nr = tokens[i].sentence;
     section_name = tokens[i].section;
-    textPart = tokens[i].textPart;
+    codingUnit = tokens[i].codingUnit;
 
-    if (textPart === "textUnit") tokens[i].ref = React.createRef();
-    sentence.push(renderToken(tokens[i], itemBundle, textPart));
+    if (codingUnit) tokens[i].ref = React.createRef();
+    sentence.push(renderToken(tokens[i], itemBundle, codingUnit));
   }
 
   if (sentence.length > 0)
-    paragraph.push(renderSentence("last", sentence_nr, sentence, itemBundle, textPart));
+    paragraph.push(renderSentence("last", sentence_nr, sentence, itemBundle, codingUnit));
   if (paragraph.length > 0)
     section.push(
-      renderParagraph("last", paragraph_nr, paragraph, true, false, itemBundle, textPart)
+      renderParagraph("last", paragraph_nr, paragraph, true, false, itemBundle, codingUnit)
     );
   if (section.length > 0)
     text["text"].push(renderSection("last_" + section_name, section, section_name));
@@ -146,7 +147,7 @@ const renderText = itemBundle => {
 };
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
-  const fontstyle = paragraphs => {
+  const fontstyle = (paragraphs) => {
     if (section === "title") return <h2 key={paragraph_nr}>{paragraphs}</h2>;
     return paragraphs;
   };
@@ -159,10 +160,10 @@ const renderSection = (paragraph_nr, paragraphs, section) => {
   );
 };
 
-const renderParagraph = (position, paragraph_nr, sentences, start, end, itemBundle, textPart) => {
+const renderParagraph = (position, paragraph_nr, sentences, start, end, itemBundle, codingUnit) => {
   // const paragraphAnnotateButton = () => {
   //   if (itemBundle.codebook.taskType === "question") return;
-  //   if (textPart !== "textUnit") return null;
+  //   if (!codingUnit) return null;
   //   if (itemBundle.codebook.textUnit !== "document" && itemBundle.codebook.textUnit !== "paragraph") return null;
   //   return (
   //     <AnnotatedTextUnit
@@ -202,10 +203,10 @@ const renderParagraph = (position, paragraph_nr, sentences, start, end, itemBund
   );
 };
 
-const renderSentence = (position, sentence_nr, tokens, itemBundle, textPart) => {
+const renderSentence = (position, sentence_nr, tokens, itemBundle, codingUnit) => {
   // const sentenceAnnotateButton = () => {
   //   if (itemBundle.codebook.taskType === "question") return;
-  //   if (textPart !== "textUnit") return null;
+  //   if (!codingUnit) return null;
   //   return (
   //     <AnnotatedTextUnit
   //       unit="sentence"
@@ -229,8 +230,8 @@ const renderSentence = (position, sentence_nr, tokens, itemBundle, textPart) => 
   );
 };
 
-const renderToken = (token, itemBundle, textPart) => {
-  if (textPart === "textUnit")
+const renderToken = (token, itemBundle, codingUnit) => {
+  if (codingUnit)
     return (
       <span
         style={{

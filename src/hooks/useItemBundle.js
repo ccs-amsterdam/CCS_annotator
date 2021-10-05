@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-
-import db from "apis/dexie";
-import { selectTokens } from "util/selectTokens";
 import { prepareDocument } from "util/createDocuments";
 
 const defaultSettings = {
@@ -22,14 +19,11 @@ const defaultSettings = {
  */
 const useItemBundle = (item, codebook, settings = defaultSettings, preview) => {
   const [itemBundle, setItemBundle] = useState(null);
-
   useEffect(() => {
     if (!item) return null;
-    //setItemBundle(null);
     prepareItemBundle(item, codebook, settings, preview, setItemBundle);
   }, [item, codebook, settings, setItemBundle, preview]);
 
-  //if (!item || !itemBundle) return null;
   return itemBundle;
 };
 
@@ -44,47 +38,22 @@ const useItemBundle = (item, codebook, settings = defaultSettings, preview) => {
  * @returns
  */
 export const prepareItemBundle = async (item, codebook, settings, preview, setItemBundle) => {
-  // Note that every item must exist as a document in the indexedDb, even if it's only opened once for annotation servers that pass
-  // one item at a time. This ensures safe and smooth annotating (e.g., broken connection, refreshing page)
-  // (NOTE TO SELF: Before <Document>, the codebook and item must therefore have been processed and stored)
-  let itemBundle;
-  if (item.doc_uid) itemBundle = await db.getDocument(item.doc_uid); // get document information (text/tokens, annotations)
-  if (!itemBundle) itemBundle = prepareTempItem(item);
+  let itemBundle = { ...item };
+
+  // For convenience, also allow item to just have a 'text' key with a string (instead of text_fields)
+  if (!itemBundle.text_fields && itemBundle.text)
+    itemBundle.text_fields = [{ name: "text", value: itemBundle.text }];
+
+  itemBundle = prepareDocument(itemBundle);
+
   if (!itemBundle) return;
-
-  // if (item.tokens) itemBundle.tokens = item.tokens;
-  // if (item.text_fields)
-  //   itemBundle.tokens = parseTokens(item.text_fields, item.offset, item.unitRange);
-
-  if (codebook.unitSettings) {
-    // if full document is retrieved, use codingUnit and contextUnit to select the coding/context tokens
-    const { contextUnit, contextWindow } = codebook.unitSettings;
-    itemBundle.tokens = selectTokens(itemBundle.tokens, item, contextUnit, contextWindow);
-  }
-
   itemBundle.textUnitSpan = getUnitSpan(itemBundle);
-  itemBundle.item = item; // add item information
   itemBundle.writable = false; // this prevents overwriting annotations before they have been loaded (in <ManageAnnotations>)
   itemBundle.codebook = codebook;
   itemBundle.settings = settings;
   itemBundle.settings.saveAnnotations = !preview;
+  console.log(itemBundle);
   if (itemBundle) setItemBundle(itemBundle);
-};
-
-/**
- * If an item does not exist in the indexedDB, prepare it on the fly
- * This does mean that annotations will also not be saved in the indexedDB,
- * so any results should immediately be send to a server via the 'returnAddress'
- *
- * The preparation is flexible, and allows the items to have several forms.
- * If the item does not yet have tokens, but it does have "text", it will be tokenized
- * @param {*} item
- * @param {*} codebook
- */
-const prepareTempItem = (item) => {
-  if (!item.tokens && !item.text_fields && item.text)
-    item.text_fields = [{ name: "text", value: item.text }];
-  return prepareDocument(item);
 };
 
 /**
@@ -92,9 +61,14 @@ const prepareTempItem = (item) => {
  * Needed for tokenization agnostic storing of annotations
  */
 const getUnitSpan = (itemBundle) => {
-  const firstUnitToken = itemBundle.tokens.find((token) => token.textPart === "textUnit");
-  let lastUnitToken = itemBundle.tokens.find((token) => token.textPart === "contextAfter");
-  if (lastUnitToken == null) lastUnitToken = itemBundle.tokens[itemBundle.tokens.length - 1];
+  const firstUnitToken = itemBundle.tokens.find((token) => token.codingUnit);
+  let lastUnitTokenIndex = itemBundle.tokens.lastIndexOf((token) => token.codingUnit);
+
+  let lastUnitToken;
+  if (lastUnitTokenIndex < 0) {
+    lastUnitToken = itemBundle.tokens[itemBundle.tokens.length - 1];
+  } else lastUnitToken = itemBundle.tokens[lastUnitTokenIndex];
+
   return [firstUnitToken.offset, lastUnitToken.offset + lastUnitToken.length];
 };
 

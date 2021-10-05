@@ -12,14 +12,15 @@ export const exportSpanAnnotations = async (doc, annotations) => {
         })
         .join("");
       const ann_obj = {
-        code: key,
+        variable: key,
+        value: ann[key].value,
         text: text,
         section: ann[key].section,
         offset: ann[key].offset,
         length: ann[key].length,
-        index: ann[key].index,
-        ngram: ann[key].span[1] - ann[key].span[0] + 1,
-        coding: ann[key].coding,
+        //index: ann[key].index,
+        //ngram: ann[key].span[1] - ann[key].span[0] + 1,
+        //coding: ann[key].coding,
       };
       un_ann.push(ann_obj);
     }

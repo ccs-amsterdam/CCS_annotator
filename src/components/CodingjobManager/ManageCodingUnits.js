@@ -6,6 +6,7 @@ import UnitSettings from "./Settings/UnitSettings";
 import Document from "components/Tokens/Document";
 import useItemBundle from "hooks/useItemBundle";
 import useJobItems from "hooks/useJobItems";
+import { standardizeItems } from "util/standardizeItem";
 
 const getTableColumns = (unitSettings) => {
   if (!unitSettings) return [];
@@ -42,9 +43,10 @@ const getTableColumns = (unitSettings) => {
 const previewDocumentSettings = {
   height: 50,
   textUnitPosition: 1 / 4,
+  centerVertical: false,
   showAnnotations: false,
   canAnnotate: true,
-  saveAnnotations: true,
+  saveAnnotations: false,
 };
 
 const ManageCodingUnits = ({ codingjob }) => {
@@ -54,8 +56,8 @@ const ManageCodingUnits = ({ codingjob }) => {
 
   return (
     <div>
-      <Grid celled="internally" columns={5}>
-        <Grid.Column verticalAlign="top" stretched width={4}>
+      <Grid stackable celled="internally" columns={3}>
+        <Grid.Column verticalAlign="top" stretched width={5}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Settings
           </Header>
@@ -71,6 +73,14 @@ const ManageCodingUnits = ({ codingjob }) => {
 
 const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
   const [jobItem, setJobItem] = useState(null);
+  const [standardizedItem, setStandardizedItem] = useState(null);
+
+  useEffect(() => {
+    if (!jobItem) return null;
+    standardizeItems(codingjob, [jobItem]).then((singleItemArray) => {
+      setStandardizedItem(singleItemArray[0]);
+    });
+  }, [jobItem, setStandardizedItem, codingjob]);
 
   useEffect(() => {
     if (jobItems && jobItems.length > 0) {
@@ -84,7 +94,7 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
         <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
           Selected units
         </Header>
-        <Dimmer inverted active={jobItems === null}>
+        <Dimmer inverted active={codingjob?.unitSettings?.textUnit && jobItems === null}>
           <Loader />
         </Dimmer>
         <SelectionTable
@@ -96,7 +106,9 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
         />
         {/* <ItemDetails items={jobItems || []} /> */}
       </Grid.Column>
-      <PreviewDocument item={jobItem} codebook={{ ...codingjob.codebook }} />
+      <Grid.Column width={5}>
+        <PreviewDocument item={standardizedItem} codebook={{ ...codingjob.codebook }} />
+      </Grid.Column>
     </>
   );
 });

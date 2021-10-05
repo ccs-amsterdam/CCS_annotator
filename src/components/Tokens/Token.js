@@ -10,7 +10,7 @@ import { List, Popup } from "semantic-ui-react";
 const Token = React.forwardRef(({ token, itemBundle }, ref) => {
   const codebook = itemBundle.codebook;
   const settings = itemBundle.settings;
-  const annotation = itemBundle.item.annotation;
+  const annotation = itemBundle.annotation;
 
   const selected = useSelector((state) => {
     if (state.tokenSelection.length === 0) return false;
@@ -22,7 +22,7 @@ const Token = React.forwardRef(({ token, itemBundle }, ref) => {
 
   let tokenClass = "token";
 
-  if (token.textPart === "textUnit") {
+  if (token.codingUnit) {
     if (selected) tokenClass = tokenClass + " selected";
     if (codebook?.unitSelection?.highlightAnnotation && annotation && annotation.span) {
       if (token.index >= annotation.span[0] && token.index <= annotation.span[1])
@@ -69,7 +69,7 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
     return <>{token.pre + token.text + token.post}</>;
 
   // if this is a context token, we can also ignore the fancy stuff
-  if (token.textPart !== "textUnit") return <>{token.pre + token.text + token.post}</>;
+  if (!token.codingUnit) return <>{token.pre + token.text + token.post}</>;
 
   const tokenSpan = (annotatedTokenClass, color) => {
     return (

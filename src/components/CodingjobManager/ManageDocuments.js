@@ -7,7 +7,7 @@ import DocumentTable from "components/CodingjobManager/DocumentTable";
 const ManageDocuments = ({ codingjob }) => {
   return (
     <div style={{ paddingLeft: "1em" }}>
-      <Grid columns={2}>
+      <Grid stackable columns={2}>
         <Grid.Column width={8}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Document list

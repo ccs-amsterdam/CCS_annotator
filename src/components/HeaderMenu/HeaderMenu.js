@@ -13,6 +13,7 @@ const HeaderMenu = ({ items, homepage, children }) => {
   const location = useLocation();
 
   const menuItems = items.map((item, index) => {
+    if (!item.menu) return null;
     return (
       <Menu.Item
         key={"item-" + index}

@@ -12,6 +12,7 @@ import Help from "components/Help";
 // The codebook can then be edited, but the imported codes cannot be removed or renamed.
 
 const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
+  console.log(taskSettings);
   const setAnnotateForm = (value) => {
     setTaskSettings({ ...taskSettings, annotate: value });
   };
@@ -40,28 +41,14 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
             toggle
             label="Search box"
             disabled={taskSettings.annotate.buttonMode === "recent"}
-            checked={taskSettings.searchBox}
+            checked={taskSettings.annotate.searchBox}
             onChange={(e, d) => setAnnotateForm({ ...taskSettings.annotate, searchBox: d.checked })}
           />
         </Form.Field>
       </Form.Group>
       <Form.Group grouped>
         <label>Code buttons</label>
-        <Form.Field>
-          <Radio
-            value="all"
-            label="Show all codes"
-            checked={taskSettings.annotate.buttonMode === "all"}
-            onChange={() => setAnnotateForm({ ...taskSettings.annotate, buttonMode: "all" })}
-          />
-          <Help
-            header={"Show all active codes"}
-            texts={[
-              "Only codes that are 'active' will be shown",
-              "You can toggle which codes are active in the codebook (top-right in menu bar)",
-            ]}
-          />
-        </Form.Field>
+
         <Form.Field>
           <Radio
             value="recent"
@@ -74,6 +61,21 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
             texts={[
               "Show only (active) codes that the coder used recently",
               "The Search box is always enabled with this option, and the buttons only serve as quick keys. This is especially usefull for very large codebooks, for instance for tagging specific named entities",
+            ]}
+          />
+        </Form.Field>
+        <Form.Field>
+          <Radio
+            value="all"
+            label="Show all codes"
+            checked={taskSettings.annotate.buttonMode === "all"}
+            onChange={() => setAnnotateForm({ ...taskSettings.annotate, buttonMode: "all" })}
+          />
+          <Help
+            header={"Show all active codes"}
+            texts={[
+              "Only codes that are 'active' will be shown",
+              "You can toggle which codes are active in the codebook (top-right in menu bar)",
             ]}
           />
         </Form.Field>

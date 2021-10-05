@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Ref, Table } from "semantic-ui-react";
 import { triggerCodeselector } from "actions";
@@ -59,7 +59,7 @@ const annotationRows = (tokens, codeMap, annotations) => {
 
       let notInUnit = true;
       for (let span_i = annotation.span[0]; span_i <= annotation.span[1]; span_i++) {
-        if (tokens[span_i + offset] != null && tokens[span_i + offset].textPart === "textUnit")
+        if (tokens[span_i + offset] != null && tokens[span_i + offset].codingUnit)
           notInUnit = false;
       }
 
@@ -95,27 +95,27 @@ const annotationRows = (tokens, codeMap, annotations) => {
 };
 
 const AnnotationRow = ({ tokens, codeMap, annotation, code, text, offset }) => {
-  const infocus = useSelector((state) => {
-    let currentIndex = tokens[state.currentToken]?.index; // currentToken is the arrayIndex
-    if (currentIndex === null) return null;
-    return currentIndex >= annotation.span[0] && currentIndex <= annotation.span[1];
-  });
+  // const infocus = useSelector((state) => {
+  //   let currentIndex = tokens[state.currentToken]?.index; // currentToken is the arrayIndex
+  //   if (currentIndex === null) return null;
+  //   return currentIndex >= annotation.span[0] && currentIndex <= annotation.span[1];
+  // });
 
   const ref = useRef();
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (infocus) {
-      if (ref.current) {
-        ref.current.style.backgroundColor = "grey";
-        ref.current.scrollIntoView(false, {
-          block: "nearest",
-        });
-      }
-    } else {
-      if (ref.current) ref.current.style.backgroundColor = null;
-    }
-  }, [infocus]);
+  // useEffect(() => {
+  //   if (infocus) {
+  //     if (ref.current) {
+  //       ref.current.style.backgroundColor = "grey";
+  //       ref.current.scrollIntoView(false, {
+  //         block: "nearest",
+  //       });
+  //     }
+  //   } else {
+  //     if (ref.current) ref.current.style.backgroundColor = null;
+  //   }
+  // }, [infocus]);
 
   const color = getColor(code, codeMap);
   const label = codeMap[code]?.foldToParent ? `${codeMap[code].foldToParent} - ${code}` : code;

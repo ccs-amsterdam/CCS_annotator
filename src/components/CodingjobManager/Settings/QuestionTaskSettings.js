@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Form, Radio, TextArea, Menu, Header, Grid } from "semantic-ui-react";
+import { Form, Radio, TextArea, Menu, Header, Segment } from "semantic-ui-react";
 import { useSelector, useDispatch } from "react-redux";
 import { setQuestionIndex } from "actions";
 
@@ -47,38 +47,29 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
     const qlist = questionMap();
     //if (qlist.length === 0) return null;
     return (
-      <Grid>
-        <Grid.Column width={3}>
-          <br />
-          <Menu vertical style={{ width: "3em" }}>
-            {Array(taskSettings.questions.length)
-              .fill(0)
-              .map((v, i) => {
-                return (
-                  <Menu.Item
-                    style={{ paddingLeft: "0.5em", paddingRight: "0.3em" }}
-                    name={`Q ${i + 1}`}
-                    active={questionIndex === i}
-                    onClick={(e, d) => dispatch(setQuestionIndex(i))}
-                  />
-                );
-              })}
-            <Menu.Item
-              icon="plus"
-              style={{ paddingBottom: "2em", background: "lightblue" }}
-              onClick={onAdd}
-            />
-          </Menu>
-        </Grid.Column>
+      <div>
+        <Menu attached="top">
+          {Array(taskSettings.questions.length)
+            .fill(0)
+            .map((v, i) => {
+              return (
+                <Menu.Item
+                  name={`Q ${i + 1}`}
+                  active={questionIndex === i}
+                  onClick={(e, d) => dispatch(setQuestionIndex(i))}
+                />
+              );
+            })}
+          <Menu.Item icon="plus" style={{ background: "lightblue" }} onClick={onAdd} />
+        </Menu>
 
-        <Grid.Column width={12}>
-          <br />
+        <Segment attached="bottom">
           {qlist.length > 0 ? (
             <Header textAlign="center">{`Question ${questionIndex + 1}`}</Header>
           ) : null}
           {qlist[questionIndex]}
-        </Grid.Column>
-      </Grid>
+        </Segment>
+      </div>
     );
   };
 

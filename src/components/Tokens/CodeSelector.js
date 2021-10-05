@@ -148,7 +148,6 @@ const CurrentCodePage = ({ current, itemSettings, annotations, codeMap, setCurre
     setCurrent(value);
   };
 
-  console.log(codeMap);
   const getOptions = (annotationCodes) => {
     return annotationCodes.map((code) => ({ label: code, color: getColor(code, codeMap) }));
   };

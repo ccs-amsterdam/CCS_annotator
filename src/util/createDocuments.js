@@ -60,7 +60,7 @@ export const prepareDocument = (document, codes = {}) => {
   if (document.tokens) {
     document.tokens = importTokens(document.tokens);
   } else {
-    document.tokens = parseTokens(document.text_fields, document.offset, document.unitRange);
+    document.tokens = parseTokens(document.text_fields, document.offset, document.unit_range);
   }
   if (document.tokens.length > 0) {
     document.n_paragraphs = document.tokens[document.tokens.length - 1].paragraph;

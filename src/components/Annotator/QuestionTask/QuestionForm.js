@@ -8,7 +8,7 @@ import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const QuestionForm = ({ itemBundle, codebook, preview }) => {
-  const questionIndex = useSelector(state => state.questionIndex);
+  const questionIndex = useSelector((state) => state.questionIndex);
   const [settings, setSettings] = useState();
 
   const dispatch = useDispatch();
@@ -26,7 +26,7 @@ const QuestionForm = ({ itemBundle, codebook, preview }) => {
   const [rawQuestion, question] = prepareQuestion(itemBundle, settings[questionIndex]);
   const currentAnswer = getCurrentAnswer(itemBundle);
 
-  const onSelect = answer => {
+  const onSelect = (answer) => {
     setNewAnswer(itemBundle, rawQuestion, answer, dispatch);
   };
 
@@ -96,17 +96,18 @@ const QuestionForm = ({ itemBundle, codebook, preview }) => {
   );
 };
 
-const prepareSettings = codebook => {
+const prepareSettings = (codebook) => {
   const questions = codebook.taskSettings.questions;
 
-  return questions.map(question => {
+  return questions.map((question) => {
     const codeMap = codeBookEdgesToMap(question.codes);
     const cta = getCodeTreeArray(codeMap);
+    console.log(questions);
     return { ...question, options: getOptions(cta) }; // note that it's important that this deep copies question
   });
 };
 
-const getOptions = cta => {
+const getOptions = (cta) => {
   return cta.reduce((options, code) => {
     if (!code.active) return options;
     if (!code.activeParent) return options;
@@ -136,12 +137,12 @@ const setNewAnswer = (itemBundle, rawQuestion, answer, dispatch) => {
   dispatch(setAnnotations({ ...newAnnotations }));
 };
 
-const getCurrentAnswer = itemBundle => {
+const getCurrentAnswer = (itemBundle) => {
   const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
   return itemBundle.annotations[itemBundle.textUnit]?.[itemBundle.unitIndex]?.[root]?.answer;
 };
 
-const showCurrent = currentAnswer => {
+const showCurrent = (currentAnswer) => {
   if (currentAnswer == null) return null;
   return (
     <div style={{ backgroundColor: "white" }}>
@@ -205,7 +206,7 @@ const prepareQuestion = (itemBundle, settings) => {
   return [rawQuestion, markedString(question)];
 };
 
-const markedString = text => {
+const markedString = (text) => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");
@@ -238,7 +239,7 @@ const SearchBoxDropdown = React.memo(({ options, callback }) => {
         placeholder={"<type to search>"}
         searchInput={{ autoFocus: true }}
         style={{ minWidth: "12em" }}
-        options={options.map(option => {
+        options={options.map((option) => {
           return {
             key: option.code,
             value: option.code,
@@ -270,12 +271,12 @@ const ButtonSelection = React.memo(({ options, callback, preview }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const eventsBlocked = useSelector(state => state.eventsBlocked);
+  const eventsBlocked = useSelector((state) => state.eventsBlocked);
 
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const nbuttons = options.length;
 
       // any arrowkey

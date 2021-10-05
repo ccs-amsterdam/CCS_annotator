@@ -5,6 +5,8 @@ import QuestionTask from "components/Annotator/QuestionTask/QuestionTask";
 import AnnotateTask from "components/Annotator/AnnotateTask/AnnotateTask";
 import useJobItems from "hooks/useJobItems";
 import ItemSelector from "components/CodingjobManager/ItemSelector";
+import { standardizeItems } from "util/standardizeItem";
+import { useEffect } from "react/cjs/react.development";
 
 const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false
@@ -21,7 +23,7 @@ const ManageTask = ({ codingjob }) => {
 
   return (
     <div>
-      <Grid columns={2}>
+      <Grid stackable columns={2}>
         <Grid.Column verticalAlign="top" stretched width={cwidths[0]}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Settings
@@ -37,14 +39,32 @@ const ManageTask = ({ codingjob }) => {
 };
 
 const PreviewTask = React.memo(({ codingjob, jobItems }) => {
+  const [jobItem, setJobItem] = useState(null);
+  const [standardizedItem, setStandardizedItem] = useState(null);
+
+  useEffect(() => {
+    if (!jobItem) return null;
+    standardizeItems(codingjob, [jobItem]).then((singleItemArray) => {
+      setStandardizedItem(singleItemArray[0]);
+    });
+  }, [jobItem, setStandardizedItem, codingjob]);
+
   if (!jobItems) return null;
 
-  const renderTaskPreview = type => {
+  const renderTaskPreview = (type) => {
     switch (type) {
       case "questions":
-        return <PreviewQuestionTask codingjob={codingjob} jobItems={jobItems} />;
+        return (
+          <PreviewQuestionTask codingjob={codingjob} standardizedItem={standardizedItem}>
+            <ItemSelector items={jobItems} setItem={setJobItem} />
+          </PreviewQuestionTask>
+        );
       case "annotate":
-        return <PreviewAnnotateTask codingjob={codingjob} jobItems={jobItems} />;
+        return (
+          <PreviewAnnotateTask codingjob={codingjob} standardizedItem={standardizedItem}>
+            <ItemSelector items={jobItems} setItem={setJobItem} />
+          </PreviewAnnotateTask>
+        );
       default:
         return null;
     }
@@ -54,50 +74,53 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
   return renderTaskPreview(codingjob.codebook.taskSettings.type);
 });
 
-const PreviewQuestionTask = React.memo(({ codingjob, jobItems }) => {
-  const [jobItem, setJobItem] = useState(null);
-
+const PreviewQuestionTask = React.memo(({ children, codingjob, standardizedItem }) => {
   return (
     <>
-      <Header textAlign="center" style={{ width: "400px", background: "#1B1C1D", color: "white" }}>
+      <Header
+        textAlign="center"
+        style={{ maxWidth: "400px", background: "#1B1C1D", color: "white" }}
+      >
         Preview
-        <ItemSelector items={jobItems} setItem={setJobItem} />
+        {children}
       </Header>
 
       <div
         style={{
           padding: "0",
-          width: "400px",
+          maxWidth: "400px",
           height: "calc(100vh - 250px)",
+          minHeight: "300px",
+
+          maxHeight: "800px",
         }}
       >
-        <div style={{ padding: "0em", paddingTop: "1em", height: "100%", border: "1px solid" }}>
-          <QuestionTask item={jobItem} codebook={codingjob.codebook} preview={true} />
+        <div style={{ padding: "0em", paddingTop: "1em", height: "100%" }}>
+          <QuestionTask item={standardizedItem} codebook={codingjob.codebook} preview={true} />
         </div>
       </div>
     </>
   );
 });
 
-const PreviewAnnotateTask = ({ codingjob, jobItems }) => {
-  const [jobItem, setJobItem] = useState(null);
-
+const PreviewAnnotateTask = ({ children, codingjob, standardizedItem }) => {
   return (
     <>
       <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
         Preview
       </Header>
-      <ItemSelector items={jobItems} setItem={setJobItem} />
+      {children}
 
       <div
         style={{
           padding: "0",
           width: "100%",
           height: "calc(100vh - 250px)",
+          minHeight: "300px",
         }}
       >
-        <div style={{ padding: "0", height: "100%", border: "1px solid" }}>
-          <AnnotateTask item={jobItem} codebook={codingjob.codebook} preview={true} />
+        <div style={{ padding: "0", height: "100%" }}>
+          <AnnotateTask item={standardizedItem} codebook={codingjob.codebook} preview={true} />
         </div>
       </div>
     </>

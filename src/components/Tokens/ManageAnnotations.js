@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setAnnotations, clearAnnotations } from "actions";
-import db from "apis/dexie";
 
 /**
  * This component loads the annotations from the document of a taskItem into the redux store,
@@ -42,7 +41,7 @@ const importAnnotations = (taskItem, dispatch) => {
 
 const writeAnnotations = (taskItem, annotations, saveAnnotations, callback) => {
   if (saveAnnotations) {
-    db.writeAnnotations({ doc_uid: taskItem.doc_uid }, annotations);
+    //db.writeAnnotations({ doc_uid: taskItem.doc_uid }, annotations);
     if (callback) callback(taskItem, annotations);
   }
 };
