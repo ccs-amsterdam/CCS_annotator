@@ -18,6 +18,7 @@ const Welcome = () => {
       if (addDemo) await create_demo_job(db);
       await db.firstLogin(name);
       await initStoragePersistence();
+      //alert(history.location.pathname);
       history.goBack();
     } catch (e) {
       console.log(e);

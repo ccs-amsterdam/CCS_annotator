@@ -38,7 +38,7 @@ const App = () => {
     <BrowserRouter>
       <HeaderMenu items={items} homepage={homepage}>
         <Switch>
-          <Route exact path={homepage} render={() => <Welcome />} />
+          <Route exact path={"/"} render={() => <Welcome />} />
           {createNavigation(items)}
         </Switch>
       </HeaderMenu>

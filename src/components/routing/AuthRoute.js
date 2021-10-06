@@ -19,7 +19,8 @@ const AuthRoute = ({ Component, homepage, ...componentProps }) => {
   };
   connect();
 
-  if (!loading && !hasdb) history.push("/home");
+  console.log("test");
+  if (!loading && !hasdb) history.push("/");
 
   return (
     <Route
