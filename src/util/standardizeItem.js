@@ -13,8 +13,8 @@ import db from "apis/dexie";
 //   - These units are transformed to simplified items
 
 export const standardizeItems = async (codingjob, jobItems) => {
-  const { contextUnit, contextWindow } = codingjob.codebook.unitSettings;
-  const importAnnotations = codingjob.taskSettings?.importAnnotations;
+  const { contextUnit, contextWindow } = codingjob.unitSettings;
+  const importAnnotations = codingjob?.taskSettings?.importAnnotations;
 
   const docs = {};
   const items = [];
@@ -32,7 +32,7 @@ export const standardizeItems = async (codingjob, jobItems) => {
   return items;
 };
 
-const unparseTokens = (tokens) => {
+const unparseTokens = tokens => {
   // Create texts from tokens in a way that preserves information about original text and textParts (context and unit)
 
   const text_fields = [];

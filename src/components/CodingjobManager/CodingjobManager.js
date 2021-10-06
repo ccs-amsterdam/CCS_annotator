@@ -18,7 +18,7 @@ const CodingjobManager = () => {
   const codingjob = useLiveQuery(() => {
     // retrieve codingjob from Dexie whenever selectedCodingjob changes OR dexie is updated
     if (selectedCodingjob) {
-      return db.idb.codingjobs.get(selectedCodingjob.job_id).then((cj) => {
+      return db.idb.codingjobs.get(selectedCodingjob.job_id).then(cj => {
         return { ...cj, ROW_ID: selectedCodingjob.ROW_ID };
       });
     }
@@ -26,10 +26,13 @@ const CodingjobManager = () => {
 
   const nDocuments = useLiveQuery(() => {
     if (!codingjob) return 0;
-    return db.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    return db.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .count();
   }, [codingjob]);
 
-  const renderSwitch = (menuItem) => {
+  const renderSwitch = menuItem => {
     switch (menuItem) {
       case "codingjobs":
         return (
@@ -69,21 +72,17 @@ const CodingjobManager = () => {
         />
         <Step
           title="Units"
-          description={
-            codingjob?.codebook?.unitSettings?.n
-              ? `${codingjob?.codebook?.unitSettings?.n} units`
-              : null
-          }
+          description={codingjob?.unitSettings?.n ? `${codingjob?.unitSettings?.n} units` : null}
           active={menuItem === "units"}
-          completed={codingjob?.codebook?.unitSettings?.n}
+          completed={codingjob?.unitSettings?.n}
           disabled={codingjob === null}
           onClick={(e, d) => setMenuItem("units")}
         />
         <Step
           title="Task"
-          description={codingjob?.codebook?.taskSettings?.type || "Define the task"}
+          description={codingjob?.taskSettings?.type || "Define the task"}
           active={menuItem === "task"}
-          completed={codingjob?.codebook?.taskSettings?.type}
+          completed={codingjob?.taskSettings?.type}
           disabled={codingjob === null}
           onClick={(e, d) => setMenuItem("task")}
         />
@@ -92,9 +91,7 @@ const CodingjobManager = () => {
           description={"Get (others) to work"}
           active={menuItem === "deploy"}
           disabled={
-            codingjob === null ||
-            !codingjob?.codebook?.unitSettings?.n ||
-            !codingjob?.codebook?.taskSettings?.type
+            codingjob === null || !codingjob?.unitSettings?.n || !codingjob?.taskSettings?.type
           }
           onClick={(e, d) => setMenuItem("deploy")}
         />

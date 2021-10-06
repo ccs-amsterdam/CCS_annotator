@@ -9,9 +9,9 @@ const defaultDeploySettings = {
 };
 
 const DeploySettings = ({ codingjob }) => {
-  const deploySettings = codingjob?.codebook?.deploySettings || defaultDeploySettings;
-  const setDeploySettings = (us) => {
-    db.setCodingjobProp(codingjob, "codebook.deploySettings", us);
+  const deploySettings = codingjob?.deploySettings || defaultDeploySettings;
+  const setDeploySettings = us => {
+    db.setCodingjobProp(codingjob, "deploySettings", us);
   };
 
   if (!deploySettings) return null;
@@ -30,7 +30,6 @@ const DeployForm = ({ deploySettings, setDeploySettings }) => {
         <Radio
           value={value}
           label={label}
-          disabled={value !== "file"}
           checked={deploySettings.medium === value}
           onChange={(e, d) =>
             setDeploySettings({
@@ -52,7 +51,6 @@ const DeployForm = ({ deploySettings, setDeploySettings }) => {
       <Form.Group grouped widths="equal">
         {radioButton("file", "File")}
         {radioButton("amcat", "AmCAT")}
-        {radioButton("custom", "Custom")}
       </Form.Group>
     </Form>
   );

@@ -8,7 +8,7 @@ import useItemBundle from "hooks/useItemBundle";
 import useJobItems from "hooks/useJobItems";
 import { standardizeItems } from "util/standardizeItem";
 
-const getTableColumns = (unitSettings) => {
+const getTableColumns = unitSettings => {
   if (!unitSettings) return [];
 
   const columns = [
@@ -57,7 +57,7 @@ const ManageCodingUnits = ({ codingjob }) => {
   return (
     <div>
       <Grid stackable celled="internally" columns={3}>
-        <Grid.Column verticalAlign="top" stretched width={5}>
+        <Grid.Column verticalAlign="top" stretched width={6}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Settings
           </Header>
@@ -77,7 +77,7 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
 
   useEffect(() => {
     if (!jobItem) return null;
-    standardizeItems(codingjob, [jobItem]).then((singleItemArray) => {
+    standardizeItems(codingjob, [jobItem]).then(singleItemArray => {
       setStandardizedItem(singleItemArray[0]);
     });
   }, [jobItem, setStandardizedItem, codingjob]);
@@ -98,7 +98,7 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
           <Loader />
         </Dimmer>
         <SelectionTable
-          columns={getTableColumns(codingjob?.codebook?.unitSettings)}
+          columns={getTableColumns(codingjob?.unitSettings)}
           selectedRow={jobItem}
           setSelectedRow={setJobItem}
           data={jobItems || []}
@@ -107,7 +107,7 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
         {/* <ItemDetails items={jobItems || []} /> */}
       </Grid.Column>
       <Grid.Column width={5}>
-        <PreviewDocument item={standardizedItem} codebook={{ ...codingjob.codebook }} />
+        <PreviewDocument item={standardizedItem} codebook={{}} />
       </Grid.Column>
     </>
   );

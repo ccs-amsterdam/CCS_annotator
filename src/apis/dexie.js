@@ -8,26 +8,26 @@ class AnnotationDB {
     this.idb = new Dexie("AmCAT_Annotator");
 
     //for testing, clean db on refresh
-    // this.idb.delete();
-    // this.idb = new Dexie("AmCAT_Annotator");
+    this.idb.delete();
+    this.idb = new Dexie("AmCAT_Annotator");
 
     this.idb.version(2).stores({
-      meta: "welcome", // this just serves to keep track of whether db was 'created' via the welcome component
+      user: "name", // other fields: 'id'
       codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
       documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
-      tasks: "[url+last_modified], url", // unindexed fields:  codebook, items
+      tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
     });
   }
 
-  // META
-  async welcome() {
-    if (!(await this.isWelcome())) {
-      this.idb.meta.add({ welcome: 1 });
+  // USER
+  async firstLogin(name) {
+    if (await this.newUser()) {
+      this.idb.user.add({ name });
     }
     return null;
   }
-  async isWelcome() {
-    return this.idb.meta.get(1);
+  async newUser() {
+    return (await this.idb.user.toArray()).length === 0;
   }
 
   // CODINGJOBS

@@ -8,9 +8,9 @@ import EditCodePopup from "./EditCodePopup";
 // problem: how to deal with renaming existing codes. (maybe just freeze used codes from editing)
 
 /**
- * Display an editable codebook that interacts with codingjob.codebook.codes
+ * Display an editable codebook
  */
-const CodeBook = ({ codes, setCodes, height = "100%" }) => {
+const CodesEditor = ({ codes, setCodes, height = "100%" }) => {
   const [codeMap, setCodeMap] = useState({});
   const [codeTreeArray, setCodeTreeArray] = useState([]);
   const [changeColor, setChangeColor] = useState(null);
@@ -37,7 +37,7 @@ const CodeBook = ({ codes, setCodes, height = "100%" }) => {
     return () => clearTimeout(timer);
   }, [codes, setCodes, changeColor, setChangeColor]);
 
-  const formatCode = (code) => {
+  const formatCode = code => {
     const color = code.active == null || code.active ? "black" : "grey";
     if (code.level === 0) return { fontWeight: "bold", fontSize: "15px", color };
     if (code.level === 1) return { fontSize: "12px", color };
@@ -160,7 +160,7 @@ const CodeBook = ({ codes, setCodes, height = "100%" }) => {
 };
 
 const changeCodeColor = (code, color, codes, setCodes) => {
-  let updatedCodes = codes.map((ucode) => {
+  let updatedCodes = codes.map(ucode => {
     if (ucode.code === code) ucode.color = color;
     return ucode;
   });
@@ -170,7 +170,7 @@ const changeCodeColor = (code, color, codes, setCodes) => {
 const toggleActiveCode = (codes, code, active, setCodes) => {
   let updatedCodes = [...codes];
 
-  const selectedCode = updatedCodes.find((ucode) => ucode.code === code);
+  const selectedCode = updatedCodes.find(ucode => ucode.code === code);
 
   // there is a possibility that code.code does not exist, if it only existed as a parent
   // this is ideally resolved upstream (when creating the codebook), but as a plan B it can be added here
@@ -184,7 +184,7 @@ const toggleActiveCode = (codes, code, active, setCodes) => {
 const toggleFoldCode = (codes, code, folded, setCodes) => {
   let updatedCodes = [...codes];
 
-  const selectedCode = updatedCodes.find((ucode) => ucode.code === code);
+  const selectedCode = updatedCodes.find(ucode => ucode.code === code);
 
   // there is a possibility that code.code does not exist, if it only existed as a parent
   // this is ideally resolved upstream (when creating the codebook), but as a plan B it can be added here
@@ -195,4 +195,4 @@ const toggleFoldCode = (codes, code, folded, setCodes) => {
   setCodes(updatedCodes);
 };
 
-export default CodeBook;
+export default CodesEditor;

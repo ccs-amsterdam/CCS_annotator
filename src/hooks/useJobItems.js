@@ -7,7 +7,7 @@ import { drawRandom } from "util/sample";
  * @param {} codingjob
  * @returns
  */
-const useJobItems = (codingjob) => {
+const useJobItems = codingjob => {
   const [jobItems, setJobItems] = useState(null);
 
   // When a new codingjob is loaded, set codingjobLoaded ref to false
@@ -15,7 +15,7 @@ const useJobItems = (codingjob) => {
   // the unitSettings stored in the codingjob
 
   useEffect(() => {
-    if (!codingjob?.codebook?.unitSettings) return null;
+    if (!codingjob?.unitSettings) return null;
     setJobItems(null);
     getJobItems(codingjob, setJobItems);
   }, [codingjob, setJobItems]);
@@ -29,29 +29,29 @@ const getJobItems = async (codingjob, setJobItems) => {
   let [totalItems, items] = await getItemsFromDB(codingjob);
   setJobItems(items);
   if (
-    codingjob.codebook.unitSettings.n === null ||
-    codingjob.codebook.unitSettings.n == null ||
-    codingjob.codebook.unitSettings.totalItems !== totalItems
+    codingjob.unitSettings.n === null ||
+    codingjob.unitSettings.n == null ||
+    codingjob.unitSettings.totalItems !== totalItems
   ) {
-    await db.setCodingjobProp(codingjob, "codebook.unitSettings", {
-      ...codingjob.codebook.unitSettings,
+    await db.setCodingjobProp(codingjob, "unitSettings", {
+      ...codingjob.unitSettings,
       n: totalItems,
       totalItems,
     });
   }
 };
 
-const getItemsFromDB = async (codingjob) => {
-  if (!codingjob?.codebook?.unitSettings) return null;
-  const textUnit = codingjob.codebook.unitSettings.textUnit;
-  const unitSelection = codingjob.codebook.unitSettings;
+const getItemsFromDB = async codingjob => {
+  if (!codingjob?.unitSettings) return null;
+  const textUnit = codingjob.unitSettings.textUnit;
+  const unitSelection = codingjob.unitSettings;
 
   let totalItems = 0;
 
-  const getGroup = (cjIndices) => {
+  const getGroup = cjIndices => {
     if (!unitSelection.balanceDocuments && !unitSelection.statifyAnnotations) return null; // if not balanced
 
-    return cjIndices.map((item) => {
+    return cjIndices.map(item => {
       let group = "";
       if (unitSelection.balanceDocuments) group += item.docIndex;
       if (item.annotation && unitSelection.balanceAnnotations) group += "_" + item.annotation.group;
@@ -134,7 +134,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
 
   const cjIndices = [];
   let docIndex = -1;
-  await documents.each((e) => {
+  await documents.each(e => {
     docIndex++;
     if (textUnit === "document" && !done.has(e.doc_uid)) {
       if (noDuplicates && done.has(e.doc_uid)) return;
@@ -193,7 +193,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
   const cjIndices = [];
   const done = new Set([]);
   let docIndex = -1;
-  await documents.each((e) => {
+  await documents.each(e => {
     docIndex++;
     if (e.annotations?.span) {
       for (let i of Object.keys(e.annotations.span)) {
@@ -244,7 +244,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
 
 const orderJobItems = (cjIndices, unitSelection) => {
   if (!unitSelection.ordered) return cjIndices;
-  return cjIndices.sort(function (a, b) {
+  return cjIndices.sort(function(a, b) {
     if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;
     if (a.unitIndex !== b.unitIndex) return a.unitIndex - b.unitIndex;
     if (a.annotation != null && a.annotation.index !== b)

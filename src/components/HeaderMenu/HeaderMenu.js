@@ -5,6 +5,7 @@ import db from "apis/dexie";
 
 import Reset from "./Reset";
 import Persist from "./Persist";
+import Amcat from "./Amcat";
 
 // This is the index file of HeaderMenu, but importing via index
 // breaks. Probably due to the withRouter()
@@ -42,6 +43,7 @@ const HeaderMenu = ({ items, homepage, children }) => {
       >
         {menuItems}
         <Menu.Menu position="right">
+          <Amcat />
           <Persist />
           <Reset homepage={homepage} />
         </Menu.Menu>

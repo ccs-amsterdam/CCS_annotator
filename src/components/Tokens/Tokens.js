@@ -9,7 +9,7 @@ const Tokens = ({ itemBundle }) => {
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = itemBundle.tokens.find((token) => token.codingUnit);
+    const firstTextUnitToken = itemBundle.tokens.find(token => token.codingUnit);
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, 1 / 4);
     }
@@ -21,9 +21,16 @@ const Tokens = ({ itemBundle }) => {
 
   if (itemBundle === null) return null;
 
+  // const emptySpace = () => {
+  //   // add empty space before and after text to center coding unit
+  //   // in case it's at the bottom or top of a text
+  //   if (!itemBundle?.settings?.centerVertical) return null;
+  //   return <div style={{ height: "10em" }} />;
+  // };
+
   // const documentAnnotateButton = () => {
-  //   if (itemBundle.codebook.taskType === "question") return;
-  //   if (itemBundle.codebook.textUnit !== "document") return;
+  //   if (itemBundle.taskType === "question") return;
+  //   if (itemBundle.textUnit !== "document") return;
   //   return (
   //     <AnnotatedTextUnit
   //       unit="document"npm
@@ -81,7 +88,7 @@ const prepareTokens = async (itemBundle, setText) => {
   // !! assignment by reference: renderText also adds a react ref to each token in itemBundle.tokens
 };
 
-const renderText = (itemBundle) => {
+const renderText = itemBundle => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
   const tokens = itemBundle.tokens;
 
@@ -147,7 +154,7 @@ const renderText = (itemBundle) => {
 };
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
-  const fontstyle = (paragraphs) => {
+  const fontstyle = paragraphs => {
     if (section === "title") return <h2 key={paragraph_nr}>{paragraphs}</h2>;
     return paragraphs;
   };
@@ -162,9 +169,9 @@ const renderSection = (paragraph_nr, paragraphs, section) => {
 
 const renderParagraph = (position, paragraph_nr, sentences, start, end, itemBundle, codingUnit) => {
   // const paragraphAnnotateButton = () => {
-  //   if (itemBundle.codebook.taskType === "question") return;
+  //   if (itemBundle.taskType === "question") return;
   //   if (!codingUnit) return null;
-  //   if (itemBundle.codebook.textUnit !== "document" && itemBundle.codebook.textUnit !== "paragraph") return null;
+  //   if (itemBundle.textUnit !== "document" && itemBundle.textUnit !== "paragraph") return null;
   //   return (
   //     <AnnotatedTextUnit
   //       unit="paragraph"
@@ -205,7 +212,7 @@ const renderParagraph = (position, paragraph_nr, sentences, start, end, itemBund
 
 const renderSentence = (position, sentence_nr, tokens, itemBundle, codingUnit) => {
   // const sentenceAnnotateButton = () => {
-  //   if (itemBundle.codebook.taskType === "question") return;
+  //   if (itemBundle.taskType === "question") return;
   //   if (!codingUnit) return null;
   //   return (
   //     <AnnotatedTextUnit
@@ -237,13 +244,14 @@ const renderToken = (token, itemBundle, codingUnit) => {
         style={{
           lineHeight: "1.5em",
           fontSize: "1.2em",
+          fontWeight: "bold",
         }}
       >
         <Token ref={token.ref} key={token.index} token={token} itemBundle={itemBundle} />
       </span>
     );
   return (
-    <span style={{ color: "blue" }}>
+    <span style={{ color: "#746363" }}>
       <Token ref={token.ref} key={token.index} token={token} itemBundle={itemBundle} />
     </span>
   );

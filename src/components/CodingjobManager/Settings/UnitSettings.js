@@ -11,7 +11,7 @@ import {
   Grid,
 } from "semantic-ui-react";
 import Help from "components/Help";
-import CodeBook from "components/CodeBook/CodeBookEditor";
+import CodesEditor from "components/CodesEditor/CodesEditor";
 import db from "apis/dexie";
 
 const defaultUnitSettings = {
@@ -29,18 +29,21 @@ const defaultUnitSettings = {
 };
 
 const UnitSettings = ({ codingjob }) => {
-  const unitSettings = codingjob?.codebook?.unitSettings || defaultUnitSettings;
-  const setUnitSettings = (us) => {
-    db.setCodingjobProp(codingjob, "codebook.unitSettings", us);
+  const unitSettings = codingjob?.unitSettings || defaultUnitSettings;
+  const setUnitSettings = us => {
+    db.setCodingjobProp(codingjob, "unitSettings", us);
   };
 
   if (!unitSettings) return null;
   return (
     <div style={{ verticalAlign: "top", float: "top", paddingLeft: "1em" }}>
-      <Grid verticalAlign="top" style={{ verticalAlign: "top", paddingTop: "1em" }}>
-        <CodingUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
-        <br />
-        <ContextUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+      <Grid style={{ paddingTop: "1em" }}>
+        <Grid.Column width={8}>
+          <CodingUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+        </Grid.Column>
+        <Grid.Column width={8}>
+          <ContextUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+        </Grid.Column>
       </Grid>
       <br />
       <br />
@@ -100,7 +103,7 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
 };
 
 const ContextUnitForm = ({ unitSettings, setUnitSettings }) => {
-  const setContextWindow = (value) => {
+  const setContextWindow = value => {
     setUnitSettings({
       ...unitSettings,
       contextWindow: value,
@@ -177,7 +180,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
   // };
 
   const onChangeSeed = (e, d) => {
-    setDelayed((current) => ({ ...current, seed: Number(d.value) }));
+    setDelayed(current => ({ ...current, seed: Number(d.value) }));
   };
 
   const onChangeShuffle = (e, d) => {
@@ -195,7 +198,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
     let value = Number(d.value);
     //value = value > n ? Math.min(totalItems, value + 4) : Math.max(0, value - 4);
     setPct(Math.round((100 * value) / totalItems));
-    setDelayed((current) => ({ ...current, n: value }));
+    setDelayed(current => ({ ...current, n: value }));
   };
 
   const onChangePCT = (e, d) => {
@@ -204,7 +207,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
     let valueN = Math.ceil((value / 100) * totalItems);
     if (valueN >= 0) {
       setPct(value);
-      setDelayed((current) => ({ ...current, n: valueN }));
+      setDelayed(current => ({ ...current, n: valueN }));
     }
   };
 
@@ -348,13 +351,13 @@ const ContextWindow = ({ contextUnit, contextWindow, setContextWindow }) => {
 };
 
 const SelectValidCodes = ({ codingjob }) => {
-  if (!codingjob?.codebook?.unitSettings) return null;
-  if (!codingjob.codebook?.unitSettings.totalItems) return null;
-  if (codingjob.codebook.unitSettings.textUnit !== "span") return null;
+  if (!codingjob?.unitSettings) return null;
+  if (!codingjob.unitSettings.totalItems) return null;
+  if (codingjob.unitSettings.textUnit !== "span") return null;
 
-  const unitSettings = codingjob.codebook.unitSettings;
+  const unitSettings = codingjob.unitSettings;
   // const setUnitSettings = (us) => {
-  //   db.setCodingjobProp(codingjob, "codebook.unitSettings", us);
+  //   db.setCodingjobProp(codingjob, "unitSettings", us);
   // };
 
   if (!unitSettings) return null;
@@ -373,7 +376,7 @@ const SelectValidCodes = ({ codingjob }) => {
           />
         </div>
       </Form.Group>
-      <CodeBook codingjob={codingjob} height="40%" />
+      <CodesEditor codingjob={codingjob} height="40%" />
     </Form>
   );
 };

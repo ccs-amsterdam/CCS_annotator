@@ -1,6 +1,19 @@
 import randomColor from "randomcolor";
 
-export const standardizeCodes = (codes) => {
+/**
+ * Transform the taskSettings into the codebook. The difference is that taskSettings also contains information that's only relevant in the manager. The codebook contains only the information relevant for the annotator
+ * @param {*} taskSettings
+ */
+export const getCodebook = taskSettings => {
+  const codebook = {
+    type: taskSettings.type,
+    ...taskSettings[taskSettings.type],
+  };
+
+  return codebook;
+};
+
+export const standardizeCodes = codes => {
   return codes.map((code, i) => {
     if (typeof code !== "object") code = { code };
     if (code.active == null) code.active = true;
@@ -11,7 +24,7 @@ export const standardizeCodes = (codes) => {
   });
 };
 
-export const codeBookEdgesToMap = (codes) => {
+export const codeBookEdgesToMap = codes => {
   // const sortFun = (a, b) => {
   //   if (a.order && b.order && a.order !== b.order) return a.order - b.order;
 
@@ -76,7 +89,7 @@ export const codeBookEdgesToMap = (codes) => {
 
 export const getCodeTreeArray = (codeMap, showColors) => {
   let parents = Object.keys(codeMap).filter(
-    (code) => !codeMap[code].parent || codeMap[code].parent === ""
+    code => !codeMap[code].parent || codeMap[code].parent === ""
   );
   const codeTreeArray = [];
   fillCodeTreeArray(codeMap, parents, codeTreeArray, [], showColors);

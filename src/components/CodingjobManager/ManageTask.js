@@ -6,6 +6,7 @@ import AnnotateTask from "components/Annotator/AnnotateTask/AnnotateTask";
 import useJobItems from "hooks/useJobItems";
 import ItemSelector from "components/CodingjobManager/ItemSelector";
 import { standardizeItems } from "util/standardizeItem";
+import { getCodebook } from "util/codebook";
 import { useEffect } from "react/cjs/react.development";
 
 const ManageTask = ({ codingjob }) => {
@@ -16,9 +17,9 @@ const ManageTask = ({ codingjob }) => {
 
   if (!codingjob) return null;
   let cwidths = [8, 8];
-  if (codingjob.codebook?.taskSettings?.type) {
-    if (codingjob.codebook.taskSettings.type === "annotate") cwidths = [4, 12];
-    if (codingjob.codebook.taskSettings.type === "questions") cwidths = [6, 6];
+  if (codingjob.taskSettings?.type) {
+    if (codingjob.taskSettings.type === "annotate") cwidths = [4, 12];
+    if (codingjob.taskSettings.type === "questions") cwidths = [6, 6];
   }
 
   return (
@@ -44,14 +45,14 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
 
   useEffect(() => {
     if (!jobItem) return null;
-    standardizeItems(codingjob, [jobItem]).then((singleItemArray) => {
+    standardizeItems(codingjob, [jobItem]).then(singleItemArray => {
       setStandardizedItem(singleItemArray[0]);
     });
   }, [jobItem, setStandardizedItem, codingjob]);
 
   if (!jobItems) return null;
 
-  const renderTaskPreview = (type) => {
+  const renderTaskPreview = type => {
     switch (type) {
       case "questions":
         return (
@@ -70,11 +71,13 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
     }
   };
 
-  if (!codingjob?.codebook?.taskSettings?.type) return null;
-  return renderTaskPreview(codingjob.codebook.taskSettings.type);
+  if (!codingjob?.taskSettings?.type) return null;
+  return renderTaskPreview(codingjob.taskSettings.type);
 });
 
 const PreviewQuestionTask = React.memo(({ children, codingjob, standardizedItem }) => {
+  const codebook = getCodebook(codingjob.taskSettings);
+
   return (
     <>
       <Header
@@ -90,13 +93,13 @@ const PreviewQuestionTask = React.memo(({ children, codingjob, standardizedItem 
           padding: "0",
           maxWidth: "400px",
           height: "calc(100vh - 250px)",
-          minHeight: "300px",
+          minHeight: "500px",
 
           maxHeight: "800px",
         }}
       >
         <div style={{ padding: "0em", paddingTop: "1em", height: "100%" }}>
-          <QuestionTask item={standardizedItem} codebook={codingjob.codebook} preview={true} />
+          <QuestionTask item={standardizedItem} codebook={codebook} preview={true} />
         </div>
       </div>
     </>
@@ -104,6 +107,8 @@ const PreviewQuestionTask = React.memo(({ children, codingjob, standardizedItem 
 });
 
 const PreviewAnnotateTask = ({ children, codingjob, standardizedItem }) => {
+  const codebook = getCodebook(codingjob.taskSettings);
+
   return (
     <>
       <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
@@ -120,7 +125,7 @@ const PreviewAnnotateTask = ({ children, codingjob, standardizedItem }) => {
         }}
       >
         <div style={{ padding: "0", height: "100%" }}>
-          <AnnotateTask item={standardizedItem} codebook={codingjob.codebook} preview={true} />
+          <AnnotateTask item={standardizedItem} codebook={codebook} preview={true} />
         </div>
       </div>
     </>

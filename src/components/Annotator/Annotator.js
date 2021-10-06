@@ -21,9 +21,9 @@ const Annotator = () => {
   }, [location, setTask]);
 
   let colWidth = 16;
-  if (task?.codebook?.taskSettings?.type) {
-    if (task.codebook.taskSettings.type === "annotate") colWidth = 16;
-    if (task.codebook.taskSettings.type === "questions") colWidth = 8;
+  if (task?.codebook?.type) {
+    if (task.codebook.type === "annotate") colWidth = 16;
+    if (task.codebook.type === "questions") colWidth = 8;
   }
 
   return (
@@ -84,7 +84,7 @@ const openCodingjob = async (jobURL, setTask) => {
 const Task = React.memo(({ codebook, item }) => {
   if (!codebook || !item) return null;
 
-  const renderTaskPreview = (type) => {
+  const renderTaskPreview = type => {
     switch (type) {
       case "questions":
         return <QuestionTask item={item} codebook={codebook} preview={false} />;
@@ -95,8 +95,8 @@ const Task = React.memo(({ codebook, item }) => {
     }
   };
 
-  if (!codebook?.taskSettings?.type) return null;
-  return renderTaskPreview(codebook.taskSettings.type);
+  if (!codebook?.type) return null;
+  return renderTaskPreview(codebook.type);
 });
 
 export default Annotator;

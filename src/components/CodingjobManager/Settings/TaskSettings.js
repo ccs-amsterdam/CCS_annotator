@@ -19,21 +19,23 @@ const defaultTaskSettings = {
   },
 
   // question type settings
-  questions: [
-    {
-      name: "Question name",
-      type: "select code",
-      question: "[Enter the question to the coder here...]",
-      codes: ["Some", "example", "options"],
-    },
-  ],
+  questions: {
+    questions: [
+      {
+        name: "Question name",
+        type: "select code",
+        question: "[Enter the question to the coder here...]",
+        codes: ["Some", "example", "options"],
+      },
+    ],
+  },
 };
 
 const TaskSettings = ({ codingjob }) => {
-  const unitSettings = codingjob?.codebook?.unitSettings;
-  const taskSettings = codingjob?.codebook?.taskSettings || defaultTaskSettings;
-  const setTaskSettings = (us) => {
-    db.setCodingjobProp(codingjob, "codebook.taskSettings", us);
+  const unitSettings = codingjob?.unitSettings;
+  const taskSettings = codingjob?.taskSettings || defaultTaskSettings;
+  const setTaskSettings = us => {
+    db.setCodingjobProp(codingjob, "taskSettings", us);
   };
 
   if (!taskSettings || !unitSettings) return null;

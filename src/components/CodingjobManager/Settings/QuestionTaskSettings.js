@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { setQuestionIndex } from "actions";
 
 import Help from "components/Help";
-import CodeBookEditor from "components/CodeBook/CodeBookEditor";
+import CodesEditor from "components/CodesEditor/CodesEditor";
 import { standardizeCodes } from "util/codebook";
 
 const questionDefaultSettings = {
@@ -17,20 +17,20 @@ const questionDefaultSettings = {
 
 const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) => {
   // question index via redux, so that it can be linked with question index in the question task preview
-  const questionIndex = useSelector((state) => state.questionIndex);
+  const questionIndex = useSelector(state => state.questionIndex);
   const dispatch = useDispatch();
 
   const onAdd = () => {
-    const questions = taskSettings.questions;
+    const questions = taskSettings.questions.questions;
     questions.push(questionDefaultSettings);
-    setTaskSettings({ ...taskSettings, questions });
+    setTaskSettings({ ...taskSettings, questions: { questions } });
   };
 
   const questionMap = () => {
-    return taskSettings.questions.map((question, i) => {
-      const setQuestionForm = (value) => {
+    return taskSettings.questions.questions.map((question, i) => {
+      const setQuestionForm = value => {
         const newTaskSettings = { ...taskSettings };
-        newTaskSettings.questions[i] = value;
+        newTaskSettings.questions.questions[i] = value;
         setTaskSettings(newTaskSettings);
       };
       return (
@@ -49,7 +49,7 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
     return (
       <div>
         <Menu attached="top">
-          {Array(taskSettings.questions.length)
+          {Array(taskSettings.questions.questions.length)
             .fill(0)
             .map((v, i) => {
               return (
@@ -117,12 +117,12 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
   }, [setDelayed, questionForm, setWarn, unitSelection]);
   console.log(warn);
 
-  const codeBookEditor = () => {
+  const codesEditor = () => {
     if (questionForm.type !== "search code" && questionForm.type !== "select code") return null;
     return (
-      <CodeBookEditor
+      <CodesEditor
         codes={standardizeCodes(questionForm.codes)}
-        setCodes={(newCodes) => setQuestionForm({ ...questionForm, codes: newCodes })}
+        setCodes={newCodes => setQuestionForm({ ...questionForm, codes: newCodes })}
       />
     );
   };
@@ -177,7 +177,7 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
         </Form.Field>
       </Form.Group>
       <br />
-      {codeBookEditor()}
+      {codesEditor()}
     </Form>
   );
 };

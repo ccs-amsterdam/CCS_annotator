@@ -2,7 +2,7 @@ import React from "react";
 
 import { Input, Form, Radio, Icon, Checkbox } from "semantic-ui-react";
 
-import CodeBookEditor from "components/CodeBook/CodeBookEditor";
+import CodesEditor from "components/CodesEditor/CodesEditor";
 import { standardizeCodes } from "util/codebook";
 
 import Help from "components/Help";
@@ -13,15 +13,15 @@ import Help from "components/Help";
 
 const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
   console.log(taskSettings);
-  const setAnnotateForm = (value) => {
+  const setAnnotateForm = value => {
     setTaskSettings({ ...taskSettings, annotate: value });
   };
 
-  const codeBookEditor = () => {
+  const codesEditor = () => {
     return (
-      <CodeBookEditor
+      <CodesEditor
         codes={standardizeCodes(taskSettings.annotate.codes)}
-        setCodes={(newCodes) => setAnnotateForm({ ...taskSettings.annotate, codes: newCodes })}
+        setCodes={newCodes => setAnnotateForm({ ...taskSettings.annotate, codes: newCodes })}
       />
     );
   };
@@ -95,7 +95,7 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
           />
         </Form.Field>
       </Form.Group>
-      {codeBookEditor()}
+      {codesEditor()}
     </Form>
   );
 };

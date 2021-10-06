@@ -1,26 +1,24 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 import db from "apis/dexie";
 import { useHistory } from "react-router-dom";
-import { Grid, Button, Header, Segment } from "semantic-ui-react";
+import { Grid, Button, Header, Segment, Form } from "semantic-ui-react";
 import { initStoragePersistence } from "apis/storemanager";
 import { demo_articles, demo_codebook } from "apis/demodata";
 
-const Welcome = ({ items }) => {
+const Welcome = () => {
   const history = useHistory();
+  const [name, setName] = useState("");
 
   const loggin = async (addDemo, checkWelcome) => {
-    if (checkWelcome) {
-      const iswelcome = await db.isWelcome();
-      if (!iswelcome) {
-        return null;
-      }
-    }
+    if (checkWelcome && (await db.newUser())) return null;
+    if (name.length < 10) return null;
+
     try {
       if (addDemo) await create_demo_job(db);
-      await db.welcome();
+      await db.firstLogin(name);
       await initStoragePersistence();
-      history.push(items[0].path);
+      history.goBack();
     } catch (e) {
       console.log(e);
     }
@@ -38,17 +36,27 @@ const Welcome = ({ items }) => {
             Welcome to the AmCAT annotator
           </Header>
           <p>
-            This is the (early development version of the) AmCAT annotator. The fact that you see
-            this message means that you're either here for the first time, or your local annotation
-            database was reset (by you or your browser).
+            Before we get started, please provide a username. This name will only be used to get
+            some idea of who coded what.
           </p>
-          <p>
-            The annotator stores your codingjobs and annotations on your local computer in your
-            browser's IndexedDB. Your data will only actually touch the internet when you
-            synchronize your data.
-          </p>
-          <Button primary onClick={() => loggin(true, false)}>
-            Yes, off course I trust you
+          <Form onSubmit={() => loggin(true, false)}>
+            <Form.Input
+              placeholder="username"
+              value={name}
+              onChange={(e, d) => {
+                if (d.value.length < 50) setName(d.value.replace(" ", "_"));
+              }}
+              autoFocus
+              style={{ width: "18em" }}
+            />
+          </Form>
+          {name.length === 49 ? (
+            <span style={{ color: "red" }}> Ok ok, please stop typing (really, these people)</span>
+          ) : null}
+          <br />
+          <br />
+          <Button primary disabled={name.length < 10} onClick={() => loggin(true, false)}>
+            {name.length < 10 ? "please use 10 characters or more" : "Get started!"}
           </Button>
         </Segment>
       </Grid.Column>
@@ -56,7 +64,7 @@ const Welcome = ({ items }) => {
   );
 };
 
-const create_demo_job = async (db) => {
+const create_demo_job = async db => {
   try {
     const job = await db.createCodingjob("Demo codingjob");
     await db.createDocuments(job, demo_articles, true);

@@ -9,7 +9,7 @@ import AuthRoute from "components/routing/AuthRoute";
 // Main pages. Use below in items to include in header menu
 import CodingjobManager from "components/CodingjobManager/CodingjobManager";
 import Annotator from "components/Annotator/Annotator";
-import TaskSelector from "components/Annotator/TaskSelector";
+import TaskSelector from "components/TaskSelector/TaskSelector";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
@@ -21,8 +21,8 @@ const items = [
 ];
 
 const App = () => {
-  const createNavigation = (items) => {
-    return items.map((item) => {
+  const createNavigation = items => {
+    return items.map(item => {
       return (
         <AuthRoute
           key={item.path}
@@ -38,7 +38,7 @@ const App = () => {
     <BrowserRouter>
       <HeaderMenu items={items} homepage={homepage}>
         <Switch>
-          <Route exact path={homepage} render={() => <Welcome items={items} />} />
+          <Route exact path={homepage} render={() => <Welcome />} />
           {createNavigation(items)}
         </Switch>
       </HeaderMenu>

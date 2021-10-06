@@ -1,34 +1,35 @@
 import React, { useState } from "react";
-import { Route, Redirect } from "react-router";
+import { Route, useHistory } from "react-router";
 import db from "apis/dexie";
 
 const AuthRoute = ({ Component, homepage, ...componentProps }) => {
   const [loading, setLoading] = useState(true);
   const [hasdb, setHasdb] = useState(false);
+  const history = useHistory();
   // the trick for passing on componentProps is basically
   // redundant now that we use Redux, but leaving it intact just in case
 
   const connect = async () => {
-    if (await db.isWelcome()) {
-      setHasdb(true);
-    } else {
+    if (await db.newUser()) {
       setHasdb(false);
+    } else {
+      setHasdb(true);
     }
     setLoading(false);
   };
   connect();
 
+  if (!loading && !hasdb) history.push("/home");
+
   return (
     <Route
       {...componentProps}
-      render={(props) =>
+      render={props =>
         loading ? (
           <div>loading...</div>
         ) : hasdb ? (
           <Component {...componentProps} {...props} />
-        ) : (
-          <Redirect to={"/home"} />
-        )
+        ) : null
       }
     />
   );

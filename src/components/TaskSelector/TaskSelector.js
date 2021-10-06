@@ -4,18 +4,18 @@ import db from "apis/dexie";
 import { useHistory } from "react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Grid, Header, Button } from "semantic-ui-react";
-
+import objectHash from "object-hash";
 import SelectionTable from "components/CodingjobManager/SelectionTable";
 
 const tableColumns = [
   {
-    Header: "URL",
-    accessor: "url",
+    Header: "Title",
+    accessor: "title",
     headerClass: "two wide",
   },
   {
-    Header: "Last modified",
-    accessor: "last_modified",
+    Header: "URL",
+    accessor: "url",
     headerClass: "four wide",
   },
 ];
@@ -24,9 +24,9 @@ const TaskSelector = () => {
   const history = useHistory();
 
   const tasks = useLiveQuery(async () => {
-    let arr = await db.idb.tasks.toCollection().primaryKeys();
-    arr = arr.map(a => ({ url: a[0], last_modified: a[1] }));
-    if (arr) arr.sort((a, b) => b.last_modified - a.last_modified);
+    let arr = await db.idb.tasks.orderBy("last_modified").primaryKeys();
+    arr = arr.map(a => ({ title: a[0], url: a[1] }));
+    //if (arr) arr.sort((a, b) => b.last_modified - a.last_modified);
     return arr;
   });
   const [taskKey, setTaskKey] = useState(null);
@@ -39,16 +39,14 @@ const TaskSelector = () => {
 
   const uploadFile = e => {
     const fileReader = new FileReader();
-    const url = e.target.files[0].name;
     fileReader.readAsText(e.target.files[0], "UTF-8");
     fileReader.onload = e => {
-      uploadTask(JSON.parse(e.target.result), url);
+      uploadTask(JSON.parse(e.target.result));
     };
   };
 
-  const setJobUrlQuery = () => {
-    // set task.url as url query to open job
-    // (this keeps it consistent with reading jobs from urls)
+  const setJobUrlQuery = async () => {
+    // set task.url as url query to open job in annotator
     history.push("/annotator?" + taskKey.url);
   };
 
@@ -86,15 +84,15 @@ const TaskSelector = () => {
   );
 };
 
-const uploadTask = async (codingjobPackage, url) => {
-  const exists = await db.idb.tasks.get(url);
+const uploadTask = async codingjobPackage => {
+  const url = "IDB:" + objectHash(codingjobPackage);
+  const exists = await db.idb.tasks.get({ url });
   if (!exists) {
     db.idb.tasks.add({
       url,
-      last_modified: codingjobPackage.last_modified,
-      name: codingjobPackage.name,
-      codebook: codingjobPackage.codebook,
-      items: codingjobPackage.items,
+      last_modified: new Date(),
+      medium: "file",
+      ...codingjobPackage,
     });
   } else {
     alert("This job has already been created before");

@@ -19,8 +19,8 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
   useEffect(() => {
     // settings is an array with the settings for each question
     // This needs a little preprocessing, so we only update it when codebook changes (not per item)
-    if (!codebook?.taskSettings?.annotate?.codes) return null;
-    setCodeMap(codeBookEdgesToMap(codebook.taskSettings.annotate.codes));
+    if (!codebook?.codes) return null;
+    setCodeMap(codeBookEdgesToMap(codebook.codes));
   }, [codebook, setCodeMap]);
 
   if (itemBundle === null || codeMap === null) return null;
@@ -52,8 +52,8 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
 };
 
 const Instructions = ({ codebook }) => {
-  const settings = codebook?.taskSettings?.annotate;
-  if (!settings) return null;
+  if (!codebook) return null;
+
   return (
     <Popup
       wide
@@ -124,7 +124,7 @@ const Instructions = ({ codebook }) => {
               </Table.HeaderCell>
               <Table.HeaderCell colSpan="2">
                 <List as="ul">
-                  {settings.searchBox || settings.buttonMode === "recent" ? (
+                  {codebook.searchBox || codebook.buttonMode === "recent" ? (
                     <ListItem as="li">
                       <i>text input</i> automatically opens dropdown{" "}
                     </ListItem>
