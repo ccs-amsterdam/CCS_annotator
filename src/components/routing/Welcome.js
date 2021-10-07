@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import db from "apis/dexie";
 import { useHistory } from "react-router-dom";
@@ -6,12 +6,15 @@ import { Grid, Button, Header, Segment, Form } from "semantic-ui-react";
 import { initStoragePersistence } from "apis/storemanager";
 import { demo_articles, demo_codebook } from "apis/demodata";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useEffect } from "react/cjs/react.development";
 
 const Welcome = () => {
   const history = useHistory();
   const user = useLiveQuery(() => db.idb.user.get(1));
   const [name, setName] = useState("");
+
+  useEffect(() => {
+    if (user != null) history.push("/manager");
+  }, [user, history]);
 
   const loggin = async () => {
     if (name.length < 10) return null;
@@ -27,10 +30,6 @@ const Welcome = () => {
       console.log(e);
     }
   };
-
-  useEffect(() => {
-    if (user != null) history.push("/manager");
-  }, [user, history]);
 
   return (
     <Grid inverted textAlign="center" style={{ height: "100vh" }} verticalAlign="middle">
