@@ -5,9 +5,9 @@ import objectHash from "object-hash";
 import React, { useState } from "react";
 import { useHistory } from "react-router";
 import { useEffect } from "react/cjs/react.development";
-import { Button, Grid, Header, TextArea } from "semantic-ui-react";
+import { Button, Grid, Header } from "semantic-ui-react";
 import TaskTable from "./TaskTable";
-import QRCode from "qrcode.react";
+//import QRCode from "qrcode.react";
 
 const TaskSelector = () => {
   const history = useHistory();
@@ -29,16 +29,17 @@ const TaskSelector = () => {
 
   const linkAndQr = () => {
     console.log(taskKey);
-    if (taskKey == null) return;
-    return (
-      <div>
-        <TextArea
-          value={"https://kasperwelbers.com/annotator?" + taskKey?.url}
-          style={{ width: "100%" }}
-        />
-        <QRCode value={"https://kasperwelbers.com/annotator?" + taskKey?.url} size={256} />
-      </div>
-    );
+    return null;
+    // if (taskKey == null) return;
+    // return (
+    //   <div>
+    //     <TextArea
+    //       value={"https://kasperwelbers.com/annotator?" + taskKey?.url}
+    //       style={{ width: "100%" }}
+    //     />
+    //     <QRCode value={"https://kasperwelbers.com/annotator?" + taskKey?.url} size={256} />
+    //   </div>
+    // );
   };
 
   return (

@@ -29,7 +29,7 @@ const Welcome = () => {
   };
 
   useEffect(() => {
-    if (user != null) history.goBack();
+    if (user != null) history.push("/manager");
   }, [user, history]);
 
   return (
