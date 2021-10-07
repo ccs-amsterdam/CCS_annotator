@@ -12,6 +12,11 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
   const [settings, setSettings] = useState();
   const [answerTransition, setAnswerTransition] = useState();
   const dispatch = useDispatch();
+  const answered = useRef(false); // to prevent answering double (e.g. with swipe events)
+
+  useEffect(() => {
+    answered.current = false;
+  }, [itemBundle]);
 
   useEffect(() => {
     // settings is an array with the settings for each question
@@ -27,6 +32,8 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
   const currentAnswer = getCurrentAnswer(itemBundle);
 
   const onSelect = (answer) => {
+    if (answered.current) return null;
+    answered.current = true;
     setNewAnswer(itemBundle, questionIndex, rawQuestion, answer.code, dispatch);
     setAnswerTransition(answer);
     if (questionIndex === itemBundle.codebook.questions.length - 1) {
@@ -34,7 +41,7 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
         // wait a little bit, so coder can confirm their answer
         setAnswerTransition(null);
         dispatch(finishedUnit());
-      }, 300);
+      }, 500);
     }
   };
 
@@ -435,9 +442,9 @@ const Annotinder = React.memo(({ options, callback, preview }) => {
 
   // set useSwipeable on document (https://github.com/FormidableLabs/react-swipeable/issues/180#issuecomment-649677983)
   const { ref } = useSwipeable({
-    onSwiped: (eventData) => {
-      console.log(eventData);
-      if (eventData) {
+    onSwipeStart: (eventData) => {
+      if (eventData && eventData.first) {
+        console.log(eventData);
         if (eventData.dir === "Right") callback(right);
         if (eventData.dir === "Up") callback(up);
         if (eventData.dir === "Left") callback(left);

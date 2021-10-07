@@ -43,7 +43,10 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
   const [standardizedItem, setStandardizedItem] = useState(null);
 
   useEffect(() => {
-    if (!jobItem) return null;
+    if (!jobItem) {
+      setStandardizedItem(null);
+      return null;
+    }
     standardizeItems(codingjob, [jobItem]).then((singleItemArray) => {
       setStandardizedItem(singleItemArray[0]);
     });

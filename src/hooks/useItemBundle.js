@@ -20,7 +20,10 @@ const defaultSettings = {
 const useItemBundle = (item, codebook, settings = defaultSettings, preview) => {
   const [itemBundle, setItemBundle] = useState(null);
   useEffect(() => {
-    if (!item) return null;
+    if (!item) {
+      setItemBundle(null);
+      return null;
+    }
     prepareItemBundle(item, codebook, settings, preview, setItemBundle);
   }, [item, codebook, settings, setItemBundle, preview]);
 

@@ -51,8 +51,12 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
 
   useEffect(() => {
     if (!items) return null;
-    if (activePage === items.length) setFinished(true);
-    setItem(items[activePage - 1]);
+    if (activePage === items.length && setFinished != null) {
+      setFinished(true);
+      setItem(null);
+    } else {
+      setItem(items[activePage - 1]);
+    }
     setDelayedActivePage(activePage);
   }, [items, setItem, setFinished, activePage]);
 
@@ -91,7 +95,9 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
           <Pagination
             secondary
             activePage={delayedActivePage}
-            pageItem={`${delayedActivePage} / ${items.length}`}
+            pageItem={
+              delayedActivePage <= items.length ? `${delayedActivePage} / ${items.length}` : "done"
+            }
             size={"mini"}
             firstItem={null}
             lastItem={null}
@@ -100,7 +106,7 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
             siblingRange={0}
             boundaryRange={0}
             ellipsisItem={null}
-            totalPages={items.length}
+            totalPages={items.length + 1}
             onClick={(e, d) => e.stopPropagation()}
             onPageChange={(e, d) => {
               if (canControl) setActivePage(Number(d.activePage));
