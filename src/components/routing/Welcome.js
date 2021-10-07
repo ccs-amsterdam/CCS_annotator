@@ -20,7 +20,9 @@ const Welcome = () => {
       await db.firstLogin(name);
       await initStoragePersistence();
       //alert(history.location.pathname);
-      history.goBack();
+      // should actually go back to previous page if previous page was annotator, but
+      // not clue how to see this in history
+      history.push("/manager");
     } catch (e) {
       console.log(e);
     }
