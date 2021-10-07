@@ -8,6 +8,8 @@ import ItemSelector from "components/CodingjobManager/ItemSelector";
 import QuestionTask from "./QuestionTask/QuestionTask";
 import AnnotateTask from "./AnnotateTask/AnnotateTask";
 
+const homepage = "/amcat4annotator";
+
 const Annotator = () => {
   const [task, setTask] = useState(null);
   const [item, setItem] = useState(null);
@@ -90,7 +92,7 @@ const ExitButton = () => {
   const history = useHistory();
   return (
     <Icon.Group size="big" style={{ position: "absolute", top: "0px", right: 0 }}>
-      <Icon link name="window close" onClick={() => history.push("/manager")} />
+      <Icon link name="window close" onClick={() => history.push(homepage + "/manager")} />
       <Icon corner="top right" />
     </Icon.Group>
   );

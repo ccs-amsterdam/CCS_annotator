@@ -32,7 +32,7 @@ const HeaderMenu = ({ items, homepage, children }) => {
     );
   });
 
-  if (location.pathname === "/annotator") return children;
+  if (location.pathname === homepage + "/annotator") return children;
   return (
     <Sidebar.Pushable style={{ height: "100vh" }}>
       <Sidebar

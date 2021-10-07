@@ -14,10 +14,10 @@ import Annotator from "components/Annotator/Annotator";
 // The first item will be the opening page after login
 const homepage = "/amcat4annotator";
 const items = [
-  { label: "Annotator", path: "/annotator", Component: Annotator, menu: false },
+  { label: "Annotator", path: homepage + "/annotator", Component: Annotator, menu: false },
   {
     label: "Codingjob manager",
-    path: "/manager",
+    path: homepage + "/manager",
     Component: CodingjobManager,
     menu: true,
   },

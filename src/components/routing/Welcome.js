@@ -7,13 +7,15 @@ import { initStoragePersistence } from "apis/storemanager";
 import { demo_articles, demo_codebook } from "apis/demodata";
 import { useLiveQuery } from "dexie-react-hooks";
 
+const homepage = "/amcat4annotator";
+
 const Welcome = () => {
   const history = useHistory();
   const user = useLiveQuery(() => db.idb.user.get(1));
   const [name, setName] = useState("");
 
   useEffect(() => {
-    if (user != null) history.push("/manager");
+    if (user != null) history.push(homepage + "/manager");
   }, [user, history]);
 
   const loggin = async () => {
@@ -25,7 +27,7 @@ const Welcome = () => {
       //alert(history.location.pathname);
       // should actually go back to previous page if previous page was annotator, but
       // not clue how to see this in history
-      history.push("/manager");
+      history.push(homepage + "/manager");
     } catch (e) {
       console.log(e);
     }

@@ -8,6 +8,8 @@ import { Button, Grid, Header, TextArea } from "semantic-ui-react";
 import TaskTable from "./TaskTable";
 import QRCode from "qrcode.react";
 
+const homepage = "/amcat4annotator";
+
 const TaskSelector = () => {
   const history = useHistory();
   const [taskKey, setTaskKey] = useState(null);
@@ -23,7 +25,7 @@ const TaskSelector = () => {
 
   const setJobUrlQuery = async () => {
     // set task.url as url query to open job in annotator
-    history.push("/annotator?" + taskKey.url);
+    history.push(homepage + "/annotator?" + taskKey.url);
   };
 
   const linkAndQr = () => {
