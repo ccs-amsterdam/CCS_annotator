@@ -33,10 +33,13 @@ const TaskSelector = () => {
     return (
       <div>
         <TextArea
-          value={"https://kasperwelbers.com/annotator?" + taskKey?.url}
+          value={"https://kasperwelbers.com/amcat4annotator/annotator?" + taskKey?.url}
           style={{ width: "100%" }}
         />
-        <QRCode value={"https://kasperwelbers.com/annotator?" + taskKey?.url} size={256} />
+        <QRCode
+          value={"https://kasperwelbers.com/amcat4annotator/annotator?" + taskKey?.url}
+          size={256}
+        />
       </div>
     );
   };
