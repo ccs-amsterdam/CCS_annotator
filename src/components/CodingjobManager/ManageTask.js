@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TaskSettings from "./Settings/TaskSettings";
 import { Grid, Header } from "semantic-ui-react";
 import QuestionTask from "components/Annotator/QuestionTask/QuestionTask";
@@ -7,7 +7,6 @@ import useJobItems from "hooks/useJobItems";
 import ItemSelector from "components/CodingjobManager/ItemSelector";
 import { standardizeItems } from "util/standardizeItem";
 import { getCodebook } from "util/codebook";
-import { useEffect } from "react/cjs/react.development";
 
 const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false
@@ -45,14 +44,14 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
 
   useEffect(() => {
     if (!jobItem) return null;
-    standardizeItems(codingjob, [jobItem]).then(singleItemArray => {
+    standardizeItems(codingjob, [jobItem]).then((singleItemArray) => {
       setStandardizedItem(singleItemArray[0]);
     });
   }, [jobItem, setStandardizedItem, codingjob]);
 
   if (!jobItems) return null;
 
-  const renderTaskPreview = type => {
+  const renderTaskPreview = (type) => {
     switch (type) {
       case "questions":
         return (
