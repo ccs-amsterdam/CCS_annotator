@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 import db from "apis/dexie";
 import { useHistory } from "react-router-dom";
 import { Grid, Button, Header, Segment, Form } from "semantic-ui-react";
 import { initStoragePersistence } from "apis/storemanager";
 import { demo_articles, demo_codebook } from "apis/demodata";
+import { useLiveQuery } from "dexie-react-hooks";
 
 const Welcome = () => {
   const history = useHistory();
+  const user = useLiveQuery(() => db.idb.user.get(1));
   const [name, setName] = useState("");
 
-  const loggin = async (addDemo, checkWelcome) => {
-    if (checkWelcome && (await db.newUser())) return null;
+  const loggin = async () => {
     if (name.length < 10) return null;
-
     try {
-      if (addDemo) await create_demo_job(db);
+      await create_demo_job(db);
       await db.firstLogin(name);
       await initStoragePersistence();
       //alert(history.location.pathname);
@@ -25,9 +25,7 @@ const Welcome = () => {
     }
   };
 
-  useEffect(() => {
-    loggin(false, true);
-  });
+  if (user != null) history.goBack();
 
   return (
     <Grid inverted textAlign="center" style={{ height: "100vh" }} verticalAlign="middle">
@@ -40,7 +38,7 @@ const Welcome = () => {
             Before we get started, please provide a username. This name will only be used to get
             some idea of who coded what.
           </p>
-          <Form onSubmit={() => loggin(true, false)}>
+          <Form onSubmit={() => loggin()}>
             <Form.Input
               placeholder="username"
               value={name}
@@ -56,7 +54,7 @@ const Welcome = () => {
           ) : null}
           <br />
           <br />
-          <Button primary disabled={name.length < 10} onClick={() => loggin(true, false)}>
+          <Button primary disabled={name.length < 10} onClick={() => loggin()}>
             {name.length < 10 ? "please use 10 characters or more" : "Get started!"}
           </Button>
         </Segment>
@@ -65,7 +63,7 @@ const Welcome = () => {
   );
 };
 
-const create_demo_job = async db => {
+const create_demo_job = async (db) => {
   try {
     const job = await db.createCodingjob("Demo codingjob");
     await db.createDocuments(job, demo_articles, true);

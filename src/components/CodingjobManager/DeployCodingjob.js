@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import DeploySettings from "./Settings/DeploySettings";
 import useJobItems from "hooks/useJobItems";
-import { Grid, Header, Button } from "semantic-ui-react";
+import { Grid, Header, Button, Form } from "semantic-ui-react";
 import fileDownload from "js-file-download";
+import objectHash from "object-hash";
 
+import db from "apis/dexie";
 import { standardizeItems } from "util/standardizeItem";
 import { getCodebook } from "util/codebook";
+import { useLiveQuery } from "dexie-react-hooks";
+import TaskSelector from "components/TaskSelector/TaskSelector";
 
 const DeployCodingjob = ({ codingjob }) => {
   const [codingjobPackage, setCodingjobPackage] = useState(null);
@@ -17,7 +21,7 @@ const DeployCodingjob = ({ codingjob }) => {
     createCodingjobPackage(codingjob, jobItems, setCodingjobPackage);
   }, [codingjob, jobItems, setCodingjobPackage]);
 
-  const deployButton = medium => {
+  const deployButton = (medium) => {
     if (!medium) return null;
     switch (codingjob.deploySettings.medium) {
       case "file":
@@ -34,7 +38,7 @@ const DeployCodingjob = ({ codingjob }) => {
   return (
     <div>
       <Grid centered stackable columns={2}>
-        <Grid.Column stretched width={8}>
+        <Grid.Column width={4}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Deploy Codingjob
           </Header>
@@ -42,32 +46,105 @@ const DeployCodingjob = ({ codingjob }) => {
           <br />
           {deployButton(codingjob?.deploySettings?.medium)}
         </Grid.Column>
+        <Grid.Column width={8}>
+          <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+            Previously deployed jobs
+          </Header>
+          <TaskSelector />
+        </Grid.Column>
       </Grid>
     </div>
   );
 };
 
 const DownloadButton = ({ codingjobPackage }) => {
+  const [title, setTitle] = useState("");
+
+  useEffect(() => {
+    if (codingjobPackage?.title) setTitle(codingjobPackage.title);
+  }, [codingjobPackage]);
+
   const onDownload = async () => {
+    codingjobPackage.title = title;
     const json = [JSON.stringify(codingjobPackage)];
     const blob = new Blob(json, { type: "text/plain;charset=utf-8" });
 
     try {
       fileDownload(blob, `AmCAT_annotator_${codingjobPackage.title}.json`);
+      const url = "IDB:" + objectHash(codingjobPackage);
+      db.uploadTask(codingjobPackage, url, "local");
     } catch (error) {
       console.error("" + error);
     }
   };
 
   return (
-    <Button loading={codingjobPackage === null} onClick={onDownload}>
-      Download Codingjob
-    </Button>
+    <div>
+      <Form onSubmit={() => onDownload()}>
+        <Form.Input
+          placeholder="username"
+          value={title}
+          maxLength={30}
+          onChange={(e, d) => setTitle(d.value)}
+          autoFocus
+          style={{ width: "100%" }}
+        />
+      </Form>
+      <br />
+
+      <Button
+        primary
+        fluid
+        loading={codingjobPackage === null}
+        disabled={title.length < 5}
+        onClick={onDownload}
+      >
+        {title.length < 5 ? "please use 5 characters or more" : "Download codingjob"}{" "}
+      </Button>
+    </div>
   );
 };
 
 const AmcatDeploy = ({ codingjobPackage }) => {
-  return <div></div>;
+  const [title, setTitle] = useState("");
+  const amcat = useLiveQuery(() => db.amcatSession());
+
+  useEffect(() => {
+    if (codingjobPackage?.title) setTitle(codingjobPackage.title);
+  }, [codingjobPackage]);
+
+  const deploy = async () => {
+    try {
+      const id = await amcat.postCodingjob(codingjobPackage, title);
+      const url = `${amcat.host}/codingjob/${id.data.id}/codebook`;
+      db.uploadTask({ title, amcat: { host: amcat.host, username: amcat.user } }, url, "remote");
+    } catch (e) {
+      console.log(e);
+      db.resetAmcatAuth();
+    }
+  };
+
+  if (!amcat) return <p>You need to log in to AmCAT first. (see top-right in the menu)</p>;
+
+  return (
+    <div>
+      <Form onSubmit={() => deploy()}>
+        <Form.Input
+          placeholder="username"
+          value={title}
+          maxLength={30}
+          onChange={(e, d) => setTitle(d.value)}
+          autoFocus
+          style={{ width: "100%" }}
+        />
+      </Form>
+      <br />
+
+      <Button fluid primary disabled={title.length < 5} onClick={() => deploy()}>
+        {title.length < 5 ? "please use 5 characters or more" : "Upload to AmCAT"}
+      </Button>
+    </div>
+  );
 };
 
 const createCodingjobPackage = async (codingjob, jobItems, setCodingjobPackage) => {
@@ -75,7 +152,7 @@ const createCodingjobPackage = async (codingjob, jobItems, setCodingjobPackage) 
     title: codingjob.name,
     provenance: { unitSettings: codingjob.unitSettings },
     codebook: getCodebook(codingjob.taskSettings),
-    items: await standardizeItems(codingjob, jobItems),
+    units: await standardizeItems(codingjob, jobItems),
     rules: {},
     annotations: [],
   };

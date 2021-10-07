@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-
-import newAmcatSession from "apis/amcat";
+import db from "apis/dexie";
+import { getToken } from "apis/amcat";
 import { Button, Form, Grid, Header, Message, Segment } from "semantic-ui-react";
 
 const color = "blue";
 
-const AmcatLogin = ({ setAmcatConnection, setOpen }) => {
+const AmcatLogin = ({ setOpen }) => {
   const [host, setHost] = useState("https://amcat4.labs.vu.nl/api");
   const [email, setEmail] = useState("admin");
   const [password, setPassword] = useState("admin");
@@ -14,13 +14,14 @@ const AmcatLogin = ({ setAmcatConnection, setOpen }) => {
   const submitForm = async () => {
     setStatus("waiting");
     try {
-      const amcat = await newAmcatSession(host, email, password);
-      if (amcat) {
-        setAmcatConnection(amcat);
+      const token = await getToken(host, email, password);
+      if (token) {
+        await db.setAmcatAuth(host, email, token);
         setStatus("success");
         setOpen(false);
-      }
+      } else setStatus("error");
     } catch (e) {
+      console.log(e);
       setStatus("error");
     }
   };

@@ -6,13 +6,15 @@ import db from "apis/dexie";
 import Reset from "./Reset";
 import Persist from "./Persist";
 import Amcat from "./Amcat";
+import { useLiveQuery } from "dexie-react-hooks";
 
 // This is the index file of HeaderMenu, but importing via index
 // breaks. Probably due to the withRouter()
 
 const HeaderMenu = ({ items, homepage, children }) => {
   const location = useLocation();
-
+  const user = useLiveQuery(() => db.idb.user.get(1));
+  console.log(user);
   const menuItems = items.map((item, index) => {
     if (!item.menu) return null;
     return (
@@ -37,7 +39,7 @@ const HeaderMenu = ({ items, homepage, children }) => {
         as={Menu}
         inverted
         animation="push"
-        visible={location.pathname !== "/annotator"}
+        visible={user != null}
         direction={"top"}
         size="mini"
       >

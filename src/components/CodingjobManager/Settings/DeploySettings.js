@@ -10,7 +10,7 @@ const defaultDeploySettings = {
 
 const DeploySettings = ({ codingjob }) => {
   const deploySettings = codingjob?.deploySettings || defaultDeploySettings;
-  const setDeploySettings = us => {
+  const setDeploySettings = (us) => {
     db.setCodingjobProp(codingjob, "deploySettings", us);
   };
 

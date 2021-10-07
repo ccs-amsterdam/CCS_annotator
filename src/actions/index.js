@@ -11,6 +11,18 @@ export const blockEvents = (block) => {
   };
 };
 
+export const finishedUnit = () => {
+  return {
+    type: "FINISHED_UNIT",
+  };
+};
+
+export const resetFinishedUnit = () => {
+  return {
+    type: "RESET_FINISHED_UNIT",
+  };
+};
+
 export const setCurrentToken = (index) => {
   return {
     type: "SET_CURRENT_TOKEN",

@@ -1,21 +1,14 @@
 import React, { useState } from "react";
 import { Menu, Header, Modal } from "semantic-ui-react";
 import AmcatLogin from "components/HeaderMenu/AmcatLogin";
+import { useLiveQuery } from "dexie-react-hooks";
+import db from "apis/dexie";
 
 const Amcat = () => {
   const [open, setOpen] = useState(false);
-  const [amcatConnection, setAmcatConnection] = useState(null);
+  const amcat = useLiveQuery(() => db.amcatSession());
 
-  //   const onClick = async () => {
-  //     await persist();
-  //     const ispersisted = await isStoragePersisted();
-  //     if (ispersisted) {
-  //       setPersisted(true);
-  //       alert("indexedDB set to persistent for AmCAT Annotator");
-  //     } else {
-  //       alert("Failed to set indexedDB to persistent");
-  //     }
-  //   };
+  console.log(amcat);
 
   return (
     <Modal
@@ -23,9 +16,9 @@ const Amcat = () => {
       open={open}
       trigger={
         <Menu.Item
-          icon={amcatConnection === null ? "toggle off" : "toggle on"}
+          icon={amcat === null ? "toggle off" : "toggle on"}
           name={"AmCAT"}
-          style={{ color: amcatConnection === null ? "red" : "green" }}
+          style={{ color: amcat === null ? "red" : "green" }}
         />
       }
       onClose={() => setOpen(false)}
@@ -33,7 +26,7 @@ const Amcat = () => {
     >
       <Header icon="database" content="Connect to AmCAT server" />
       <Modal.Content>
-        <AmcatLogin setAmcatConnection={setAmcatConnection} setOpen={setOpen} />
+        <AmcatLogin setOpen={setOpen} />
       </Modal.Content>
       {/* <Modal.Actions>
         <Button onClick={onClick}>

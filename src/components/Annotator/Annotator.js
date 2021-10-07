@@ -11,14 +11,31 @@ import AnnotateTask from "./AnnotateTask/AnnotateTask";
 const Annotator = () => {
   const [task, setTask] = useState(null);
   const [item, setItem] = useState(null);
+  const [preparedItem, setPreparedItem] = useState(null);
+  const [finished, setFinished] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
     if (location.search) {
       const jobURL = decodeURI(location.search.substring(1));
-      openCodingjob(jobURL, setTask);
+      prepareTask(jobURL, setTask);
     }
   }, [location, setTask]);
+
+  useEffect(() => {
+    if (task?.unitMode === "perUnit") {
+      task.server
+        .get()
+        .then((unit) => {
+          setPreparedItem({ post: task.server.post, unitId: unit.data.id, ...unit.data.unit });
+        })
+        .catch((e) => {
+          if (e.response?.status === 404) setFinished(true);
+        });
+    } else {
+      setPreparedItem(item);
+    }
+  }, [item, task, setPreparedItem]);
 
   let colWidth = 16;
   if (task?.codebook?.type) {
@@ -26,11 +43,18 @@ const Annotator = () => {
     if (task.codebook.type === "questions") colWidth = 8;
   }
 
+  if (finished) return <Finished />;
+
   return (
     <Grid container stackable centered style={{ margin: "0", padding: "0" }}>
       <Grid.Row style={{ height: "40px", padding: "0" }}>
         <div width={3}>
-          <ItemSelector items={task?.items} setItem={setItem} />
+          <ItemSelector
+            items={task?.units}
+            setItem={setItem}
+            canControl={task?.unitMode === "list"}
+            setFinished={setFinished}
+          />
         </div>
         <div width={3}>
           <ExitButton />
@@ -38,8 +62,25 @@ const Annotator = () => {
       </Grid.Row>
       <Grid.Row>
         <Grid.Column width={colWidth} style={{ minHeight: "90vh" }}>
-          <Task codebook={task?.codebook} item={item} />
+          <Task codebook={task?.codebook} item={preparedItem} />
         </Grid.Column>
+      </Grid.Row>
+    </Grid>
+  );
+};
+
+const Finished = () => {
+  return (
+    <Grid container centered verticalAlign="middle" style={{ margin: "0", padding: "0" }}>
+      <Grid.Row style={{ height: "40px", padding: "0" }}>
+        <div width={3}>
+          <ExitButton />
+        </div>
+      </Grid.Row>
+      <Grid.Row style={{ marginTop: "40vh" }}>
+        <div>
+          <Icon name="flag checkered" size="huge" style={{ transform: "scale(5)" }} />
+        </div>
       </Grid.Row>
     </Grid>
   );
@@ -55,16 +96,36 @@ const ExitButton = () => {
   );
 };
 
-const openCodingjob = async (jobURL, setTask) => {
+const prepareTask = async (jobURL, setTask) => {
   let task = await db.idb.tasks.get({ url: jobURL });
-  if (!task) {
+  if (task && task.where === "local") {
+    task.unitMode = "list";
+  } else {
+    const user = await db.idb.user.get(1);
     const response = await axios.get(jobURL);
-    const data = response.data;
-    await db.idb.tasks.add({
-      ...data,
-      url: jobURL,
-    });
-    task = await db.idb.tasks.get(jobURL);
+
+    // works if url always has this structure. Otherwise maybe include id in codebook
+    const id = jobURL.split("codingjob/")[1].split("/codebook")[0];
+    const host = jobURL.split("codingjob/")[0];
+    const get = () => axios.get(`${host}/codingjob/${id}/unit?user=${user.name}`);
+    const post = (unit_id, data) =>
+      axios.post(`${host}/codingjob/${id}/unit/${unit_id}/annotation?user=${user.name}`, data);
+
+    // this is just a temp hack. need to make itemselector smarter
+    const units_range = [];
+    for (let i = 1; i <= 20; i++) units_range.push(i);
+
+    task = {
+      codebook: response.data,
+      units: units_range,
+      unitMode: "perUnit",
+      server: { get, post },
+    };
+    // await db.idb.tasks.add({
+    //   ...data,
+    //   url: jobURL,
+    // });
+    //task = await db.idb.tasks.get(jobURL);
   }
   setTask(task);
 
@@ -84,7 +145,7 @@ const openCodingjob = async (jobURL, setTask) => {
 const Task = React.memo(({ codebook, item }) => {
   if (!codebook || !item) return null;
 
-  const renderTaskPreview = type => {
+  const renderTaskPreview = (type) => {
     switch (type) {
       case "questions":
         return <QuestionTask item={item} codebook={codebook} preview={false} />;

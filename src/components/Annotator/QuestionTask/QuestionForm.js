@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Header, Button, Dropdown, Ref, Segment } from "semantic-ui-react";
 import { moveUp, moveDown } from "util/refNavigation";
-import { setAnnotations, setQuestionIndex } from "actions";
+import { finishedUnit, setAnnotations } from "actions";
 import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const QuestionForm = ({ itemBundle, codebook, preview }) => {
-  const questionIndex = useSelector(state => state.questionIndex);
+  const questionIndex = useSelector((state) => state.questionIndex);
   const [settings, setSettings] = useState();
 
   const dispatch = useDispatch();
@@ -27,8 +27,8 @@ const QuestionForm = ({ itemBundle, codebook, preview }) => {
   const [rawQuestion, question] = prepareQuestion(itemBundle, settings[questionIndex]);
   const currentAnswer = getCurrentAnswer(itemBundle);
 
-  const onSelect = answer => {
-    setNewAnswer(itemBundle, rawQuestion, answer, dispatch);
+  const onSelect = (answer) => {
+    setNewAnswer(itemBundle, questionIndex, rawQuestion, answer, dispatch);
   };
 
   const questionIndexStep = () => {
@@ -39,7 +39,7 @@ const QuestionForm = ({ itemBundle, codebook, preview }) => {
           return (
             <Button
               active={i === questionIndex}
-              onClick={() => dispatch(setQuestionIndex(i))}
+              // onClick={() => dispatch(setQuestionIndex(i))}
               style={{ padding: "0.2em", minWidth: "1.3em", background: "grey", color: "white" }}
             >
               {i + 1}
@@ -97,17 +97,17 @@ const QuestionForm = ({ itemBundle, codebook, preview }) => {
   );
 };
 
-const prepareSettings = codebook => {
+const prepareSettings = (codebook) => {
   const questions = codebook.questions;
 
-  return questions.map(question => {
+  return questions.map((question) => {
     const codeMap = codeBookEdgesToMap(question.codes);
     const cta = getCodeTreeArray(codeMap);
     return { ...question, options: getOptions(cta) }; // note that it's important that this deep copies question
   });
 };
 
-const getOptions = cta => {
+const getOptions = (cta) => {
   return cta.reduce((options, code) => {
     if (!code.active) return options;
     if (!code.activeParent) return options;
@@ -123,26 +123,42 @@ const getOptions = cta => {
   }, []);
 };
 
-const setNewAnswer = (itemBundle, rawQuestion, answer, dispatch) => {
+const setNewAnswer = (itemBundle, questionIndex, rawQuestion, answer, dispatch) => {
   const newAnnotations = { ...itemBundle.annotations };
-  const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
 
-  const textUnit = itemBundle.item.textUnit;
-  const unitIndex = itemBundle.item.unitIndex;
+  const question = itemBundle.codebook.questions[questionIndex].name;
+  const group = questionIndex + ": " + question;
 
-  if (!newAnnotations[textUnit][unitIndex]) newAnnotations[textUnit][unitIndex] = {};
+  const section = itemBundle.tokens.reduce((obj, token) => {
+    if (token.codingUnit && !obj[token.section]) obj[token.section] = 1;
+    return obj;
+  }, {});
 
-  newAnnotations[textUnit][unitIndex][root] = { question: rawQuestion, answer: answer };
+  const span = itemBundle.textUnitSpan;
+  const annotation = {
+    question,
+    questionIndex,
+    value: answer,
+    section: Object.keys(section).join("+"),
+    offset: span[0],
+    length: span[1] - span[0],
+  };
 
+  if (!newAnnotations["span"]["unit"]) newAnnotations["span"]["unit"] = {};
+  newAnnotations["span"]["unit"][group] = annotation;
   dispatch(setAnnotations({ ...newAnnotations }));
+
+  if (questionIndex === itemBundle.codebook.questions.length - 1) {
+    dispatch(finishedUnit());
+  }
 };
 
-const getCurrentAnswer = itemBundle => {
+const getCurrentAnswer = (itemBundle) => {
   const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
   return itemBundle.annotations[itemBundle.textUnit]?.[itemBundle.unitIndex]?.[root]?.answer;
 };
 
-const showCurrent = currentAnswer => {
+const showCurrent = (currentAnswer) => {
   if (currentAnswer == null) return null;
   return (
     <div style={{ backgroundColor: "white" }}>
@@ -206,7 +222,7 @@ const prepareQuestion = (itemBundle, settings) => {
   return [rawQuestion, markedString(question)];
 };
 
-const markedString = text => {
+const markedString = (text) => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");
@@ -239,7 +255,7 @@ const SearchBoxDropdown = React.memo(({ options, callback }) => {
         placeholder={"<type to search>"}
         searchInput={{ autoFocus: true }}
         style={{ minWidth: "12em" }}
-        options={options.map(option => {
+        options={options.map((option) => {
           return {
             key: option.code,
             value: option.code,
@@ -271,12 +287,12 @@ const ButtonSelection = React.memo(({ options, callback, preview }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const eventsBlocked = useSelector(state => state.eventsBlocked);
+  const eventsBlocked = useSelector((state) => state.eventsBlocked);
 
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const nbuttons = options.length;
 
       // any arrowkey

@@ -1,10 +1,14 @@
 import Axios from "axios";
 
-export default async function newAmcatSession(host, email, password) {
+export async function getToken(host, email, password) {
   const response = await Axios.get(`${host}/auth/token/`, {
     auth: { username: email, password: password },
   });
-  return new Amcat(host, email, response.data.token);
+  return response.data.token;
+}
+
+export default function newAmcatSession(host, email, token) {
+  return new Amcat(host, email, token);
 }
 
 class Amcat {
@@ -14,6 +18,18 @@ class Amcat {
     this.api = Axios.create({
       baseURL: host,
       headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
+  postCodingjob(codingjobPackage, title) {
+    codingjobPackage.title = title;
+
+    return this.api.post(`/codingjob`, {
+      title: title,
+      units: codingjobPackage.units,
+      codebook: codingjobPackage.codebook,
+      provenance: codingjobPackage.provenance,
+      rules: {},
     });
   }
 }

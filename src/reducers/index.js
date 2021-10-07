@@ -10,6 +10,18 @@ const eventsBlocked = (state = false, action) => {
   }
 };
 
+const finishedUnit = (state = 0, action) => {
+  // this simply triggers a rerender used to move to the next unit
+  switch (action.type) {
+    case "FINISHED_UNIT":
+      return state + 1;
+    case "RESET_FINISHED_UNIT":
+      return 0;
+    default:
+      return state;
+  }
+};
+
 const currentToken = (state = 0, action) => {
   switch (action.type) {
     case "SET_CURRENT_TOKEN":
@@ -129,6 +141,7 @@ const questionIndex = (state = 0, action) => {
 
 const rootReducer = combineReducers({
   eventsBlocked,
+  finishedUnit,
   currentToken,
   codeSelectorTrigger,
   tokenSelection,

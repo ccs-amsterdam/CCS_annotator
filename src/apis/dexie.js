@@ -1,5 +1,6 @@
 import Dexie from "dexie";
 import hash from "object-hash";
+import newAmcatSession from "./amcat";
 
 import { prepareDocumentBatch } from "util/createDocuments";
 
@@ -8,11 +9,11 @@ class AnnotationDB {
     this.idb = new Dexie("AmCAT_Annotator");
 
     //for testing, clean db on refresh
-    this.idb.delete();
-    this.idb = new Dexie("AmCAT_Annotator");
+    // this.idb.delete();
+    // this.idb = new Dexie("AmCAT_Annotator");
 
     this.idb.version(2).stores({
-      user: "name", // other fields: 'id'
+      user: "++id, name", // other fields: 'id'
       codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
       documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
       tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
@@ -29,6 +30,17 @@ class AnnotationDB {
   async newUser() {
     return (await this.idb.user.toArray()).length === 0;
   }
+  async setAmcatAuth(host, email, token) {
+    return await this.idb.user.where("id").equals(1).modify({ amcat: { host, email, token } });
+  }
+  async resetAmcatAuth() {
+    return await this.idb.user.where("id").equals(1).modify({ amcat: undefined });
+  }
+  async amcatSession() {
+    const user = await this.idb.user.get(1);
+    if (user?.amcat) return newAmcatSession(user.amcat.host, user.amcat.email, user.amcat.token);
+    return null;
+  }
 
   // CODINGJOBS
   async createCodingjob(name, job_id = null) {
@@ -40,10 +52,7 @@ class AnnotationDB {
     return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
-    await this.idb.documents
-      .where("job_id")
-      .equals(codingjob.job_id)
-      .delete();
+    await this.idb.documents.where("job_id").equals(codingjob.job_id).delete();
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
 
@@ -101,7 +110,7 @@ class AnnotationDB {
     }
 
     // making absolutely sure no garbage is added
-    codebook.codes = codebook.codes.filter(code => code.code !== "");
+    codebook.codes = codebook.codes.filter((code) => code.code !== "");
 
     return await this.writeCodebook(codingjob, codebook);
   }
@@ -109,10 +118,7 @@ class AnnotationDB {
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
-      await this.idb.documents
-        .where("job_id")
-        .equals(codingjob.job_id)
-        .primaryKeys()
+      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
     );
 
     const [preparedDocuments, codes] = prepareDocumentBatch(
@@ -128,7 +134,7 @@ class AnnotationDB {
   }
 
   async deleteDocuments(documents) {
-    const documentIds = documents.map(document => document.doc_uid);
+    const documentIds = documents.map((document) => document.doc_uid);
     return this.idb.documents.bulkDelete(documentIds);
   }
 
@@ -142,10 +148,7 @@ class AnnotationDB {
   }
 
   async getJobDocumentCount(codingjob) {
-    return this.idb.documents
-      .where("job_id")
-      .equals(codingjob.job_id)
-      .count();
+    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
   }
 
   async getDocuments(codingjob) {
@@ -157,10 +160,7 @@ class AnnotationDB {
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents
-      .where("doc_uid")
-      .equals(document.doc_uid)
-      .modify({ tokens: tokens });
+    return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
   }
 
   async writeAnnotations(document, annotations) {
@@ -168,6 +168,21 @@ class AnnotationDB {
       .where("doc_uid")
       .equals(document.doc_uid)
       .modify({ annotations: annotations });
+  }
+
+  // TASKS
+  async uploadTask(codingjobPackage, url, where) {
+    const exists = await this.idb.tasks.get({ url });
+    if (!exists) {
+      this.idb.tasks.add({
+        url,
+        last_modified: new Date(),
+        where,
+        ...codingjobPackage,
+      });
+    } else {
+      alert("This job has already been created before");
+    }
   }
 
   // CLEANUP

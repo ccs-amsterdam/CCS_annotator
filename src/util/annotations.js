@@ -1,32 +1,23 @@
-export const exportSpanAnnotations = async (doc, annotations) => {
+export const exportAnnotations = (annotations) => {
+  annotations = annotations["span"];
   // export annotations from the object format (for fast use in the annotator) to array format
-  const uniqueAnnotations = Object.values(annotations).reduce((un_ann, ann) => {
+  if (Object.keys(annotations).length === 0) return [];
+  const uniqueAnnotations = Object.keys(annotations).reduce((un_ann, index) => {
+    const ann = annotations[index];
+    console.log(ann);
     for (let key of Object.keys(ann)) {
-      if (ann[key].index !== ann[key].span[0]) continue;
-      const annotationTokens = doc.tokens.slice(ann[key].span[0], ann[key].span[1] + 1);
-      const text = annotationTokens
-        .map((at, i) => {
-          const pre = i > 0 ? at.pre : "";
-          const post = i < annotationTokens.length - 1 ? at.post : "";
-          return pre + at.text + post;
-        })
-        .join("");
+      if (index !== "unit") if (ann[key].index !== ann[key].span[0]) continue;
       const ann_obj = {
         variable: key,
         value: ann[key].value,
-        text: text,
         section: ann[key].section,
         offset: ann[key].offset,
         length: ann[key].length,
-        //index: ann[key].index,
-        //ngram: ann[key].span[1] - ann[key].span[0] + 1,
-        //coding: ann[key].coding,
       };
       un_ann.push(ann_obj);
     }
     return un_ann;
   }, []);
-
   return uniqueAnnotations;
 };
 

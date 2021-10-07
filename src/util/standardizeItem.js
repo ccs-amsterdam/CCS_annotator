@@ -1,4 +1,4 @@
-import { exportSpanAnnotations } from "./annotations";
+import { exportAnnotations } from "./annotations";
 import { selectTokens } from "./selectTokens";
 import db from "apis/dexie";
 
@@ -26,13 +26,13 @@ export const standardizeItems = async (codingjob, jobItems) => {
     const tokens = selectTokens(docs[doc_uid].tokens, jobItems[i], contextUnit, contextWindow);
     const item = { text_fields: unparseTokens(tokens) };
 
-    if (importAnnotations) item.annotations = exportSpanAnnotations(item.annotations);
+    if (importAnnotations) item.annotations = exportAnnotations(item.annotations);
     items.push(item);
   }
   return items;
 };
 
-const unparseTokens = tokens => {
+const unparseTokens = (tokens) => {
   // Create texts from tokens in a way that preserves information about original text and textParts (context and unit)
 
   const text_fields = [];

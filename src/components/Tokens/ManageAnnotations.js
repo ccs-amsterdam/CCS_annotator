@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setAnnotations, clearAnnotations } from "actions";
+import { exportAnnotations } from "util/annotations";
 
 /**
  * This component loads the annotations from the document of a taskItem into the redux store,
@@ -8,7 +9,7 @@ import { setAnnotations, clearAnnotations } from "actions";
  * indexedDB, and optionally a callback can be specified that can be used to send updates to
  * another backend.
  */
-const ManageAnnotations = ({ taskItem, callback, saveAnnotations }) => {
+const ManageAnnotations = ({ taskItem, saveAnnotations }) => {
   let annotations = useSelector((state) => state.annotations);
   const dispatch = useDispatch();
 
@@ -21,9 +22,9 @@ const ManageAnnotations = ({ taskItem, callback, saveAnnotations }) => {
 
   useEffect(() => {
     if (taskItem.writable) {
-      writeAnnotations(taskItem, annotations, saveAnnotations, callback);
+      writeAnnotations(taskItem, annotations, saveAnnotations);
     }
-  }, [taskItem, annotations, saveAnnotations, callback]);
+  }, [taskItem, annotations, saveAnnotations]);
 
   useEffect(() => {
     if (taskItem.writable || taskItem.tokens.length === 0) return;
@@ -39,10 +40,14 @@ const importAnnotations = (taskItem, dispatch) => {
   taskItem.writable = true;
 };
 
-const writeAnnotations = (taskItem, annotations, saveAnnotations, callback) => {
+const writeAnnotations = async (taskItem, annotations, saveAnnotations) => {
   if (saveAnnotations) {
     //db.writeAnnotations({ doc_uid: taskItem.doc_uid }, annotations);
-    if (callback) callback(taskItem, annotations);
+    if (taskItem.post) {
+      const annotationsArray = exportAnnotations(annotations);
+      console.log(annotationsArray);
+      await taskItem.post(taskItem.unitId, annotationsArray);
+    }
   }
 };
 

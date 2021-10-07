@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Input, Loader, Pagination, Segment } from "semantic-ui-react";
+import { useSelector, useDispatch } from "react-redux";
+import { resetFinishedUnit } from "actions";
 
-const ItemSelector = ({ items, setItem }) => {
+const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
+  const finishedUnit = useSelector((state) => state.finishedUnit);
+  const dispatch = useDispatch();
+
   const [loading, setLoading] = useState(false);
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
@@ -26,7 +31,7 @@ const ItemSelector = ({ items, setItem }) => {
   };
 
   useEffect(() => {
-    window.addEventListener("keydown", onKeyDown);
+    if (canControl) window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
     };
@@ -34,14 +39,22 @@ const ItemSelector = ({ items, setItem }) => {
 
   useEffect(() => {
     if (!items) return null;
+    dispatch(resetFinishedUnit());
     setActivePage(1);
-  }, [items, setItem, setActivePage]);
+  }, [items, setItem, setActivePage, dispatch]);
+
+  useEffect(() => {
+    if (finishedUnit > 0 && items) {
+      setActivePage((current) => Math.min(items.length + 1, current + 1));
+    }
+  }, [items, finishedUnit]);
 
   useEffect(() => {
     if (!items) return null;
+    if (activePage === items.length) setFinished(true);
     setItem(items[activePage - 1]);
     setDelayedActivePage(activePage);
-  }, [items, setItem, activePage]);
+  }, [items, setItem, setFinished, activePage]);
 
   useEffect(() => {
     if (!items) return null;
@@ -68,8 +81,10 @@ const ItemSelector = ({ items, setItem }) => {
       <Input
         style={{ padding: 0, margin: 0, width: "100%" }}
         min={1}
-        max={items.length}
-        onChange={(e, d) => setDelayedActivePage(Number(d.value))}
+        max={items.length + 1}
+        onChange={(e, d) => {
+          if (canControl) setDelayedActivePage(Number(d.value));
+        }}
         type="range"
         labelPosition="left"
         label={
@@ -80,14 +95,16 @@ const ItemSelector = ({ items, setItem }) => {
             size={"mini"}
             firstItem={null}
             lastItem={null}
-            prevItem={"back"}
-            nextItem={"next"}
+            prevItem={canControl ? "back" : null}
+            nextItem={canControl ? "next" : null}
             siblingRange={0}
             boundaryRange={0}
             ellipsisItem={null}
             totalPages={items.length}
             onClick={(e, d) => e.stopPropagation()}
-            onPageChange={(e, d) => setActivePage(Number(d.activePage))}
+            onPageChange={(e, d) => {
+              if (canControl) setActivePage(Number(d.activePage));
+            }}
             style={{ fontSize: "9px", border: "none", boxShadow: "none", padding: 0, margin: 0 }}
           ></Pagination>
         }

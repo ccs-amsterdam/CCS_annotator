@@ -13,16 +13,21 @@ import TaskSelector from "components/TaskSelector/TaskSelector";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
-const homepage = "/home";
+const homepage = "/amcat4annotator";
 const items = [
   { label: "Task selector", path: "/tasks", Component: TaskSelector, menu: true },
   { label: "Annotator", path: "/annotator", Component: Annotator, menu: false },
-  { label: "Codingjob manager", path: "/manager", Component: CodingjobManager, menu: true },
+  {
+    label: "Codingjob manager",
+    path: "/manager",
+    Component: CodingjobManager,
+    menu: true,
+  },
 ];
 
 const App = () => {
-  const createNavigation = items => {
-    return items.map(item => {
+  const createNavigation = (items) => {
+    return items.map((item) => {
       return (
         <AuthRoute
           key={item.path}
@@ -38,7 +43,7 @@ const App = () => {
     <BrowserRouter>
       <HeaderMenu items={items} homepage={homepage}>
         <Switch>
-          <Route exact path={"/"} render={() => <Welcome />} />
+          <Route exact path={homepage} render={() => <Welcome />} />
           {createNavigation(items)}
         </Switch>
       </HeaderMenu>

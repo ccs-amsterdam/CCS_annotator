@@ -1,47 +1,23 @@
-import React, { useEffect, useState } from "react";
-
 import db from "apis/dexie";
-import { useHistory } from "react-router";
-import { useLiveQuery } from "dexie-react-hooks";
-import { Grid, Header, Button } from "semantic-ui-react";
-import objectHash from "object-hash";
 import SelectionTable from "components/CodingjobManager/SelectionTable";
-
-const tableColumns = [
-  {
-    Header: "Title",
-    accessor: "title",
-    headerClass: "two wide",
-  },
-  {
-    Header: "URL",
-    accessor: "url",
-    headerClass: "four wide",
-  },
-];
+import { useLiveQuery } from "dexie-react-hooks";
+import objectHash from "object-hash";
+import React, { useState } from "react";
+import { useHistory } from "react-router";
+import { useEffect } from "react/cjs/react.development";
+import { Button, Grid, Header } from "semantic-ui-react";
+import TaskTable from "./TaskTable";
 
 const TaskSelector = () => {
   const history = useHistory();
-
-  const tasks = useLiveQuery(async () => {
-    let arr = await db.idb.tasks.orderBy("last_modified").primaryKeys();
-    arr = arr.map(a => ({ title: a[0], url: a[1] }));
-    //if (arr) arr.sort((a, b) => b.last_modified - a.last_modified);
-    return arr;
-  });
   const [taskKey, setTaskKey] = useState(null);
 
-  useEffect(() => {
-    if (!taskKey && tasks) {
-      setTaskKey(tasks.length > 0 ? { ...tasks[0], ROW_ID: "0" } : null);
-    }
-  }, [taskKey, tasks, setTaskKey]);
-
-  const uploadFile = e => {
+  const uploadFile = (e) => {
     const fileReader = new FileReader();
     fileReader.readAsText(e.target.files[0], "UTF-8");
-    fileReader.onload = e => {
-      uploadTask(JSON.parse(e.target.result));
+    fileReader.onload = (e) => {
+      const url = "IDB:" + objectHash(e.target.result);
+      db.uploadTask(JSON.parse(e.target.result), url, "local");
     };
   };
 
@@ -50,52 +26,97 @@ const TaskSelector = () => {
     history.push("/annotator?" + taskKey.url);
   };
 
-  //if (task) return <
-
   return (
     <Grid centered container>
-      <Grid.Column width={6}>
-        {" "}
-        <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
-          Recent coding jobs
-        </Header>
-        <SelectionTable
-          columns={tableColumns}
-          data={tasks ? tasks : []}
-          selectedRow={taskKey}
-          setSelectedRow={setTaskKey}
-          defaultSize={15}
-        />
-      </Grid.Column>
-      <Grid.Column width={3}>
-        <br />
-        <br />
-        <Header>Upload codingjob</Header>
-
-        <input type="file" onChange={uploadFile} />
-        <div>
+      <Grid.Row>
+        <Grid.Column width={10}>
+          {" "}
+          <TaskTable taskKey={taskKey} setTaskKey={setTaskKey} />
+        </Grid.Column>
+        <Grid.Column width={6}>
           <br />
-          <Button primary disabled={!taskKey} onClick={setJobUrlQuery}>
-            Open selected codingjob
-          </Button>
-        </div>
-      </Grid.Column>
+          <br />
+          <Header>Upload codingjob</Header>
+
+          <input type="file" onChange={uploadFile} />
+          <div>
+            <br />
+            <Button primary disabled={!taskKey} onClick={setJobUrlQuery}>
+              Open selected codingjob
+            </Button>
+          </div>
+        </Grid.Column>
+      </Grid.Row>
+      <Grid.Row>
+        <TaskResults taskKey={taskKey} />
+      </Grid.Row>
     </Grid>
   );
 };
 
-const uploadTask = async codingjobPackage => {
-  const url = "IDB:" + objectHash(codingjobPackage);
-  const exists = await db.idb.tasks.get({ url });
-  if (!exists) {
-    db.idb.tasks.add({
-      url,
-      last_modified: new Date(),
-      medium: "file",
-      ...codingjobPackage,
-    });
-  } else {
-    alert("This job has already been created before");
+const columns = [
+  {
+    Header: "ID",
+    accessor: "id",
+    headerClass: "one wide",
+  },
+  {
+    Header: "Coder",
+    accessor: "coder",
+    headerClass: "three wide",
+  },
+  {
+    Header: "Variable",
+    accessor: "variable",
+    headerClass: "three wide",
+  },
+  {
+    Header: "Value",
+    accessor: "value",
+    headerClass: "three wide",
+  },
+];
+
+const TaskResults = ({ taskKey }) => {
+  const [annotations, setAnnotations] = useState([]);
+  const amcat = useLiveQuery(() => db.amcatSession());
+
+  useEffect(() => {
+    if (!taskKey) return null;
+    setAnnotations([]);
+    getResultUrl(taskKey, amcat, setAnnotations);
+  }, [taskKey, amcat, setAnnotations]);
+
+  return <SelectionTable columns={columns} data={annotations} />;
+};
+
+const getResultUrl = async (taskKey, amcat, setAnnotations) => {
+  let task = await db.idb.tasks.get({ url: taskKey.url });
+
+  if (!task) return;
+  if (task.where === "remote") {
+    if (!amcat) return;
+    const id = taskKey.url.split("codingjob/")[1].split("/codebook")[0];
+    const host = taskKey.url.split("codingjob/")[0];
+    const url = `${host}/codingjob/${id}`;
+    try {
+      const res = await amcat.api.get(url);
+      console.log(res.data);
+      const annotations = res.data.units.reduce((arr, unit, i) => {
+        if (unit.annotations) {
+          for (let coder of Object.keys(unit.annotations)) {
+            for (let ann of unit.annotations[coder]) {
+              arr.push({ id: i, coder, ...ann });
+            }
+          }
+        }
+        return arr;
+      }, []);
+      setAnnotations(annotations);
+    } catch (e) {
+      console.log(e);
+      //db.resetAmcatAuth();
+    }
   }
 };
 
