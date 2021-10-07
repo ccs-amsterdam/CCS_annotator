@@ -22,10 +22,10 @@ const defaultTaskSettings = {
   questions: {
     questions: [
       {
-        name: "Question name",
         type: "select code",
-        question: "[Enter the question to the coder here...]",
-        codes: ["Some", "example", "options"],
+        name: "[Question name]",
+        question: "[The question itself]",
+        codes: ["No", "Skip", "Yes"],
       },
     ],
   },
@@ -34,7 +34,7 @@ const defaultTaskSettings = {
 const TaskSettings = ({ codingjob }) => {
   const unitSettings = codingjob?.unitSettings;
   const taskSettings = codingjob?.taskSettings || defaultTaskSettings;
-  const setTaskSettings = us => {
+  const setTaskSettings = (us) => {
     db.setCodingjobProp(codingjob, "taskSettings", us);
   };
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Form, Radio, TextArea, Menu, Header, Segment } from "semantic-ui-react";
+import { Form, Radio, TextArea, Menu, Header, Segment, Grid, Dropdown } from "semantic-ui-react";
 import { useSelector, useDispatch } from "react-redux";
 import { setQuestionIndex } from "actions";
 
@@ -9,15 +9,15 @@ import CodesEditor from "components/CodesEditor/CodesEditor";
 import { standardizeCodes } from "util/codebook";
 
 const questionDefaultSettings = {
-  name: "Question name",
   type: "select code",
-  question: "[Enter the question to the coder here...]",
-  codes: ["Some", "example", "options"],
+  name: "[Question name]",
+  question: "[The question itself]",
+  codes: ["No", "Skip", "Yes"],
 };
 
 const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) => {
   // question index via redux, so that it can be linked with question index in the question task preview
-  const questionIndex = useSelector(state => state.questionIndex);
+  const questionIndex = useSelector((state) => state.questionIndex);
   const dispatch = useDispatch();
 
   const onAdd = () => {
@@ -28,7 +28,7 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
 
   const questionMap = () => {
     return taskSettings.questions.questions.map((question, i) => {
-      const setQuestionForm = value => {
+      const setQuestionForm = (value) => {
         const newTaskSettings = { ...taskSettings };
         newTaskSettings.questions.questions[i] = value;
         setTaskSettings(newTaskSettings);
@@ -118,11 +118,11 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
   console.log(warn);
 
   const codesEditor = () => {
-    if (questionForm.type !== "search code" && questionForm.type !== "select code") return null;
+    //if (questionForm.type !== "search code" && questionForm.type !== "select code") return null;
     return (
       <CodesEditor
         codes={standardizeCodes(questionForm.codes)}
-        setCodes={newCodes => setQuestionForm({ ...questionForm, codes: newCodes })}
+        setCodes={(newCodes) => setQuestionForm({ ...questionForm, codes: newCodes })}
       />
     );
   };
@@ -175,9 +175,127 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
             onChange={() => setQuestionForm({ ...questionForm, type: "select code" })}
           />
         </Form.Field>
+
+        <Form.Field>
+          <Radio
+            value="annotinder"
+            label="Annotinder (swipe left/right/up)"
+            checked={questionForm.type === "annotinder"}
+            onChange={() => setQuestionForm({ ...questionForm, type: "annotinder" })}
+          />
+        </Form.Field>
       </Form.Group>
       <br />
+      <AnnotinderEditor questionForm={questionForm} setQuestionForm={setQuestionForm} />
       {codesEditor()}
+    </Form>
+  );
+};
+
+const AnnotinderEditor = ({ questionForm, setQuestionForm }) => {
+  const [swipes, setSwipes] = useState({ left: null, up: null, right: null });
+
+  useEffect(() => {
+    // if there are not yet any .swipe keys, read first 3 codes as defaults
+    if (questionForm.type !== "annotinder") return null;
+    const newCodes = [...questionForm.codes];
+    let firstTime = true;
+    for (let code of newCodes) if (code?.swipe) firstTime = false;
+    if (!firstTime) return null;
+    const directions = ["left", "up", "right"];
+    for (let i = 0; i < 3; i++) {
+      if (newCodes.length > i) {
+        if (typeof newCodes[i] === "object") {
+          newCodes[i] = { ...newCodes[i], swipe: directions[i] };
+        } else newCodes[i] = { code: newCodes[i], swipe: directions[i] };
+      }
+    }
+    setQuestionForm({ ...questionForm, codes: newCodes });
+  }, [questionForm, setQuestionForm]);
+
+  useEffect(() => {
+    const getSwipeCode = (direction) => {
+      return questionForm.codes.find((code) => {
+        if (typeof code !== "object") return false;
+        return code.swipe && code.swipe === direction;
+      });
+    };
+    const left = getSwipeCode("left") || null;
+    const up = getSwipeCode("up") || null;
+    const right = getSwipeCode("right") || null;
+    setSwipes({ left, up, right });
+  }, [questionForm, setSwipes]);
+
+  const onSelect = (direction, selected) => {
+    const newCodes = questionForm.codes.map((code) => {
+      const newcode = typeof code !== "object" ? { code } : { ...code };
+      if (newcode.code === selected) {
+        return { ...newcode, swipe: direction };
+      } else {
+        if (newcode.swipe && newcode.swipe === direction) return { ...newcode, swipe: null };
+      }
+      if (!newcode.swipe) newcode.swipe = null;
+      return newcode;
+    });
+    setQuestionForm({ ...questionForm, codes: newCodes });
+  };
+
+  if (questionForm.type !== "annotinder") return null;
+
+  const options = questionForm.codes.map((code, i) => {
+    return { key: i, text: code.code || code, value: code.code || code };
+  });
+
+  return (
+    <Form>
+      <Grid textAlign="center" verticalAlign="middle">
+        <Grid.Row style={{ paddingBottom: "0" }}>
+          <Grid.Column width={6}>
+            <Form.Group grouped>
+              <b>swipe/arrow up</b>
+
+              <Dropdown
+                placeholder="not used"
+                clearable
+                value={swipes.up?.code || null}
+                options={options}
+                selection
+                style={{ minWidth: "10em", maxWidth: "10em" }}
+                onChange={(e, d) => onSelect("up", d.value)}
+              />
+            </Form.Group>
+          </Grid.Column>
+        </Grid.Row>
+        <Grid.Row>
+          <Grid.Column width={8}>
+            <b>swipe/arrow left</b>
+            <Dropdown
+              placeholder="not used"
+              clearable
+              value={swipes.left?.code || null}
+              options={options}
+              selection
+              style={{ minWidth: "10em", maxWidth: "10em" }}
+              onChange={(e, d) => onSelect("left", d.value)}
+            />
+          </Grid.Column>
+          <Grid.Column width={8}>
+            <b>swipe/arrow right</b>
+
+            <Dropdown
+              placeholder="not used"
+              clearable
+              value={swipes.right?.code || null}
+              options={options}
+              selection
+              style={{ minWidth: "10em", maxWidth: "10em" }}
+              onChange={(e, d) => onSelect("right", d.value)}
+            />
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+      <br />
+      <br />
     </Form>
   );
 };

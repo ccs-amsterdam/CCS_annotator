@@ -1,22 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Header, Button, Dropdown, Ref, Segment } from "semantic-ui-react";
+import { Header, Button, Dropdown, Ref, Segment, Icon } from "semantic-ui-react";
 import { moveUp, moveDown } from "util/refNavigation";
 import { finishedUnit, setAnnotations } from "actions";
 import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
+import { useSwipeable } from "react-swipeable";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const QuestionForm = ({ itemBundle, codebook, preview }) => {
-  const questionIndex = useSelector((state) => state.questionIndex);
+const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
   const [settings, setSettings] = useState();
-
+  const [answerTransition, setAnswerTransition] = useState();
   const dispatch = useDispatch();
 
   useEffect(() => {
     // settings is an array with the settings for each question
     // This needs a little preprocessing, so we only update it when codebook changes (not per item)
-    console.log(codebook);
     if (!codebook?.questions) return null;
     setSettings(prepareSettings(codebook));
   }, [codebook, setSettings]);
@@ -28,7 +27,15 @@ const QuestionForm = ({ itemBundle, codebook, preview }) => {
   const currentAnswer = getCurrentAnswer(itemBundle);
 
   const onSelect = (answer) => {
-    setNewAnswer(itemBundle, questionIndex, rawQuestion, answer, dispatch);
+    setNewAnswer(itemBundle, questionIndex, rawQuestion, answer.code, dispatch);
+    setAnswerTransition(answer);
+    if (questionIndex === itemBundle.codebook.questions.length - 1) {
+      setTimeout(() => {
+        // wait a little bit, so coder can confirm their answer
+        setAnswerTransition(null);
+        dispatch(finishedUnit());
+      }, 300);
+    }
   };
 
   const questionIndexStep = () => {
@@ -47,6 +54,56 @@ const QuestionForm = ({ itemBundle, codebook, preview }) => {
           );
         })}
       </Button.Group>
+    );
+  };
+
+  const renderAnswerSegment = () => {
+    if (answerTransition)
+      return (
+        <Segment
+          style={{
+            height: "100%",
+            width: "100%",
+            background: answerTransition.color,
+            textAlign: "center",
+          }}
+        >
+          <Header as="h1">{answerTransition.code}</Header>
+        </Segment>
+      );
+    return (
+      <>
+        {showCurrent(currentAnswer || answerTransition)}
+        <Segment
+          style={{
+            flex: "1 1 auto",
+            padding: "0",
+            overflowY: "auto",
+            height: "100%",
+            width: "100%",
+            margin: "0",
+          }}
+        >
+          {settings[questionIndex].type === "search code" ? (
+            <SearchBoxDropdown options={settings[questionIndex].options} callback={onSelect} />
+          ) : null}
+          {settings[questionIndex].type === "select code" ? (
+            <ButtonSelection
+              options={settings[questionIndex].options}
+              callback={onSelect}
+              preview={preview}
+            />
+          ) : null}
+          {settings[questionIndex].type === "annotinder" ? (
+            <Annotinder
+              options={settings[questionIndex].options}
+              currentAnswer={currentAnswer}
+              callback={onSelect}
+              preview={preview}
+            />
+          ) : null}
+        </Segment>
+      </>
     );
   };
 
@@ -73,26 +130,8 @@ const QuestionForm = ({ itemBundle, codebook, preview }) => {
         </div>
       </div>
       <p>{question}</p>
-      {showCurrent(currentAnswer)}
-      <Segment
-        style={{
-          flex: "1 1 auto",
-          padding: "0.1em",
-          overflowY: "auto",
-          height: "100%",
-        }}
-      >
-        {settings[questionIndex].type === "search code" ? (
-          <SearchBoxDropdown options={settings[questionIndex].options} callback={onSelect} />
-        ) : null}
-        {settings[questionIndex].type === "select code" ? (
-          <ButtonSelection
-            options={settings[questionIndex].options}
-            callback={onSelect}
-            preview={preview}
-          />
-        ) : null}
-      </Segment>
+
+      {renderAnswerSegment()}
     </div>
   );
 };
@@ -117,6 +156,7 @@ const getOptions = (cta) => {
       ref: React.createRef(),
       code: code.code,
       tree: tree,
+      swipe: code.swipe,
       color: code.color,
     });
     return options;
@@ -147,32 +187,27 @@ const setNewAnswer = (itemBundle, questionIndex, rawQuestion, answer, dispatch) 
   if (!newAnnotations["span"]["unit"]) newAnnotations["span"]["unit"] = {};
   newAnnotations["span"]["unit"][group] = annotation;
   dispatch(setAnnotations({ ...newAnnotations }));
-
-  if (questionIndex === itemBundle.codebook.questions.length - 1) {
-    dispatch(finishedUnit());
-  }
 };
 
 const getCurrentAnswer = (itemBundle) => {
-  const root = ""; // this is just a placeholder. Need to add setting for question mode task that a root from the codebook is used
-  return itemBundle.annotations[itemBundle.textUnit]?.[itemBundle.unitIndex]?.[root]?.answer;
+  // this needs to be 10x prettier or something
+  return itemBundle.annotations[itemBundle.textUnit]?.[itemBundle.unitIndex]?.["unit"]?.answer;
 };
 
 const showCurrent = (currentAnswer) => {
   if (currentAnswer == null) return null;
   return (
-    <div style={{ backgroundColor: "white" }}>
+    <div style={{ backgroundColor: "white", color: "black" }}>
       <Segment
         style={{
-          backgroundColor: currentAnswer,
           padding: "0.2em",
           margin: "0",
           textAlign: "center",
         }}
       >
-        <div style={{ fontSize: "1.5em", marginTop: "0.3em" }}>{currentAnswer}</div>
-        <div style={{ float: "left", fontStyle: "italic" }}>selected</div>{" "}
-        <div style={{ textAlign: "right", fontStyle: "italic" }}>select again to continue</div>
+        <div style={{ fontSize: "1.5em", marginTop: "0.3em" }}>
+          You answered <b>{`${currentAnswer}`}</b>
+        </div>
       </Segment>
     </div>
   );
@@ -198,24 +233,6 @@ const prepareQuestion = (itemBundle, settings) => {
   //     const codeTag = `{{yellow###${code}}}`; // add optional color from itemSettings
   //     question = question.replace("[group]", codeTag);
   //     rawQuestion = rawQuestion.replace("[code]", code);
-  //   }
-  // }
-
-  // if (question.search("\\[text\\]") >= 0) {
-  //   if (item.annotation?.span != null) {
-  //     const text = tokens.reduce((str, token) => {
-  //       const i = token.index;
-  //       const [from, to] = item.annotation.span;
-  //       if (i === from && i === to) str += token.text;
-  //       if (i === from && i < to) str += token.text + token.post;
-  //       if (i > from && i < to) str += token.pre + token.text + token.post;
-  //       if (i > from && i === to) str += token.text + token.post;
-  //       return str;
-  //     }, "");
-  //     const textTag = `{{lightblue###${text}}}`; // add optional color from itemSettings
-
-  //     question = question.replace("[text]", textTag);
-  //     rawQuestion = rawQuestion.replace("[code]", text);
   //   }
   // }
 
@@ -258,8 +275,8 @@ const SearchBoxDropdown = React.memo(({ options, callback }) => {
         options={options.map((option) => {
           return {
             key: option.code,
-            value: option.code,
-            text: option.code + " (" + option.tree + ")",
+            value: option,
+            text: option.code + (option.tree ? " (" + option.tree + ")" : ""),
             content: (
               <>
                 {option.code}
@@ -329,7 +346,7 @@ const ButtonSelection = React.memo(({ options, callback, preview }) => {
         if (selected === options.length) {
           callback(null); // this means delete button was selected
         } else {
-          callback(options[selected].code);
+          callback(options[selected]);
         }
       }
     },
@@ -360,7 +377,7 @@ const ButtonSelection = React.memo(({ options, callback, preview }) => {
                 border: i === selected ? "3px solid black" : "3px solid #ece9e9",
               }}
               key={option.code}
-              value={option.code}
+              value={option}
               compact
               //active={i === selected}
               onMouseOver={() => setSelected(i)}
@@ -398,6 +415,125 @@ const ButtonSelection = React.memo(({ options, callback, preview }) => {
       }}
     >
       {mapButtons()}
+    </div>
+  );
+});
+
+const swipeConfig = {
+  delta: 10, // min distance(px) before a swipe starts. *See Notes*
+  preventDefaultTouchmoveEvent: false, // call e.preventDefault *See Details*
+  trackTouch: true, // track touch input
+  trackMouse: false, // track mouse input
+  rotationAngle: 0, // set a rotation angle
+};
+
+const Annotinder = React.memo(({ options, callback, preview }) => {
+  const eventsBlocked = useSelector((state) => state.eventsBlocked);
+  const left = options.find((option) => option.swipe === "left");
+  const up = options.find((option) => option.swipe === "up");
+  const right = options.find((option) => option.swipe === "right");
+
+  // set useSwipeable on document (https://github.com/FormidableLabs/react-swipeable/issues/180#issuecomment-649677983)
+  const { ref } = useSwipeable({
+    onSwiped: (eventData) => {
+      console.log(eventData);
+      if (eventData) {
+        if (eventData.dir === "Right") callback(right);
+        if (eventData.dir === "Up") callback(up);
+        if (eventData.dir === "Left") callback(left);
+      }
+    },
+    ...swipeConfig,
+  });
+  useEffect(() => ref(document));
+
+  const onKeydown = React.useCallback(
+    (event) => {
+      // any arrowkey
+      if (arrowKeys.includes(event.key)) {
+        event.preventDefault();
+        if (event.key === "ArrowRight") callback(right);
+        if (event.key === "ArrowUp") callback(up);
+        if (event.key === "ArrowLeft") callback(left);
+      }
+    },
+
+    [callback, left, right, up]
+  );
+
+  useEffect(() => {
+    if (!eventsBlocked && !preview) {
+      window.addEventListener("keydown", onKeydown);
+    } else window.removeEventListener("keydown", onKeydown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeydown);
+    };
+  }, [onKeydown, eventsBlocked, preview]);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignContent: "stretch",
+
+        height: "100%",
+      }}
+    >
+      <Button
+        fluid
+        disabled={up == null}
+        onClick={(e, d) => callback(up)}
+        style={{
+          flex: "1 1 auto",
+          background: up?.color || "white",
+        }}
+      >
+        <div style={{ color: "black", fontWeight: "bold", fontSize: "1em" }}>
+          <Icon name={up?.code ? "arrow up" : null} />
+          <span>{up?.code || ""}</span>
+        </div>
+      </Button>
+      <div style={{ flex: "1 1 auto" }}>
+        <div
+          style={{
+            display: "flex",
+            height: "100%",
+            flexWrap: "wrap",
+            alignContent: "stretch",
+          }}
+        >
+          <Button
+            disabled={left == null}
+            onClick={(e, d) => callback(left)}
+            style={{
+              flex: "1 1 auto",
+              width: "45%",
+              background: left?.color || "white",
+            }}
+          >
+            <div style={{ color: "black", fontWeight: "bold", fontSize: "1em" }}>
+              <Icon name={left?.code ? "arrow left" : null} />
+              <span>{left?.code || ""}</span>
+            </div>
+          </Button>
+          <Button
+            disabled={right == null}
+            onClick={(e, d) => callback(right)}
+            style={{
+              flex: "1 1 auto",
+              width: "45%",
+              background: right?.color || "white",
+            }}
+          >
+            <div style={{ color: "black", fontWeight: "bold", fontSize: "1em" }}>
+              <span>{right?.code || ""}</span>
+              <Icon name={right?.code ? "arrow right" : null} />
+            </div>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 });
