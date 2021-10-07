@@ -122,7 +122,6 @@ export const toggleSpanAnnotations = (annotations, annList, rm) => {
 
 const prepareSpanAnnotations = (annotations) => {
   if (!annotations || annotations === "") return {};
-
   // create an object where the key is a section+offset, and the
   // value is an array that tells which codes start and end there
   // used in Tokens for matching to token indices

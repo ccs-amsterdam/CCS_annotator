@@ -9,13 +9,11 @@ import AuthRoute from "components/routing/AuthRoute";
 // Main pages. Use below in items to include in header menu
 import CodingjobManager from "components/CodingjobManager/CodingjobManager";
 import Annotator from "components/Annotator/Annotator";
-import TaskSelector from "components/TaskSelector/TaskSelector";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
 const homepage = "/amcat4annotator";
 const items = [
-  { label: "Task selector", path: "/tasks", Component: TaskSelector, menu: true },
   { label: "Annotator", path: "/annotator", Component: Annotator, menu: false },
   {
     label: "Codingjob manager",
@@ -45,6 +43,7 @@ const App = () => {
         <Switch>
           <Route exact path={homepage} render={() => <Welcome />} />
           {createNavigation(items)}
+          <Route exact path={"/"} render={() => <Welcome />} />
         </Switch>
       </HeaderMenu>
     </BrowserRouter>

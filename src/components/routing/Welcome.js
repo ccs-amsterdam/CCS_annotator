@@ -6,6 +6,7 @@ import { Grid, Button, Header, Segment, Form } from "semantic-ui-react";
 import { initStoragePersistence } from "apis/storemanager";
 import { demo_articles, demo_codebook } from "apis/demodata";
 import { useLiveQuery } from "dexie-react-hooks";
+import { useEffect } from "react/cjs/react.development";
 
 const Welcome = () => {
   const history = useHistory();
@@ -25,7 +26,9 @@ const Welcome = () => {
     }
   };
 
-  if (user != null) history.goBack();
+  useEffect(() => {
+    if (user != null) history.goBack();
+  }, [user, history]);
 
   return (
     <Grid inverted textAlign="center" style={{ height: "100vh" }} verticalAlign="middle">

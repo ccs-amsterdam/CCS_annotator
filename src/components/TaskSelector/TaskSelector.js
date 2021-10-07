@@ -5,8 +5,9 @@ import objectHash from "object-hash";
 import React, { useState } from "react";
 import { useHistory } from "react-router";
 import { useEffect } from "react/cjs/react.development";
-import { Button, Grid, Header } from "semantic-ui-react";
+import { Button, Grid, Header, TextArea } from "semantic-ui-react";
 import TaskTable from "./TaskTable";
+import QRCode from "qrcode.react";
 
 const TaskSelector = () => {
   const history = useHistory();
@@ -26,6 +27,20 @@ const TaskSelector = () => {
     history.push("/annotator?" + taskKey.url);
   };
 
+  const linkAndQr = () => {
+    console.log(taskKey);
+    if (taskKey == null) return;
+    return (
+      <div>
+        <TextArea
+          value={"https://kasperwelbers.com/annotator?" + taskKey?.url}
+          style={{ width: "100%" }}
+        />
+        <QRCode value={"https://kasperwelbers.com/annotator?" + taskKey?.url} size={256} />
+      </div>
+    );
+  };
+
   return (
     <Grid centered container>
       <Grid.Row>
@@ -41,9 +56,13 @@ const TaskSelector = () => {
           <input type="file" onChange={uploadFile} />
           <div>
             <br />
+
             <Button primary disabled={!taskKey} onClick={setJobUrlQuery}>
               Open selected codingjob
             </Button>
+            <br />
+            <br />
+            {linkAndQr()}
           </div>
         </Grid.Column>
       </Grid.Row>

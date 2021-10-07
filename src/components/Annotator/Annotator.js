@@ -90,7 +90,7 @@ const ExitButton = () => {
   const history = useHistory();
   return (
     <Icon.Group size="big" style={{ position: "absolute", top: "0px", right: 0 }}>
-      <Icon link name="window close" onClick={() => history.push("/tasks")} />
+      <Icon link name="window close" onClick={() => history.push("/manager")} />
       <Icon corner="top right" />
     </Icon.Group>
   );

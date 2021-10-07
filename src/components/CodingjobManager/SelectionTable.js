@@ -110,7 +110,7 @@ const SelectionTable = ({
     });
   };
 
-  if (data.length === 0) return null;
+  //if (data.length === 0) return null;
 
   return (
     <div style={{ width: width }}>
