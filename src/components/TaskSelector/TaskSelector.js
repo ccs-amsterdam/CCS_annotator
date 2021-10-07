@@ -30,15 +30,13 @@ const TaskSelector = () => {
 
   const linkAndQr = () => {
     if (taskKey == null) return;
+    const url = "https://kasperwelbers.com/amcat4annotator/annotator?" + taskKey?.url;
     return (
       <div>
-        <TextArea
-          value={"https://kasperwelbers.com/amcat4annotator/annotator?" + taskKey?.url}
-          style={{ width: "100%" }}
-        />
+        <TextArea value={url} style={{ width: "512px" }} />
         <QRCode
-          value={"https://kasperwelbers.com/amcat4annotator/annotator?" + taskKey?.url}
-          size={256}
+          value={"This link opens a codingjob in the AmCAT annotator" + encodeURI(url)}
+          size={512}
         />
       </div>
     );
@@ -47,11 +45,11 @@ const TaskSelector = () => {
   return (
     <Grid centered container>
       <Grid.Row>
-        <Grid.Column width={10}>
+        <Grid.Column width={6}>
           {" "}
           <TaskTable taskKey={taskKey} setTaskKey={setTaskKey} />
         </Grid.Column>
-        <Grid.Column width={6}>
+        <Grid.Column width={10}>
           <br />
           <br />
           <Header>Upload codingjob</Header>

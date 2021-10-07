@@ -9,14 +9,18 @@ import { useLiveQuery } from "dexie-react-hooks";
 
 const homepage = "/amcat4annotator";
 
-const Welcome = () => {
+const Welcome = ({ redirectUrl }) => {
   const history = useHistory();
   const user = useLiveQuery(() => db.idb.user.get(1));
   const [name, setName] = useState("");
 
   useEffect(() => {
-    if (user != null) history.push(homepage + "/manager");
-  }, [user, history]);
+    if (user != null) {
+      if (redirectUrl) {
+        history.push(redirectUrl);
+      } else history.push(homepage + "/manager");
+    }
+  }, [user, history, redirectUrl]);
 
   const loggin = async () => {
     if (name.length < 10) return null;
@@ -27,7 +31,9 @@ const Welcome = () => {
       //alert(history.location.pathname);
       // should actually go back to previous page if previous page was annotator, but
       // not clue how to see this in history
-      history.push(homepage + "/manager");
+      if (redirectUrl) {
+        history.push(redirectUrl);
+      } else history.push(homepage + "/manager");
     } catch (e) {
       console.log(e);
     }

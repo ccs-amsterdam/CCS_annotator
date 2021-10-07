@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Route, useHistory } from "react-router";
+import { Route } from "react-router";
+import Welcome from "./Welcome";
 import db from "apis/dexie";
 
 const AuthRoute = ({ Component, homepage, ...componentProps }) => {
   const [loading, setLoading] = useState(true);
   const [hasdb, setHasdb] = useState(false);
-  const history = useHistory();
   // the trick for passing on componentProps is basically
   // redundant now that we use Redux, but leaving it intact just in case
 
@@ -19,13 +19,13 @@ const AuthRoute = ({ Component, homepage, ...componentProps }) => {
   };
   connect();
 
-  console.log("test");
-  if (!loading && !hasdb) history.push("/");
+  const url = componentProps.location.pathname + componentProps.location.search;
+  if (!loading && !hasdb) return <Welcome redirectUrl={url} />;
 
   return (
     <Route
       {...componentProps}
-      render={props =>
+      render={(props) =>
         loading ? (
           <div>loading...</div>
         ) : hasdb ? (
