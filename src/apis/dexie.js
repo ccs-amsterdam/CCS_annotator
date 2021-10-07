@@ -11,24 +11,13 @@ class AnnotationDB {
     //for testing, clean db on refresh
     // this.idb.delete();
     // this.idb = new Dexie("AmCAT_Annotator");
-    try {
-      this.idb.version(2).stores({
-        user: "++id, name", // other fields: 'id'
-        codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
-        documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
-        tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
-      });
-    } catch (e) {
-      // this is not a good idea for production, but for now it helps
-      this.idb.delete();
-      this.idb = new Dexie("AmCAT_Annotator");
-      this.idb.version(2).stores({
-        user: "++id, name", // other fields: 'id'
-        codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
-        documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
-        tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
-      });
-    }
+
+    this.idb.version(3).stores({
+      user: "++id, name", // other fields: 'id'
+      codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
+      documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
+      tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
+    });
   }
 
   // USER
