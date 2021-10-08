@@ -42,10 +42,10 @@ const useItemBundle = (item, codebook, settings = defaultSettings, preview) => {
  */
 export const prepareItemBundle = async (item, codebook, settings, preview, setItemBundle) => {
   let itemBundle = { ...item };
-
   // For convenience, also allow item to just have a 'text' key with a string (instead of text_fields)
   if (!itemBundle.text_fields && itemBundle.text)
     itemBundle.text_fields = [{ name: "text", value: itemBundle.text }];
+  if (!itemBundle.text_fields) return null;
 
   itemBundle = prepareDocument(itemBundle);
 
@@ -62,9 +62,9 @@ export const prepareItemBundle = async (item, codebook, settings, preview, setIt
  * Gets the char span for the coding unit.
  * Needed for tokenization agnostic storing of annotations
  */
-const getUnitSpan = (itemBundle) => {
-  const firstUnitToken = itemBundle.tokens.find((token) => token.codingUnit);
-  let lastUnitTokenIndex = itemBundle.tokens.lastIndexOf((token) => token.codingUnit);
+const getUnitSpan = itemBundle => {
+  const firstUnitToken = itemBundle.tokens.find(token => token.codingUnit);
+  let lastUnitTokenIndex = itemBundle.tokens.lastIndexOf(token => token.codingUnit);
 
   let lastUnitToken;
   if (lastUnitTokenIndex < 0) {

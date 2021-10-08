@@ -3,16 +3,16 @@ import db from "apis/dexie";
 import axios from "axios";
 import { useLocation, useHistory } from "react-router";
 import { Icon, Grid } from "semantic-ui-react";
-import ItemSelector from "components/CodingjobManager/ItemSelector";
 
 import QuestionTask from "./QuestionTask/QuestionTask";
 import AnnotateTask from "./AnnotateTask/AnnotateTask";
+import IndexController from "./IndexController";
 
 const homepage = "/amcat4annotator";
 
 const Annotator = () => {
   const [task, setTask] = useState(null);
-  const [item, setItem] = useState(null);
+  const [unitIndex, setUnitIndex] = useState(null);
   const [preparedItem, setPreparedItem] = useState(null);
   const [finished, setFinished] = useState(false);
   const location = useLocation();
@@ -25,19 +25,16 @@ const Annotator = () => {
   }, [location, setTask]);
 
   useEffect(() => {
-    if (task?.unitMode === "perUnit") {
-      task.server
-        .get()
-        .then((unit) => {
-          setPreparedItem({ post: task.server.post, unitId: unit.data.id, ...unit.data.unit });
-        })
-        .catch((e) => {
-          if (e.response?.status === 404) setFinished(true);
-        });
-    } else {
-      setPreparedItem(item);
-    }
-  }, [item, task, setPreparedItem]);
+    if (!task) return;
+    task.server
+      .get(unitIndex)
+      .then(unit => {
+        setPreparedItem({ post: task.server.post, unitId: unit.data.id, ...unit.data.unit });
+      })
+      .catch(e => {
+        if (e.response?.status === 404) setFinished(true);
+      });
+  }, [unitIndex, task, setPreparedItem]);
 
   let colWidth = 16;
   if (task?.codebook?.type) {
@@ -51,9 +48,9 @@ const Annotator = () => {
     <Grid container stackable centered style={{ margin: "0", padding: "0" }}>
       <Grid.Row style={{ height: "40px", padding: "0" }}>
         <div width={3}>
-          <ItemSelector
-            items={task?.units}
-            setItem={setItem}
+          <IndexController
+            n={task?.units?.length}
+            setIndex={setUnitIndex}
             canControl={task?.unitMode === "list"}
             setFinished={setFinished}
           />
@@ -63,7 +60,7 @@ const Annotator = () => {
         </div>
       </Grid.Row>
       <Grid.Row>
-        <Grid.Column width={colWidth} style={{ minHeight: "90vh" }}>
+        <Grid.Column width={colWidth} style={{ height: "90vh" }}>
           <Task codebook={task?.codebook} item={preparedItem} />
         </Grid.Column>
       </Grid.Row>
@@ -110,10 +107,13 @@ const prepareTask = async (jobURL, setTask) => {
   // get should take an item index as input (even if it doesn't use it).
   // post should take the unit_id and data as input.
 
+  // !! make task a proper class
+
   if (task && task.where === "local") {
     task.unitMode = "list";
-
-    ///task.get();
+    const get = async i => ({ data: { id: i, unit: task.units[i] } });
+    const post = async (unit_id, data) => console.log("here function to write to db");
+    task.server = { get, post };
   } else {
     const user = await db.idb.user.get(1);
     const response = await axios.get(jobURL);
@@ -121,8 +121,8 @@ const prepareTask = async (jobURL, setTask) => {
     // works if url always has this structure. Otherwise maybe include id in codebook
     const id = jobURL.split("codingjob/")[1].split("/codebook")[0];
     const host = jobURL.split("codingjob/")[0];
-    const get = (i) => axios.get(`${host}/codingjob/${id}/unit?user=${user.name}`);
-    const post = (unit_id, data) =>
+    const get = async i => axios.get(`${host}/codingjob/${id}/unit?user=${user.name}`);
+    const post = async (unit_id, data) =>
       axios.post(`${host}/codingjob/${id}/unit/${unit_id}/annotation?user=${user.name}`, data);
 
     // this is just a temp hack. need to make itemselector smarter
@@ -142,7 +142,7 @@ const prepareTask = async (jobURL, setTask) => {
 const Task = React.memo(({ codebook, item }) => {
   if (!codebook || !item) return null;
 
-  const renderTaskPreview = (type) => {
+  const renderTaskPreview = type => {
     switch (type) {
       case "questions":
         return <QuestionTask item={item} codebook={codebook} preview={false} />;

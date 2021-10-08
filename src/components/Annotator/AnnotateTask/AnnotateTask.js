@@ -25,6 +25,7 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
 
   if (itemBundle === null || codeMap === null) return null;
 
+  console.log(itemBundle);
   return (
     <Grid
       style={{ height: "100%", width: "100%", paddingTop: "0" }}

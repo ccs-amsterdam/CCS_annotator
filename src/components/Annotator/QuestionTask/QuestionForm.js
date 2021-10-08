@@ -5,6 +5,7 @@ import { moveUp, moveDown } from "util/refNavigation";
 import { setAnnotations } from "actions";
 import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
 import { useSwipeable } from "react-swipeable";
+import { setMoveUnitIndex } from "actions";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
@@ -31,7 +32,7 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
   const [rawQuestion, question] = prepareQuestion(itemBundle, settings[questionIndex]);
   const currentAnswer = getCurrentAnswer(itemBundle);
 
-  const onSelect = (answer) => {
+  const onSelect = answer => {
     if (answered.current) return null;
     answered.current = true;
     setNewAnswer(itemBundle, questionIndex, rawQuestion, answer.code, dispatch);
@@ -39,7 +40,9 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
     if (questionIndex === itemBundle.codebook.questions.length - 1) {
       setTimeout(() => {
         // wait a little bit, so coder can confirm their answer
+        answered.current = false;
         setAnswerTransition(null);
+        dispatch(setMoveUnitIndex("next"));
       }, 500);
     }
   };
@@ -130,7 +133,7 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
       <div style={{ width: "100%" }}>
         {questionIndexStep()}
         <div style={{}}>
-          <Header as="h2" style={{ color: "white" }}>
+          <Header as="h3" style={{ color: "white" }}>
             {settings[questionIndex].name}
           </Header>
         </div>
@@ -142,17 +145,17 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
   );
 };
 
-const prepareSettings = (codebook) => {
+const prepareSettings = codebook => {
   const questions = codebook.questions;
 
-  return questions.map((question) => {
+  return questions.map(question => {
     const codeMap = codeBookEdgesToMap(question.codes);
     const cta = getCodeTreeArray(codeMap);
     return { ...question, options: getOptions(cta) }; // note that it's important that this deep copies question
   });
 };
 
-const getOptions = (cta) => {
+const getOptions = cta => {
   return cta.reduce((options, code) => {
     if (!code.active) return options;
     if (!code.activeParent) return options;
@@ -195,12 +198,12 @@ const setNewAnswer = (itemBundle, questionIndex, rawQuestion, answer, dispatch) 
   dispatch(setAnnotations({ ...newAnnotations }));
 };
 
-const getCurrentAnswer = (itemBundle) => {
+const getCurrentAnswer = itemBundle => {
   // this needs to be 10x prettier or something
   return itemBundle.annotations[itemBundle.textUnit]?.[itemBundle.unitIndex]?.["unit"]?.answer;
 };
 
-const showCurrent = (currentAnswer) => {
+const showCurrent = currentAnswer => {
   if (currentAnswer == null) return null;
   return (
     <div style={{ backgroundColor: "white", color: "black" }}>
@@ -245,7 +248,7 @@ const prepareQuestion = (itemBundle, settings) => {
   return [rawQuestion, markedString(question)];
 };
 
-const markedString = (text) => {
+const markedString = text => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");
@@ -278,7 +281,7 @@ const SearchBoxDropdown = React.memo(({ options, callback }) => {
         placeholder={"<type to search>"}
         searchInput={{ autoFocus: true }}
         style={{ minWidth: "12em" }}
-        options={options.map((option) => {
+        options={options.map(option => {
           return {
             key: option.code,
             value: option,
@@ -310,12 +313,12 @@ const ButtonSelection = React.memo(({ options, callback, preview }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const eventsBlocked = useSelector((state) => state.eventsBlocked);
+  const eventsBlocked = useSelector(state => state.eventsBlocked);
 
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const nbuttons = options.length;
 
       // any arrowkey
@@ -434,16 +437,15 @@ const swipeConfig = {
 };
 
 const Annotinder = React.memo(({ options, callback, preview }) => {
-  const eventsBlocked = useSelector((state) => state.eventsBlocked);
-  const left = options.find((option) => option.swipe === "left");
-  const up = options.find((option) => option.swipe === "up");
-  const right = options.find((option) => option.swipe === "right");
+  const eventsBlocked = useSelector(state => state.eventsBlocked);
+  const left = options.find(option => option.swipe === "left");
+  const up = options.find(option => option.swipe === "up");
+  const right = options.find(option => option.swipe === "right");
 
   // set useSwipeable on document (https://github.com/FormidableLabs/react-swipeable/issues/180#issuecomment-649677983)
   const { ref } = useSwipeable({
-    onSwipeStart: (eventData) => {
+    onSwipeStart: eventData => {
       if (eventData && eventData.first) {
-        console.log(eventData);
         if (eventData.dir === "Right") callback(right);
         if (eventData.dir === "Up") callback(up);
         if (eventData.dir === "Left") callback(left);
@@ -454,7 +456,7 @@ const Annotinder = React.memo(({ options, callback, preview }) => {
   useEffect(() => ref(document));
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       // any arrowkey
       if (arrowKeys.includes(event.key)) {
         event.preventDefault();
@@ -492,6 +494,8 @@ const Annotinder = React.memo(({ options, callback, preview }) => {
         disabled={up == null}
         onClick={(e, d) => callback(up)}
         style={{
+          margin: "0",
+          padding: "0",
           flex: "1 1 auto",
           background: up?.color || "white",
         }}
@@ -504,6 +508,8 @@ const Annotinder = React.memo(({ options, callback, preview }) => {
       <div style={{ flex: "1 1 auto" }}>
         <div
           style={{
+            padding: "0",
+            margin: "0",
             display: "flex",
             height: "100%",
             flexWrap: "wrap",
@@ -514,6 +520,8 @@ const Annotinder = React.memo(({ options, callback, preview }) => {
             disabled={left == null}
             onClick={(e, d) => callback(left)}
             style={{
+              margin: "0",
+              padding: "0",
               flex: "1 1 auto",
               width: "45%",
               background: left?.color || "white",
@@ -528,6 +536,8 @@ const Annotinder = React.memo(({ options, callback, preview }) => {
             disabled={right == null}
             onClick={(e, d) => callback(right)}
             style={{
+              padding: "0",
+              margin: "0",
               flex: "1 1 auto",
               width: "45%",
               background: right?.color || "white",

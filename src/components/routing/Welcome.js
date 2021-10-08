@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import db from "apis/dexie";
 import { useHistory } from "react-router-dom";
 import { Grid, Button, Header, Segment, Form } from "semantic-ui-react";
-import { initStoragePersistence } from "apis/storemanager";
 import { demo_articles, demo_codebook } from "apis/demodata";
 import { useLiveQuery } from "dexie-react-hooks";
 
@@ -23,11 +22,11 @@ const Welcome = ({ redirectUrl }) => {
   }, [user, history, redirectUrl]);
 
   const loggin = async () => {
-    if (name.length < 10) return null;
+    if (name.length < 5) return null;
     try {
       await create_demo_job(db);
       await db.firstLogin(name);
-      await initStoragePersistence();
+      //await initStoragePersistence();
       //alert(history.location.pathname);
       // should actually go back to previous page if previous page was annotator, but
       // not clue how to see this in history
@@ -66,8 +65,8 @@ const Welcome = ({ redirectUrl }) => {
           ) : null}
           <br />
           <br />
-          <Button primary disabled={name.length < 10} onClick={() => loggin()}>
-            {name.length < 10 ? "please use 10 characters or more" : "Get started!"}
+          <Button primary disabled={name.length < 5} onClick={() => loggin()}>
+            {name.length < 5 ? "please use 5 characters or more" : "Get started!"}
           </Button>
         </Segment>
       </Grid.Column>
@@ -75,7 +74,7 @@ const Welcome = ({ redirectUrl }) => {
   );
 };
 
-const create_demo_job = async (db) => {
+const create_demo_job = async db => {
   try {
     const job = await db.createCodingjob("Demo codingjob");
     await db.createDocuments(job, demo_articles, true);

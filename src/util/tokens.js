@@ -10,7 +10,7 @@ nlp.extend(paragraphs);
  *                              If both unit_start and unit_end is omitted, the whole text is considered codingUnit.
  * @returns
  */
-export const parseTokens = (text_fields) => {
+export const parseTokens = text_fields => {
   const tokens = [];
   let token = null;
   let paragraph = 0; // offset can be used if position in original article is known
@@ -18,6 +18,8 @@ export const parseTokens = (text_fields) => {
   let tokenIndex = 0;
   let t = null;
   let text = null;
+
+  console.log(text_fields);
 
   let has_unit_start = false;
   for (let text_field of text_fields) if (text_field.unit_start != null) has_unit_start = true;
@@ -29,7 +31,10 @@ export const parseTokens = (text_fields) => {
     let offset = text_field.offset || 0;
 
     text = text_field.value;
-    t = nlp.tokenize(text).paragraphs().json({ offset: true });
+    t = nlp
+      .tokenize(text)
+      .paragraphs()
+      .json({ offset: true });
     // map to single array.
     for (let par = 0; par < t.length; par++) {
       for (let sent = 0; sent < t[par].sentences.length; sent++) {
@@ -71,7 +76,7 @@ export const parseTokens = (text_fields) => {
   return tokens;
 };
 
-export const importTokens = (tokens) => {
+export const importTokens = tokens => {
   let paragraph = 0;
   let last_paragraph = tokens[0].paragraph;
 
@@ -117,9 +122,11 @@ export const importTokens = (tokens) => {
       if (tokens[i].section === tokens[i + 1].section) {
         if (tokens[i + 1].offset < tokens[i].offset + totalLength) {
           alert(
-            `Invalid token position data. The length of "${
-              tokens[i].pre + tokens[i].text + tokens[i].post
-            }" on position ${tokens[i].offset} exeeds the offset/start position of the next token`
+            `Invalid token position data. The length of "${tokens[i].pre +
+              tokens[i].text +
+              tokens[i].post}" on position ${
+              tokens[i].offset
+            } exeeds the offset/start position of the next token`
           );
           return null;
         }

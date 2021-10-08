@@ -21,7 +21,7 @@ const DeployCodingjob = ({ codingjob }) => {
     createCodingjobPackage(codingjob, jobItems, setCodingjobPackage);
   }, [codingjob, jobItems, setCodingjobPackage]);
 
-  const deployButton = (medium) => {
+  const deployButton = medium => {
     if (!medium) return null;
     switch (codingjob.deploySettings.medium) {
       case "file":
@@ -124,6 +124,7 @@ const AmcatDeploy = ({ codingjobPackage }) => {
     }
   };
 
+  console.log(amcat);
   if (!amcat) return <p>You need to log in to AmCAT first. (see top-right in the menu)</p>;
 
   return (

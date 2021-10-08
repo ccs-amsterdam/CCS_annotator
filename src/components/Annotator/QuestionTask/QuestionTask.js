@@ -14,7 +14,7 @@ const documentSettings = {
 
 const QuestionTask = ({ item, codebook, preview = false }) => {
   //const [menuHeight, setMenuHeight] = useState(50);
-  const questionIndex = useSelector((state) => state.questionIndex);
+  const questionIndex = useSelector(state => state.questionIndex);
   const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
 
   if (!itemBundle) return null;
