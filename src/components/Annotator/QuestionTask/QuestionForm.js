@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Header, Button, Dropdown, Ref, Segment, Icon } from "semantic-ui-react";
 import { moveUp, moveDown } from "util/refNavigation";
-import { finishedUnit, setAnnotations } from "actions";
+import { setAnnotations } from "actions";
 import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
 import { useSwipeable } from "react-swipeable";
 
@@ -40,7 +40,6 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
       setTimeout(() => {
         // wait a little bit, so coder can confirm their answer
         setAnswerTransition(null);
-        dispatch(finishedUnit());
       }, 500);
     }
   };

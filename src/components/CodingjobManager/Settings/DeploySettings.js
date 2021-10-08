@@ -5,7 +5,7 @@ import { Icon, Form, Radio } from "semantic-ui-react";
 import db from "apis/dexie";
 
 const defaultDeploySettings = {
-  medium: "file",
+  medium: null,
 };
 
 const DeploySettings = ({ codingjob }) => {

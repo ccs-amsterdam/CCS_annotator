@@ -4,9 +4,9 @@ import { Grid, Header } from "semantic-ui-react";
 import QuestionTask from "components/Annotator/QuestionTask/QuestionTask";
 import AnnotateTask from "components/Annotator/AnnotateTask/AnnotateTask";
 import useJobItems from "hooks/useJobItems";
-import ItemSelector from "components/CodingjobManager/ItemSelector";
 import { standardizeItems } from "util/standardizeItem";
 import { getCodebook } from "util/codebook";
+import IndexController from "components/Annotator/IndexController";
 
 const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false
@@ -39,18 +39,18 @@ const ManageTask = ({ codingjob }) => {
 };
 
 const PreviewTask = React.memo(({ codingjob, jobItems }) => {
-  const [jobItem, setJobItem] = useState(null);
+  const [index, setIndex] = useState(null);
   const [standardizedItem, setStandardizedItem] = useState(null);
 
   useEffect(() => {
-    if (!jobItem) {
+    if (!jobItems || index === null) {
       setStandardizedItem(null);
       return null;
     }
-    standardizeItems(codingjob, [jobItem]).then((singleItemArray) => {
+    standardizeItems(codingjob, [jobItems[index]]).then((singleItemArray) => {
       setStandardizedItem(singleItemArray[0]);
     });
-  }, [jobItem, setStandardizedItem, codingjob]);
+  }, [index, jobItems, setStandardizedItem, codingjob]);
 
   if (!jobItems) return null;
 
@@ -59,13 +59,13 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
       case "questions":
         return (
           <PreviewQuestionTask codingjob={codingjob} standardizedItem={standardizedItem}>
-            <ItemSelector items={jobItems} setItem={setJobItem} />
+            <IndexController n={jobItems?.length} setIndex={setIndex} />
           </PreviewQuestionTask>
         );
       case "annotate":
         return (
           <PreviewAnnotateTask codingjob={codingjob} standardizedItem={standardizedItem}>
-            <ItemSelector items={jobItems} setItem={setJobItem} />
+            <IndexController n={jobItems?.length} setIndex={setIndex} />
           </PreviewAnnotateTask>
         );
       default:

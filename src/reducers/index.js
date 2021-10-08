@@ -10,13 +10,19 @@ const eventsBlocked = (state = false, action) => {
   }
 };
 
-const finishedUnit = (state = 0, action) => {
-  // this simply triggers a rerender used to move to the next unit
+const moveUnitIndex = (state = 0, action) => {
+  // this simply triggers a rerender used to move to the previous or next unit
+  // it increments to trigger rerender, with sign indicating direction
   switch (action.type) {
-    case "FINISHED_UNIT":
-      return state + 1;
-    case "RESET_FINISHED_UNIT":
-      return 0;
+    case "SET_MOVE_UNIT_INDEX":
+      switch (action.where) {
+        case "next":
+          return Math.abs(state) + 1;
+        case "previous":
+          return Math.abs(state) - 1;
+        default:
+          return state;
+      }
     default:
       return state;
   }
@@ -141,7 +147,7 @@ const questionIndex = (state = 0, action) => {
 
 const rootReducer = combineReducers({
   eventsBlocked,
-  finishedUnit,
+  moveUnitIndex,
   currentToken,
   codeSelectorTrigger,
   tokenSelection,

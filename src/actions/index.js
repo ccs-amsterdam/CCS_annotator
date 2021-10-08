@@ -11,15 +11,10 @@ export const blockEvents = (block) => {
   };
 };
 
-export const finishedUnit = () => {
+export const setMoveUnitIndex = (where) => {
   return {
-    type: "FINISHED_UNIT",
-  };
-};
-
-export const resetFinishedUnit = () => {
-  return {
-    type: "RESET_FINISHED_UNIT",
+    type: "SET_MOVE_UNIT_INDEX",
+    where,
   };
 };
 

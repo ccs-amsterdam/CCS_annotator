@@ -100,8 +100,20 @@ const ExitButton = () => {
 
 const prepareTask = async (jobURL, setTask) => {
   let task = await db.idb.tasks.get({ url: jobURL });
+
+  // make this two steps:
+  // if task does not exist, retrieve it, and add to db
+  // In time, retrieved task can itself say type is local or remote, but for now assume it's always remote
+
+  // second step is to prepare the task for either local or remote
+  // preparedTask should have its own get and post functions
+  // get should take an item index as input (even if it doesn't use it).
+  // post should take the unit_id and data as input.
+
   if (task && task.where === "local") {
     task.unitMode = "list";
+
+    ///task.get();
   } else {
     const user = await db.idb.user.get(1);
     const response = await axios.get(jobURL);
@@ -109,7 +121,7 @@ const prepareTask = async (jobURL, setTask) => {
     // works if url always has this structure. Otherwise maybe include id in codebook
     const id = jobURL.split("codingjob/")[1].split("/codebook")[0];
     const host = jobURL.split("codingjob/")[0];
-    const get = () => axios.get(`${host}/codingjob/${id}/unit?user=${user.name}`);
+    const get = (i) => axios.get(`${host}/codingjob/${id}/unit?user=${user.name}`);
     const post = (unit_id, data) =>
       axios.post(`${host}/codingjob/${id}/unit/${unit_id}/annotation?user=${user.name}`, data);
 
@@ -123,25 +135,8 @@ const prepareTask = async (jobURL, setTask) => {
       unitMode: "perUnit",
       server: { get, post },
     };
-    // await db.idb.tasks.add({
-    //   ...data,
-    //   url: jobURL,
-    // });
-    //task = await db.idb.tasks.get(jobURL);
   }
   setTask(task);
-
-  // let job = { name: data.details.name, job_id: hash(data) };
-  // job = await db.getCodingjob(job);
-  // if (!job) {
-  //   await db.createCodingjob(data.details.name, hash(data));
-  //   await db.createDocuments(job, data.documents, true);
-  //   await db.writeCodebook(job, data.codebook);
-  // }
-  // const codingjobs = await db.listCodingjobs();
-  // const cj = await db.getCodingjob(job);
-  // dispatch(selectCodingjob(cj));
-  // dispatch(setCodingjobs(codingjobs));
 };
 
 const Task = React.memo(({ codebook, item }) => {

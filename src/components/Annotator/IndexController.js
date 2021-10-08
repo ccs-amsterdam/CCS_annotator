@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Input, Loader, Pagination, Segment } from "semantic-ui-react";
 import { useSelector, useDispatch } from "react-redux";
 
-const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
+const IndexController = ({ n, setIndex, canControl = true, setFinished }) => {
   const moveUnitIndex = useSelector((state) => state.moveUnitIndex);
-  const canMove = useRef(false); // used to ignore moveUnitIndex when items changes
+  const canMove = useRef(false);
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
@@ -22,9 +22,9 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
         }
       } else {
         if (e.repeat) {
-          setDelayedActivePage((current) => (current < items.length ? current + 1 : current));
+          setDelayedActivePage((current) => (current < n ? current + 1 : current));
         } else {
-          setActivePage((current) => (current < items.length ? current + 1 : current));
+          setActivePage((current) => (current < n ? current + 1 : current));
         }
       }
     }
@@ -39,35 +39,35 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
 
   useEffect(() => {
     canMove.current = false;
-  }, [items]);
+  }, [n]);
 
   useEffect(() => {
     if (!canMove.current) return;
-    console.log("move");
-    if (moveUnitIndex !== 0 && items) {
-      setActivePage((current) => Math.min(items.length + 1, current + 1));
+    if (n) {
+      const newn = moveUnitIndex > 0 ? n + 1 : n - 1;
+      setActivePage((current) => Math.min(newn, current + 1));
     }
-  }, [items, moveUnitIndex]);
+  }, [n, moveUnitIndex]);
 
   useEffect(() => {
-    if (!items) return null;
+    if (!n) return null;
     setActivePage(1);
     canMove.current = true;
-  }, [items, setItem, setActivePage, dispatch]);
+  }, [n, setActivePage, dispatch]);
 
   useEffect(() => {
-    if (!items) return null;
-    if (activePage === items.length && setFinished != null) {
+    if (!n) return null;
+    if (activePage === n && setFinished != null) {
       setFinished(true);
-      setItem(null);
+      setIndex(null);
     } else {
-      setItem(items[activePage - 1]);
+      setIndex(activePage - 1);
     }
     setDelayedActivePage(activePage);
-  }, [items, setItem, setFinished, activePage]);
+  }, [n, setIndex, setFinished, activePage]);
 
   useEffect(() => {
-    if (!items) return null;
+    if (!n) return null;
     if (activePage === delayedActivePage) {
       setLoading(false);
       return null;
@@ -78,9 +78,9 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
       setLoading(false);
     }, 500);
     return () => clearTimeout(timer);
-  }, [activePage, delayedActivePage, items, setLoading]);
+  }, [activePage, delayedActivePage, n, setLoading]);
 
-  if (!items) return null;
+  if (!n) return null;
 
   return (
     <Segment
@@ -91,7 +91,7 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
       <Input
         style={{ padding: 0, margin: 0, width: "100%" }}
         min={1}
-        max={items.length + 1}
+        max={n + 1}
         onChange={(e, d) => {
           if (canControl) setDelayedActivePage(Number(d.value));
         }}
@@ -101,9 +101,7 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
           <Pagination
             secondary
             activePage={delayedActivePage}
-            pageItem={
-              delayedActivePage <= items.length ? `${delayedActivePage} / ${items.length}` : "done"
-            }
+            pageItem={delayedActivePage <= n ? `${delayedActivePage} / ${n}` : "done"}
             size={"mini"}
             firstItem={null}
             lastItem={null}
@@ -112,7 +110,7 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
             siblingRange={0}
             boundaryRange={0}
             ellipsisItem={null}
-            totalPages={items.length + 1}
+            totalPages={n + 1}
             onClick={(e, d) => e.stopPropagation()}
             onPageChange={(e, d) => {
               if (canControl) setActivePage(Number(d.activePage));
@@ -126,4 +124,4 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
   );
 };
 
-export default React.memo(ItemSelector);
+export default IndexController;
