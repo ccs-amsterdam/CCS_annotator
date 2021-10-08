@@ -40,7 +40,6 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
     if (questionIndex === itemBundle.codebook.questions.length - 1) {
       setTimeout(() => {
         // wait a little bit, so coder can confirm their answer
-        answered.current = false;
         setAnswerTransition(null);
         dispatch(setMoveUnitIndex("next"));
       }, 500);
@@ -71,8 +70,12 @@ const QuestionForm = ({ itemBundle, codebook, questionIndex, preview }) => {
       return (
         <Segment
           style={{
+            flex: "1 1 auto",
+            padding: "0",
+            overflowY: "auto",
             height: "100%",
             width: "100%",
+            margin: "0",
             background: answerTransition.color,
             textAlign: "center",
           }}
@@ -429,7 +432,7 @@ const ButtonSelection = React.memo(({ options, callback, preview }) => {
 });
 
 const swipeConfig = {
-  delta: 10, // min distance(px) before a swipe starts. *See Notes*
+  delta: 100, // min distance(px) before a swipe starts. *See Notes*
   preventDefaultTouchmoveEvent: false, // call e.preventDefault *See Details*
   trackTouch: true, // track touch input
   trackMouse: false, // track mouse input
@@ -446,6 +449,7 @@ const Annotinder = React.memo(({ options, callback, preview }) => {
   const { ref } = useSwipeable({
     onSwipeStart: eventData => {
       if (eventData && eventData.first) {
+        console.log(eventData);
         if (eventData.dir === "Right") callback(right);
         if (eventData.dir === "Up") callback(up);
         if (eventData.dir === "Left") callback(left);
@@ -460,6 +464,7 @@ const Annotinder = React.memo(({ options, callback, preview }) => {
       // any arrowkey
       if (arrowKeys.includes(event.key)) {
         event.preventDefault();
+
         if (event.key === "ArrowRight") callback(right);
         if (event.key === "ArrowUp") callback(up);
         if (event.key === "ArrowLeft") callback(left);

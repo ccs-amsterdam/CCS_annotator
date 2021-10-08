@@ -47,14 +47,15 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
       setStandardizedItem(null);
       return null;
     }
-    standardizeItems(codingjob, [jobItems[index]]).then((singleItemArray) => {
+    if (index >= jobItems.length) return null;
+    standardizeItems(codingjob, [jobItems[index]]).then(singleItemArray => {
       setStandardizedItem(singleItemArray[0]);
     });
   }, [index, jobItems, setStandardizedItem, codingjob]);
 
   if (!jobItems) return null;
 
-  const renderTaskPreview = (type) => {
+  const renderTaskPreview = type => {
     switch (type) {
       case "questions":
         return (
