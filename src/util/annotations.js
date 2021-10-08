@@ -1,4 +1,4 @@
-export const exportAnnotations = (annotations) => {
+export const exportAnnotations = annotations => {
   annotations = annotations["span"];
   // export annotations from the object format (for fast use in the annotator) to array format
   if (Object.keys(annotations).length === 0) return [];
@@ -9,7 +9,7 @@ export const exportAnnotations = (annotations) => {
       if (index !== "unit") if (ann[key].index !== ann[key].span[0]) continue;
       const ann_obj = {
         variable: key,
-        value: ann[key].value,
+        value: ann[key].code,
         section: ann[key].section,
         offset: ann[key].offset,
         length: ann[key].length,
@@ -112,6 +112,7 @@ export const toggleSpanAnnotations = (annotations, annList, rm) => {
         index: a.index,
         span: [a.span[0], a.span[1]],
         length: a.length,
+        code: a.code,
         section: a.section,
         offset: a.offset,
       };
@@ -120,7 +121,7 @@ export const toggleSpanAnnotations = (annotations, annList, rm) => {
   return annotations;
 };
 
-const prepareSpanAnnotations = (annotations) => {
+const prepareSpanAnnotations = annotations => {
   if (!annotations || annotations === "") return {};
   // create an object where the key is a section+offset, and the
   // value is an array that tells which codes start and end there

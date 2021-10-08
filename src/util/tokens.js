@@ -19,8 +19,6 @@ export const parseTokens = text_fields => {
   let t = null;
   let text = null;
 
-  console.log(text_fields);
-
   let has_unit_start = false;
   for (let text_field of text_fields) if (text_field.unit_start != null) has_unit_start = true;
   let unit_started = !has_unit_start; // if unit start not specified, start from beginning

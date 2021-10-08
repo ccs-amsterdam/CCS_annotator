@@ -55,7 +55,7 @@ const CodeSelectorPopup = ({
 }) => {
   // separate popup from CodeSelector, because it would rerender CodeSelector,
   // which messes up the useEffect that cleans up after close
-  const itemSettings = codebook?.taskSettings?.annotate;
+  console.log(codebook);
   const codeMap = Object.keys(codebook.codeMap).reduce((obj, key) => {
     if (!newSelection && current && annotations[key]) return obj;
     if (!codebook.codeMap[key].active || !codebook.codeMap[key].activeParent) return obj;
@@ -63,7 +63,7 @@ const CodeSelectorPopup = ({
     return obj;
   }, {});
 
-  const codeHistory = useSelector((state) => state.codeHistory);
+  const codeHistory = useSelector(state => state.codeHistory);
   const dispatch = useDispatch();
 
   const [hasOpened, setHasOpened] = useState(false);
@@ -123,14 +123,14 @@ const CodeSelectorPopup = ({
       <div style={{ margin: "1em", border: "0px" }}>
         <CurrentCodePage
           current={current}
-          itemSettings={itemSettings}
+          itemSettings={codebook}
           annotations={annotations}
           codeMap={codeMap}
           setCurrent={setCurrent}
         />
         <NewCodePage
           codeHistory={codeHistory}
-          itemSettings={itemSettings}
+          itemSettings={codebook}
           codeMap={codeMap}
           annotations={annotations}
           unit={unit}
@@ -144,12 +144,12 @@ const CodeSelectorPopup = ({
 const CurrentCodePage = ({ current, itemSettings, annotations, codeMap, setCurrent }) => {
   const annotationCodes = Object.keys(annotations);
 
-  const onButtonSelect = (value) => {
+  const onButtonSelect = value => {
     setCurrent(value);
   };
 
-  const getOptions = (annotationCodes) => {
-    return annotationCodes.map((code) => ({ label: code, color: getColor(code, codeMap) }));
+  const getOptions = annotationCodes => {
+    return annotationCodes.map(code => ({ label: code, color: getColor(code, codeMap) }));
   };
 
   if (annotationCodes.length === 1) setCurrent(annotationCodes[0]);
@@ -175,7 +175,7 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
   const [focusOnButtons, setFocusOnButtons] = useState(true);
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const focusOnTextInput = textInputRef?.current?.children[0] === document.activeElement;
       if (!focusOnTextInput) setFocusOnButtons(true);
 
@@ -195,7 +195,7 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
     };
   });
 
-  const onButtonSelect = (value) => {
+  const onButtonSelect = value => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
       updateAnnotations(annotations, unit, current, current, dispatch);
@@ -205,6 +205,8 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
   };
 
   const getOptions = (codeHistory, n) => {
+    console.log("wtf");
+    if (itemSettings) console.log(itemSettings.buttonMode);
     if (itemSettings && itemSettings.buttonMode === "all") {
       return Object.keys(codeMap).reduce((options, code) => {
         options.push({ label: code, color: getColor(code, codeMap) });
@@ -300,7 +302,7 @@ const ButtonSelection = ({ active, options, itemSettings, canDelete, callback })
   const rowSize = itemSettings?.annotate?.rowSize || 5;
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const nbuttons = canDelete ? options.length + 1 : options.length;
 
       // any arrowkey
@@ -392,6 +394,7 @@ const ButtonSelection = ({ active, options, itemSettings, canDelete, callback })
     if (!canDelete) return null;
     return (
       <Button
+        key={"trash"}
         icon="trash"
         size="mini"
         floated="right"
@@ -448,6 +451,7 @@ const updateSpanAnnotations = (annotations, current, value, dispatch) => {
   for (let i = ann.span[0]; i <= ann.span[1]; i++) {
     let newAnnotation = { ...ann };
     newAnnotation.group = value;
+    newAnnotation.code = value;
     newAnnotation.index = i;
     newAnnotations.push(newAnnotation);
   }

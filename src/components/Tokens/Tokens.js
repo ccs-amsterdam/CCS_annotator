@@ -9,7 +9,7 @@ const Tokens = ({ itemBundle }) => {
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = itemBundle.tokens.find((token) => token.codingUnit);
+    const firstTextUnitToken = itemBundle.tokens.find(token => token.codingUnit);
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, 1 / 4);
     }
@@ -61,7 +61,7 @@ const prepareTokens = async (itemBundle, setText) => {
   // !! assignment by reference: renderText also adds a react ref to each token in itemBundle.tokens
 };
 
-const renderText = (itemBundle) => {
+const renderText = itemBundle => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
   const tokens = itemBundle.tokens;
 
@@ -112,14 +112,14 @@ const renderText = (itemBundle) => {
 };
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
-  const fontstyle = (paragraphs) => {
+  const fontstyle = paragraphs => {
     if (section === "title") return <h2 key={section + paragraph_nr}>{paragraphs}</h2>;
     return paragraphs;
   };
 
   return (
     // uses span behaving like p, because p is not allowed due to nested div (for Label)
-    <span className="section" key={section + paragraph_nr}>
+    <span className="section" key={"section" + section}>
       {fontstyle(paragraphs)}
     </span>
   );
@@ -131,6 +131,7 @@ const renderParagraph = (position, paragraph_nr, sentences, end) => {
     <div style={{ display: "flex" }}>
       {/* <div style={{ flex: "1 2%" }}>{paragraphAnnotateButton()}</div> */}
       <span
+        key={"par" + paragraph_nr}
         className="paragraph"
         style={{
           flex: "1 98%",
@@ -138,7 +139,6 @@ const renderParagraph = (position, paragraph_nr, sentences, end) => {
           display: "table",
           paddingLeft: "0.3em",
         }}
-        key={position + "_" + paragraph_nr}
       >
         {sentences}
       </span>
@@ -148,7 +148,7 @@ const renderParagraph = (position, paragraph_nr, sentences, end) => {
 
 const renderSentence = (position, sentence_nr, tokens) => {
   return (
-    <span className="sentence" key={position + sentence_nr}>
+    <span className="sentence" key={"sent" + sentence_nr}>
       {/* {sentenceAnnotateButton()} */}
       {tokens}
     </span>
@@ -159,6 +159,7 @@ const renderToken = (token, itemBundle, codingUnit) => {
   if (codingUnit)
     return (
       <span
+        key={token.index}
         style={{
           lineHeight: "1.5em",
           fontSize: "1.2em",
@@ -169,7 +170,7 @@ const renderToken = (token, itemBundle, codingUnit) => {
       </span>
     );
   return (
-    <span style={{ color: "#746363" }}>
+    <span key={token.index} style={{ color: "#746363" }}>
       <Token ref={token.ref} key={token.index} token={token} itemBundle={itemBundle} />
     </span>
   );
