@@ -3,7 +3,7 @@ import { Ref } from "semantic-ui-react";
 import { scrollToMiddle } from "util/scroll";
 import Token from "./Token";
 
-const Tokens = ({ itemBundle }) => {
+const Tokens = ({ itemBundle, setReady }) => {
   const [text, setText] = useState({});
   const containerRef = useRef(null);
 
@@ -16,8 +16,10 @@ const Tokens = ({ itemBundle }) => {
   });
 
   useEffect(() => {
+    if (!itemBundle.tokens) return null;
     prepareTokens(itemBundle, setText);
-  }, [itemBundle]);
+    if (setReady) setReady(current => current + 1); // setReady is an optional property used to let parents know the text is ready.
+  }, [itemBundle, setReady]);
 
   if (itemBundle === null) return null;
 
@@ -30,6 +32,7 @@ const Tokens = ({ itemBundle }) => {
 
   return (
     <div
+      key="tokens"
       style={{
         display: "flex",
         alignItems: itemBundle.settings.centerVertical ? "center" : null,
@@ -55,8 +58,7 @@ const Tokens = ({ itemBundle }) => {
   );
 };
 
-const prepareTokens = async (itemBundle, setText) => {
-  if (!itemBundle.tokens) return null;
+const prepareTokens = (itemBundle, setText) => {
   setText(renderText(itemBundle));
   // !! assignment by reference: renderText also adds a react ref to each token in itemBundle.tokens
 };
@@ -108,6 +110,7 @@ const renderText = itemBundle => {
   if (paragraph.length > 0) section.push(renderParagraph("last", paragraph_nr, paragraph, false));
   if (section.length > 0)
     text["text"].push(renderSection("last_" + section_name, section, section_name));
+  console.log("tests");
   return text;
 };
 

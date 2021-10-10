@@ -69,7 +69,7 @@ const codeSelectorTrigger = (
 
 const toggleSelection = (selection, tokens, index, add) => {
   if (!add || selection.length === 0) return [index, index];
-
+  if (index === null) return [selection[0], null];
   // Negative offset for if token.index does not start at 0
   //let offset = -tokens[0].index;
   let offset = 0;
@@ -126,7 +126,7 @@ const codeHistory = (state = [], action) => {
     case "RESET_CODE_HISTORY":
       return [];
     case "APPEND_CODE_HISTORY":
-      let newstate = state.filter((v) => v !== action.code).slice(0, action.n - 1);
+      let newstate = state.filter(v => v !== action.code).slice(0, action.n - 1);
       newstate.unshift(action.code);
       return newstate;
     case "RESET_DB":

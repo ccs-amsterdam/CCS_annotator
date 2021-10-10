@@ -8,8 +8,6 @@ const Amcat = () => {
   const [open, setOpen] = useState(false);
   const amcat = useLiveQuery(() => db.amcatSession());
 
-  console.log(amcat);
-
   return (
     <Modal
       closeIcon

@@ -161,18 +161,26 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     window.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("touchstart", onMouseDown);
+    window.addEventListener("touchmove", onMouseMove);
+    window.addEventListener("touchend", onMouseUp);
+
     window.addEventListener("contextmenu", onContextMenu);
     return () => {
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("touchstart", onMouseDown);
+      window.removeEventListener("touchmove", onMouseMove);
+      window.removeEventListener("touchend", onMouseUp);
       window.removeEventListener("contextmenu", onContextMenu);
     };
   });
 
   const onMouseDown = event => {
     // When left button pressed, start new selection
-    if (event.which === 1) {
+    if (event.which === 1 || event.which === 0) {
+      //if (event.which === 0) event.preventDefault();
       //event.preventDefault();
       setHoldMouseLeft(true);
       dispatch(clearTokenSelection());
@@ -182,7 +190,8 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
   const onMouseMove = event => {
     // When selection started (mousedown), select tokens hovered over
     if (holdMouseLeft) {
-      if (event.which !== 1) return null;
+      if (event.which !== 1 && event.which !== 0) return null;
+      if (event.which === 0) event.preventDefault();
       window.getSelection().empty();
       storeMouseSelection(event);
     } else {
@@ -198,17 +207,18 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     // When left mouse key is released, create the annotation
     // note that in case of a single click, the token has not been selected (this happens on move)
     // so this way a click can still be used to open
-    if (event.which !== 1) return null;
+    if (event.which !== 1 && event.which !== 0) return null;
     const currentNode = storeMouseSelection(event);
     window.getSelection().empty();
     setHoldMouseLeft(false);
 
-    if (currentNode === null) return null;
+    // this worked before, but is not possible due to touchend not registering position
+    //if (currentNode === null) return null;
 
     // storeMouseSelection does save position to tokenSelection state, but this isn't
     // yet updated within this scope. This results in single clicks (without mousemove)
     // not registering. So if there is no current selection, directly use currentNode as position.
-    if (tokenSelection.length > 0) {
+    if (tokenSelection.length > 0 && tokenSelection[0] !== null && tokenSelection[1] !== null) {
       annotationFromSelection(tokens, tokenSelection, dispatch, selectedCode);
     } else {
       if (currentNode !== null) {
@@ -226,7 +236,7 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
   const storeMouseSelection = event => {
     // select tokens that the mouse/touch is currently pointing at
     let currentNode = getToken(tokens, event);
-    if (currentNode == null || currentNode === null) return null;
+    //if (currentNode == null || currentNode === null) return null;
 
     dispatch(setCurrentToken(currentNode));
     dispatch(toggleTokenSelection(tokens, currentNode, true));
@@ -348,24 +358,32 @@ const getToken = (tokens, e) => {
   try {
     // sometimes e is Restricted, and I have no clue why,
     // nor how to check this in a condition. hence the try clause
-    e = e.originalTarget || e.path[0];
-    if (e) {
+    let n;
+    if (e.type === "mousemove" || e.type === "mouseup") n = e.originalTarget || e.path[0];
+    if (e.type === "touchmove") {
+      // stupid hack since someone decided touchmove target is always the starting target (weirdly inconsistent with mousemove)
+      // also, this still doesn't work for touchend, which is just arrrggg
+      let position = e.touches[0];
+      n = document.elementFromPoint(position.clientX, position.clientY);
+    }
+
+    if (n) {
       if (
-        e.className === "token" ||
-        e.className === "token selected" ||
-        e.className === "token selected highlight" ||
-        e.className === "token highlight"
+        n.className === "token" ||
+        n.className === "token selected" ||
+        n.className === "token selected highlight" ||
+        n.className === "token highlight"
       ) {
-        return getTokenAttributes(tokens, e);
+        return getTokenAttributes(tokens, n);
       }
-      if (e.parentNode) {
+      if (n.parentNode) {
         if (
-          e.parentNode.className === "token" ||
-          e.parentNode.className === "token selected" ||
-          e.parentNode.className === "token selected highlight" ||
-          e.parentNode.className === "token highlight"
+          n.parentNode.className === "token" ||
+          n.parentNode.className === "token selected" ||
+          n.parentNode.className === "token selected highlight" ||
+          n.parentNode.className === "token highlight"
         )
-          return getTokenAttributes(tokens, e.parentNode);
+          return getTokenAttributes(tokens, n.parentNode);
       }
     }
     return null;

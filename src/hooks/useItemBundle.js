@@ -41,6 +41,9 @@ const useItemBundle = (item, codebook, settings = defaultSettings, preview) => {
  * @returns
  */
 export const prepareItemBundle = async (item, codebook, settings, preview, setItemBundle) => {
+  console.log(codebook);
+
+  console.log(item);
   let itemBundle = { ...item };
   // For convenience, also allow item to just have a 'text' key with a string (instead of text_fields)
   if (!itemBundle.text_fields && itemBundle.text)

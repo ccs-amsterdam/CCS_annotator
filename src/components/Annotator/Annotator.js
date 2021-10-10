@@ -3,6 +3,7 @@ import db from "apis/dexie";
 import axios from "axios";
 import { useLocation, useHistory } from "react-router";
 import { Icon, Grid } from "semantic-ui-react";
+import { FullScreen, useFullScreenHandle } from "react-full-screen";
 
 import QuestionTask from "./QuestionTask/QuestionTask";
 import AnnotateTask from "./AnnotateTask/AnnotateTask";
@@ -11,6 +12,7 @@ import IndexController from "./IndexController";
 const homepage = "/amcat4annotator";
 
 const Annotator = () => {
+  const handle = useFullScreenHandle();
   const [task, setTask] = useState(null);
   const [unitIndex, setUnitIndex] = useState(null);
   const [preparedItem, setPreparedItem] = useState(null);
@@ -45,26 +47,34 @@ const Annotator = () => {
   if (finished) return <Finished />;
 
   return (
-    <Grid container stackable centered style={{ margin: "0", padding: "0" }}>
-      <Grid.Row style={{ height: "40px", padding: "0" }}>
-        <div width={3}>
-          <IndexController
-            n={task?.units?.length}
-            setIndex={setUnitIndex}
-            canControl={task?.unitMode === "list"}
-            setFinished={setFinished}
-          />
-        </div>
-        <div width={3}>
-          <ExitButton />
-        </div>
-      </Grid.Row>
-      <Grid.Row>
-        <Grid.Column width={colWidth} style={{ height: "90vh" }}>
-          <Task codebook={task?.codebook} item={preparedItem} />
-        </Grid.Column>
-      </Grid.Row>
-    </Grid>
+    <FullScreen handle={handle}>
+      <Grid
+        container
+        stackable
+        centered
+        style={{ background: "white", margin: "0", padding: "0", height: "100vh" }}
+      >
+        <Grid.Row style={{ height: "35px", padding: "0" }}>
+          <div>
+            <IndexController
+              n={task?.units?.length}
+              setIndex={setUnitIndex}
+              canControl={task?.unitMode === "list"}
+              setFinished={setFinished}
+            />
+          </div>
+          <div>
+            <FullScreenButton handle={handle} />
+            <ExitButton />
+          </div>
+        </Grid.Row>
+        <Grid.Row style={{ height: "calc(100% - 35px)" }}>
+          <Grid.Column width={colWidth} style={{ height: "100%" }}>
+            <Task codebook={task?.codebook} item={preparedItem}></Task>
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+    </FullScreen>
   );
 };
 
@@ -95,6 +105,22 @@ const ExitButton = () => {
   );
 };
 
+const FullScreenButton = ({ handle }) => {
+  return (
+    <Icon.Group size="big" style={{ position: "absolute", top: "0px", left: "2px" }}>
+      <Icon
+        link
+        name={handle.active ? "compress" : "expand"}
+        onClick={() => {
+          console.log(handle);
+          handle.active ? handle.exit() : handle.enter();
+        }}
+      />
+      <Icon corner="top left" />
+    </Icon.Group>
+  );
+};
+
 const prepareTask = async (jobURL, setTask) => {
   let task = await db.idb.tasks.get({ url: jobURL });
 
@@ -108,6 +134,7 @@ const prepareTask = async (jobURL, setTask) => {
   // post should take the unit_id and data as input.
 
   // !! make task a proper class
+  console.log(task);
 
   if (task && task.where === "local") {
     task.unitMode = "list";

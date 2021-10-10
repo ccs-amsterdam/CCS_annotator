@@ -41,6 +41,11 @@ const ManageTask = ({ codingjob }) => {
 const PreviewTask = React.memo(({ codingjob, jobItems }) => {
   const [index, setIndex] = useState(null);
   const [standardizedItem, setStandardizedItem] = useState(null);
+  const [codebook, setCodebook] = useState(null);
+
+  useEffect(() => {
+    setCodebook(getCodebook(codingjob.taskSettings));
+  }, [codingjob.taskSettings]);
 
   useEffect(() => {
     if (!jobItems || index === null) {
@@ -59,13 +64,13 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
     switch (type) {
       case "questions":
         return (
-          <PreviewQuestionTask codingjob={codingjob} standardizedItem={standardizedItem}>
+          <PreviewQuestionTask codebook={codebook} standardizedItem={standardizedItem}>
             <IndexController n={jobItems?.length} setIndex={setIndex} />
           </PreviewQuestionTask>
         );
       case "annotate":
         return (
-          <PreviewAnnotateTask codingjob={codingjob} standardizedItem={standardizedItem}>
+          <PreviewAnnotateTask codebook={codebook} standardizedItem={standardizedItem}>
             <IndexController n={jobItems?.length} setIndex={setIndex} />
           </PreviewAnnotateTask>
         );
@@ -78,9 +83,7 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
   return renderTaskPreview(codingjob.taskSettings.type);
 });
 
-const PreviewQuestionTask = React.memo(({ children, codingjob, standardizedItem }) => {
-  const codebook = getCodebook(codingjob.taskSettings);
-
+const PreviewQuestionTask = React.memo(({ children, codebook, standardizedItem }) => {
   return (
     <>
       <Header
@@ -109,9 +112,7 @@ const PreviewQuestionTask = React.memo(({ children, codingjob, standardizedItem 
   );
 });
 
-const PreviewAnnotateTask = ({ children, codingjob, standardizedItem }) => {
-  const codebook = getCodebook(codingjob.taskSettings);
-
+const PreviewAnnotateTask = ({ children, codebook, standardizedItem }) => {
   return (
     <>
       <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>

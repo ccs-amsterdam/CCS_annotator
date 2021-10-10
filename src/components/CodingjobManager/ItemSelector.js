@@ -3,7 +3,7 @@ import { Input, Loader, Pagination, Segment } from "semantic-ui-react";
 import { useSelector, useDispatch } from "react-redux";
 
 const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
-  const moveUnitIndex = useSelector((state) => state.moveUnitIndex);
+  const moveUnitIndex = useSelector(state => state.moveUnitIndex);
   const canMove = useRef(false); // used to ignore moveUnitIndex when items changes
   const dispatch = useDispatch();
 
@@ -11,20 +11,20 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
 
-  const onKeyDown = (e) => {
+  const onKeyDown = e => {
     if (e.keyCode === 9) {
       e.preventDefault();
       if (e.shiftKey) {
         if (e.repeat) {
-          setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
+          setDelayedActivePage(current => (current > 1 ? current - 1 : current));
         } else {
-          setActivePage((current) => (current > 1 ? current - 1 : current));
+          setActivePage(current => (current > 1 ? current - 1 : current));
         }
       } else {
         if (e.repeat) {
-          setDelayedActivePage((current) => (current < items.length ? current + 1 : current));
+          setDelayedActivePage(current => (current < items.length ? current + 1 : current));
         } else {
-          setActivePage((current) => (current < items.length ? current + 1 : current));
+          setActivePage(current => (current < items.length ? current + 1 : current));
         }
       }
     }
@@ -43,9 +43,8 @@ const ItemSelector = ({ items, setItem, canControl = true, setFinished }) => {
 
   useEffect(() => {
     if (!canMove.current) return;
-    console.log("move");
     if (moveUnitIndex !== 0 && items) {
-      setActivePage((current) => Math.min(items.length + 1, current + 1));
+      setActivePage(current => Math.min(items.length + 1, current + 1));
     }
   }, [items, moveUnitIndex]);
 

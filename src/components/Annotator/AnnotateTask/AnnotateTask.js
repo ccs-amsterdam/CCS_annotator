@@ -16,7 +16,6 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
   const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
   const [codeMap, setCodeMap] = useState(null);
 
-  console.log(codebook);
   useEffect(() => {
     // settings is an array with the settings for each question
     // This needs a little preprocessing, so we only update it when codebook changes (not per item)

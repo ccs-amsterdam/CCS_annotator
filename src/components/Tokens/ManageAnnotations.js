@@ -10,7 +10,7 @@ import { exportAnnotations } from "util/annotations";
  * another backend.
  */
 const ManageAnnotations = ({ taskItem, saveAnnotations }) => {
-  let annotations = useSelector((state) => state.annotations);
+  let annotations = useSelector(state => state.annotations);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -45,7 +45,6 @@ const writeAnnotations = async (taskItem, annotations, saveAnnotations) => {
     //db.writeAnnotations({ doc_uid: taskItem.doc_uid }, annotations);
     if (taskItem.post) {
       const annotationsArray = exportAnnotations(annotations);
-      console.log(annotationsArray);
       await taskItem.post(taskItem.unitId, annotationsArray);
     }
   }

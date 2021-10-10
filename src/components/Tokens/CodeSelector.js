@@ -55,7 +55,6 @@ const CodeSelectorPopup = ({
 }) => {
   // separate popup from CodeSelector, because it would rerender CodeSelector,
   // which messes up the useEffect that cleans up after close
-  console.log(codebook);
   const codeMap = Object.keys(codebook.codeMap).reduce((obj, key) => {
     if (!newSelection && current && annotations[key]) return obj;
     if (!codebook.codeMap[key].active || !codebook.codeMap[key].activeParent) return obj;
@@ -205,8 +204,6 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
   };
 
   const getOptions = (codeHistory, n) => {
-    console.log("wtf");
-    if (itemSettings) console.log(itemSettings.buttonMode);
     if (itemSettings && itemSettings.buttonMode === "all") {
       return Object.keys(codeMap).reduce((options, code) => {
         options.push({ label: code, color: getColor(code, codeMap) });

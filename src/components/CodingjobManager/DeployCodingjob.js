@@ -124,7 +124,6 @@ const AmcatDeploy = ({ codingjobPackage }) => {
     }
   };
 
-  console.log(amcat);
   if (!amcat) return <p>You need to log in to AmCAT first. (see top-right in the menu)</p>;
 
   return (
