@@ -27,6 +27,7 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
 
   return (
     <Grid
+      centered
       style={{ height: "100%", width: "100%", paddingTop: "0" }}
       verticalAlign={"top"}
       columns={2}

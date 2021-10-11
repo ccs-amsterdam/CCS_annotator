@@ -12,7 +12,7 @@ const Token = React.forwardRef(({ token, itemBundle }, ref) => {
   const settings = itemBundle.settings;
   const annotation = itemBundle.annotation;
 
-  const selected = useSelector(state => {
+  const selected = useSelector((state) => {
     if (state.tokenSelection.length === 0) return false;
 
     let [from, to] = state.tokenSelection;
@@ -42,9 +42,9 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
   // If we specifically ask for the annotations for the current token within the
   // useSelector function, rerender is only triggered if this value has changed
 
-  let annotations = useSelector(state => state.annotations.span[token.index]);
+  let annotations = useSelector((state) => state.annotations.span[token.index]);
 
-  const csTrigger = useSelector(state => {
+  const csTrigger = useSelector((state) => {
     if (state.codeSelectorTrigger.unit !== "token") return null;
     if (state.codeSelectorTrigger.index !== token.index) return null;
     return state.codeSelectorTrigger;
@@ -54,7 +54,7 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
 
   // This is a trick required to render if at least something within this token's
   // annotations changed (somehow 'annotations' doesn't trigger this)
-  useSelector(state => JSON.stringify(state.annotations.span[token.index]));
+  useSelector((state) => JSON.stringify(state.annotations.span[token.index]));
 
   if (annotations && codeMap) {
     annotations = { ...annotations };
@@ -76,7 +76,7 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
     return (
       <span
         className={annotatedTokenClass}
-        onContextMenu={e => {
+        onContextMenu={(e) => {
           e.preventDefault();
           dispatch(triggerCodeselector("right_click", "token", token.index, null));
         }}
@@ -97,14 +97,14 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
   };
 
   let tokenCodes = Object.keys(annotations);
-  let colors = tokenCodes.map(code => getColor(code, codeMap));
+  let colors = tokenCodes.map((code) => getColor(code, codeMap));
   let color = getColorGradient(colors);
 
   // Set specific classes for nice css to show the start/end of codes
-  const allLeft = !Object.values(annotations).some(code => code.span[0] !== code.index);
-  const allRight = !Object.values(annotations).some(code => code.span[1] !== code.index);
-  const anyLeft = Object.values(annotations).some(code => code.span[0] === code.index);
-  const anyRight = Object.values(annotations).some(code => code.span[1] === code.index);
+  const allLeft = !Object.values(annotations).some((code) => code.span[0] !== code.index);
+  const allRight = !Object.values(annotations).some((code) => code.span[1] !== code.index);
+  const anyLeft = Object.values(annotations).some((code) => code.span[0] === code.index);
+  const anyRight = Object.values(annotations).some((code) => code.span[1] === code.index);
 
   let annotatedTokenClass = "annotatedToken";
   if (allLeft) annotatedTokenClass = annotatedTokenClass + " allLeft";
@@ -127,7 +127,7 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
           codebook={codebook}
           unit={"span"}
           currentCode={csTrigger.code}
-          newSelection={csTrigger.from === "new_selection"}
+          newSelection={false}
         >
           {tokenSpan(annotatedTokenClass, color)}
         </CodeSelector>

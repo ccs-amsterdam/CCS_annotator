@@ -9,7 +9,7 @@ const Tokens = ({ itemBundle, setReady }) => {
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = itemBundle.tokens.find(token => token.codingUnit);
+    const firstTextUnitToken = itemBundle.tokens.find((token) => token.codingUnit);
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, 1 / 4);
     }
@@ -18,7 +18,7 @@ const Tokens = ({ itemBundle, setReady }) => {
   useEffect(() => {
     if (!itemBundle.tokens) return null;
     prepareTokens(itemBundle, setText);
-    if (setReady) setReady(current => current + 1); // setReady is an optional property used to let parents know the text is ready.
+    if (setReady) setReady((current) => current + 1); // setReady is an optional property used to let parents know the text is ready.
   }, [itemBundle, setReady]);
 
   if (itemBundle === null) return null;
@@ -63,7 +63,7 @@ const prepareTokens = (itemBundle, setText) => {
   // !! assignment by reference: renderText also adds a react ref to each token in itemBundle.tokens
 };
 
-const renderText = itemBundle => {
+const renderText = (itemBundle) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
   const tokens = itemBundle.tokens;
 
@@ -115,7 +115,7 @@ const renderText = itemBundle => {
 };
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
-  const fontstyle = paragraphs => {
+  const fontstyle = (paragraphs) => {
     if (section === "title") return <h2 key={section + paragraph_nr}>{paragraphs}</h2>;
     return paragraphs;
   };
@@ -164,9 +164,9 @@ const renderToken = (token, itemBundle, codingUnit) => {
       <span
         key={token.index}
         style={{
-          lineHeight: "1.5em",
-          fontSize: "1.2em",
-          fontWeight: "bold",
+          lineHeight: "1.2em",
+          fontSize: "1.5em",
+          //fontWeight: "bold",
         }}
       >
         <Token ref={token.ref} key={token.index} token={token} itemBundle={itemBundle} />

@@ -53,6 +53,8 @@ const CodeSelectorPopup = ({
   unit,
   newSelection,
 }) => {
+  const fullScreenNode = useSelector((state) => state.fullScreenNode);
+
   // separate popup from CodeSelector, because it would rerender CodeSelector,
   // which messes up the useEffect that cleans up after close
   const codeMap = Object.keys(codebook.codeMap).reduce((obj, key) => {
@@ -62,13 +64,14 @@ const CodeSelectorPopup = ({
     return obj;
   }, {});
 
-  const codeHistory = useSelector(state => state.codeHistory);
+  const codeHistory = useSelector((state) => state.codeHistory);
   const dispatch = useDispatch();
 
   const [hasOpened, setHasOpened] = useState(false);
 
   return (
     <Popup
+      mountNode={fullScreenNode || undefined}
       trigger={children}
       flowing
       hoverable
@@ -143,17 +146,20 @@ const CodeSelectorPopup = ({
 const CurrentCodePage = ({ current, itemSettings, annotations, codeMap, setCurrent }) => {
   const annotationCodes = Object.keys(annotations);
 
-  const onButtonSelect = value => {
+  const onButtonSelect = (value) => {
     setCurrent(value);
   };
 
-  const getOptions = annotationCodes => {
-    return annotationCodes.map(code => ({ label: code, color: getColor(code, codeMap) }));
+  const getOptions = (annotationCodes) => {
+    const options = [{ label: "Create new", value: "UNASSIGNED", color: "white" }]; // 'value' is optional, but lets us use a different label
+    for (let code of annotationCodes)
+      if (code !== "UNASSIGNED") options.push({ label: code, color: getColor(code, codeMap) });
+    return options;
   };
 
   if (annotationCodes.length === 1) setCurrent(annotationCodes[0]);
-
   if (current) return null;
+
   return (
     <div>
       <ButtonSelection
@@ -174,7 +180,7 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
   const [focusOnButtons, setFocusOnButtons] = useState(true);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const focusOnTextInput = textInputRef?.current?.children[0] === document.activeElement;
       if (!focusOnTextInput) setFocusOnButtons(true);
 
@@ -194,7 +200,7 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
     };
   });
 
-  const onButtonSelect = value => {
+  const onButtonSelect = (value) => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
       updateAnnotations(annotations, unit, current, current, dispatch);
@@ -206,13 +212,13 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
   const getOptions = (codeHistory, n) => {
     if (itemSettings && itemSettings.buttonMode === "all") {
       return Object.keys(codeMap).reduce((options, code) => {
-        options.push({ label: code, color: getColor(code, codeMap) });
+        options.push({ key: code, label: code, color: getColor(code, codeMap) });
         return options;
       }, []);
     } else {
       return codeHistory.reduce((options, code) => {
         if (options.length <= n && codeMap[code])
-          options.push({ label: code, color: getColor(code, codeMap) });
+          options.push({ key: code, label: code, color: getColor(code, codeMap) });
         return options;
       }, []);
     }
@@ -299,7 +305,7 @@ const ButtonSelection = ({ active, options, itemSettings, canDelete, callback })
   const rowSize = itemSettings?.annotate?.rowSize || 5;
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const nbuttons = canDelete ? options.length + 1 : options.length;
 
       // any arrowkey
@@ -362,7 +368,7 @@ const ButtonSelection = ({ active, options, itemSettings, canDelete, callback })
           <Button
             style={{ backgroundColor: option.color, margin: "0" }}
             key={option.label}
-            value={option.label}
+            value={option.value || option.label}
             compact
             size="mini"
             active={i === selected}

@@ -28,6 +28,15 @@ const moveUnitIndex = (state = 0, action) => {
   }
 };
 
+const fullScreenNode = (state = null, action) => {
+  switch (action.type) {
+    case "SET_FULL_SCREEN_NODE":
+      return action.node;
+    default:
+      return state;
+  }
+};
+
 const currentToken = (state = 0, action) => {
   switch (action.type) {
     case "SET_CURRENT_TOKEN":
@@ -126,7 +135,7 @@ const codeHistory = (state = [], action) => {
     case "RESET_CODE_HISTORY":
       return [];
     case "APPEND_CODE_HISTORY":
-      let newstate = state.filter(v => v !== action.code).slice(0, action.n - 1);
+      let newstate = state.filter((v) => v !== action.code).slice(0, action.n - 1);
       newstate.unshift(action.code);
       return newstate;
     case "RESET_DB":
@@ -149,6 +158,7 @@ const rootReducer = combineReducers({
   eventsBlocked,
   moveUnitIndex,
   currentToken,
+  fullScreenNode,
   codeSelectorTrigger,
   tokenSelection,
   annotations,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   toggleTokenSelection,
@@ -9,18 +9,19 @@ import {
 import { toggleSpanAnnotations } from "actions";
 import { keepInView } from "util/scroll";
 import { moveUp, moveDown } from "util/refNavigation";
+import { is } from "@babel/types";
 
 // This component generates no content, but manages navigation for span level annotations
 
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
 const AnnotateNavigation = ({ tokens, selectedCode }) => {
-  const eventsBlocked = useSelector(state => state.eventsBlocked);
+  const eventsBlocked = useSelector((state) => state.eventsBlocked);
   // positions based on token.arrayIndex, not token.index
   // arrayIndex is the actual tokens array, where token.index is the position of the token in the document
   // (these can be different if the text/context does not start at token.index 0)
-  const currentToken = useSelector(state => state.currentToken);
-  const tokenSelection = useSelector(state => state.tokenSelection); // selection based on token.arrayIndex (not token.index)
+  const currentToken = useSelector((state) => state.currentToken);
+  const tokenSelection = useSelector((state) => state.tokenSelection); // selection based on token.arrayIndex (not token.index)
 
   const [mover, setMover] = useState(null);
   const [HoldSpace, setHoldSpace] = useState(false);
@@ -103,7 +104,7 @@ const KeyEvents = ({
   });
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyUp = event => {
+  const onKeyUp = (event) => {
     // keep track of which buttons are pressed in the state
     if (event.keyCode === 32 && HoldSpace) {
       setHoldSpace(false);
@@ -118,7 +119,7 @@ const KeyEvents = ({
   };
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyDown = event => {
+  const onKeyDown = (event) => {
     // key presses, and key holding (see onKeyUp)
     if (event.keyCode === 32) {
       event.preventDefault();
@@ -154,63 +155,103 @@ const KeyEvents = ({
 };
 
 const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
-  const [holdMouseLeft, setHoldMouseLeft] = useState(false);
+  const selectionStarted = useRef(false);
+  const tapped = useRef(null);
+  const touchhold = useRef(null);
+  const istouch = useRef(
+    "ontouchstart" in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
+  ); // hack to notice if device uses touch (because single touch somehow triggers mouseup)
   const dispatch = useDispatch();
 
   useEffect(() => {
     window.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("touchstart", onMouseDown);
-    window.addEventListener("touchmove", onMouseMove);
-    window.addEventListener("touchend", onMouseUp);
-
+    window.addEventListener("touchstart", onTouchDown);
     window.addEventListener("contextmenu", onContextMenu);
     return () => {
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("touchstart", onMouseDown);
-      window.removeEventListener("touchmove", onMouseMove);
-      window.removeEventListener("touchend", onMouseUp);
+      window.removeEventListener("touchstart", onTouchDown);
       window.removeEventListener("contextmenu", onContextMenu);
     };
   });
 
-  const onMouseDown = event => {
+  const onTouchDown = (event) => {
+    const token = getToken(tokens, event);
+    if (token.index === null) {
+      dispatch(clearTokenSelection());
+      return;
+    }
+
+    // first check if there is a tokenselection (after double tab). If so, this completes the selection
+    if (tokenSelection.length > 0 && tokenSelection[0] !== null) {
+      const currentNode = storeMouseSelection(event);
+      annotationFromSelection(tokens, [tokenSelection[0], currentNode], dispatch, selectedCode);
+      dispatch(clearTokenSelection());
+      tapped.current = null;
+      return;
+    }
+
+    // if there is no tokenselection. Check if this is the first tab on an already annotated token, to open the edit popup
+    if (token.annotated) {
+      annotationFromSelection(
+        tokens,
+        [tokens[token.index].index, tokens[token.index].index],
+        dispatch,
+        null
+      );
+      // dispatch(triggerCodeselector(null, null, null, null));
+      // dispatch(triggerCodeselector("touch", "token", tokens[token.index].index, null));
+      return;
+    }
+
+    // otherwise, handle the double tab (on the same token) for starting the selection
+    if (tapped.current !== token.index) {
+      tapped.current = token.index;
+    } else {
+      dispatch(toggleTokenSelection(tokens, token.index, false));
+    }
+  };
+
+  const onMouseDown = (event) => {
+    if (istouch.current) return; // suppress mousedown triggered by quick tap
     // When left button pressed, start new selection
-    if (event.which === 1 || event.which === 0) {
-      //if (event.which === 0) event.preventDefault();
-      //event.preventDefault();
-      setHoldMouseLeft(true);
+    if (event.which === 1) {
+      selectionStarted.current = true;
       dispatch(clearTokenSelection());
     }
   };
 
-  const onMouseMove = event => {
+  const onMouseMove = (event) => {
+    if (istouch.current) return;
     // When selection started (mousedown), select tokens hovered over
-    if (holdMouseLeft) {
+    if (selectionStarted.current) {
+      event.preventDefault();
       if (event.which !== 1 && event.which !== 0) return null;
-      if (event.which === 0) event.preventDefault();
+
       window.getSelection().empty();
       storeMouseSelection(event);
     } else {
       let currentNode = getToken(tokens, event);
-      if (currentNode !== null) {
-        dispatch(setCurrentToken(currentNode));
-        dispatch(toggleTokenSelection(tokens, currentNode, false));
+      if (currentNode.index !== null) {
+        dispatch(setCurrentToken(currentNode.index));
+        dispatch(toggleTokenSelection(tokens, currentNode.index, false));
       }
     }
   };
 
-  const onMouseUp = event => {
+  const onMouseUp = (event) => {
+    if (istouch.current) return;
     // When left mouse key is released, create the annotation
     // note that in case of a single click, the token has not been selected (this happens on move)
     // so this way a click can still be used to open
     if (event.which !== 1 && event.which !== 0) return null;
     const currentNode = storeMouseSelection(event);
     window.getSelection().empty();
-    setHoldMouseLeft(false);
+    //setHoldMouseLeft(false);
+    selectionStarted.current = false;
 
     // this worked before, but is not possible due to touchend not registering position
     //if (currentNode === null) return null;
@@ -227,20 +268,20 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     }
   };
 
-  const onContextMenu = event => {
+  const onContextMenu = (event) => {
     if (event.button === 2) return null;
     event.preventDefault();
     event.stopPropagation();
   };
 
-  const storeMouseSelection = event => {
+  const storeMouseSelection = (event) => {
     // select tokens that the mouse/touch is currently pointing at
     let currentNode = getToken(tokens, event);
     //if (currentNode == null || currentNode === null) return null;
 
-    dispatch(setCurrentToken(currentNode));
-    dispatch(toggleTokenSelection(tokens, currentNode, true));
-    return currentNode;
+    dispatch(setCurrentToken(currentNode.index));
+    dispatch(toggleTokenSelection(tokens, currentNode.index, true));
+    return currentNode.index;
   };
 
   return <></>;
@@ -288,12 +329,12 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
 
   if (tokens[newPosition]?.ref == null) {
     if (key === "ArrowRight") {
-      const firstUnit = tokens.findIndex(token => token.codingUnit);
+      const firstUnit = tokens.findIndex((token) => token.codingUnit);
       if (firstUnit < 0) return mover.position;
       newPosition = firstUnit;
     }
     if (key === "ArrowLeft") {
-      const firstAfterUnit = tokens.lastIndexOf(token => token.codingUnit);
+      const firstAfterUnit = tokens.lastIndexOf((token) => token.codingUnit);
       if (firstAfterUnit < 0) return mover.position;
       newPosition = firstAfterUnit - 1;
     }
@@ -338,7 +379,7 @@ const moveSentence = (tokens, mover, direction = "up") => {
   // token spans, that provide information about the x and y values
 
   if (tokens[mover.position]?.ref == null || tokens[mover.startposition]?.ref == null) {
-    const firstUnit = tokens.findIndex(token => token.codingUnit);
+    const firstUnit = tokens.findIndex((token) => token.codingUnit);
     return firstUnit < 0 ? 0 : firstUnit;
   }
 
@@ -350,17 +391,19 @@ const moveSentence = (tokens, mover, direction = "up") => {
   }
 };
 
-const getTokenAttributes = (tokens, tokenNode) => {
-  return parseInt(tokenNode.getAttribute("tokenindex"));
+const getToken = (tokens, e) => {
+  const [n, annotated] = getNode(tokens, e);
+  if (n === null) return { index: null, annotated: false };
+  return { index: getTokenAttributes(tokens, n), annotated };
 };
 
-const getToken = (tokens, e) => {
+const getNode = (tokens, e) => {
   try {
     // sometimes e is Restricted, and I have no clue why,
     // nor how to check this in a condition. hence the try clause
     let n;
     if (e.type === "mousemove" || e.type === "mouseup") n = e.originalTarget || e.path[0];
-    if (e.type === "touchmove") {
+    if (e.type === "touchmove" || e.type === "touchstart") {
       // stupid hack since someone decided touchmove target is always the starting target (weirdly inconsistent with mousemove)
       // also, this still doesn't work for touchend, which is just arrrggg
       let position = e.touches[0];
@@ -368,28 +411,21 @@ const getToken = (tokens, e) => {
     }
 
     if (n) {
-      if (
-        n.className === "token" ||
-        n.className === "token selected" ||
-        n.className === "token selected highlight" ||
-        n.className === "token highlight"
-      ) {
-        return getTokenAttributes(tokens, n);
+      if (n.className.includes("token")) {
+        return [n, false];
       }
       if (n.parentNode) {
-        if (
-          n.parentNode.className === "token" ||
-          n.parentNode.className === "token selected" ||
-          n.parentNode.className === "token selected highlight" ||
-          n.parentNode.className === "token highlight"
-        )
-          return getTokenAttributes(tokens, n.parentNode);
+        if (n.parentNode.className.includes("token")) return [n.parentNode, true];
       }
     }
-    return null;
+    return [null, false];
   } catch (e) {
-    return null;
+    return [null, false];
   }
+};
+
+const getTokenAttributes = (tokens, tokenNode) => {
+  return parseInt(tokenNode.getAttribute("tokenindex"));
 };
 
 function scrollTokenToMiddle(token) {

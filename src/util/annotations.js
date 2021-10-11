@@ -4,7 +4,6 @@ export const exportAnnotations = (annotations) => {
   if (Object.keys(annotations).length === 0) return [];
   const uniqueAnnotations = Object.keys(annotations).reduce((un_ann, index) => {
     const ann = annotations[index];
-    console.log(ann);
     for (let key of Object.keys(ann)) {
       if (index !== "unit") if (ann[key].index !== ann[key].span[0]) continue;
       const ann_obj = {

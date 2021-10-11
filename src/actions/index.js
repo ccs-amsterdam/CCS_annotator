@@ -18,6 +18,13 @@ export const setMoveUnitIndex = (where) => {
   };
 };
 
+export const setFullScreenNode = (node) => {
+  return {
+    type: "SET_FULL_SCREEN_NODE",
+    node,
+  };
+};
+
 export const setCurrentToken = (index) => {
   return {
     type: "SET_CURRENT_TOKEN",
