@@ -3,7 +3,7 @@ import { Input, Loader, Pagination, Segment } from "semantic-ui-react";
 import { useSelector, useDispatch } from "react-redux";
 
 const IndexController = ({ n, setIndex, canControl = true, setFinished }) => {
-  const moveUnitIndex = useSelector((state) => state.moveUnitIndex);
+  const moveUnitIndex = useSelector(state => state.moveUnitIndex);
   const canMove = useRef(false);
   const dispatch = useDispatch();
 
@@ -11,20 +11,20 @@ const IndexController = ({ n, setIndex, canControl = true, setFinished }) => {
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
 
-  const onKeyDown = (e) => {
+  const onKeyDown = e => {
     if (e.keyCode === 9) {
       e.preventDefault();
       if (e.shiftKey) {
         if (e.repeat) {
-          setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
+          setDelayedActivePage(current => (current > 1 ? current - 1 : current));
         } else {
-          setActivePage((current) => (current > 1 ? current - 1 : current));
+          setActivePage(current => (current > 1 ? current - 1 : current));
         }
       } else {
         if (e.repeat) {
-          setDelayedActivePage((current) => (current < n ? current + 1 : current));
+          setDelayedActivePage(current => (current < n ? current + 1 : current));
         } else {
-          setActivePage((current) => (current < n ? current + 1 : current));
+          setActivePage(current => (current < n ? current + 1 : current));
         }
       }
     }
@@ -45,7 +45,7 @@ const IndexController = ({ n, setIndex, canControl = true, setFinished }) => {
     if (!canMove.current) return;
     if (n) {
       const newn = moveUnitIndex > 0 ? n + 1 : n - 1;
-      setActivePage((current) => Math.min(newn, current + 1));
+      setActivePage(current => Math.min(newn, current + 1));
     }
   }, [n, moveUnitIndex]);
 
@@ -84,12 +84,19 @@ const IndexController = ({ n, setIndex, canControl = true, setFinished }) => {
 
   return (
     <Segment
-      style={{ border: "none", boxShadow: "none", padding: "0", leftMargin: "0px", width: "100%" }}
+      style={{
+        border: "none",
+        boxShadow: "none",
+        padding: "0",
+        leftMargin: "0px",
+        width: "100%",
+        maxHeight: "35px",
+      }}
     >
       <Loader active={loading} content="" />
 
       <Input
-        style={{ padding: 0, margin: 0, width: "100%" }}
+        style={{ padding: "0 !important", margin: "0", width: "100%" }}
         min={1}
         max={n + 1}
         onChange={(e, d) => {

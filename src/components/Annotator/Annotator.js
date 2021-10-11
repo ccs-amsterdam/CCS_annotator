@@ -38,24 +38,20 @@ const Annotator = () => {
       });
   }, [unitIndex, task, setPreparedItem]);
 
-  let colWidth = 16;
+  let maxWidth = "100%";
   if (task?.codebook?.type) {
-    if (task.codebook.type === "annotate") colWidth = 16;
-    if (task.codebook.type === "questions") colWidth = 8;
+    if (task.codebook.type === "questions") maxWidth = "1000px";
   }
 
   if (finished) return <Finished />;
 
   return (
     <FullScreen handle={handle}>
-      <Grid
-        container
-        stackable
-        centered
-        style={{ background: "white", margin: "0", padding: "0", height: "100vh" }}
+      <div
+        style={{ maxWidth, background: "white", margin: "0 auto", padding: "0", height: "100vh" }}
       >
-        <Grid.Row style={{ height: "35px", padding: "0" }}>
-          <div>
+        <div style={{ height: "35px", padding: "0", position: "relative" }}>
+          <div style={{ width: "85%", paddingLeft: "7.5%" }}>
             <IndexController
               n={task?.units?.length}
               setIndex={setUnitIndex}
@@ -67,13 +63,11 @@ const Annotator = () => {
             <FullScreenButton handle={handle} />
             <ExitButton />
           </div>
-        </Grid.Row>
-        <Grid.Row style={{ height: "calc(100% - 35px)" }}>
-          <Grid.Column width={colWidth} style={{ height: "100%" }}>
-            <Task codebook={task?.codebook} item={preparedItem}></Task>
-          </Grid.Column>
-        </Grid.Row>
-      </Grid>
+        </div>
+        <div style={{ height: "calc(100% - 35px)", padding: "0" }}>
+          <Task codebook={task?.codebook} item={preparedItem} />
+        </div>
+      </div>
     </FullScreen>
   );
 };
@@ -98,7 +92,7 @@ const Finished = () => {
 const ExitButton = () => {
   const history = useHistory();
   return (
-    <Icon.Group size="big" style={{ position: "absolute", top: "0px", right: 0 }}>
+    <Icon.Group size="big" style={{ padding: "3px", position: "absolute", top: "0px", right: 0 }}>
       <Icon link name="window close" onClick={() => history.push(homepage + "/manager")} />
       <Icon corner="top right" />
     </Icon.Group>
@@ -107,7 +101,10 @@ const ExitButton = () => {
 
 const FullScreenButton = ({ handle }) => {
   return (
-    <Icon.Group size="big" style={{ position: "absolute", top: "0px", left: "2px" }}>
+    <Icon.Group
+      size="big"
+      style={{ padding: "3px", position: "absolute", top: "0px", left: "2px" }}
+    >
       <Icon
         link
         name={handle.active ? "compress" : "expand"}
@@ -134,7 +131,6 @@ const prepareTask = async (jobURL, setTask) => {
   // post should take the unit_id and data as input.
 
   // !! make task a proper class
-  console.log(task);
 
   if (task && task.where === "local") {
     task.unitMode = "list";

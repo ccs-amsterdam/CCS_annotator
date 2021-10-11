@@ -220,6 +220,8 @@ export const Annotinder = React.memo(({ swipeOptions, callback, preview, swipe }
           margin: "0",
           padding: "0",
           flex: "1 1 auto",
+          borderRadius: "0",
+          border: "1px solid",
           background: swipeOptions.up?.color || "white",
         }}
       >
@@ -247,6 +249,8 @@ export const Annotinder = React.memo(({ swipeOptions, callback, preview, swipe }
               padding: "0",
               flex: "1 1 auto",
               width: "45%",
+              borderRadius: "0",
+              border: "1px solid",
               background: swipeOptions.left?.color || "white",
             }}
           >
@@ -263,6 +267,8 @@ export const Annotinder = React.memo(({ swipeOptions, callback, preview, swipe }
               margin: "0",
               flex: "1 1 auto",
               width: "45%",
+              borderRadius: "0",
+              border: "1px solid",
               background: swipeOptions.right?.color || "white",
             }}
           >

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Grid } from "semantic-ui-react";
 import QuestionForm from "./QuestionForm";
 import Document from "components/Tokens/Document";
 import useItemBundle from "hooks/useItemBundle";
@@ -42,10 +41,11 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
   }, [textReady, refs.text, refs.box]);
 
   // swipe controlls need to be up here due to working on the div wrapping the while question screen
+  // use separate swipe for text (document) and menu rows, to disable swiping up
+  // in text (which conflicts with scrolling)
   const [swipe, setSwipe] = useState(null);
-  const leftrightSwipe = useSwipeable(
-    swipeControlLeftright(questions?.[questionIndex], refs, setSwipe)
-  );
+  const textSwipe = useSwipeable(swipeControl(questions?.[questionIndex], refs, setSwipe, false));
+  const menuSwipe = useSwipeable(swipeControl(questions?.[questionIndex], refs, setSwipe, true));
   //const upSwipe = useSwipeable(swipeControl(questions?.[questionIndex], swipeAnimationRefs.up));
 
   if (!itemBundle) return null;
@@ -56,41 +56,31 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
   }
 
   return (
-    <div {...leftrightSwipe} style={{ height: "100%" }}>
-      <Grid
-        style={{
-          height: "100%",
-        }}
-      >
-        <Grid.Column style={{ padding: "0", height: "100%" }}>
-          <Grid.Row style={{ border: "1px solid", height: `${splitHeight}%` }}>
-            <div ref={refs.box} style={{ height: "100%", overflow: "hidden" }}>
-              <div
-                ref={refs.text}
-                style={{
-                  border: "1px solid",
-                  height: "100%",
-                  backgroundColor: "white",
-                  overflow: "hidden",
-                }}
-              >
-                <Document itemBundle={itemBundle} setReady={setTextReady} />
-              </div>
-            </div>
-          </Grid.Row>
-          <Grid.Row style={{ height: `${100 - splitHeight}%` }}>
-            <div style={{ height: "100%" }}>
-              <QuestionForm
-                itemBundle={itemBundle}
-                questions={questions}
-                questionIndex={questionIndex}
-                preview={preview}
-                swipe={swipe}
-              />
-            </div>
-          </Grid.Row>
-        </Grid.Column>
-      </Grid>
+    <div style={{ height: "100%" }}>
+      <div {...textSwipe} style={{ border: "1px solid", height: `${splitHeight}%` }}>
+        <div ref={refs.box} style={{ height: "100%", overflow: "hidden" }}>
+          <div
+            ref={refs.text}
+            style={{
+              border: "1px solid",
+              height: "100%",
+              backgroundColor: "white",
+              overflow: "hidden",
+            }}
+          >
+            <Document itemBundle={itemBundle} setReady={setTextReady} />
+          </div>
+        </div>
+      </div>
+      <div {...menuSwipe} style={{ height: `${100 - splitHeight}%` }}>
+        <QuestionForm
+          itemBundle={itemBundle}
+          questions={questions}
+          questionIndex={questionIndex}
+          preview={preview}
+          swipe={swipe}
+        />
+      </div>
     </div>
   );
 };
@@ -126,7 +116,7 @@ const getOptions = cta => {
   return [options, swipeOptions];
 };
 
-const swipeControlLeftright = (question, refs, setSwipe, triggerdist = 100) => {
+const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 100) => {
   if (!question) return {};
   if (question.type !== "annotinder") return {};
   const transitionTime = 200;
@@ -140,28 +130,45 @@ const swipeControlLeftright = (question, refs, setSwipe, triggerdist = 100) => {
     rotationAngle: 0, // set a rotation angle
   };
 
+  const getDeltas = d => {
+    let deltaX = d.deltaX;
+    let deltaY = d.deltaY;
+    if (Math.abs(deltaX) > Math.abs(deltaY) + 10) deltaY = 0;
+    if (Math.abs(deltaX) < Math.abs(deltaY) + 10) deltaX = 0;
+    if (!doVertical) deltaY = 0;
+    return [deltaX, deltaY];
+  };
+
   return {
     onSwiping: d => {
-      if (d.deltaX !== 0) {
-        refs.text.current.style.transition = ``;
-        refs.text.current.style.transform = `translateX(${d.deltaX}px)`;
-        refs.box.current.style.backgroundColor =
-          d.deltaX > 0 ? question.swipeOptions.right.color : question.swipeOptions.left.color;
-        refs.box.current.text = "Test";
-      }
+      const [deltaX, deltaY] = getDeltas(d);
+
+      refs.text.current.style.transition = ``;
+      refs.text.current.style.transform = `translateX(${deltaX}px) translateY(${deltaY}px)`;
+
+      let bgc = question.swipeOptions.up.color;
+      if (deltaX > 0) bgc = question.swipeOptions.right.color;
+      if (deltaX < 0) bgc = question.swipeOptions.left.color;
+      refs.box.current.style.backgroundColor = bgc;
     },
     onSwiped: d => {
-      refs.text.current.style.transition = `transform ${transitionTime}ms ease-out, opacity ${transitionTime}ms ease-out, opacity ${transitionTime}ms ease-out`;
+      const [deltaX, deltaY] = getDeltas(d);
 
-      if (Math.abs(d.deltaX) < triggerdist) {
-        refs.text.current.style.transform = `translateX(0%)`;
+      refs.text.current.style.transition = `transform ${transitionTime}ms ease-out, opacity ${transitionTime}ms ease-out`;
+
+      if (Math.abs(deltaX) < triggerdist && Math.abs(deltaY) < triggerdist) {
+        refs.text.current.style.transform = `translateX(0%) translateY(0%)`;
         refs.box.current.style.backgroundColor = "white";
       } else {
-        refs.text.current.style.transform = `translateX(${d.deltaX > 0 ? 100 : -100}%)`;
+        refs.text.current.style.transform = `translateX(${
+          deltaX > 0 ? 100 : deltaX < 0 ? -100 : 0
+        }%) translateY(${deltaY > 0 ? 100 : -100}%)`;
         refs.box.current.style.transition = `opacity ${transitionTime}ms ease-out`;
         refs.box.current.style.opacity = 0;
 
-        setSwipe(d.deltaX > 0 ? "right" : "left");
+        let dir = "up";
+        dir = deltaX > 0 ? "right" : "left";
+        setSwipe(dir);
         setSwipe(null);
       }
     },
