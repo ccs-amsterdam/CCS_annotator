@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import { Icon, Form, Radio, Divider } from "semantic-ui-react";
 
@@ -63,6 +63,14 @@ const TaskSettings = ({ codingjob }) => {
 };
 
 const TypeForm = ({ taskSettings, setTaskSettings }) => {
+  useEffect(() => {
+    if (!taskSettings?.type)
+      setTaskSettings({
+        ...taskSettings,
+        type: "annotate",
+      });
+  }, [taskSettings, setTaskSettings]);
+
   const radioButton = (value, label) => {
     return (
       <Form.Field>
