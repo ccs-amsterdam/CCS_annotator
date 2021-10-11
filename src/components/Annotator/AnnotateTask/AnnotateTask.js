@@ -67,17 +67,18 @@ const Instructions = ({ codebook }) => {
         </Button>
       }
     >
-      <Container style={{ paddingTop: "2em", width: "100%" }}>
+      <Container style={{ paddingTop: "2em", width: "500px" }}>
         <Header as="h4" align="center">
           Edit span annotations
         </Header>
         <p align="center">Assign codes to words or phrases. A word can have multiple codes.</p>
-        <Table unstackable compact="very" size="tiny">
+        <Table unstackable>
           <Table.Header>
             <Table.Row>
               <Table.HeaderCell></Table.HeaderCell>
               <Table.HeaderCell>Keyboard</Table.HeaderCell>
               <Table.HeaderCell>Mouse</Table.HeaderCell>
+              <Table.HeaderCell>Touchpad</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -88,6 +89,7 @@ const Instructions = ({ codebook }) => {
               <Table.Cell>
                 <i>Arrow keys</i>
               </Table.Cell>
+              <Table.Cell></Table.Cell>
               <Table.Cell></Table.Cell>
             </Table.Row>
             <Table.Row>
@@ -104,16 +106,22 @@ const Instructions = ({ codebook }) => {
                 <br />
                 Hold to select multiple
               </Table.Cell>
+              <Table.Cell>
+                <i>tab</i> first word 2 times, then last word 1 time
+              </Table.Cell>
             </Table.Row>
             <Table.Row>
               <Table.Cell>
                 <strong>Edit code</strong>
               </Table.Cell>
               <Table.Cell>
-                <i>Enter</i> when cursor on annotation
+                Press <i>spacebar</i> (don't hold) on an annotation
               </Table.Cell>
               <Table.Cell>
-                <i>Right-click</i> annotation
+                <i>Left-click</i> (don't hold) on an annotation
+              </Table.Cell>
+              <Table.Cell>
+                <i>tab</i> an annotation 3 times
               </Table.Cell>
             </Table.Row>
           </Table.Body>
@@ -123,7 +131,7 @@ const Instructions = ({ codebook }) => {
                 <strong>Quick keys</strong> <br />
                 in popup
               </Table.HeaderCell>
-              <Table.HeaderCell colSpan="2">
+              <Table.HeaderCell colSpan="3">
                 <List as="ul">
                   {codebook.searchBox || codebook.buttonMode === "recent" ? (
                     <ListItem as="li">

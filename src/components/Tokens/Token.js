@@ -45,7 +45,6 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
   let annotations = useSelector((state) => state.annotations.span[token.index]);
 
   const csTrigger = useSelector((state) => {
-    if (state.codeSelectorTrigger.unit !== "token") return null;
     if (state.codeSelectorTrigger.index !== token.index) return null;
     return state.codeSelectorTrigger;
   });
@@ -65,9 +64,11 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
     }
   }
 
+  //
+  if (!annotations && csTrigger) annotations = {};
+
   // if there are no annotation codes, our life is easy
-  if (!settings?.showAnnotations || !annotations || Object.keys(annotations).length === 0)
-    return <>{token.pre + token.text + token.post}</>;
+  if (!settings?.showAnnotations || !annotations) return <>{token.pre + token.text + token.post}</>;
 
   // if this is a context token, we can also ignore the fancy stuff
   if (!token.codingUnit) return <>{token.pre + token.text + token.post}</>;
@@ -78,7 +79,7 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
         className={annotatedTokenClass}
         onContextMenu={(e) => {
           e.preventDefault();
-          dispatch(triggerCodeselector("right_click", "token", token.index, null));
+          dispatch(triggerCodeselector(token.index, null, null));
         }}
         style={
           color
@@ -125,9 +126,8 @@ const AnnotatedToken = ({ token, codebook, settings, selected }) => {
         <CodeSelector
           annotations={annotations}
           codebook={codebook}
-          unit={"span"}
           currentCode={csTrigger.code}
-          newSelection={false}
+          selection={csTrigger.selection}
         >
           {tokenSpan(annotatedTokenClass, color)}
         </CodeSelector>

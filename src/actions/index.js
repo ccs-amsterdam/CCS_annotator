@@ -47,13 +47,12 @@ export const clearTokenSelection = () => {
   };
 };
 
-export const triggerCodeselector = (from, unit, index, code) => {
+export const triggerCodeselector = (index, code, selection) => {
   return {
     type: "TRIGGER_CODESELECTOR",
-    from: from,
-    unit: unit,
-    index: index,
-    code: code,
+    index,
+    code,
+    selection,
   };
 };
 

@@ -6,16 +6,14 @@ import {
   clearTokenSelection,
   triggerCodeselector,
 } from "actions";
-import { toggleSpanAnnotations } from "actions";
 import { keepInView } from "util/scroll";
 import { moveUp, moveDown } from "util/refNavigation";
-import { is } from "@babel/types";
 
 // This component generates no content, but manages navigation for span level annotations
 
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const AnnotateNavigation = ({ tokens, selectedCode }) => {
+const AnnotateNavigation = ({ tokens }) => {
   const eventsBlocked = useSelector((state) => state.eventsBlocked);
   // positions based on token.arrayIndex, not token.index
   // arrayIndex is the actual tokens array, where token.index is the position of the token in the document
@@ -71,9 +69,8 @@ const AnnotateNavigation = ({ tokens, selectedCode }) => {
         setMover={setMover}
         setHoldSpace={setHoldSpace}
         setHoldArrow={setHoldArrow}
-        selectedCode={selectedCode}
       />
-      <MouseEvents tokenSelection={tokenSelection} tokens={tokens} selectedCode={selectedCode} />
+      <MouseEvents tokenSelection={tokenSelection} tokens={tokens} />
     </>
   );
 };
@@ -86,7 +83,6 @@ const KeyEvents = ({
   setMover,
   setHoldSpace,
   setHoldArrow,
-  selectedCode,
 }) => {
   const dispatch = useDispatch();
 
@@ -108,8 +104,10 @@ const KeyEvents = ({
     // keep track of which buttons are pressed in the state
     if (event.keyCode === 32 && HoldSpace) {
       setHoldSpace(false);
-      if (tokenSelection.length > 0)
-        annotationFromSelection(tokens, tokenSelection, dispatch, selectedCode);
+      if (tokenSelection.length > 0) {
+        const code = tokenSelection[0] === tokenSelection[1] ? null : "UNASSIGNED";
+        annotationFromSelection(tokens, tokenSelection, dispatch, code);
+      }
       return;
     }
     if (arrowkeys.includes(event.key)) {
@@ -143,9 +141,8 @@ const KeyEvents = ({
       if (tokenSelection[0] === tokenSelection[1]) {
         // enter key
         if (event.keyCode === 13) {
-          dispatch(
-            triggerCodeselector("enter_key", "token", tokens[tokenSelection[0]].index, null)
-          );
+          console.log("whaaat");
+          dispatch(triggerCodeselector(tokens[tokenSelection[0]].index, null, null));
         }
       }
     }
@@ -154,10 +151,9 @@ const KeyEvents = ({
   return <></>;
 };
 
-const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
+const MouseEvents = ({ tokenSelection, tokens }) => {
   const selectionStarted = useRef(false);
   const tapped = useRef(null);
-  const touchhold = useRef(null);
   const istouch = useRef(
     "ontouchstart" in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
   ); // hack to notice if device uses touch (because single touch somehow triggers mouseup)
@@ -180,36 +176,31 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
 
   const onTouchDown = (event) => {
     const token = getToken(tokens, event);
-    if (token.index === null) {
+    if (token?.index === null) {
+      tapped.current = null;
       dispatch(clearTokenSelection());
       return;
     }
 
     // first check if there is a tokenselection (after double tab). If so, this completes the selection
-    if (tokenSelection.length > 0 && tokenSelection[0] !== null) {
+    if (tokenSelection.length > 0 && tokenSelection[0] === tapped.current) {
+      // if a single token, and an annotation already exists, open create/edit mode
       const currentNode = storeMouseSelection(event);
-      annotationFromSelection(tokens, [tokenSelection[0], currentNode], dispatch, selectedCode);
-      dispatch(clearTokenSelection());
-      tapped.current = null;
-      return;
-    }
+      dispatch(toggleTokenSelection(tokens, currentNode, true));
 
-    // if there is no tokenselection. Check if this is the first tab on an already annotated token, to open the edit popup
-    if (token.annotated) {
-      annotationFromSelection(
-        tokens,
-        [tokens[token.index].index, tokens[token.index].index],
-        dispatch,
-        null
-      );
-      // dispatch(triggerCodeselector(null, null, null, null));
-      // dispatch(triggerCodeselector("touch", "token", tokens[token.index].index, null));
+      if (token?.annotated && currentNode === tokenSelection[0]) {
+        annotationFromSelection(tokens, [currentNode, currentNode], dispatch, null);
+      } else {
+        annotationFromSelection(tokens, [tokenSelection[0], currentNode], dispatch, "UNASSIGNED");
+      }
+      tapped.current = null;
       return;
     }
 
     // otherwise, handle the double tab (on the same token) for starting the selection
     if (tapped.current !== token.index) {
       tapped.current = token.index;
+      dispatch(clearTokenSelection());
     } else {
       dispatch(toggleTokenSelection(tokens, token.index, false));
     }
@@ -260,10 +251,10 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
     // yet updated within this scope. This results in single clicks (without mousemove)
     // not registering. So if there is no current selection, directly use currentNode as position.
     if (tokenSelection.length > 0 && tokenSelection[0] !== null && tokenSelection[1] !== null) {
-      annotationFromSelection(tokens, tokenSelection, dispatch, selectedCode);
+      annotationFromSelection(tokens, tokenSelection, dispatch, "UNASSIGNED");
     } else {
       if (currentNode !== null) {
-        annotationFromSelection(tokens, [currentNode, currentNode], dispatch, selectedCode);
+        annotationFromSelection(tokens, [currentNode, currentNode], dispatch, null);
       }
     }
   };
@@ -287,34 +278,19 @@ const MouseEvents = ({ tokenSelection, tokens, selectedCode }) => {
   return <></>;
 };
 
-const annotationFromSelection = (tokens, selection, dispatch, selectedCode) => {
+const annotationFromSelection = (tokens, selection, dispatch, code) => {
   let [from, to] = selection;
   if (from > to) [from, to] = [to, from];
 
-  const annotations = [];
-  let lastSection = tokens[from].section;
-  for (let i = from; i <= to; i++) {
-    if (tokens[i].section !== lastSection) {
-      from = i;
-      lastSection = tokens[i].section;
-    }
-    annotations.push({
-      index: tokens[i].index, // note that i is not token.index, but the tokens arrayIndex
-      group: selectedCode == null ? "UNASSIGNED" : selectedCode,
-      length: tokens[to].length + tokens[to].offset - tokens[from].offset,
-      span: [tokens[from].index, tokens[to].index],
-      code: selectedCode == null ? "UNASSIGNED" : selectedCode,
-      section: tokens[i].section,
-      offset: tokens[from].offset,
-    });
-  }
+  const annotation = {
+    index: tokens[from].index,
+    length: tokens[to].length + tokens[to].offset - tokens[from].offset,
+    span: [tokens[from].index, tokens[to].index],
+    section: tokens[from].section,
+    offset: tokens[from].offset,
+  };
 
-  dispatch(toggleSpanAnnotations(annotations));
-  dispatch(clearTokenSelection());
-  if (selectedCode == null) {
-    dispatch(triggerCodeselector(null, null, null, null));
-    dispatch(triggerCodeselector("new_selection", "token", tokens[to].index, null));
-  }
+  dispatch(triggerCodeselector(tokens[to].index, code, annotation));
 };
 
 const movePosition = (tokens, key, mover, space, dispatch) => {

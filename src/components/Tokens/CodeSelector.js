@@ -7,58 +7,44 @@ import {
   rmSpanAnnotations,
   blockEvents,
   triggerCodeselector,
-  toggleAnnotation,
+  clearTokenSelection,
 } from "actions";
 import { getColor } from "util/tokenDesign";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const CodeSelector = React.memo(
-  ({ children, codebook, annotations, unit, currentCode, newSelection }) => {
-    const [current, setCurrent] = useState(newSelection ? "UNASSIGNED" : currentCode);
-    const dispatch = useDispatch();
+const CodeSelector = React.memo(({ children, codebook, annotations, currentCode, selection }) => {
+  const [current, setCurrent] = useState(currentCode);
+  const dispatch = useDispatch();
 
-    // When codeselector opens, disable events for spanannotationsnavigation
-    // when it closes, make sure to clean up if code is UNASSIGNED
-    useEffect(() => {
-      dispatch(blockEvents(true));
-      return () => {
-        dispatch(blockEvents(false));
-        if (current === "UNASSIGNED")
-          updateAnnotations(annotations, unit, current, current, dispatch);
-      };
-    });
+  useEffect(() => {
+    dispatch(blockEvents(true));
+    return () => {
+      dispatch(blockEvents(false));
+      dispatch(triggerCodeselector(null, null, null));
+    };
+  }, [dispatch]);
 
-    return (
-      <CodeSelectorPopup
-        current={current}
-        codebook={codebook}
-        setCurrent={setCurrent}
-        annotations={annotations}
-        unit={unit}
-        newSelection={newSelection}
-      >
-        {children}
-      </CodeSelectorPopup>
-    );
-  }
-);
+  return (
+    <CodeSelectorPopup
+      current={current}
+      codebook={codebook}
+      setCurrent={setCurrent}
+      annotations={annotations}
+      selection={selection}
+    >
+      {children}
+    </CodeSelectorPopup>
+  );
+});
 
-const CodeSelectorPopup = ({
-  children,
-  codebook,
-  current,
-  setCurrent,
-  annotations,
-  unit,
-  newSelection,
-}) => {
+const CodeSelectorPopup = ({ children, codebook, current, setCurrent, annotations, selection }) => {
+  const [open, setOpen] = useState(true);
   const fullScreenNode = useSelector((state) => state.fullScreenNode);
 
-  // separate popup from CodeSelector, because it would rerender CodeSelector,
-  // which messes up the useEffect that cleans up after close
   const codeMap = Object.keys(codebook.codeMap).reduce((obj, key) => {
-    if (!newSelection && current && annotations[key]) return obj;
+    const singleSelection = selection === null || selection?.span[0] === selection.span[1];
+    if (singleSelection && current && annotations[key]) return obj;
     if (!codebook.codeMap[key].active || !codebook.codeMap[key].activeParent) return obj;
     obj[key] = codebook.codeMap[key];
     return obj;
@@ -76,16 +62,16 @@ const CodeSelectorPopup = ({
       flowing
       hoverable
       wide
-      open
+      open={open}
       mouseLeaveDelay={10000000} // just don't use mouse leave
       onOpen={() => setHasOpened(true)}
       onClose={() => {
         if (hasOpened) {
-          if (current === "UNASSIGNED")
-            updateAnnotations(annotations, unit, current, current, dispatch);
-          // calling dispatch directly causes a memory leak warning, because it unmounts
-          // the component. The very minor async timeout fixes this.
-          setTimeout(() => dispatch(triggerCodeselector(null)), 10);
+          setTimeout(() => {
+            dispatch(clearTokenSelection());
+            dispatch(triggerCodeselector(null, null, null));
+          }, 10);
+          setOpen(false);
         }
       }}
       position="top left"
@@ -101,7 +87,7 @@ const CodeSelectorPopup = ({
         }}
       >
         {!current ? (
-          <b>Edit which code?</b>
+          <b>Edit what?</b>
         ) : current === "UNASSIGNED" ? (
           <b>Create new code</b>
         ) : (
@@ -117,8 +103,9 @@ const CodeSelectorPopup = ({
           style={{ background: "#80808000", margin: "0px" }}
           onClick={() => {
             if (current === "UNASSIGNED")
-              updateAnnotations(annotations, unit, current, current, dispatch);
+              updateAnnotations(annotations, current, current, selection, dispatch);
             dispatch(triggerCodeselector(null, null, null, null));
+            dispatch(clearTokenSelection());
           }}
         />
       </div>
@@ -127,6 +114,7 @@ const CodeSelectorPopup = ({
           current={current}
           itemSettings={codebook}
           annotations={annotations}
+          canBeNew={selection !== null} // if no selection is provided, can only edit existing codes
           codeMap={codeMap}
           setCurrent={setCurrent}
         />
@@ -135,7 +123,7 @@ const CodeSelectorPopup = ({
           itemSettings={codebook}
           codeMap={codeMap}
           annotations={annotations}
-          unit={unit}
+          selection={selection}
           current={current}
         />
       </div>
@@ -143,7 +131,7 @@ const CodeSelectorPopup = ({
   );
 };
 
-const CurrentCodePage = ({ current, itemSettings, annotations, codeMap, setCurrent }) => {
+const CurrentCodePage = ({ current, itemSettings, annotations, canBeNew, codeMap, setCurrent }) => {
   const annotationCodes = Object.keys(annotations);
 
   const onButtonSelect = (value) => {
@@ -151,13 +139,20 @@ const CurrentCodePage = ({ current, itemSettings, annotations, codeMap, setCurre
   };
 
   const getOptions = (annotationCodes) => {
-    const options = [{ label: "Create new", value: "UNASSIGNED", color: "white" }]; // 'value' is optional, but lets us use a different label
+    const options = [];
+    if (canBeNew) options.push({ label: "Create new", value: "UNASSIGNED", color: "white" }); // 'value' is optional, but lets us use a different label
     for (let code of annotationCodes)
       if (code !== "UNASSIGNED") options.push({ label: code, color: getColor(code, codeMap) });
     return options;
   };
 
-  if (annotationCodes.length === 1) setCurrent(annotationCodes[0]);
+  if (annotationCodes.length === 0) {
+    setCurrent("UNASSIGNED");
+    return null;
+  }
+
+  const options = getOptions(annotationCodes);
+  if (options.length === 1) setCurrent(options[0].label);
   if (current) return null;
 
   return (
@@ -166,7 +161,7 @@ const CurrentCodePage = ({ current, itemSettings, annotations, codeMap, setCurre
         key={"currentCodePageButtons"}
         active={true}
         itemSettings={itemSettings}
-        options={getOptions(annotationCodes)}
+        options={options}
         canDelete={false}
         callback={onButtonSelect}
       />
@@ -174,7 +169,7 @@ const CurrentCodePage = ({ current, itemSettings, annotations, codeMap, setCurre
   );
 };
 
-const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, current }) => {
+const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, selection, current }) => {
   const textInputRef = useRef(null);
   const dispatch = useDispatch();
   const [focusOnButtons, setFocusOnButtons] = useState(true);
@@ -203,9 +198,9 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
   const onButtonSelect = (value) => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
-      updateAnnotations(annotations, unit, current, current, dispatch);
+      updateAnnotations(annotations, current, current, selection, dispatch);
     } else {
-      updateAnnotations(annotations, unit, current, value, dispatch);
+      updateAnnotations(annotations, current, value, selection, dispatch);
     }
   };
 
@@ -268,7 +263,7 @@ const NewCodePage = ({ codeHistory, itemSettings, codeMap, annotations, unit, cu
                 onClose={() => setFocusOnButtons(true)}
                 onChange={(e, d) => {
                   if (codeMap[d.value])
-                    updateAnnotations(annotations, unit, current, d.value, dispatch);
+                    updateAnnotations(annotations, current, d.value, selection, dispatch);
                 }}
               />
             </Ref>
@@ -375,17 +370,6 @@ const ButtonSelection = ({ active, options, itemSettings, canDelete, callback })
             onMouseOver={() => setSelected(i)}
             onClick={(e, d) => callback(d.value)}
           >
-            {/* <div  
-              style={{
-                position: "relative",
-                float: "left",
-                fontStyle: "bold",
-                marginTop: "-0.5em",
-                marginLeft: "-1em",
-              }}
-            >
-              {i + 1}
-            </div> */}
             {" " + option.label}
           </Button>
         </>
@@ -418,27 +402,15 @@ const ButtonSelection = ({ active, options, itemSettings, canDelete, callback })
   );
 };
 
-const updateAnnotations = (annotations, unit, current, value, dispatch) => {
+const updateAnnotations = (annotations, current, value, selection, dispatch) => {
   if (!annotations) return null;
 
-  if (unit === "span") {
-    updateSpanAnnotations(annotations, current, value, dispatch);
+  let ann;
+  if (annotations[current]) {
+    ann = { ...annotations[current] };
   } else {
-    const ann = annotations[current];
-    if (!ann) return;
-    dispatch(toggleAnnotation(unit, ann.index, current, null)); // toggleAnnotation with null deletes
-    if (current !== value) {
-      dispatch(toggleAnnotation(unit, ann.index, value, { ...ann }));
-      dispatch(appendCodeHistory(value));
-    }
-    dispatch(triggerCodeselector(null, null, null, null));
+    ann = { ...selection };
   }
-};
-
-const updateSpanAnnotations = (annotations, current, value, dispatch) => {
-  if (!annotations) return null;
-
-  let ann = { ...annotations[current] };
   ann.group = current;
 
   let oldAnnotation = { ...ann };
@@ -461,6 +433,7 @@ const updateSpanAnnotations = (annotations, current, value, dispatch) => {
   dispatch(toggleSpanAnnotations(newAnnotations));
   dispatch(appendCodeHistory(value));
   dispatch(triggerCodeselector(null, null, null, null));
+  dispatch(clearTokenSelection());
 };
 
 export default CodeSelector;

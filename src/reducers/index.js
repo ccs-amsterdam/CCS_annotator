@@ -64,13 +64,14 @@ const tokenSelection = (state = [], action) => {
   }
 };
 
-const codeSelectorTrigger = (
-  state = { from: null, unit: null, index: null, code: null },
-  action
-) => {
+const codeSelectorTrigger = (state = { index: null, code: null, selection: null }, action) => {
   switch (action.type) {
     case "TRIGGER_CODESELECTOR":
-      return { from: action.from, unit: action.unit, index: action.index, code: action.code };
+      return {
+        index: action.index,
+        code: action.code,
+        selection: action.selection,
+      };
     default:
       return state;
   }
