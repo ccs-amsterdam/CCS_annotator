@@ -18,21 +18,23 @@ const CodingjobManager = () => {
   const codingjob = useLiveQuery(() => {
     // retrieve codingjob from Dexie whenever selectedCodingjob changes OR dexie is updated
     if (selectedCodingjob) {
-      return db.idb.codingjobs.get(selectedCodingjob.job_id).then(cj => {
-        return { ...cj, ROW_ID: selectedCodingjob.ROW_ID };
-      });
+      return db.idb.codingjobs
+        .get(selectedCodingjob.job_id)
+        .then((cj) => {
+          return { ...cj, ROW_ID: selectedCodingjob.ROW_ID };
+        })
+        .catch((e) => {
+          console.log(e);
+        });
     }
   }, [selectedCodingjob]);
 
   const nDocuments = useLiveQuery(() => {
-    if (!codingjob) return 0;
-    return db.idb.documents
-      .where("job_id")
-      .equals(codingjob.job_id)
-      .count();
+    if (!codingjob?.job_id) return 0;
+    return db.idb.documents.where("job_id").equals(codingjob.job_id).count();
   }, [codingjob]);
 
-  const renderSwitch = menuItem => {
+  const renderSwitch = (menuItem) => {
     switch (menuItem) {
       case "codingjobs":
         return (
@@ -75,7 +77,7 @@ const CodingjobManager = () => {
           description={codingjob?.unitSettings?.n ? `${codingjob?.unitSettings?.n} units` : null}
           active={menuItem === "units"}
           completed={codingjob?.unitSettings?.n}
-          disabled={codingjob === null}
+          disabled={nDocuments === 0}
           onClick={(e, d) => setMenuItem("units")}
         />
         <Step
@@ -83,7 +85,7 @@ const CodingjobManager = () => {
           description={codingjob?.taskSettings?.type || "Define the task"}
           active={menuItem === "task"}
           completed={codingjob?.taskSettings?.type}
-          disabled={codingjob === null}
+          disabled={!codingjob?.unitSettings?.n}
           onClick={(e, d) => setMenuItem("task")}
         />
         <Step

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import db from "apis/dexie";
 import { useHistory } from "react-router-dom";
 import { Grid, Button, Header, Segment, Form } from "semantic-ui-react";
-import { demo_articles, demo_codebook } from "apis/demodata";
 import { useLiveQuery } from "dexie-react-hooks";
 
 const homepage = "/amcat4annotator";
@@ -24,7 +23,6 @@ const Welcome = ({ redirectUrl }) => {
   const loggin = async () => {
     if (name.length < 5) return null;
     try {
-      await create_demo_job(db);
       await db.firstLogin(name);
       //await initStoragePersistence();
       //alert(history.location.pathname);
@@ -72,17 +70,6 @@ const Welcome = ({ redirectUrl }) => {
       </Grid.Column>
     </Grid>
   );
-};
-
-const create_demo_job = async db => {
-  try {
-    const job = await db.createCodingjob("Demo codingjob");
-    await db.createDocuments(job, demo_articles, true);
-    await db.writeCodebook(job, demo_codebook);
-    return null;
-  } catch (e) {
-    console.log(e);
-  }
 };
 
 export default Welcome;

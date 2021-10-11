@@ -4,31 +4,29 @@ import newAmcatSession from "./amcat";
 
 import { prepareDocumentBatch } from "util/createDocuments";
 
+const dbName = "AmCAT_Annotator_DB";
+const idbStores = {
+  user: "++id, name", // other fields: 'id'
+  codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
+  documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
+  tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
+};
+
 class AnnotationDB {
   constructor() {
-    this.idb = new Dexie("AmCAT_Annotator_DB");
+    this.idb = new Dexie(dbName);
 
     //for testing, clean db on refresh
     // this.idb.delete();
     // this.idb = new Dexie("AmCAT_Annotator");
     try {
-      this.idb.version(2).stores({
-        user: "++id, name", // other fields: 'id'
-        codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
-        documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
-        tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
-      });
+      this.idb.version(2).stores(idbStores);
     } catch (e) {
       // this is not a good idea for production, but for now it helps solve the problem
       // that whenever the schemas are changed (in development), everything breaks
       this.idb.delete();
-      this.idb = new Dexie("AmCAT_Annotator_DB");
-      this.idb.version(2).stores({
-        user: "++id, name", // other fields: 'id'
-        codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
-        documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
-        tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
-      });
+      this.idb = new Dexie(dbName);
+      this.idb.version(2).stores(idbStores);
     }
   }
 
@@ -64,7 +62,10 @@ class AnnotationDB {
     return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
-    await this.idb.documents.where("job_id").equals(codingjob.job_id).delete();
+    const docs = await this.idb.documents.where("job_id").equals(codingjob.job_id);
+    const ndocs = await docs.count();
+    console.log(ndocs);
+    if (ndocs > 0) docs.delete();
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
 
@@ -200,13 +201,8 @@ class AnnotationDB {
   // CLEANUP
   async deleteDB() {
     await this.idb.delete();
-    this.idb = new Dexie("AmCAT_Annotator");
-    this.idb.version(2).stores({
-      user: "++id, name", // other fields: 'id'
-      codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
-      documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
-      tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
-    });
+    this.idb = new Dexie(dbName);
+    this.idb.version(2).stores(idbStores);
   }
 }
 

@@ -18,7 +18,7 @@ const DeleteCodingjob = ({ codingjob, setCodingjob }) => {
     }
   };
 
-  if (!codingjob) return null;
+  if (!codingjob?.job_id) return null;
 
   return (
     <Modal

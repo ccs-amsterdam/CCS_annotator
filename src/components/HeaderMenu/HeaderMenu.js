@@ -14,7 +14,6 @@ import { useLiveQuery } from "dexie-react-hooks";
 const HeaderMenu = ({ items, homepage, children }) => {
   const location = useLocation();
   const user = useLiveQuery(() => db.idb.user.get(1));
-  console.log(user);
   const menuItems = items.map((item, index) => {
     if (!item.menu) return null;
     return (

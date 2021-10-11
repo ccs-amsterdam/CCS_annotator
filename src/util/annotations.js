@@ -1,4 +1,4 @@
-export const exportAnnotations = annotations => {
+export const exportAnnotations = (annotations) => {
   annotations = annotations["span"];
   // export annotations from the object format (for fast use in the annotator) to array format
   if (Object.keys(annotations).length === 0) return [];
@@ -28,7 +28,7 @@ export const importAnnotations = (annotations, tokens) => {
   if (!annotations.document) annotations.document = {};
   if (!annotations.paragraph) annotations.paragraph = {};
   if (!annotations.sentence) annotations.sentence = {};
-  if (annotations.span) {
+  if (annotations.span && Object.keys(annotations.span).length > 0) {
     annotations.span = importSpanAnnotations({}, annotations.span, tokens);
   } else annotations.span = {};
 
@@ -121,7 +121,7 @@ export const toggleSpanAnnotations = (annotations, annList, rm) => {
   return annotations;
 };
 
-const prepareSpanAnnotations = annotations => {
+const prepareSpanAnnotations = (annotations) => {
   if (!annotations || annotations === "") return {};
   // create an object where the key is a section+offset, and the
   // value is an array that tells which codes start and end there

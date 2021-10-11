@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import objectHash from "object-hash";
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router";
-import { Button, Grid, Header, TextArea } from "semantic-ui-react";
+import { Button, Grid, Header, Popup, TextArea } from "semantic-ui-react";
 import TaskTable from "./TaskTable";
 import QRCode from "qrcode.react";
 
@@ -34,10 +34,12 @@ const TaskSelector = () => {
     return (
       <div>
         <TextArea value={url} style={{ width: "512px" }} />
-        <QRCode
-          value={"This link opens a codingjob in the AmCAT annotator" + encodeURI(url)}
-          size={512}
-        />
+        <Popup hoverable trigger={<Button>Show QR code</Button>}>
+          <QRCode
+            value={"This link opens a codingjob in the AmCAT annotator" + encodeURI(url)}
+            size={256}
+          />
+        </Popup>
       </div>
     );
   };

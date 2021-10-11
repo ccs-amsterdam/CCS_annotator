@@ -44,6 +44,7 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
   const [codebook, setCodebook] = useState(null);
 
   useEffect(() => {
+    if (!codingjob?.taskSettings) return;
     setCodebook(getCodebook(codingjob.taskSettings));
   }, [codingjob.taskSettings]);
 
@@ -53,14 +54,14 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
       return null;
     }
     if (index >= jobItems.length) return null;
-    standardizeItems(codingjob, [jobItems[index]]).then(singleItemArray => {
+    standardizeItems(codingjob, [jobItems[index]]).then((singleItemArray) => {
       setStandardizedItem(singleItemArray[0]);
     });
   }, [index, jobItems, setStandardizedItem, codingjob]);
 
   if (!jobItems) return null;
 
-  const renderTaskPreview = type => {
+  const renderTaskPreview = (type) => {
     switch (type) {
       case "questions":
         return (
