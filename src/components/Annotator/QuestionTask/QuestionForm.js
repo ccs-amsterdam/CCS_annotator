@@ -49,7 +49,7 @@ const QuestionForm = ({ itemBundle, questions, questionIndex, preview, swipe }) 
         padding: "1em",
         color: "white",
         borderTop: "5px double grey",
-        backgroundColor: "black",
+        backgroundColor: "#1B1C1D",
       }}
     >
       <div style={{ width: "100%", flex: "1 1 auto" }}>

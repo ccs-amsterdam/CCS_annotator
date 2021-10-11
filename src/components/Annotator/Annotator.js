@@ -48,7 +48,14 @@ const Annotator = () => {
   return (
     <FullScreen handle={handle}>
       <div
-        style={{ maxWidth, background: "white", margin: "0 auto", padding: "0", height: "100vh" }}
+        style={{
+          maxWidth,
+          background: "white",
+          margin: "0 auto",
+          padding: "0",
+          height: "100vh",
+          border: "1px solid white",
+        }}
       >
         <div style={{ height: "35px", padding: "0", position: "relative" }}>
           <div style={{ width: "85%", paddingLeft: "7.5%" }}>
