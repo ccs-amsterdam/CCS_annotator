@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import QuestionForm from "./QuestionForm";
-import Document from "components/Tokens/Document";
+import Document from "components/Document/Document";
 import useItemBundle from "hooks/useItemBundle";
 import { useSelector } from "react-redux";
 import { useSwipeable } from "react-swipeable";
@@ -69,7 +69,12 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
               overflow: "hidden",
             }}
           >
-            <Document itemBundle={itemBundle} setReady={setTextReady} />
+            <Document
+              tokens={itemBundle?.tokens}
+              codebook={itemBundle?.codebook}
+              settings={itemBundle?.settings}
+              setReady={setTextReady}
+            />
           </div>
         </div>
       </div>

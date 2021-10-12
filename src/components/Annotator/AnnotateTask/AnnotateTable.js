@@ -1,17 +1,14 @@
 import React, { useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { Ref, Table } from "semantic-ui-react";
 import { triggerCodeselector } from "actions";
 import { getColor } from "util/tokenDesign";
-import "components/spanAnnotationsStyle.css";
+import "components/Document/subcomponents/spanAnnotationsStyle.css";
 
 const COLWIDTHS = [4, 2, 2]; // for offset and text
 
-const AnnotateTable = ({ itemBundle, codeMap }) => {
-  const annotations = useSelector((state) => state.annotations);
-
-  if (!itemBundle.tokens || itemBundle.tokens.length === 0) return null;
-  if (!itemBundle.writable) return null;
+const AnnotateTable = ({ tokens, codeMap, annotations }) => {
+  if (!tokens || tokens.length === 0) return null;
 
   return (
     <Table
@@ -34,7 +31,7 @@ const AnnotateTable = ({ itemBundle, codeMap }) => {
         </Table.Row>
       </Table.Header>
       <Table.Body className="annotations-tbody">
-        {annotationRows(itemBundle.tokens, codeMap, annotations.span)}
+        {annotationRows(tokens, codeMap, annotations)}
       </Table.Body>
     </Table>
   );

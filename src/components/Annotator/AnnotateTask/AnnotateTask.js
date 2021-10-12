@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Grid, Header, List, ListItem, Table, Popup, Button } from "semantic-ui-react";
 import AnnotateTable from "./AnnotateTable";
-import Document from "components/Tokens/Document";
+import Document from "components/Document/Document";
 import useItemBundle from "hooks/useItemBundle";
 import { codeBookEdgesToMap } from "util/codebook";
 
@@ -14,16 +14,16 @@ const documentSettings = {
 
 const AnnotateTask = ({ item, codebook, preview = false }) => {
   const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
-  const [codeMap, setCodeMap] = useState(null);
+  const [annotations, setAnnotations] = useState({});
 
   useEffect(() => {
     // settings is an array with the settings for each question
     // This needs a little preprocessing, so we only update it when codebook changes (not per item)
-    if (!codebook?.codes) return null;
-    setCodeMap(codeBookEdgesToMap(codebook.codes));
-  }, [codebook, setCodeMap]);
+    if (!itemBundle?.codebook?.codeMap && !itemBundle?.codebook?.codes) return null;
+    itemBundle.codebook.codeMap = codeBookEdgesToMap(itemBundle.codebook.codes);
+  }, [itemBundle]);
 
-  if (itemBundle === null || codeMap === null) return null;
+  if (itemBundle === null || itemBundle?.codebook?.codeMap === null) return null;
 
   return (
     <Grid
@@ -33,7 +33,13 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
       columns={2}
     >
       <Grid.Column width={10} style={{ paddingRight: "0em", height: "100%" }}>
-        <Document itemBundle={itemBundle} codeMap={codeMap} />
+        <Document
+          tokens={itemBundle?.tokens}
+          codebook={itemBundle?.codebook}
+          settings={itemBundle?.settings}
+          annotations={annotations}
+          setAnnotations={setAnnotations}
+        />
       </Grid.Column>
       <Grid.Column
         width={6}
@@ -46,7 +52,11 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
       >
         <Instructions codebook={codebook} />
 
-        <AnnotateTable itemBundle={itemBundle} codeMap={codeMap} />
+        <AnnotateTable
+          tokens={itemBundle?.tokens}
+          codeMap={itemBundle?.codebook?.codeMap}
+          annotations={annotations}
+        />
       </Grid.Column>
     </Grid>
   );

@@ -2,27 +2,27 @@ import React, { useEffect, useRef, useState } from "react";
 import { Ref } from "semantic-ui-react";
 import { scrollToMiddle } from "util/scroll";
 
-import "components/spanAnnotationsStyle.css";
+import "components/Document/subcomponents/spanAnnotationsStyle.css";
 
-const Tokens = ({ itemBundle, setReady }) => {
+const Tokens = ({ tokens, centerVertical, setReady }) => {
   const [text, setText] = useState({});
   const containerRef = useRef(null);
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = itemBundle.tokens.find((token) => token.codingUnit);
+    const firstTextUnitToken = tokens.find((token) => token.codingUnit);
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, 1 / 4);
     }
   });
 
   useEffect(() => {
-    if (!itemBundle.tokens) return null;
-    prepareTokens(itemBundle, setText);
+    if (!tokens) return null;
+    setText(renderText(tokens));
     if (setReady) setReady((current) => current + 1); // setReady is an optional property used to let parents know the text is ready.
-  }, [itemBundle, setReady]);
+  }, [tokens, setReady]);
 
-  if (itemBundle === null) return null;
+  if (tokens === null) return null;
 
   // const emptySpace = () => {
   //   // add empty space before and after text to center coding unit
@@ -36,7 +36,7 @@ const Tokens = ({ itemBundle, setReady }) => {
       key="tokens"
       style={{
         display: "flex",
-        alignItems: itemBundle.settings.centerVertical ? "center" : null,
+        alignItems: centerVertical ? "center" : null,
         height: "100%",
       }}
     >
@@ -59,14 +59,8 @@ const Tokens = ({ itemBundle, setReady }) => {
   );
 };
 
-const prepareTokens = (itemBundle, setText) => {
-  setText(renderText(itemBundle));
-  // !! assignment by reference: renderText also adds a react ref to each token in itemBundle.tokens
-};
-
-const renderText = (itemBundle) => {
+const renderText = (tokens) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
-  const tokens = itemBundle.tokens;
 
   let section = [];
   let paragraph = [];
@@ -104,7 +98,7 @@ const renderText = (itemBundle) => {
     codingUnit = tokens[i].codingUnit;
 
     if (codingUnit) tokens[i].ref = React.createRef();
-    sentence.push(renderToken(tokens[i], itemBundle, codingUnit));
+    sentence.push(renderToken(tokens[i], codingUnit));
   }
 
   if (sentence.length > 0) paragraph.push(renderSentence("last", sentence_nr, sentence));

@@ -3,12 +3,12 @@ import React, { useEffect, useState } from "react";
 import { Grid, Header, Dimmer, Loader } from "semantic-ui-react";
 
 import UnitSettings from "./Settings/UnitSettings";
-import Document from "components/Tokens/Document";
+import Document from "components/Document/Document";
 import useItemBundle from "hooks/useItemBundle";
 import useJobItems from "hooks/useJobItems";
 import { standardizeItems } from "util/standardizeItem";
 
-const getTableColumns = unitSettings => {
+const getTableColumns = (unitSettings) => {
   if (!unitSettings) return [];
 
   const columns = [
@@ -77,7 +77,7 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
 
   useEffect(() => {
     if (!jobItem) return null;
-    standardizeItems(codingjob, [jobItem]).then(singleItemArray => {
+    standardizeItems(codingjob, [jobItem]).then((singleItemArray) => {
       setStandardizedItem(singleItemArray[0]);
     });
   }, [jobItem, setStandardizedItem, codingjob]);
@@ -127,7 +127,11 @@ const PreviewDocument = ({ item, codebook }) => {
         <Dimmer inverted active={item === null}>
           <Loader />
         </Dimmer>
-        <Document itemBundle={itemBundle} />
+        <Document
+          tokens={itemBundle?.tokens}
+          codebook={itemBundle?.codebook}
+          settings={itemBundle?.settings}
+        />
       </>
     );
   };

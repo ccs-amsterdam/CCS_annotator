@@ -6,16 +6,24 @@ import { moveUp, moveDown } from "util/refNavigation";
 
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const AnnotateNavigation = ({ tokens, triggerCodePopup, eventsBlocked }) => {
-  //const eventsBlocked = useSelector((state) => state.eventsBlocked);
-  // positions based on token.arrayIndex, not token.index
+/**
+ * This is a hugely elaborate component for managing navigation (key, mouse and touch events)
+ * It doesn't acctually render anything, but its shaped as a component because useEffect is just really convenient here
+ * You probably never want to read this. And if you do, don't expect my sympathies. Rather, just blame me
+ * if anything in here breaks, or ask nicely if we need more features
+ */
+const NavigationEvents = ({
+  tokens,
+  currentToken,
+  setCurrentToken,
+  tokenSelection,
+  setTokenSelection,
+  triggerCodePopup,
+  eventsBlocked,
+}) => {
+  // !! Keep in mind that positions are based on token.arrayIndex, not token.index
   // arrayIndex is the actual tokens array, where token.index is the position of the token in the document
   // (these can be different if the text/context does not start at token.index 0)
-  const [currentToken, setCurrentToken] = useState(0);
-  const [tokenSelection, setTokenSelection] = useState([]); // selection based on token.arrayIndex (not token.index)
-
-  //const currentToken = useSelector((state) => state.currentToken);
-  //const tokenSelection = useSelector((state) => state.tokenSelection); // selection based on token.arrayIndex (not token.index)
 
   const [mover, setMover] = useState(null);
   const [HoldSpace, setHoldSpace] = useState(false);
@@ -28,11 +36,7 @@ const AnnotateNavigation = ({ tokens, triggerCodePopup, eventsBlocked }) => {
     } else {
       setTokenSelection([]);
     }
-  }, [setHoldArrow, setHoldSpace, eventsBlocked]);
-
-  useEffect(() => {
-    showSelection(tokens, tokenSelection);
-  }, [tokens, tokenSelection]);
+  }, [setHoldArrow, setHoldSpace, eventsBlocked, setTokenSelection]);
 
   useEffect(() => {
     // When arrow key is held, walk through tokens with increasing speed
@@ -87,24 +91,6 @@ const AnnotateNavigation = ({ tokens, triggerCodePopup, eventsBlocked }) => {
       />
     </>
   );
-};
-
-const showSelection = (tokens, selection) => {
-  for (let token of tokens) {
-    if (!token.ref?.current) continue;
-    if (selection.length === 0 || selection[0] === null || selection[1] === null) {
-      token.ref.current.classList.remove("selected");
-      continue;
-    }
-
-    let [from, to] = selection;
-    //if (to === null) return false;
-    if (from > to) [to, from] = [from, to];
-    let selected = token.arrayIndex >= from && token.arrayIndex <= to;
-    if (selected && token.codingUnit) {
-      token.ref.current.classList.add("selected");
-    } else token.ref.current.classList.remove("selected");
-  }
 };
 
 const KeyEvents = ({
@@ -266,7 +252,7 @@ const MouseEvents = ({
     } else {
       let currentNode = getToken(tokens, event);
       if (currentNode.index !== null) {
-        setCurrentToken((state) => (state === currentNode.index ? null : currentNode.index));
+        setCurrentToken((state) => (state === currentNode.index ? state : currentNode.index));
         setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, false));
       }
     }
@@ -305,7 +291,7 @@ const MouseEvents = ({
   };
 
   const onContextMenu = (event) => {
-    //if (event.button === 2) return null;
+    if (event.button === 2) return null;
     event.preventDefault();
     event.stopPropagation();
   };
@@ -315,7 +301,7 @@ const MouseEvents = ({
     let currentNode = getToken(tokens, event);
     //if (currentNode == null || currentNode === null) return null;
 
-    setCurrentToken((state) => (state === currentNode.index ? null : currentNode.index));
+    setCurrentToken((state) => (state === currentNode.index ? state : currentNode.index));
     setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, true));
     return currentNode.index;
   };
@@ -487,4 +473,4 @@ const updateSelection = (selection, tokens, index, add) => {
   return newSelection;
 };
 
-export default AnnotateNavigation;
+export default NavigationEvents;

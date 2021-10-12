@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Button, Dropdown, Grid, Popup, Ref } from "semantic-ui-react";
 import { toggleSpanAnnotations } from "util/annotations";
+import { codeBookEdgesToMap } from "util/codebook";
 import { getColor } from "util/tokenDesign";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
@@ -12,6 +13,17 @@ const useCodeSelector = (tokens, codebook, annotations, setAnnotations) => {
   const [current, setCurrent] = useState(null);
   const [tokenRef, setTokenRef] = useState(null);
   const [tokenAnnotations, setTokenAnnotations] = useState({});
+
+  useEffect(() => {
+    if (!codebook?.codeMap && codebook?.codes)
+      codebook.codeMap = codeBookEdgesToMap(codebook.codes);
+  }, [codebook]);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [tokens]);
+
+  if (!codebook) return [null, null, true];
 
   const triggerFunction = (index, code, selection) => {
     setTokenRef(tokens[index].ref);
@@ -425,6 +437,7 @@ const updateAnnotations = (annotations, current, value, selection, setAnnotation
     setOpen(false);
     return null;
   }
+
   let ann;
   if (annotations[current]) {
     ann = { ...annotations[current] };
@@ -433,11 +446,10 @@ const updateAnnotations = (annotations, current, value, selection, setAnnotation
   }
   ann.group = current;
 
-  let oldAnnotation = { ...ann };
-  oldAnnotation.span = [oldAnnotation.index, oldAnnotation.index];
-  setAnnotations((state) => toggleSpanAnnotations({ ...state }, [oldAnnotation], true));
-
   if (value === current) {
+    let oldAnnotation = { ...ann };
+    oldAnnotation.span = [oldAnnotation.index, oldAnnotation.index];
+    setAnnotations((state) => toggleSpanAnnotations({ ...state }, [oldAnnotation], true));
     setOpen(false);
     return null;
   }
