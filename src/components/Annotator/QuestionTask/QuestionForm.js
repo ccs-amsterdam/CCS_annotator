@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { Header, Button, Segment } from "semantic-ui-react";
-import { setAnnotations } from "actions";
-import { setQuestionIndex } from "actions";
-import { setMoveUnitIndex } from "actions";
+import { setQuestionIndex, setMoveUnitIndex, setAnnotations } from "actions";
 import { SearchBoxDropdown, ButtonSelection, Annotinder } from "./QuestionForms";
 
 const QuestionForm = ({ itemBundle, questions, questionIndex, preview, swipe }) => {
@@ -20,7 +18,7 @@ const QuestionForm = ({ itemBundle, questions, questionIndex, preview, swipe }) 
   const question = prepareQuestion(itemBundle, questions[questionIndex]);
   const currentAnswer = getCurrentAnswer(itemBundle);
 
-  const onSelect = answer => {
+  const onSelect = (answer) => {
     // write result to IDB/server and skip to next question or next item
     if (answered.current) return null;
     answered.current = true;
@@ -179,12 +177,12 @@ const setNewAnswer = (itemBundle, questionIndex, answer, dispatch) => {
   dispatch(setAnnotations({ ...newAnnotations }));
 };
 
-const getCurrentAnswer = itemBundle => {
+const getCurrentAnswer = (itemBundle) => {
   // this needs to be 10x prettier or something
   return itemBundle.annotations[itemBundle.textUnit]?.[itemBundle.unitIndex]?.["unit"]?.answer;
 };
 
-const showCurrent = currentAnswer => {
+const showCurrent = (currentAnswer) => {
   if (currentAnswer == null) return null;
   return (
     <div style={{ backgroundColor: "white", color: "black" }}>
@@ -217,7 +215,7 @@ const prepareQuestion = (itemBundle, questions) => {
   return markedString(question);
 };
 
-const markedString = text => {
+const markedString = (text) => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");

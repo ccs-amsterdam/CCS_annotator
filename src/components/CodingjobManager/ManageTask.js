@@ -30,7 +30,7 @@ const ManageTask = ({ codingjob }) => {
           </Header>
           <TaskSettings codingjob={codingjob} />
         </Grid.Column>
-        <Grid.Column center width={cwidths[1]}>
+        <Grid.Column width={cwidths[1]}>
           <PreviewTask codingjob={codingjob} jobItems={jobItems} />
         </Grid.Column>
       </Grid>

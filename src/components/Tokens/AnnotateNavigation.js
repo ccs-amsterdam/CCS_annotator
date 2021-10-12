@@ -1,11 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  toggleTokenSelection,
-  setCurrentToken,
-  clearTokenSelection,
-  triggerCodeselector,
-} from "actions";
 import { keepInView } from "util/scroll";
 import { moveUp, moveDown } from "util/refNavigation";
 
@@ -13,26 +6,33 @@ import { moveUp, moveDown } from "util/refNavigation";
 
 const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const AnnotateNavigation = ({ tokens }) => {
-  const eventsBlocked = useSelector((state) => state.eventsBlocked);
+const AnnotateNavigation = ({ tokens, triggerCodePopup, eventsBlocked }) => {
+  //const eventsBlocked = useSelector((state) => state.eventsBlocked);
   // positions based on token.arrayIndex, not token.index
   // arrayIndex is the actual tokens array, where token.index is the position of the token in the document
   // (these can be different if the text/context does not start at token.index 0)
-  const currentToken = useSelector((state) => state.currentToken);
-  const tokenSelection = useSelector((state) => state.tokenSelection); // selection based on token.arrayIndex (not token.index)
+  const [currentToken, setCurrentToken] = useState(0);
+  const [tokenSelection, setTokenSelection] = useState([]); // selection based on token.arrayIndex (not token.index)
+
+  //const currentToken = useSelector((state) => state.currentToken);
+  //const tokenSelection = useSelector((state) => state.tokenSelection); // selection based on token.arrayIndex (not token.index)
 
   const [mover, setMover] = useState(null);
   const [HoldSpace, setHoldSpace] = useState(false);
   const [holdArrow, setHoldArrow] = useState(null);
 
-  const dispatch = useDispatch();
-
   useEffect(() => {
     if (eventsBlocked) {
       setHoldArrow(false);
       setHoldSpace(false);
+    } else {
+      setTokenSelection([]);
     }
   }, [setHoldArrow, setHoldSpace, eventsBlocked]);
+
+  useEffect(() => {
+    showSelection(tokens, tokenSelection);
+  }, [tokens, tokenSelection]);
 
   useEffect(() => {
     // When arrow key is held, walk through tokens with increasing speed
@@ -40,7 +40,14 @@ const AnnotateNavigation = ({ tokens }) => {
     // this is like setIntervall, but allows custom time intervalls,
     if (!mover || !holdArrow) return;
 
-    let position = movePosition(tokens, holdArrow, mover, HoldSpace, dispatch);
+    let position = movePosition(
+      tokens,
+      holdArrow,
+      mover,
+      HoldSpace,
+      setCurrentToken,
+      setTokenSelection
+    );
 
     let delay = Math.max(5, 100 / Math.ceil(mover.counter / 5));
     if (mover.counter === 1) delay = 150;
@@ -52,7 +59,7 @@ const AnnotateNavigation = ({ tokens }) => {
         counter: mover.counter + 1,
       });
     }, delay);
-  }, [tokens, mover, holdArrow, HoldSpace, dispatch]);
+  }, [tokens, mover, holdArrow, HoldSpace, setCurrentToken, setTokenSelection]);
 
   if (!tokens) return null;
 
@@ -69,10 +76,35 @@ const AnnotateNavigation = ({ tokens }) => {
         setMover={setMover}
         setHoldSpace={setHoldSpace}
         setHoldArrow={setHoldArrow}
+        triggerCodePopup={triggerCodePopup}
       />
-      <MouseEvents tokenSelection={tokenSelection} tokens={tokens} />
+      <MouseEvents
+        tokenSelection={tokenSelection}
+        tokens={tokens}
+        setCurrentToken={setCurrentToken}
+        setTokenSelection={setTokenSelection}
+        triggerCodePopup={triggerCodePopup}
+      />
     </>
   );
+};
+
+const showSelection = (tokens, selection) => {
+  for (let token of tokens) {
+    if (!token.ref?.current) continue;
+    if (selection.length === 0 || selection[0] === null || selection[1] === null) {
+      token.ref.current.classList.remove("selected");
+      continue;
+    }
+
+    let [from, to] = selection;
+    //if (to === null) return false;
+    if (from > to) [to, from] = [from, to];
+    let selected = token.arrayIndex >= from && token.arrayIndex <= to;
+    if (selected && token.codingUnit) {
+      token.ref.current.classList.add("selected");
+    } else token.ref.current.classList.remove("selected");
+  }
 };
 
 const KeyEvents = ({
@@ -83,16 +115,14 @@ const KeyEvents = ({
   setMover,
   setHoldSpace,
   setHoldArrow,
+  triggerCodePopup,
 }) => {
-  const dispatch = useDispatch();
-
   // This blocks event listeners when the eventsBlocked state (in redux) is true.
   // This lets us block the key activities in the text (selecting tokens) when
   // the CodeSelector popup is open
   useEffect(() => {
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
-
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
@@ -106,7 +136,7 @@ const KeyEvents = ({
       setHoldSpace(false);
       if (tokenSelection.length > 0) {
         const code = tokenSelection[0] === tokenSelection[1] ? null : "UNASSIGNED";
-        annotationFromSelection(tokens, tokenSelection, dispatch, code);
+        annotationFromSelection(tokens, tokenSelection, code, triggerCodePopup);
       }
       return;
     }
@@ -137,27 +167,31 @@ const KeyEvents = ({
       setHoldArrow(event.key);
     }
 
-    if (tokenSelection.length > 0) {
-      if (tokenSelection[0] === tokenSelection[1]) {
-        // enter key
-        if (event.keyCode === 13) {
-          console.log("whaaat");
-          dispatch(triggerCodeselector(tokens[tokenSelection[0]].index, null, null));
-        }
-      }
-    }
+    // if (tokenSelection.length > 0) {
+    //   if (tokenSelection[0] === tokenSelection[1]) {
+    //     // enter key
+    //     if (event.keyCode === 13) {
+    //       triggerCodePopup(tokens[tokenSelection[0]].index, null, null);
+    //     }
+    //   }
+    // }
   };
 
   return <></>;
 };
 
-const MouseEvents = ({ tokenSelection, tokens }) => {
+const MouseEvents = ({
+  tokenSelection,
+  tokens,
+  setCurrentToken,
+  setTokenSelection,
+  triggerCodePopup,
+}) => {
   const selectionStarted = useRef(false);
   const tapped = useRef(null);
   const istouch = useRef(
     "ontouchstart" in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
   ); // hack to notice if device uses touch (because single touch somehow triggers mouseup)
-  const dispatch = useDispatch();
 
   useEffect(() => {
     window.addEventListener("mousedown", onMouseDown);
@@ -178,7 +212,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     const token = getToken(tokens, event);
     if (token?.index === null) {
       tapped.current = null;
-      dispatch(clearTokenSelection());
+      setTokenSelection((state) => (state.length === 0 ? state : []));
       return;
     }
 
@@ -186,12 +220,17 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     if (tokenSelection.length > 0 && tokenSelection[0] === tapped.current) {
       // if a single token, and an annotation already exists, open create/edit mode
       const currentNode = storeMouseSelection(event);
-      dispatch(toggleTokenSelection(tokens, currentNode, true));
+      setTokenSelection((state) => updateSelection(state, tokens, currentNode, true));
 
       if (token?.annotated && currentNode === tokenSelection[0]) {
-        annotationFromSelection(tokens, [currentNode, currentNode], dispatch, null);
+        annotationFromSelection(tokens, [currentNode, currentNode], null, triggerCodePopup);
       } else {
-        annotationFromSelection(tokens, [tokenSelection[0], currentNode], dispatch, "UNASSIGNED");
+        annotationFromSelection(
+          tokens,
+          [tokenSelection[0], currentNode],
+          "UNASSIGNED",
+          triggerCodePopup
+        );
       }
       tapped.current = null;
       return;
@@ -200,9 +239,9 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     // otherwise, handle the double tab (on the same token) for starting the selection
     if (tapped.current !== token.index) {
       tapped.current = token.index;
-      dispatch(clearTokenSelection());
+      setTokenSelection((state) => (state.length === 0 ? state : []));
     } else {
-      dispatch(toggleTokenSelection(tokens, token.index, false));
+      setTokenSelection((state) => updateSelection(state, tokens, token.index, true));
     }
   };
 
@@ -211,7 +250,7 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     // When left button pressed, start new selection
     if (event.which === 1) {
       selectionStarted.current = true;
-      dispatch(clearTokenSelection());
+      setTokenSelection((state) => (state.length === 0 ? state : []));
     }
   };
 
@@ -227,8 +266,8 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     } else {
       let currentNode = getToken(tokens, event);
       if (currentNode.index !== null) {
-        dispatch(setCurrentToken(currentNode.index));
-        dispatch(toggleTokenSelection(tokens, currentNode.index, false));
+        setCurrentToken((state) => (state === currentNode.index ? null : currentNode.index));
+        setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, false));
       }
     }
   };
@@ -251,16 +290,22 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     // yet updated within this scope. This results in single clicks (without mousemove)
     // not registering. So if there is no current selection, directly use currentNode as position.
     if (tokenSelection.length > 0 && tokenSelection[0] !== null && tokenSelection[1] !== null) {
-      annotationFromSelection(tokens, tokenSelection, dispatch, "UNASSIGNED");
+      annotationFromSelection(tokens, tokenSelection, "UNASSIGNED", triggerCodePopup);
     } else {
       if (currentNode !== null) {
-        annotationFromSelection(tokens, [currentNode, currentNode], dispatch, null);
+        annotationFromSelection(
+          tokens,
+          [currentNode, currentNode],
+
+          null,
+          triggerCodePopup
+        );
       }
     }
   };
 
   const onContextMenu = (event) => {
-    if (event.button === 2) return null;
+    //if (event.button === 2) return null;
     event.preventDefault();
     event.stopPropagation();
   };
@@ -270,15 +315,15 @@ const MouseEvents = ({ tokenSelection, tokens }) => {
     let currentNode = getToken(tokens, event);
     //if (currentNode == null || currentNode === null) return null;
 
-    dispatch(setCurrentToken(currentNode.index));
-    dispatch(toggleTokenSelection(tokens, currentNode.index, true));
+    setCurrentToken((state) => (state === currentNode.index ? null : currentNode.index));
+    setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, true));
     return currentNode.index;
   };
 
   return <></>;
 };
 
-const annotationFromSelection = (tokens, selection, dispatch, code) => {
+const annotationFromSelection = (tokens, selection, code, triggerCodePopup) => {
   let [from, to] = selection;
   if (from > to) [from, to] = [to, from];
 
@@ -289,11 +334,10 @@ const annotationFromSelection = (tokens, selection, dispatch, code) => {
     section: tokens[from].section,
     offset: tokens[from].offset,
   };
-
-  dispatch(triggerCodeselector(tokens[to].index, code, annotation));
+  triggerCodePopup(tokens[to].index, code, annotation);
 };
 
-const movePosition = (tokens, key, mover, space, dispatch) => {
+const movePosition = (tokens, key, mover, space, setCurrentToken, setTokenSelection) => {
   let newPosition = mover.position;
   if (key === "ArrowRight") newPosition++;
   if (key === "ArrowLeft") newPosition--;
@@ -337,9 +381,8 @@ const movePosition = (tokens, key, mover, space, dispatch) => {
   }
 
   if (mover.position !== newPosition) {
-    dispatch(setCurrentToken(newPosition));
-    dispatch(toggleTokenSelection(tokens, newPosition, space));
-
+    setCurrentToken((state) => (state === newPosition ? state : newPosition));
+    setTokenSelection((state) => updateSelection(state, tokens, newPosition, space));
     scrollTokenToMiddle(tokens[newPosition].ref.current);
 
     // const down = key === "ArrowRight" || key === "ArrowDown";
@@ -404,11 +447,44 @@ const getTokenAttributes = (tokens, tokenNode) => {
   return parseInt(tokenNode.getAttribute("tokenindex"));
 };
 
-function scrollTokenToMiddle(token) {
+const scrollTokenToMiddle = (token) => {
   // token->sentence->paragraph->paragraphFlexBox->section->textpart->box
   // this should be stable, but it still looks terrible
   const parentDiv = token.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
   keepInView(parentDiv, token);
-}
+};
+
+const updateSelection = (selection, tokens, index, add) => {
+  if (index === null) return selection;
+  let newSelection = [...selection];
+
+  if (!add || newSelection.length === 0) return [index, index];
+  if (index === null) return [newSelection[0], null];
+
+  if (tokens[newSelection[0]].section === tokens[index].section) {
+    newSelection = [newSelection[0], index];
+  } else {
+    if (index > newSelection[0]) {
+      for (let i = index; i >= newSelection[0]; i--) {
+        if (tokens[newSelection[0]].section === tokens[i].section)
+          newSelection = [newSelection[0], i];
+      }
+    } else {
+      for (let i = index; i <= newSelection[0]; i++) {
+        if (tokens[newSelection[0]].section === tokens[i].section)
+          newSelection = [newSelection[0], i];
+      }
+    }
+  }
+  // if it hasn't changed, return old to prevent updating the state
+  if (
+    newSelection.length > 0 &&
+    selection[0] === newSelection[0] &&
+    selection[1] === newSelection[1]
+  ) {
+    return selection;
+  }
+  return newSelection;
+};
 
 export default AnnotateNavigation;

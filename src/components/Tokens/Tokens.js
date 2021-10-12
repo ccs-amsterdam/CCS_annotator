@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Ref } from "semantic-ui-react";
 import { scrollToMiddle } from "util/scroll";
-import Token from "./Token";
+
+import "components/spanAnnotationsStyle.css";
 
 const Tokens = ({ itemBundle, setReady }) => {
   const [text, setText] = useState({});
@@ -158,23 +159,20 @@ const renderSentence = (position, sentence_nr, tokens) => {
   );
 };
 
-const renderToken = (token, itemBundle, codingUnit) => {
-  if (codingUnit)
-    return (
-      <span
-        key={token.index}
-        style={{
-          lineHeight: "1.2em",
-          fontSize: "1.5em",
-          //fontWeight: "bold",
-        }}
-      >
-        <Token ref={token.ref} key={token.index} token={token} itemBundle={itemBundle} />
-      </span>
-    );
+const renderToken = (token, codingUnit) => {
+  const style = codingUnit ? { lineHeight: "1.2em", fontSize: "1.5em" } : { color: "#746363" };
+
   return (
-    <span key={token.index} style={{ color: "#746363" }}>
-      <Token ref={token.ref} key={token.index} token={token} itemBundle={itemBundle} />
+    <span
+      key={token.index}
+      ref={token.ref}
+      className={"token"}
+      tokenindex={token.arrayIndex}
+      style={style}
+    >
+      <span className="pre">{token.pre}</span>
+      <span className="text">{token.text}</span>
+      <span className="post">{token.post}</span>
     </span>
   );
 };

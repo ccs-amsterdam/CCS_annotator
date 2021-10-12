@@ -1,5 +1,4 @@
 export const exportAnnotations = (annotations) => {
-  annotations = annotations["span"];
   // export annotations from the object format (for fast use in the annotator) to array format
   if (Object.keys(annotations).length === 0) return [];
   const uniqueAnnotations = Object.keys(annotations).reduce((un_ann, index) => {
