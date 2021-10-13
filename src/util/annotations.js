@@ -1,4 +1,4 @@
-export const exportAnnotations = (annotations) => {
+export const exportAnnotations = annotations => {
   // export annotations from the object format (for fast use in the annotator) to array format
   if (Object.keys(annotations).length === 0) return [];
   const uniqueAnnotations = Object.keys(annotations).reduce((un_ann, index) => {
@@ -19,28 +19,11 @@ export const exportAnnotations = (annotations) => {
   return uniqueAnnotations;
 };
 
-export const importAnnotations = (annotations, tokens) => {
-  if (!annotations) {
-    return { document: {}, paragraph: {}, sentence: {}, span: {} };
-  }
-  if (!annotations.document) annotations.document = {};
-  if (!annotations.paragraph) annotations.paragraph = {};
-  if (!annotations.sentence) annotations.sentence = {};
-  if (annotations.span && Object.keys(annotations.span).length > 0) {
-    annotations.span = importSpanAnnotations({}, annotations.span, tokens);
-  } else annotations.span = {};
-
-  for (let key of Object.keys(annotations)) {
-    if (key !== "document" && key !== "paragraph" && key !== "sentence" && key !== "span")
-      delete annotations[key];
-  }
-
-  return annotations;
-};
-
-export const importSpanAnnotations = (currentAnnotations, newAnnotations, tokens) => {
+export const importAnnotations = (annotationsArray, tokens, currentAnnotations = {}) => {
+  if (annotationsArray.length === 0) return { ...currentAnnotations };
   // import span annotations. Uses the offset to match annotations to tokens
-  const importedAnnotations = prepareSpanAnnotations(newAnnotations);
+  const importedAnnotations = prepareSpanAnnotations(annotationsArray);
+  console.log(importedAnnotations);
   let trackAnnotations = {};
   let matchedAnnotations = [];
 
@@ -119,7 +102,7 @@ export const toggleSpanAnnotations = (annotations, annList, rm) => {
   return annotations;
 };
 
-const prepareSpanAnnotations = (annotations) => {
+const prepareSpanAnnotations = annotations => {
   if (!annotations || annotations === "") return {};
   // create an object where the key is a section+offset, and the
   // value is an array that tells which codes start and end there

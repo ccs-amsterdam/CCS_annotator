@@ -1,6 +1,6 @@
 import hash from "object-hash";
 import { importTokens, importTokenAnnotations, parseTokens } from "util/tokens";
-import { importAnnotations, importSpanAnnotations } from "util/annotations";
+import { importAnnotations } from "util/annotations";
 
 /**
  * Prepares a batch of documents. Returns [documents, codes], where codes contains the annotation codes used in the documents
@@ -57,30 +57,29 @@ export const prepareDocumentBatch = (
 };
 
 export const prepareDocument = (document, codes = {}) => {
-  if (document.tokens) {
-    document.tokens = importTokens(document.tokens);
+  const doc = { ...document };
+
+  if (doc.tokens) {
+    doc.tokens = importTokens(document.tokens);
   } else {
-    document.tokens = parseTokens(document.text_fields, document.offset, document.unit_range);
+    if (!doc.text_fields && doc.text) doc.text_fields = [{ name: "text", value: doc.text }];
+    doc.tokens = parseTokens([...doc.text_fields]);
   }
-  if (document.tokens.length > 0) {
-    document.n_paragraphs = document.tokens[document.tokens.length - 1].paragraph;
-    document.n_sentences = document.tokens[document.tokens.length - 1].sentence;
+  if (doc.tokens.length > 0) {
+    doc.n_paragraphs = doc.tokens[doc.tokens.length - 1].paragraph;
+    doc.n_sentences = doc.tokens[doc.tokens.length - 1].sentence;
   } else {
-    document.n_paragraphs = 0;
-    document.n_sentences = 0;
+    doc.n_paragraphs = 0;
+    doc.n_sentences = 0;
   }
 
-  if (document.annotations) {
-    document.annotations = importAnnotations(document.annotations, document.tokens);
-  } else document.annotations = { document: {}, paragraph: {}, sentence: {}, span: {} };
+  if (doc.annotations) {
+    doc.annotations = importAnnotations([...doc.annotations], doc.tokens);
+  } else doc.annotations = {};
 
-  const tokenAnnotations = importTokenAnnotations(document.tokens, codes); // also fills codes
+  const tokenAnnotations = importTokenAnnotations(doc.tokens, codes); // also fills codes
   if (tokenAnnotations.length > 0)
-    document.annotations.span = importSpanAnnotations(
-      document.annotations.span,
-      tokenAnnotations,
-      document.tokens
-    );
+    doc.annotations.span = importAnnotations(tokenAnnotations, doc.tokens, doc.annotations);
 
-  return document;
+  return doc;
 };

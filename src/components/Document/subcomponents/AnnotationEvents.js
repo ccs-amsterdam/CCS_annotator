@@ -12,7 +12,7 @@ const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
  * You probably never want to read this. And if you do, don't expect my sympathies. Rather, just blame me
  * if anything in here breaks, or ask nicely if we need more features
  */
-const NavigationEvents = ({
+const AnnotationEvents = ({
   tokens,
   currentToken,
   setCurrentToken,
@@ -116,7 +116,7 @@ const KeyEvents = ({
   });
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyUp = (event) => {
+  const onKeyUp = event => {
     // keep track of which buttons are pressed in the state
     if (event.keyCode === 32 && HoldSpace) {
       setHoldSpace(false);
@@ -133,7 +133,7 @@ const KeyEvents = ({
   };
 
   // (see useEffect with 'eventsBlocked' for details on useCallback)
-  const onKeyDown = (event) => {
+  const onKeyDown = event => {
     // key presses, and key holding (see onKeyUp)
     if (event.keyCode === 32) {
       event.preventDefault();
@@ -194,11 +194,11 @@ const MouseEvents = ({
     };
   });
 
-  const onTouchDown = (event) => {
+  const onTouchDown = event => {
     const token = getToken(tokens, event);
     if (token?.index === null) {
       tapped.current = null;
-      setTokenSelection((state) => (state.length === 0 ? state : []));
+      setTokenSelection(state => (state.length === 0 ? state : []));
       return;
     }
 
@@ -206,7 +206,7 @@ const MouseEvents = ({
     if (tokenSelection.length > 0 && tokenSelection[0] === tapped.current) {
       // if a single token, and an annotation already exists, open create/edit mode
       const currentNode = storeMouseSelection(event);
-      setTokenSelection((state) => updateSelection(state, tokens, currentNode, true));
+      setTokenSelection(state => updateSelection(state, tokens, currentNode, true));
 
       if (token?.annotated && currentNode === tokenSelection[0]) {
         annotationFromSelection(tokens, [currentNode, currentNode], null, triggerCodePopup);
@@ -225,22 +225,22 @@ const MouseEvents = ({
     // otherwise, handle the double tab (on the same token) for starting the selection
     if (tapped.current !== token.index) {
       tapped.current = token.index;
-      setTokenSelection((state) => (state.length === 0 ? state : []));
+      setTokenSelection(state => (state.length === 0 ? state : []));
     } else {
-      setTokenSelection((state) => updateSelection(state, tokens, token.index, true));
+      setTokenSelection(state => updateSelection(state, tokens, token.index, true));
     }
   };
 
-  const onMouseDown = (event) => {
+  const onMouseDown = event => {
     if (istouch.current) return; // suppress mousedown triggered by quick tap
     // When left button pressed, start new selection
     if (event.which === 1) {
       selectionStarted.current = true;
-      setTokenSelection((state) => (state.length === 0 ? state : []));
+      setTokenSelection(state => (state.length === 0 ? state : []));
     }
   };
 
-  const onMouseMove = (event) => {
+  const onMouseMove = event => {
     if (istouch.current) return;
     // When selection started (mousedown), select tokens hovered over
     if (selectionStarted.current) {
@@ -252,13 +252,13 @@ const MouseEvents = ({
     } else {
       let currentNode = getToken(tokens, event);
       if (currentNode.index !== null) {
-        setCurrentToken((state) => (state === currentNode.index ? state : currentNode.index));
-        setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, false));
+        setCurrentToken(state => (state === currentNode.index ? state : currentNode.index));
+        setTokenSelection(state => updateSelection(state, tokens, currentNode.index, false));
       }
     }
   };
 
-  const onMouseUp = (event) => {
+  const onMouseUp = event => {
     if (istouch.current) return;
     // When left mouse key is released, create the annotation
     // note that in case of a single click, the token has not been selected (this happens on move)
@@ -290,19 +290,19 @@ const MouseEvents = ({
     }
   };
 
-  const onContextMenu = (event) => {
+  const onContextMenu = event => {
     if (event.button === 2) return null;
     event.preventDefault();
     event.stopPropagation();
   };
 
-  const storeMouseSelection = (event) => {
+  const storeMouseSelection = event => {
     // select tokens that the mouse/touch is currently pointing at
     let currentNode = getToken(tokens, event);
     //if (currentNode == null || currentNode === null) return null;
 
-    setCurrentToken((state) => (state === currentNode.index ? state : currentNode.index));
-    setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, true));
+    setCurrentToken(state => (state === currentNode.index ? state : currentNode.index));
+    setTokenSelection(state => updateSelection(state, tokens, currentNode.index, true));
     return currentNode.index;
   };
 
@@ -335,12 +335,12 @@ const movePosition = (tokens, key, mover, space, setCurrentToken, setTokenSelect
 
   if (tokens[newPosition]?.ref == null) {
     if (key === "ArrowRight") {
-      const firstUnit = tokens.findIndex((token) => token.codingUnit);
+      const firstUnit = tokens.findIndex(token => token.codingUnit);
       if (firstUnit < 0) return mover.position;
       newPosition = firstUnit;
     }
     if (key === "ArrowLeft") {
-      const firstAfterUnit = tokens.lastIndexOf((token) => token.codingUnit);
+      const firstAfterUnit = tokens.lastIndexOf(token => token.codingUnit);
       if (firstAfterUnit < 0) return mover.position;
       newPosition = firstAfterUnit - 1;
     }
@@ -367,8 +367,8 @@ const movePosition = (tokens, key, mover, space, setCurrentToken, setTokenSelect
   }
 
   if (mover.position !== newPosition) {
-    setCurrentToken((state) => (state === newPosition ? state : newPosition));
-    setTokenSelection((state) => updateSelection(state, tokens, newPosition, space));
+    setCurrentToken(state => (state === newPosition ? state : newPosition));
+    setTokenSelection(state => updateSelection(state, tokens, newPosition, space));
     scrollTokenToMiddle(tokens[newPosition].ref.current);
 
     // const down = key === "ArrowRight" || key === "ArrowDown";
@@ -384,7 +384,7 @@ const moveSentence = (tokens, mover, direction = "up") => {
   // token spans, that provide information about the x and y values
 
   if (tokens[mover.position]?.ref == null || tokens[mover.startposition]?.ref == null) {
-    const firstUnit = tokens.findIndex((token) => token.codingUnit);
+    const firstUnit = tokens.findIndex(token => token.codingUnit);
     return firstUnit < 0 ? 0 : firstUnit;
   }
 
@@ -433,7 +433,7 @@ const getTokenAttributes = (tokens, tokenNode) => {
   return parseInt(tokenNode.getAttribute("tokenindex"));
 };
 
-const scrollTokenToMiddle = (token) => {
+const scrollTokenToMiddle = token => {
   // token->sentence->paragraph->paragraphFlexBox->section->textpart->box
   // this should be stable, but it still looks terrible
   const parentDiv = token.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
@@ -473,4 +473,4 @@ const updateSelection = (selection, tokens, index, add) => {
   return newSelection;
 };
 
-export default NavigationEvents;
+export default AnnotationEvents;

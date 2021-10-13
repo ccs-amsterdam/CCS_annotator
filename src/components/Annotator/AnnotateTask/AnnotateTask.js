@@ -2,28 +2,23 @@ import React, { useState, useEffect } from "react";
 import { Container, Grid, Header, List, ListItem, Table, Popup, Button } from "semantic-ui-react";
 import AnnotateTable from "./AnnotateTable";
 import Document from "components/Document/Document";
-import useItemBundle from "hooks/useItemBundle";
 import { codeBookEdgesToMap } from "util/codebook";
 
-const documentSettings = {
-  textUnitPosition: 1 / 4,
-  showAnnotations: true,
-  centerVertical: false,
-  canAnnotate: true,
-};
-
 const AnnotateTask = ({ item, codebook, preview = false }) => {
-  const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
-  const [annotations, setAnnotations] = useState({});
+  //const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
+
+  const [annotations, setAnnotations] = useState([]);
+  const [tokens, setTokens] = useState();
 
   useEffect(() => {
     // settings is an array with the settings for each question
     // This needs a little preprocessing, so we only update it when codebook changes (not per item)
-    if (!itemBundle?.codebook?.codeMap && !itemBundle?.codebook?.codes) return null;
-    itemBundle.codebook.codeMap = codeBookEdgesToMap(itemBundle.codebook.codes);
-  }, [itemBundle]);
+    if (codebook?.codeMap) return null;
+    if (!codebook?.codes) return null;
+    codebook.codeMap = codeBookEdgesToMap(codebook.codes);
+  }, [codebook]);
 
-  if (itemBundle === null || itemBundle?.codebook?.codeMap === null) return null;
+  if (!item || codebook?.codeMap === null) return null;
 
   return (
     <Grid
@@ -34,11 +29,11 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
     >
       <Grid.Column width={10} style={{ paddingRight: "0em", height: "100%" }}>
         <Document
-          tokens={itemBundle?.tokens}
-          codebook={itemBundle?.codebook}
-          settings={itemBundle?.settings}
-          annotations={annotations}
-          setAnnotations={setAnnotations}
+          unit={item}
+          codes={codebook?.codes}
+          settings={codebook?.settings}
+          returnAnnotations={setAnnotations}
+          returnTokens={setTokens}
         />
       </Grid.Column>
       <Grid.Column
@@ -52,27 +47,23 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
       >
         <Instructions codebook={codebook} />
 
-        <AnnotateTable
-          tokens={itemBundle?.tokens}
-          codeMap={itemBundle?.codebook?.codeMap}
-          annotations={annotations}
-        />
+        <AnnotateTable tokens={tokens} codeMap={codebook?.codeMap} annotations={annotations} />
       </Grid.Column>
     </Grid>
   );
 };
 
 const Instructions = ({ codebook }) => {
+  const [open, setOpen] = useState(false);
   if (!codebook) return null;
 
   return (
     <Popup
-      wide
+      flowing
+      open={open}
       position="bottom right"
-      closeOnTriggerClick
-      openOnTriggerClick
       trigger={
-        <Button fluid primary size="tiny" style={{}}>
+        <Button fluid primary size="tiny" onClick={() => setOpen(!open)} style={{}}>
           Instructions
         </Button>
       }

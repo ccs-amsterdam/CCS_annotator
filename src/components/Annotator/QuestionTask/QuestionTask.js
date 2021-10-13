@@ -15,7 +15,7 @@ const documentSettings = {
 
 const QuestionTask = ({ item, codebook, preview = false }) => {
   //const [menuHeight, setMenuHeight] = useState(50);
-  const questionIndex = useSelector((state) => state.questionIndex);
+  const questionIndex = useSelector(state => state.questionIndex);
   const [questions, setQuestions] = useState(null);
   const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
   const refs = { text: useRef(), box: useRef() };
@@ -69,12 +69,7 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
               overflow: "hidden",
             }}
           >
-            <Document
-              tokens={itemBundle?.tokens}
-              codebook={itemBundle?.codebook}
-              settings={itemBundle?.settings}
-              setReady={setTextReady}
-            />
+            <Document unit={item} settings={itemBundle?.settings} setReady={setTextReady} />
           </div>
         </div>
       </div>
@@ -91,9 +86,9 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
   );
 };
 
-const prepareQuestions = (codebook) => {
+const prepareQuestions = codebook => {
   const questions = codebook.questions;
-  return questions.map((question) => {
+  return questions.map(question => {
     const codeMap = codeBookEdgesToMap(question.codes);
     const cta = getCodeTreeArray(codeMap);
     const [options, swipeOptions] = getOptions(cta);
@@ -101,7 +96,7 @@ const prepareQuestions = (codebook) => {
   });
 };
 
-const getOptions = (cta) => {
+const getOptions = cta => {
   const options = [];
   const swipeOptions = {}; // object, for fast lookup in swipeControl
 
@@ -136,7 +131,7 @@ const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 100) =
     rotationAngle: 0, // set a rotation angle
   };
 
-  const getDeltas = (d) => {
+  const getDeltas = d => {
     let deltaX = d.deltaX;
     let deltaY = d.deltaY;
     if (Math.abs(deltaX) > Math.abs(deltaY) + 10) deltaY = 0;
@@ -146,7 +141,7 @@ const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 100) =
   };
 
   return {
-    onSwiping: (d) => {
+    onSwiping: d => {
       const [deltaX, deltaY] = getDeltas(d);
 
       refs.text.current.style.transition = ``;
@@ -157,7 +152,7 @@ const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 100) =
       if (deltaX < 0) bgc = question.swipeOptions.left.color;
       refs.box.current.style.backgroundColor = bgc;
     },
-    onSwiped: (d) => {
+    onSwiped: d => {
       const [deltaX, deltaY] = getDeltas(d);
 
       refs.text.current.style.transition = `transform ${transitionTime}ms ease-out, opacity ${transitionTime}ms ease-out`;

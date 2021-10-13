@@ -25,20 +25,6 @@ export const standardizeCodes = codes => {
 };
 
 export const codeBookEdgesToMap = codes => {
-  // const sortFun = (a, b) => {
-  //   if (a.order && b.order && a.order !== b.order) return a.order - b.order;
-
-  //   let labelA = a.code.toUpperCase(); // ignore upper and lowercase
-  //   let labelB = b.code.toUpperCase(); // ignore upper and lowercase
-  //   if (labelA < labelB) {
-  //     return -1;
-  //   }
-  //   if (labelA > labelB) {
-  //     return 1;
-  //   }
-  //   return 0;
-  // };
-
   const standardizedCodes = standardizeCodes(codes);
 
   // the payload is an array of objects, but for efficients operations

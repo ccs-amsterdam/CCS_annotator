@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import NavigationEvents from "./NavigationEvents";
+import AnnotationEvents from "./AnnotationEvents";
 import { Popup, List } from "semantic-ui-react";
 import { getColor, getColorGradient } from "util/tokenDesign";
 
@@ -10,18 +10,20 @@ import { getColor, getColorGradient } from "util/tokenDesign";
  */
 const AnnotateNavigation = ({
   tokens,
-  codebook,
+  codeMap,
   annotations,
   triggerCodePopup,
-  setAnnotations,
   eventsBlocked,
+  fullScreenNode,
+  disableAnnotations,
 }) => {
   const [currentToken, setCurrentToken] = useState(0);
   const [tokenSelection, setTokenSelection] = useState([]);
 
   useEffect(() => {
-    showAnnotations(tokens, annotations, codebook);
-  }, [tokens, annotations, codebook]);
+    console.log(annotations);
+    showAnnotations(tokens, annotations, codeMap);
+  }, [tokens, annotations, codeMap]);
 
   useEffect(() => {
     showSelection(tokens, tokenSelection);
@@ -29,9 +31,15 @@ const AnnotateNavigation = ({
 
   return (
     <>
-      {annotationPopup(tokens, currentToken, annotations, codebook)}
-      {!setAnnotations || !codebook ? null : (
-        <NavigationEvents
+      <AnnotationPopup
+        tokens={tokens}
+        currentToken={currentToken}
+        annotations={annotations}
+        codeMap={codeMap}
+        fullScreenNode={fullScreenNode}
+      />
+      {disableAnnotations ? null : (
+        <AnnotationEvents
           tokens={tokens}
           currentToken={currentToken}
           setCurrentToken={setCurrentToken}
@@ -45,11 +53,11 @@ const AnnotateNavigation = ({
   );
 };
 
-const showAnnotations = (tokens, annotations, codebook) => {
+const showAnnotations = (tokens, annotations, codeMap) => {
   for (let token of tokens) {
     if (!token.ref?.current) continue;
 
-    let tokenAnnotations = allowedAnnotations(annotations?.[token.index], codebook?.codeMap);
+    let tokenAnnotations = allowedAnnotations(annotations?.[token.index], codeMap);
 
     if (!tokenAnnotations) {
       if (token.ref.current.classList.contains("annotated")) {
@@ -59,7 +67,7 @@ const showAnnotations = (tokens, annotations, codebook) => {
       continue;
     }
 
-    annotateToken(token, tokenAnnotations, codebook?.codeMap);
+    annotateToken(token, tokenAnnotations, codeMap);
   }
 };
 
@@ -79,21 +87,23 @@ const allowedAnnotations = (annotations, codeMap) => {
 
 const annotatedColor = (annotations, codeMap) => {
   let tokenCodes = Object.keys(annotations);
-  let colors = tokenCodes.map((code) => getColor(code, codeMap));
+  let colors = tokenCodes.map(code => getColor(code, codeMap));
   return getColorGradient(colors);
 };
 
 const annotateToken = (token, annotations, codeMap) => {
   // Set specific classes for nice css to show the start/end of codes
 
-  const allLeft = !Object.values(annotations).some((code) => code.span[0] !== code.index);
-  const allRight = !Object.values(annotations).some((code) => code.span[1] !== code.index);
-  const anyLeft = Object.values(annotations).some((code) => code.span[0] === code.index);
-  const anyRight = Object.values(annotations).some((code) => code.span[1] === code.index);
+  const isLeft = Object.values(annotations).filter(code => code.span[0] === code.index);
+  const isRight = Object.values(annotations).filter(code => code.span[1] === code.index);
+  const allLeft = isLeft.length === Object.values(annotations).length;
+  const allRight = isRight.length === Object.values(annotations).length;
+  const anyLeft = isLeft.length > 0;
+  const anyRight = isRight.length > 0;
 
-  let annotatedTokenClass = token.ref.current.classList.contains("selected")
-    ? ["token", "selected", "annotated"]
-    : ["annotated"];
+  // let annotatedTokenClass = token.ref.current.classList.contains("selected")
+  //   ? ["token", "selected", "annotated"]
+  //   : ["annotated"];
 
   const cl = token.ref.current.classList;
   cl.add("annotated");
@@ -101,7 +111,7 @@ const annotateToken = (token, annotations, codeMap) => {
   anyLeft & !allLeft ? cl.add("anyLeft") : cl.remove("anyLeft");
   allRight ? cl.add("allRight") : cl.remove("allRight");
   anyRight & !allRight ? cl.add("anyRight") : cl.remove("anyRight");
-  token.ref.current.classList.add(...annotatedTokenClass);
+  //token.ref.current.classList.add(...annotatedTokenClass);
 
   const textColor = annotatedColor(annotations, codeMap);
   const preColor = allLeft ? "white" : textColor;
@@ -134,20 +144,26 @@ const showSelection = (tokens, selection) => {
   }
 };
 
-const annotationPopup = (tokens, currentToken, annotations, codebook) => {
-  if (!tokens?.[currentToken]?.ref) return;
-  if (!annotations?.[tokens[currentToken].index]) return;
-  if (!codebook?.codeMap) return;
+const AnnotationPopup = ({ tokens, currentToken, annotations, codeMap, fullScreenNode }) => {
+  if (!tokens?.[currentToken]?.ref) return null;
+  if (!annotations?.[tokens[currentToken].index]) return null;
+  if (!codeMap) return null;
   const codes = Object.keys(annotations[tokens[currentToken].index]);
 
   return (
-    <Popup context={tokens?.[currentToken]?.ref} open={true}>
+    <Popup
+      mountNode={fullScreenNode || undefined}
+      context={tokens?.[currentToken]?.ref}
+      basic
+      hoverable="false"
+      position="top left"
+      mouseLeaveDelay={0}
+      open={true}
+      style={{ padding: "0", border: "1px solid" }}
+    >
       <List>
         {codes.map((code, i) => (
-          <List.Item
-            key={i}
-            style={{ backgroundColor: getColor(code, codebook.codeMap), padding: "0.3em" }}
-          >
+          <List.Item key={i} style={{ backgroundColor: getColor(code, codeMap), padding: "0.3em" }}>
             {code}
           </List.Item>
         ))}

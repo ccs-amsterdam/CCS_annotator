@@ -16,6 +16,9 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
   const setAnnotateForm = value => {
     setTaskSettings({ ...taskSettings, annotate: value });
   };
+  const setAnnotateSettings = value => {
+    setAnnotateForm({ ...taskSettings.annotate, settings: value });
+  };
 
   const codesEditor = () => {
     return (
@@ -40,9 +43,11 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
           <Checkbox
             toggle
             label="Search box"
-            disabled={taskSettings.annotate.buttonMode === "recent"}
-            checked={taskSettings.annotate.searchBox}
-            onChange={(e, d) => setAnnotateForm({ ...taskSettings.annotate, searchBox: d.checked })}
+            disabled={taskSettings.annotate.settings.buttonMode === "recent"}
+            checked={taskSettings.annotate.settings.searchBox}
+            onChange={(e, d) =>
+              setAnnotateSettings({ ...taskSettings.annotate.settings, searchBox: d.checked })
+            }
           />
         </Form.Field>
       </Form.Group>
@@ -53,8 +58,10 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
           <Radio
             value="recent"
             label="Show recently used"
-            checked={taskSettings.annotate.buttonMode === "recent"}
-            onChange={() => setAnnotateForm({ ...taskSettings.annotate, buttonMode: "recent" })}
+            checked={taskSettings.annotate.settings.buttonMode === "recent"}
+            onChange={() =>
+              setAnnotateSettings({ ...taskSettings.annotate.settings, buttonMode: "recent" })
+            }
           />
           <Help
             header={"Show recently used codes"}
@@ -68,8 +75,10 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
           <Radio
             value="all"
             label="Show all codes"
-            checked={taskSettings.annotate.buttonMode === "all"}
-            onChange={() => setAnnotateForm({ ...taskSettings.annotate, buttonMode: "all" })}
+            checked={taskSettings.annotate.settings.buttonMode === "all"}
+            onChange={() =>
+              setAnnotateSettings({ ...taskSettings.annotate.settings, buttonMode: "all" })
+            }
           />
           <Help
             header={"Show all active codes"}
@@ -87,11 +96,13 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
             size="mini"
             min={1}
             max={10}
-            value={taskSettings.annotate.rowSize}
+            value={taskSettings.annotate.settings.rowSize}
             type="number"
             style={{ width: "6em" }}
             label={"Buttons per row"}
-            onChange={(e, d) => setAnnotateForm({ ...taskSettings.annotate, rowSize: d.value })}
+            onChange={(e, d) =>
+              setAnnotateSettings({ ...taskSettings.annotate.settings, rowSize: d.value })
+            }
           />
         </Form.Field>
       </Form.Group>

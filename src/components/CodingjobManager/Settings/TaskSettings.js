@@ -12,14 +12,17 @@ const defaultTaskSettings = {
 
   // annotate type settings
   annotate: {
-    buttonMode: "recent",
-    searchBox: true,
-    rowSize: 5,
+    settings: {
+      buttonMode: "recent",
+      searchBox: true,
+      rowSize: 5,
+    },
     codes: ["Some", "example", "options"],
   },
 
   // question type settings
   questions: {
+    settings: {},
     questions: [
       {
         type: "select code",
@@ -34,7 +37,7 @@ const defaultTaskSettings = {
 const TaskSettings = ({ codingjob }) => {
   const unitSettings = codingjob?.unitSettings;
   const taskSettings = codingjob?.taskSettings || defaultTaskSettings;
-  const setTaskSettings = (us) => {
+  const setTaskSettings = us => {
     db.setCodingjobProp(codingjob, "taskSettings", us);
   };
 

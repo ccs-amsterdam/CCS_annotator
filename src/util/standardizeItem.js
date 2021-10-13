@@ -32,7 +32,7 @@ export const standardizeItems = async (codingjob, jobItems) => {
   return items;
 };
 
-const unparseTokens = (tokens) => {
+const unparseTokens = tokens => {
   // Create texts from tokens in a way that preserves information about original text and textParts (context and unit)
 
   const text_fields = [];

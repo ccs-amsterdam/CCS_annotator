@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
 import { Button, Dropdown, Grid, Popup, Ref } from "semantic-ui-react";
 import { toggleSpanAnnotations } from "util/annotations";
 import { codeBookEdgesToMap } from "util/codebook";
@@ -7,23 +6,33 @@ import { getColor } from "util/tokenDesign";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const useCodeSelector = (tokens, codebook, annotations, setAnnotations) => {
+const useCodeSelector = (tokens, codes, settings, annotations, setAnnotations, fullScreenNode) => {
   const [open, setOpen] = useState(false);
   const [selection, setSelection] = useState(null);
   const [current, setCurrent] = useState(null);
   const [tokenRef, setTokenRef] = useState(null);
   const [tokenAnnotations, setTokenAnnotations] = useState({});
+  const [codeMap, setCodeMap] = useState(null);
+  const [codeHistory, setCodeHistory] = useState([]);
 
   useEffect(() => {
-    if (!codebook?.codeMap && codebook?.codes)
-      codebook.codeMap = codeBookEdgesToMap(codebook.codes);
-  }, [codebook]);
+    if (!codes || codes.length === 0) return null;
+    let cm = codeBookEdgesToMap(codes);
+    cm = Object.keys(cm).reduce((obj, key) => {
+      if (!cm[key].active || !cm[key].activeParent) return obj;
+      obj[key] = cm[key];
+      return obj;
+    }, {});
+    setCodeMap(cm);
+
+    setCodeHistory([]);
+  }, [codes, setCodeMap, setCodeHistory]);
 
   useEffect(() => {
     setOpen(false);
   }, [tokens]);
 
-  if (!codebook) return [null, null, true];
+  if (!codes) return [null, null, null, true];
 
   const triggerFunction = (index, code, selection) => {
     setTokenRef(tokens[index].ref);
@@ -35,45 +44,39 @@ const useCodeSelector = (tokens, codebook, annotations, setAnnotations) => {
 
   let popup = (
     <CodeSelectorPopup
+      fullScreenNode={fullScreenNode}
       open={open}
       setOpen={setOpen}
       tokenRef={tokenRef}
       current={current}
-      codebook={codebook}
-      setCurrent={setCurrent}
-      annotations={tokenAnnotations}
-      setAnnotations={setAnnotations}
-      selection={selection}
-    />
+    >
+      <CurrentCodePage // when editing existing annotation, choose which is the 'current' code to edit
+        current={current}
+        codeMap={codeMap}
+        settings={settings}
+        annotations={tokenAnnotations}
+        canBeNew={selection !== null} // if no selection is provided, can only edit existing codes
+        setCurrent={setCurrent}
+      />
+      <NewCodePage // if current is known, select what the new code should be (or delete, or ignore)
+        current={current}
+        codeMap={codeMap}
+        settings={settings}
+        codeHistory={codeHistory}
+        annotations={tokenAnnotations}
+        setAnnotations={setAnnotations}
+        selection={selection}
+        setOpen={setOpen}
+        setCodeHistory={setCodeHistory}
+      />
+    </CodeSelectorPopup>
   );
-  if (!codebook?.codeMap || !tokens) popup = null;
+  if (!codeMap || !tokens) popup = null;
 
-  return [popup, triggerFunction, open];
+  return [popup, triggerFunction, codeMap, open];
 };
 
-const CodeSelectorPopup = ({
-  open,
-  setOpen,
-  tokenRef,
-  codebook,
-  current,
-  setCurrent,
-  annotations,
-  setAnnotations,
-  selection,
-}) => {
-  const fullScreenNode = useSelector((state) => state.fullScreenNode);
-
-  const codeMap = Object.keys(codebook.codeMap).reduce((obj, key) => {
-    const singleSelection = selection === null || selection?.span[0] === selection?.span[1];
-    if (singleSelection && current && annotations[key]) return obj;
-    if (!codebook.codeMap[key].active || !codebook.codeMap[key].activeParent) return obj;
-    obj[key] = codebook.codeMap[key];
-    return obj;
-  }, {});
-
-  const codeHistory = useSelector((state) => state.codeHistory);
-
+const CodeSelectorPopup = ({ children, fullScreenNode, open, setOpen, tokenRef, current }) => {
   const [hasOpened, setHasOpened] = useState(false);
 
   return (
@@ -123,38 +126,19 @@ const CodeSelectorPopup = ({
           }}
         />
       </div>
-      <div style={{ margin: "1em", border: "0px" }}>
-        <CurrentCodePage
-          current={current}
-          itemSettings={codebook}
-          annotations={annotations}
-          canBeNew={selection !== null} // if no selection is provided, can only edit existing codes
-          codeMap={codeMap}
-          setCurrent={setCurrent}
-        />
-        <NewCodePage
-          codeHistory={codeHistory}
-          itemSettings={codebook}
-          codeMap={codeMap}
-          annotations={annotations}
-          setAnnotations={setAnnotations}
-          selection={selection}
-          current={current}
-          setOpen={setOpen}
-        />
-      </div>
+      <div style={{ margin: "1em", border: "0px" }}>{children}</div>
     </Popup>
   );
 };
 
-const CurrentCodePage = ({ current, itemSettings, annotations, canBeNew, codeMap, setCurrent }) => {
+const CurrentCodePage = ({ current, settings, annotations, canBeNew, codeMap, setCurrent }) => {
   const annotationCodes = Object.keys(annotations);
 
-  const onButtonSelect = (value) => {
+  const onButtonSelect = value => {
     setCurrent(value);
   };
 
-  const getOptions = (annotationCodes) => {
+  const getOptions = annotationCodes => {
     const options = [];
     if (canBeNew) options.push({ label: "Create new", value: "UNASSIGNED", color: "white" }); // 'value' is optional, but lets us use a different label
     for (let code of annotationCodes)
@@ -176,7 +160,7 @@ const CurrentCodePage = ({ current, itemSettings, annotations, canBeNew, codeMap
       <ButtonSelection
         key={"currentCodePageButtons"}
         active={true}
-        itemSettings={itemSettings}
+        settings={settings}
         options={options}
         canDelete={false}
         callback={onButtonSelect}
@@ -187,19 +171,21 @@ const CurrentCodePage = ({ current, itemSettings, annotations, canBeNew, codeMap
 
 const NewCodePage = ({
   codeHistory,
-  itemSettings,
+  settings,
   codeMap,
   annotations,
   setAnnotations,
   selection,
   current,
   setOpen,
+  setCodeHistory,
 }) => {
   const textInputRef = useRef(null);
   const [focusOnButtons, setFocusOnButtons] = useState(true);
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
+      if (settings && !settings.searchBox) return null;
       const focusOnTextInput = textInputRef?.current?.children[0] === document.activeElement;
       if (!focusOnTextInput) setFocusOnButtons(true);
       if (event.keyCode === 27) setOpen(false);
@@ -208,7 +194,7 @@ const NewCodePage = ({
       if (textInputRef.current) textInputRef.current.click();
       setFocusOnButtons(false);
     },
-    [textInputRef, setOpen]
+    [textInputRef, setOpen, settings]
   );
 
   useEffect(() => {
@@ -218,33 +204,86 @@ const NewCodePage = ({
     };
   });
 
-  const onButtonSelect = (value) => {
+  const onButtonSelect = value => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
-      updateAnnotations(annotations, current, current, selection, setAnnotations, setOpen);
+      updateAnnotations(
+        annotations,
+        current,
+        current,
+        selection,
+        setAnnotations,
+        setOpen,
+        setCodeHistory
+      );
     } else {
-      updateAnnotations(annotations, current, value, selection, setAnnotations, setOpen);
+      updateAnnotations(
+        annotations,
+        current,
+        value,
+        selection,
+        setAnnotations,
+        setOpen,
+        setCodeHistory
+      );
     }
   };
 
-  const getOptions = (codeHistory, n) => {
-    if (itemSettings && itemSettings.buttonMode === "all") {
-      return Object.keys(codeMap).reduce((options, code) => {
-        options.push({ key: code, label: code, color: getColor(code, codeMap) });
-        return options;
-      }, []);
-    } else {
-      return codeHistory.reduce((options, code) => {
-        if (options.length <= n && codeMap[code])
-          options.push({ key: code, label: code, color: getColor(code, codeMap) });
-        return options;
-      }, []);
+  const getOptions = () => {
+    const buttonOptions = [];
+    const dropdownOptions = [];
+    const historyN = 5; // maybe make this a setting
+    for (let code of Object.keys(codeMap)) {
+      const singleSelection = selection === null || selection?.span[0] === selection?.span[1];
+      if (singleSelection && annotations[code]) continue;
+
+      if (settings && settings.buttonMode === "all")
+        buttonOptions.push({ key: code, label: code, color: getColor(code, codeMap) });
+
+      let tree = codeMap[code].tree.join(" - ");
+      dropdownOptions.push({
+        key: code,
+        value: code,
+        text: code + " " + tree,
+        content: (
+          <>
+            {code}
+            <br />
+            <span style={{ color: "grey" }}>{tree}</span>
+          </>
+        ),
+      });
     }
+
+    // use 'recent' mode if specified, or if settings are missing
+    if (!settings || settings.buttonMode === "recent") {
+      for (let code of codeHistory) {
+        if (buttonOptions.length > historyN) break;
+        buttonOptions.push({ key: code, label: code, color: getColor(code, codeMap) });
+      }
+    }
+    return [buttonOptions, dropdownOptions];
   };
 
-  const searchBoxDropdown = () => {
-    if (itemSettings && itemSettings.buttonMode !== "recent" && !itemSettings.searchBox)
-      return null;
+  const buttonSelection = options => {
+    if (options.length === 0) return null;
+    return (
+      <ButtonSelection
+        key={"newCodePageButtons"}
+        active={focusOnButtons}
+        settings={settings}
+        options={options}
+        canDelete={true}
+        callback={onButtonSelect}
+      />
+    );
+  };
+
+  const dropdownSelection = options => {
+    if (options.length === 0) return null;
+
+    // use searchBox if specified OR if settings are missing
+    if (settings && !settings.searchBox) return null;
     return (
       <>
         <Grid>
@@ -256,7 +295,7 @@ const NewCodePage = ({
                 style={{ minWidth: "12em" }}
                 options={Object.keys(codeMap).reduce((options, code) => {
                   let tree = codeMap[code].tree.join(" - ");
-                  if (tree === "") tree = "Root";
+                  //if (tree === "") tree = "Root";
                   options.push({
                     key: code,
                     value: code,
@@ -292,7 +331,8 @@ const NewCodePage = ({
                       d.value,
                       selection,
                       setAnnotations,
-                      setOpen
+                      setOpen,
+                      setCodeHistory
                     );
                 }}
               />
@@ -305,32 +345,27 @@ const NewCodePage = ({
   };
 
   if (!current) return null;
+
+  const [buttonOptions, dropdownOptions] = getOptions();
+
   return (
     <>
-      {searchBoxDropdown()}
-      <ButtonSelection
-        key={"newCodePageButtons"}
-        active={focusOnButtons}
-        itemSettings={itemSettings}
-        options={getOptions(codeHistory, 5)}
-        canDelete={true}
-        callback={onButtonSelect}
-      />
-      &nbsp;&nbsp;
+      {dropdownSelection(dropdownOptions)}
+      {buttonSelection(buttonOptions)}
     </>
   );
 };
 
-const ButtonSelection = ({ active, options, itemSettings, canDelete, callback }) => {
+const ButtonSelection = ({ active, options, settings, canDelete, callback }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
   const [selected, setSelected] = useState(0);
 
-  const rowSize = itemSettings?.annotate?.rowSize || 5;
+  const rowSize = settings?.rowSize || 5;
 
   const onKeydown = React.useCallback(
-    (event) => {
+    event => {
       const nbuttons = canDelete ? options.length + 1 : options.length;
 
       // any arrowkey
@@ -432,7 +467,15 @@ const ButtonSelection = ({ active, options, itemSettings, canDelete, callback })
   );
 };
 
-const updateAnnotations = (annotations, current, value, selection, setAnnotations, setOpen) => {
+const updateAnnotations = (
+  annotations,
+  current,
+  value,
+  selection,
+  setAnnotations,
+  setOpen,
+  setCodeHistory
+) => {
   if (!annotations) {
     setOpen(false);
     return null;
@@ -446,10 +489,11 @@ const updateAnnotations = (annotations, current, value, selection, setAnnotation
   }
   ann.group = current;
 
+  let oldAnnotation = { ...ann };
+  oldAnnotation.span = [oldAnnotation.index, oldAnnotation.index];
+  setAnnotations(state => toggleSpanAnnotations({ ...state }, [oldAnnotation], true));
+
   if (value === current) {
-    let oldAnnotation = { ...ann };
-    oldAnnotation.span = [oldAnnotation.index, oldAnnotation.index];
-    setAnnotations((state) => toggleSpanAnnotations({ ...state }, [oldAnnotation], true));
     setOpen(false);
     return null;
   }
@@ -463,7 +507,8 @@ const updateAnnotations = (annotations, current, value, selection, setAnnotation
     newAnnotations.push(newAnnotation);
   }
 
-  setAnnotations((state) => toggleSpanAnnotations({ ...state }, newAnnotations, false));
+  setAnnotations(state => toggleSpanAnnotations({ ...state }, newAnnotations, false));
+  setCodeHistory(state => [value, ...state.filter(v => v !== value)].slice(0, 5));
   setOpen(false);
 };
 

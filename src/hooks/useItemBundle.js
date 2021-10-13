@@ -62,9 +62,9 @@ export const prepareItemBundle = async (item, codebook, settings, preview, setIt
  * Gets the char span for the coding unit.
  * Needed for tokenization agnostic storing of annotations
  */
-const getUnitSpan = (itemBundle) => {
-  const firstUnitToken = itemBundle.tokens.find((token) => token.codingUnit);
-  let lastUnitTokenIndex = itemBundle.tokens.lastIndexOf((token) => token.codingUnit);
+const getUnitSpan = itemBundle => {
+  const firstUnitToken = itemBundle.tokens.find(token => token.codingUnit);
+  let lastUnitTokenIndex = itemBundle.tokens.lastIndexOf(token => token.codingUnit);
 
   let lastUnitToken;
   if (lastUnitTokenIndex < 0) {

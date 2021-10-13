@@ -2,42 +2,50 @@ import React, { useState, useEffect } from "react";
 import AnnotateNavigation from "./subcomponents/AnnotateNavigation";
 import Tokens from "./subcomponents/Tokens";
 import useCodeSelector from "./subcomponents/useCodeSelector";
-
+import { useSelector } from "react-redux";
+import { exportAnnotations } from "util/annotations";
+import useUnit from "./subcomponents/useUnit";
 /**
  * This is hopefully the only Component in this folder that you'll ever see. It should be fairly isolated
  * and easy to use, but behind the scenes it gets dark real fast.
  * @param {*} tokens An array with token objects, as created with importTokens or parseTokens
- * @param {*} codebook A codebook that has (at least) a codebook.codes (or a codebook.codeMap, but if not this gets created from codes).
- *                     codebook.codes is either a simple array of codes, or an array of objects in which
- *                     codes can have more cool stuff (specific color, parents). If not given, texts will be shown, but users
- *                     cannot make annotations.
- * @param {*} settings some general settings. Currently only supports boolean value 'centerVertical'
- * @param {*} annotations Optionally, annotations in the object format (for fast lookup). If annotations are in the array format,
- *                        (as they should be outside of this tool), the conversion between both formats can be handled with
- *                        importAnnotations (array to object) and exportAnnotations (object to array)
- * @param {*} setAnnotations A function for saving annotations which, if given, should be the connected to annotations
- *                           (like const [annotations, setAnnotations] = useState({})). If not given, users cannot make annotations
- * @param {*} setReady       A function for passing a boolean to the parent to indicate that the text is ready (which is usefull
- *                           if the parent wants to transition to new texts nicely)
+ * @param {*} codes    An array of codes, or an array of objects in which codes can have
+ *                     more cool stuff (color, parent, tree). If not given, texts will be
+ *                     shown, but users cannot make annotations.
+ * @param {*} settings An object with settings. Currently supports:
+ *                     - centerVertical: true/false      whether text is centered verticall
+ *                     - buttonMode: "all"/"recent"      show all or only recent selected options as button
+ *                     - rowSize: number                 number of buttons per row
+ * @param {*} returnAnnotations A function for saving annotations which, if given, should be the
+ *                           connected to annotation
+ *                           (like const [annotations, setAnnotations] = useState({})).
+ *                           If not given, users cannot make annotations
+ * @param {*} setReady       A function for passing a boolean to the parent to indicate that the
+ *                           text is ready (which is usefull if the parent wants to transition
+ *                           to new texts nicely)
  * @returns
  */
-const Document = ({ tokens, codebook, settings, annotations, setAnnotations, setReady }) => {
-  // !! annotations doesn't yet work nice.
-  // this way they are carried over across documents
-  // make it so that an array of annotations is given.
-  // setAnnotations is not linked, but returns the exported annotations
-  // and then see whether it also makes sense to do the tokenization internally.
+const Document = ({ unit, codes, settings, returnAnnotations, returnTokens, setReady }) => {
+  const fullScreenNode = useSelector(state => state.fullScreenNode);
 
   const [tokensReady, setTokensReady] = useState(0);
-  const [popup, triggerCodePopup, codeSelectorOpen] = useCodeSelector(
+  const [tokens, annotations, setAnnotations] = useUnit(unit, returnTokens);
+  const [popup, triggerCodePopup, codeMap, codeSelectorOpen] = useCodeSelector(
     tokens,
-    codebook,
+    codes,
+    settings,
     annotations,
-    setAnnotations
+    setAnnotations,
+    fullScreenNode
   );
 
   useEffect(() => {
-    if (setReady) setReady((current) => current + 1);
+    if (returnAnnotations && annotations) returnAnnotations(exportAnnotations(annotations));
+  }, [annotations, returnAnnotations]);
+
+  useEffect(() => {
+    if (setReady) setReady(current => current + 1);
+    setAnnotations(state => ({ ...state })); //trigger DOM update after token refs have been prepared
   }, [tokensReady, setAnnotations, setReady]);
 
   if (!tokens) return null;
@@ -47,14 +55,15 @@ const Document = ({ tokens, codebook, settings, annotations, setAnnotations, set
       <Tokens tokens={tokens} centerVertical={settings.centerVertical} setReady={setTokensReady} />
       <AnnotateNavigation
         tokens={tokens}
-        codebook={codebook}
+        codeMap={codeMap}
         annotations={annotations}
         triggerCodePopup={triggerCodePopup}
-        setAnnotations={setAnnotations}
         eventsBlocked={codeSelectorOpen}
+        fullScreenNode={fullScreenNode}
+        disableAnnotations={!returnAnnotations || !codeMap}
       />
 
-      {popup}
+      {popup || null}
     </>
   );
 };

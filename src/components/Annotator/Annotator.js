@@ -30,10 +30,10 @@ const Annotator = () => {
     if (!task) return;
     task.server
       .get(unitIndex)
-      .then((unit) => {
+      .then(unit => {
         setPreparedItem({ post: task.server.post, unitId: unit.data.id, ...unit.data.unit });
       })
-      .catch((e) => {
+      .catch(e => {
         if (e.response?.status === 404) {
           console.log(
             "404 error. Probably amcat ran out of stuff to give you, but we should handle this differently"
@@ -183,7 +183,7 @@ const prepareTask = async (jobURL, setTask) => {
 
   if (task && task.where === "local") {
     task.unitMode = "list";
-    const get = async (i) => ({ data: { id: i, unit: task.units[i] } });
+    const get = async i => ({ data: { id: i, unit: task.units[i] } });
     const post = async (unit_id, data) => console.log("here function to write to db");
     task.server = { get, post };
   } else {
@@ -193,7 +193,7 @@ const prepareTask = async (jobURL, setTask) => {
     // works if url always has this structure. Otherwise maybe include id in codebook
     const id = jobURL.split("codingjob/")[1].split("/codebook")[0];
     const host = jobURL.split("codingjob/")[0];
-    const get = async (i) => axios.get(`${host}/codingjob/${id}/unit?user=${user.name}`);
+    const get = async i => axios.get(`${host}/codingjob/${id}/unit?user=${user.name}`);
     const post = async (unit_id, data) =>
       axios.post(`${host}/codingjob/${id}/unit/${unit_id}/annotation?user=${user.name}`, data);
 
@@ -214,7 +214,7 @@ const prepareTask = async (jobURL, setTask) => {
 const Task = React.memo(({ codebook, item }) => {
   if (!codebook || !item) return null;
 
-  const renderTaskPreview = (type) => {
+  const renderTaskPreview = type => {
     switch (type) {
       case "questions":
         return <QuestionTask item={item} codebook={codebook} preview={false} />;

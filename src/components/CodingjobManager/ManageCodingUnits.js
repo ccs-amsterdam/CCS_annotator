@@ -8,7 +8,7 @@ import useItemBundle from "hooks/useItemBundle";
 import useJobItems from "hooks/useJobItems";
 import { standardizeItems } from "util/standardizeItem";
 
-const getTableColumns = (unitSettings) => {
+const getTableColumns = unitSettings => {
   if (!unitSettings) return [];
 
   const columns = [
@@ -77,7 +77,7 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
 
   useEffect(() => {
     if (!jobItem) return null;
-    standardizeItems(codingjob, [jobItem]).then((singleItemArray) => {
+    standardizeItems(codingjob, [jobItem]).then(singleItemArray => {
       setStandardizedItem(singleItemArray[0]);
     });
   }, [jobItem, setStandardizedItem, codingjob]);
@@ -127,11 +127,7 @@ const PreviewDocument = ({ item, codebook }) => {
         <Dimmer inverted active={item === null}>
           <Loader />
         </Dimmer>
-        <Document
-          tokens={itemBundle?.tokens}
-          codebook={itemBundle?.codebook}
-          settings={itemBundle?.settings}
-        />
+        <Document unit={item} codes={codebook?.codes} settings={itemBundle?.settings} />
       </>
     );
   };
