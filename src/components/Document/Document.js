@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AnnotateNavigation from "./subcomponents/AnnotateNavigation";
 import Tokens from "./subcomponents/Tokens";
 import useCodeSelector from "./subcomponents/useCodeSelector";
 import { useSelector } from "react-redux";
-import { exportAnnotations } from "util/annotations";
+import { exportSpanAnnotations } from "util/annotations";
 import useUnit from "./subcomponents/useUnit";
+import hash from "object-hash";
+
 /**
  * This is hopefully the only Component in this folder that you'll ever see. It should be fairly isolated
  * and easy to use, but behind the scenes it gets dark real fast.
@@ -16,20 +18,20 @@ import useUnit from "./subcomponents/useUnit";
  *                     - centerVertical: true/false      whether text is centered verticall
  *                     - buttonMode: "all"/"recent"      show all or only recent selected options as button
  *                     - rowSize: number                 number of buttons per row
- * @param {*} returnAnnotations A function for saving annotations which, if given, should be the
- *                           connected to annotation
- *                           (like const [annotations, setAnnotations] = useState({})).
- *                           If not given, users cannot make annotations
+ * @param {*} onChangeAnnotations An optional function for saving annotations.
+ *                              If not given, users cannot make annotations
+ * @param {*} returnTokens   An optional function for getting access to the tokens array
  * @param {*} setReady       A function for passing a boolean to the parent to indicate that the
  *                           text is ready (which is usefull if the parent wants to transition
  *                           to new texts nicely)
  * @returns
  */
-const Document = ({ unit, codes, settings, returnAnnotations, returnTokens, setReady }) => {
+const Document = ({ unit, codes, settings, onChangeAnnotations, returnTokens, setReady }) => {
   const fullScreenNode = useSelector(state => state.fullScreenNode);
+  const safetyCheck = useRef(null); // ensures only new annotations for the current unit are passed to onChangeAnnotations
 
   const [tokensReady, setTokensReady] = useState(0);
-  const [tokens, annotations, setAnnotations] = useUnit(unit, returnTokens);
+  const [tokens, annotations, setAnnotations] = useUnit(unit, safetyCheck, returnTokens);
   const [popup, triggerCodePopup, codeMap, codeSelectorOpen] = useCodeSelector(
     tokens,
     codes,
@@ -40,8 +42,18 @@ const Document = ({ unit, codes, settings, returnAnnotations, returnTokens, setR
   );
 
   useEffect(() => {
-    if (returnAnnotations && annotations) returnAnnotations(exportAnnotations(annotations));
-  }, [annotations, returnAnnotations]);
+    if (!annotations) return;
+
+    // check if same unit, to prevent annotations from spilling over due to race conditions
+    if (safetyCheck.current.tokens !== tokens) return;
+    // check if annotations changed since start.
+    if (!safetyCheck.current.annotationsChanged) {
+      if (safetyCheck.current.annotations === hash(annotations)) return;
+      safetyCheck.current.annotationsChanged = true;
+    }
+
+    onChangeAnnotations(exportSpanAnnotations(annotations, tokens));
+  }, [tokens, annotations, onChangeAnnotations]);
 
   useEffect(() => {
     if (setReady) setReady(current => current + 1);
@@ -60,7 +72,7 @@ const Document = ({ unit, codes, settings, returnAnnotations, returnTokens, setR
         triggerCodePopup={triggerCodePopup}
         eventsBlocked={codeSelectorOpen}
         fullScreenNode={fullScreenNode}
-        disableAnnotations={!returnAnnotations || !codeMap}
+        disableAnnotations={!onChangeAnnotations || !codeMap}
       />
 
       {popup || null}

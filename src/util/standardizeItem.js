@@ -1,5 +1,5 @@
-import { exportAnnotations } from "./annotations";
 import { selectTokens } from "./selectTokens";
+import hash from "object-hash";
 import db from "apis/dexie";
 
 // Transform an item as its created in codingjob manager into a simpler
@@ -19,14 +19,18 @@ export const standardizeItems = async (codingjob, jobItems) => {
   const docs = {};
   const items = [];
 
+  const jobhash = hash(codingjob);
+
   for (let i = 0; i < jobItems.length; i++) {
     const doc_uid = jobItems[i].doc_uid;
     if (!docs[doc_uid]) docs[doc_uid] = await db.getDocument(doc_uid);
 
     const tokens = selectTokens(docs[doc_uid].tokens, jobItems[i], contextUnit, contextWindow);
-    const item = { text_fields: unparseTokens(tokens) };
-
-    if (importAnnotations) item.annotations = exportAnnotations(item.annotations);
+    const item = {
+      text_fields: unparseTokens(tokens),
+      meta: { unit: jobItems[i].textUnit, unit_index: jobItems[i].unitIndex },
+    };
+    item.unit_id = hash({ jobhash, item, date: Date() });
     items.push(item);
   }
   return items;
@@ -37,23 +41,39 @@ const unparseTokens = tokens => {
 
   const text_fields = [];
 
-  let offset = tokens[0].offset;
   let unit_start = null;
   let unit_end = null;
   let text = "";
   let section = tokens[0].section;
+
+  let offset = {};
+  if (tokens[0].offset > 0) offset.offset = tokens[0].offset;
+  if (tokens[0].index > 0) offset.offset_index = tokens[0].index;
+  if (tokens[0].sentence > 0) offset.offset_sentence = tokens[0].sentence;
+  if (tokens[0].paragraph > 0) offset.offset_paragraph = tokens[0].paragraph;
+
+  let extraOffset = {
+    // now 'extra', because not sure whether to include this by default
+    // it's not tokenizer agnostic, but at the same time quite usefull information
+    offset_index: tokens[0].index,
+    offset_sentence: tokens[0].sentence,
+    offset_paragraph: tokens[0].paragraph,
+  };
 
   let unit_started = false;
   let unit_ended = false;
 
   for (let token of tokens) {
     if (token.section !== section) {
-      const text_field = { name: section, value: text, offset };
+      const text_field = { name: section, value: text, ...offset };
       if (unit_start !== null) text_field.unit_start = unit_start;
       if (unit_end !== null) text_field.unit_end = unit_end;
 
       text_fields.push(text_field);
-      offset = token.offset;
+
+      offset = {};
+      if (token.offset > 0) offset.offset = token.offset;
+
       unit_start = null;
       unit_end = null;
       text = "";
@@ -72,7 +92,7 @@ const unparseTokens = tokens => {
     section = token.section;
   }
   if (text.length > 0) {
-    const text_field = { name: section, value: text, offset };
+    const text_field = { name: section, value: text, ...offset };
     if (unit_start !== null) text_field.unit_start = unit_start;
     if (unit_end !== null) text_field.unit_end = unit_end;
     text_fields.push(text_field);

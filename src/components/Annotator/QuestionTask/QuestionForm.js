@@ -1,28 +1,34 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { Header, Button, Segment } from "semantic-ui-react";
-import { setQuestionIndex, setMoveUnitIndex, setAnnotations } from "actions";
+import { setQuestionIndex, setMoveUnitIndex } from "actions";
 import { SearchBoxDropdown, ButtonSelection, Annotinder } from "./QuestionForms";
 
-const QuestionForm = ({ itemBundle, questions, questionIndex, preview, swipe }) => {
+const QuestionForm = ({ unit, tokens, questions, questionIndex, preview, swipe }) => {
   const [answerTransition, setAnswerTransition] = useState();
   const dispatch = useDispatch();
   const answered = useRef(false); // to prevent answering double (e.g. with swipe events)
 
   useEffect(() => {
     answered.current = false;
-  }, [itemBundle]);
+  }, [unit]);
 
-  if (!questions || !itemBundle) return null;
+  console.log(unit);
+  if (!questions || !unit) return null;
 
-  const question = prepareQuestion(itemBundle, questions[questionIndex]);
-  const currentAnswer = getCurrentAnswer(itemBundle);
+  const question = prepareQuestion(unit, questions[questionIndex]);
+  const annotationObject = createAnnotationObject(tokens, questions[questionIndex], questionIndex);
+  const currentAnswer = getCurrentAnswer(unit.annotations, annotationObject);
 
-  const onSelect = (answer) => {
+  const onSelect = answer => {
     // write result to IDB/server and skip to next question or next item
     if (answered.current) return null;
+    if (!annotationObject) return null;
     answered.current = true;
-    setNewAnswer(itemBundle, questionIndex, answer.code, dispatch);
+
+    annotationObject.value = answer.code;
+    unit.post(unit.unitId, [annotationObject]);
+
     setAnswerTransition(answer); // show given answer
     setTimeout(() => {
       // wait a little bit, so coder can confirm their answer
@@ -151,38 +157,74 @@ const AnswerSegment = ({
   );
 };
 
-const setNewAnswer = (itemBundle, questionIndex, answer, dispatch) => {
-  const newAnnotations = { ...itemBundle.annotations };
+const createAnnotationObject = (tokens, question, questionIndex) => {
+  // creates an object with all information about the annotation except for the
+  // value. This lets us check whether the annotations already exists, and add
+  // or change the value.
+  if (tokens.length === 0) return null;
 
-  const question = itemBundle.codebook.questions[questionIndex].name;
-  const group = questionIndex + ": " + question;
+  const sections = {};
+  const lastToken = tokens[tokens.length - 1];
 
-  const section = itemBundle.tokens.reduce((obj, token) => {
-    if (token.codingUnit && !obj[token.section]) obj[token.section] = 1;
-    return obj;
-  }, {});
+  const charspan = [0, lastToken.offset + lastToken.length];
+  const indexspan = [0, tokens.length];
+  let [unitStarted, unitEnded] = [false, false];
 
-  const span = itemBundle.textUnitSpan;
-  const annotation = {
-    question,
-    questionIndex,
-    value: answer,
-    section: Object.keys(section).join("+"),
-    offset: span[0],
-    length: span[1] - span[0],
+  let i = 0;
+  for (let token of tokens) {
+    if (token.codingUnit && !sections[token.section]) sections[token.section] = 1;
+    if (!unitStarted && token.codingUnit) {
+      unitStarted = true;
+      charspan[0] = token.offset;
+      indexspan[0] = i;
+    }
+    if (!unitEnded && !token.codingUnit && unitStarted) {
+      unitEnded = true;
+      charspan[1] = token.offset + token.length;
+      indexspan[1] = i;
+    }
+    i++;
+  }
+
+  const extras = {};
+  // make these optional? Because they're not tokenizer agnostic
+  // also only make sense if text_units include all offsets
+  // maybe only include IF the offsets are set, OR if offset === 0
+  extras.token_start = tokens[0].index;
+  extras.token_end = tokens[1].index;
+  extras.paragraph_start = tokens[0].paragraph;
+  extras.paragraph_end = tokens[1].paragraph;
+  extras.sentence_start = tokens[0].sentence;
+  extras.sentence_end = tokens[1].sentence;
+
+  return {
+    variable: `${questionIndex + 1}: ${question.name}`,
+    value: null,
+    section: Object.keys(sections).join(" + "),
+    offset: charspan[0],
+    length: charspan[1] - charspan[0],
+    ...extras,
   };
-
-  if (!newAnnotations["span"]["unit"]) newAnnotations["span"]["unit"] = {};
-  newAnnotations["span"]["unit"][group] = annotation;
-  dispatch(setAnnotations({ ...newAnnotations }));
 };
 
-const getCurrentAnswer = (itemBundle) => {
-  // this needs to be 10x prettier or something
-  return itemBundle.annotations[itemBundle.textUnit]?.[itemBundle.unitIndex]?.["unit"]?.answer;
+const getCurrentAnswer = (annotations, annotationObject) => {
+  console.log(annotations);
+  if (!annotations) return null;
+  for (let annotation of annotations) {
+    console.log(annotation);
+    console.log(annotationObject);
+    if (
+      annotation.variable === annotationObject.variable &&
+      annotation.section === annotationObject.section &&
+      annotation.offset === annotationObject.offset &&
+      annotation.length === annotationObject.length
+    )
+      return annotation.value;
+  }
+  return null;
 };
 
-const showCurrent = (currentAnswer) => {
+const showCurrent = currentAnswer => {
   if (currentAnswer == null) return null;
   return (
     <div style={{ backgroundColor: "white", color: "black" }}>
@@ -194,28 +236,28 @@ const showCurrent = (currentAnswer) => {
         }}
       >
         <div style={{ fontSize: "1.5em", marginTop: "0.3em" }}>
-          You answered <b>{`${currentAnswer}`}</b>
+          current answer: <b>{`${currentAnswer}`}</b>
         </div>
       </Segment>
     </div>
   );
 };
 
-const prepareQuestion = (itemBundle, questions) => {
-  let question = questions.question;
+const prepareQuestion = (unit, question) => {
+  let preparedQuestion = question.question;
 
-  if (question.search("\\[code\\]") >= 0) {
-    if (itemBundle.annotation) {
-      let code = itemBundle.annotation.group;
+  if (preparedQuestion.search("\\[code\\]") >= 0) {
+    if (unit.annotation) {
+      let code = unit.annotation.value;
       const codeTag = `{{lightyellow###${code}}}`; // add optional color from itemquestions
-      question = question.replace("[code]", codeTag);
+      preparedQuestion = preparedQuestion.replace("[code]", codeTag);
     }
   }
 
-  return markedString(question);
+  return markedString(preparedQuestion);
 };
 
-const markedString = (text) => {
+const markedString = text => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");

@@ -10,7 +10,7 @@ const Tokens = ({ tokens, centerVertical, setReady }) => {
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = tokens.find((token) => token.codingUnit);
+    const firstTextUnitToken = tokens.find(token => token.codingUnit);
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, 1 / 4);
     }
@@ -19,7 +19,7 @@ const Tokens = ({ tokens, centerVertical, setReady }) => {
   useEffect(() => {
     if (!tokens) return null;
     setText(renderText(tokens));
-    if (setReady) setReady((current) => current + 1); // setReady is an optional property used to let parents know the text is ready.
+    if (setReady) setReady(current => current + 1); // setReady is an optional property used to let parents know the text is ready.
   }, [tokens, setReady]);
 
   if (tokens === null) return null;
@@ -47,7 +47,7 @@ const Tokens = ({ tokens, centerVertical, setReady }) => {
             width: "100%",
             maxHeight: "100%",
             overflowY: "auto",
-            textAlign: "justify",
+            //textAlign: "justify",
           }}
         >
           {/* <div style={{ height: "10em" }} /> */}
@@ -59,7 +59,7 @@ const Tokens = ({ tokens, centerVertical, setReady }) => {
   );
 };
 
-const renderText = (tokens) => {
+const renderText = tokens => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
 
   let section = [];
@@ -105,12 +105,11 @@ const renderText = (tokens) => {
   if (paragraph.length > 0) section.push(renderParagraph("last", paragraph_nr, paragraph, false));
   if (section.length > 0)
     text["text"].push(renderSection("last_" + section_name, section, section_name));
-  console.log("tests");
   return text;
 };
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
-  const fontstyle = (paragraphs) => {
+  const fontstyle = paragraphs => {
     if (section === "title") return <h2 key={section + paragraph_nr}>{paragraphs}</h2>;
     return paragraphs;
   };

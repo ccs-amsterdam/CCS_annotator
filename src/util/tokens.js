@@ -27,6 +27,9 @@ export const parseTokens = text_fields => {
   for (let text_field of text_fields) {
     let section = text_field.name || "text";
     let offset = text_field.offset || 0;
+    // let offset_index = text_field.offset_index || 0;
+    // let offset_sentence = text_field.offset_sentence || 0;
+    // let offset_paragraph = text_field.offset_paragraph || 0;
 
     text = text_field.value;
     t = nlp
@@ -57,6 +60,8 @@ export const parseTokens = text_fields => {
               paragraph: paragraph,
               sentence: sentence,
               index: tokenIndex,
+              // add section_paragraph and such. To keep track of this for meta
+              // then works the same as offset
               text: token.text,
               pre: token.pre,
               post: token.post,

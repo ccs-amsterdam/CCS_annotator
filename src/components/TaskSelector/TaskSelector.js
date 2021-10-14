@@ -14,10 +14,10 @@ const TaskSelector = () => {
   const history = useHistory();
   const [taskKey, setTaskKey] = useState(null);
 
-  const uploadFile = (e) => {
+  const uploadFile = e => {
     const fileReader = new FileReader();
     fileReader.readAsText(e.target.files[0], "UTF-8");
-    fileReader.onload = (e) => {
+    fileReader.onload = e => {
       const url = "IDB:" + objectHash(e.target.result);
       db.uploadTask(JSON.parse(e.target.result), url, "local");
     };
@@ -123,7 +123,6 @@ const getResultUrl = async (taskKey, amcat, setAnnotations) => {
     const url = `${host}/codingjob/${id}`;
     try {
       const res = await amcat.api.get(url);
-      console.log(res.data);
       const annotations = res.data.units.reduce((arr, unit, i) => {
         if (unit.annotations) {
           for (let coder of Object.keys(unit.annotations)) {

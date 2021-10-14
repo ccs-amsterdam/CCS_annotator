@@ -9,6 +9,7 @@ import FullScreenFix from "./FullScreenFix";
 import QuestionTask from "./QuestionTask/QuestionTask";
 import AnnotateTask from "./AnnotateTask/AnnotateTask";
 import IndexController from "./IndexController";
+import { CSVDownloader } from "react-papaparse";
 
 const homepage = "/amcat4annotator";
 
@@ -31,6 +32,7 @@ const Annotator = () => {
     task.server
       .get(unitIndex)
       .then(unit => {
+        console.log(unit);
         setPreparedItem({ post: task.server.post, unitId: unit.data.id, ...unit.data.unit });
       })
       .catch(e => {
@@ -49,7 +51,7 @@ const Annotator = () => {
   }
 
   const renderTask = () => {
-    if (unitIndex === null) return <Finished />;
+    if (unitIndex === null) return <Finished task={task} />;
     return <Task codebook={task?.codebook} item={preparedItem} />;
   };
 
@@ -85,13 +87,54 @@ const Annotator = () => {
   );
 };
 
-const Finished = () => {
+const Finished = ({ task }) => {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    if (!task) return;
+    db.listAnnotations(task.url).then(data => {
+      console.log(data);
+      setData(data);
+    });
+  }, [task]);
+
+  if (!task) return null;
+
+  if (!task === "local")
+    return (
+      <Grid container centered verticalAlign="middle" style={{ margin: "0", padding: "0" }}>
+        <Grid.Row style={{ marginTop: "40vh" }}>
+          <div>
+            <Icon name="flag checkered" size="huge" style={{ transform: "scale(5)" }} />
+          </div>
+        </Grid.Row>
+      </Grid>
+    );
+
+  const onDownload = async () => {
+    const user = await this.idb.user.get(1);
+    const annotations = await db.listAnnotations(task.url);
+    //const json = [JSON.stringify(annotations)];
+    //const blob = new Blob(json, { type: "text/plain;charset=utf-8" });
+    return annotations;
+    // try {
+    //   fileDownload(blob, `annotations_${user.name}.json`);
+    // } catch (error) {
+    //   console.error("" + error);
+    // }
+  };
+
   return (
     <Grid container centered verticalAlign="middle" style={{ margin: "0", padding: "0" }}>
       <Grid.Row style={{ marginTop: "40vh" }}>
-        <div>
+        <Grid.Column width={8}>
           <Icon name="flag checkered" size="huge" style={{ transform: "scale(5)" }} />
-        </div>
+        </Grid.Column>
+        <Grid.Column width={8}>
+          <CSVDownloader filename={`annotations_${task.url}.json`} data={data}>
+            Download
+          </CSVDownloader>
+        </Grid.Column>
       </Grid.Row>
     </Grid>
   );
@@ -183,9 +226,23 @@ const prepareTask = async (jobURL, setTask) => {
 
   if (task && task.where === "local") {
     task.unitMode = "list";
-    const get = async i => ({ data: { id: i, unit: task.units[i] } });
-    const post = async (unit_id, data) => console.log("here function to write to db");
+    const get = async i => {
+      const unit_id = task.units[i].unit_id;
+      let annotations = await db.getAnnotations(unit_id);
+      annotations = annotations?.annotations || [];
+      return {
+        data: {
+          url: task.url,
+          id: unit_id,
+          unit: { ...task.units[i], annotations },
+        },
+      };
+    };
+    const post = async (unit_id, data) => {
+      db.postAnnotations(task.url, unit_id, data);
+    };
     task.server = { get, post };
+    task.local = task.where === "local";
   } else {
     const user = await db.idb.user.get(1);
     const response = await axios.get(jobURL);

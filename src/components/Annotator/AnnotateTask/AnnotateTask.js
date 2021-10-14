@@ -8,6 +8,7 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
   //const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
 
   const [annotations, setAnnotations] = useState([]);
+
   const [tokens, setTokens] = useState();
 
   useEffect(() => {
@@ -32,7 +33,7 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
           unit={item}
           codes={codebook?.codes}
           settings={codebook?.settings}
-          returnAnnotations={setAnnotations}
+          onChangeAnnotations={setAnnotations}
           returnTokens={setTokens}
         />
       </Grid.Column>

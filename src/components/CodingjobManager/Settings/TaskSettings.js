@@ -13,8 +13,8 @@ const defaultTaskSettings = {
   // annotate type settings
   annotate: {
     settings: {
-      buttonMode: "recent",
-      searchBox: true,
+      buttonMode: "all",
+      searchBox: false,
       rowSize: 5,
     },
     codes: ["Some", "example", "options"],

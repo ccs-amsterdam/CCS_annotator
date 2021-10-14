@@ -1,6 +1,6 @@
 import hash from "object-hash";
 import { importTokens, importTokenAnnotations, parseTokens } from "util/tokens";
-import { importAnnotations } from "util/annotations";
+import { importSpanAnnotations } from "util/annotations";
 
 /**
  * Prepares a batch of documents. Returns [documents, codes], where codes contains the annotation codes used in the documents
@@ -74,12 +74,12 @@ export const prepareDocument = (document, codes = {}) => {
   }
 
   if (doc.annotations) {
-    doc.annotations = importAnnotations([...doc.annotations], doc.tokens);
+    doc.annotations = importSpanAnnotations([...doc.annotations], doc.tokens);
   } else doc.annotations = {};
 
   const tokenAnnotations = importTokenAnnotations(doc.tokens, codes); // also fills codes
   if (tokenAnnotations.length > 0)
-    doc.annotations.span = importAnnotations(tokenAnnotations, doc.tokens, doc.annotations);
+    doc.annotations.span = importSpanAnnotations(tokenAnnotations, doc.tokens, doc.annotations);
 
   return doc;
 };

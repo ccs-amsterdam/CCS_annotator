@@ -65,6 +65,7 @@ span.token.annotated > span {
   border-right-width: 1px;
   border-left: none;
   border-right: none;
+  cursor: pointer;
 }
 
 span.token.annotated.anyLeft > span.text {

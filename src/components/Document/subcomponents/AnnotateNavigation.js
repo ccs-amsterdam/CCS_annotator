@@ -21,7 +21,7 @@ const AnnotateNavigation = ({
   const [tokenSelection, setTokenSelection] = useState([]);
 
   useEffect(() => {
-    console.log(annotations);
+    if (!codeMap) return null;
     showAnnotations(tokens, annotations, codeMap);
   }, [tokens, annotations, codeMap]);
 
@@ -72,6 +72,7 @@ const showAnnotations = (tokens, annotations, codeMap) => {
 };
 
 const allowedAnnotations = (annotations, codeMap) => {
+  console.log(annotations);
   if (!annotations) return null;
 
   if (annotations && codeMap) {

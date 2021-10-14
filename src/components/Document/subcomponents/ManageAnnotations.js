@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setAnnotations, clearAnnotations } from "actions";
-import { exportAnnotations } from "util/annotations";
+import { exportSpanAnnotations } from "util/annotations";
 import { getColor, getColorGradient } from "util/tokenDesign";
 
 /**
@@ -45,7 +45,7 @@ const writeAnnotations = async (taskItem, annotations, saveAnnotations) => {
   if (saveAnnotations) {
     //db.writeAnnotations({ doc_uid: taskItem.doc_uid }, annotations);
     if (taskItem.post) {
-      const annotationsArray = exportAnnotations(annotations);
+      const annotationsArray = exportSpanAnnotations(annotations);
       await taskItem.post(taskItem.unitId, annotationsArray);
     }
   }
@@ -85,17 +85,17 @@ const allowedAnnotations = (annotations, codeMap) => {
 
 const annotatedColor = (annotations, codeMap) => {
   let tokenCodes = Object.keys(annotations);
-  let colors = tokenCodes.map((code) => getColor(code, codeMap));
+  let colors = tokenCodes.map(code => getColor(code, codeMap));
   return getColorGradient(colors);
 };
 
 const annotateToken = (token, annotations, codeMap) => {
   // Set specific classes for nice css to show the start/end of codes
 
-  const allLeft = !Object.values(annotations).some((code) => code.span[0] !== code.index);
-  const allRight = !Object.values(annotations).some((code) => code.span[1] !== code.index);
-  const anyLeft = Object.values(annotations).some((code) => code.span[0] === code.index);
-  const anyRight = Object.values(annotations).some((code) => code.span[1] === code.index);
+  const allLeft = !Object.values(annotations).some(code => code.span[0] !== code.index);
+  const allRight = !Object.values(annotations).some(code => code.span[1] !== code.index);
+  const anyLeft = Object.values(annotations).some(code => code.span[0] === code.index);
+  const anyRight = Object.values(annotations).some(code => code.span[1] === code.index);
 
   let annotatedTokenClass = token.ref.current.classList.contains("selected")
     ? ["token", "selected", "annotated"]

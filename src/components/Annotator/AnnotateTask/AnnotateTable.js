@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { Ref, Table } from "semantic-ui-react";
 import { triggerCodeselector } from "actions";
 import { getColor } from "util/tokenDesign";
-import { importAnnotations } from "util/annotations";
+import { importSpanAnnotations } from "util/annotations";
 import "components/Document/subcomponents/spanAnnotationsStyle.css";
 
 const COLWIDTHS = [4, 2, 2]; // for offset and text
@@ -11,6 +11,7 @@ const COLWIDTHS = [4, 2, 2]; // for offset and text
 const AnnotateTable = ({ tokens, codeMap, annotations }) => {
   if (!tokens || tokens.length === 0) return null;
 
+  console.log(annotations);
   return (
     <Table
       style={{ fontSize: "10px" }}
@@ -32,7 +33,7 @@ const AnnotateTable = ({ tokens, codeMap, annotations }) => {
         </Table.Row>
       </Table.Header>
       <Table.Body className="annotations-tbody">
-        {annotationRows(tokens, codeMap, importAnnotations(annotations, tokens))}
+        {annotationRows(tokens, codeMap, importSpanAnnotations(annotations, tokens))}
       </Table.Body>
     </Table>
   );

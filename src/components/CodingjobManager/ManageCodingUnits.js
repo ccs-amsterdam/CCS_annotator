@@ -114,10 +114,11 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
 });
 
 const PreviewDocument = ({ item, codebook }) => {
-  const itemBundle = useItemBundle(item, codebook, previewDocumentSettings);
+  //const itemBundle = useItemBundle(item, codebook, previewDocumentSettings);
+  console.log(item);
 
   const renderDocument = () => {
-    if (!item || !itemBundle) return null;
+    if (!item) return null;
     return (
       <>
         <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
@@ -127,7 +128,7 @@ const PreviewDocument = ({ item, codebook }) => {
         <Dimmer inverted active={item === null}>
           <Loader />
         </Dimmer>
-        <Document unit={item} codes={codebook?.codes} settings={itemBundle?.settings} />
+        <Document unit={item} codes={codebook?.codes} settings={{}} />
       </>
     );
   };

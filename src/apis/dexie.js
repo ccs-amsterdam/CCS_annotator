@@ -8,6 +8,7 @@ const dbName = "AmCAT_Annotator_DB";
 const idbStores = {
   user: "++id, name", // other fields: 'id'
   codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
+  annotations: "unit_id, url",
   documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
   tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
 };
@@ -41,10 +42,16 @@ class AnnotationDB {
     return (await this.idb.user.toArray()).length === 0;
   }
   async setAmcatAuth(host, email, token) {
-    return await this.idb.user.where("id").equals(1).modify({ amcat: { host, email, token } });
+    return await this.idb.user
+      .where("id")
+      .equals(1)
+      .modify({ amcat: { host, email, token } });
   }
   async resetAmcatAuth() {
-    return await this.idb.user.where("id").equals(1).modify({ amcat: undefined });
+    return await this.idb.user
+      .where("id")
+      .equals(1)
+      .modify({ amcat: undefined });
   }
   async amcatSession() {
     const user = await this.idb.user.get(1);
@@ -64,7 +71,6 @@ class AnnotationDB {
   async deleteCodingjob(codingjob) {
     const docs = await this.idb.documents.where("job_id").equals(codingjob.job_id);
     const ndocs = await docs.count();
-    console.log(ndocs);
     if (ndocs > 0) docs.delete();
     return this.idb.codingjobs.delete(codingjob.job_id);
   }
@@ -123,7 +129,7 @@ class AnnotationDB {
     }
 
     // making absolutely sure no garbage is added
-    codebook.codes = codebook.codes.filter((code) => code.code !== "");
+    codebook.codes = codebook.codes.filter(code => code.code !== "");
 
     return await this.writeCodebook(codingjob, codebook);
   }
@@ -131,7 +137,10 @@ class AnnotationDB {
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
+      await this.idb.documents
+        .where("job_id")
+        .equals(codingjob.job_id)
+        .primaryKeys()
     );
 
     const [preparedDocuments, codes] = prepareDocumentBatch(
@@ -147,7 +156,7 @@ class AnnotationDB {
   }
 
   async deleteDocuments(documents) {
-    const documentIds = documents.map((document) => document.doc_uid);
+    const documentIds = documents.map(document => document.doc_uid);
     return this.idb.documents.bulkDelete(documentIds);
   }
 
@@ -161,7 +170,10 @@ class AnnotationDB {
   }
 
   async getJobDocumentCount(codingjob) {
-    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    return this.idb.documents
+      .where("job_id")
+      .equals(codingjob.job_id)
+      .count();
   }
 
   async getDocuments(codingjob) {
@@ -173,15 +185,18 @@ class AnnotationDB {
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
-  }
-
-  async writeAnnotations(document, annotations) {
     return this.idb.documents
       .where("doc_uid")
       .equals(document.doc_uid)
-      .modify({ annotations: annotations });
+      .modify({ tokens: tokens });
   }
+
+  // async writeAnnotations(document, annotations) {
+  //   return this.idb.documents
+  //     .where("doc_uid")
+  //     .equals(document.doc_uid)
+  //     .modify({ annotations: annotations });
+  // }
 
   // TASKS
   async uploadTask(codingjobPackage, url, where) {
@@ -196,6 +211,20 @@ class AnnotationDB {
     } else {
       alert("This job has already been created before");
     }
+  }
+
+  // ANNOTATIONS
+  async getAnnotations(unit_id) {
+    return this.idb.annotations.get({ unit_id });
+  }
+  async listAnnotations(url) {
+    return this.idb.annotations
+      .where("url")
+      .equals(url)
+      .toArray();
+  }
+  async postAnnotations(url, unit_id, annotations) {
+    return this.idb.annotations.put({ unit_id, url, annotations }, [unit_id]);
   }
 
   // CLEANUP

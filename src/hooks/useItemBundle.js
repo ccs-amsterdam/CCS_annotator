@@ -51,7 +51,7 @@ export const prepareItemBundle = async (item, codebook, settings, preview, setIt
 
   if (!itemBundle) return;
   itemBundle.textUnitSpan = getUnitSpan(itemBundle);
-  itemBundle.writable = false; // this prevents overwriting annotations before they have been loaded (in <ManageAnnotations>)
+  //itemBundle.writable = false;
   itemBundle.codebook = codebook;
   itemBundle.settings = settings;
   itemBundle.settings.saveAnnotations = !preview;

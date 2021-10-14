@@ -7,17 +7,14 @@ import { useSwipeable } from "react-swipeable";
 import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
 
 const documentSettings = {
-  textUnitPosition: 2 / 4,
-  showAnnotations: false,
   centerVertical: true,
-  canAnnotate: false,
 };
 
 const QuestionTask = ({ item, codebook, preview = false }) => {
   //const [menuHeight, setMenuHeight] = useState(50);
+  const [tokens, setTokens] = useState([]);
   const questionIndex = useSelector(state => state.questionIndex);
   const [questions, setQuestions] = useState(null);
-  const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
   const refs = { text: useRef(), box: useRef() };
   const [textReady, setTextReady] = useState(0);
 
@@ -49,10 +46,10 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
   const menuSwipe = useSwipeable(swipeControl(questions?.[questionIndex], refs, setSwipe, true));
   //const upSwipe = useSwipeable(swipeControl(questions?.[questionIndex], swipeAnimationRefs.up));
 
-  if (!itemBundle) return null;
+  if (!item) return null;
   let splitHeight = 50;
 
-  if (codebook.questions[questionIndex].type === "annotinder") {
+  if (codebook?.questions?.[questionIndex].type === "annotinder") {
     splitHeight = 70;
   }
 
@@ -69,13 +66,19 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
               overflow: "hidden",
             }}
           >
-            <Document unit={item} settings={itemBundle?.settings} setReady={setTextReady} />
+            <Document
+              unit={item}
+              settings={documentSettings}
+              setReady={setTextReady}
+              returnTokens={setTokens}
+            />
           </div>
         </div>
       </div>
       <div {...menuSwipe} style={{ height: `${100 - splitHeight}%` }}>
         <QuestionForm
-          itemBundle={itemBundle}
+          unit={item}
+          tokens={tokens}
           questions={questions}
           questionIndex={questionIndex}
           preview={preview}

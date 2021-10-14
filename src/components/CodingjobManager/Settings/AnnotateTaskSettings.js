@@ -41,10 +41,12 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
       <Form.Group>
         <Form.Field>
           <Checkbox
-            toggle
             label="Search box"
             disabled={taskSettings.annotate.settings.buttonMode === "recent"}
-            checked={taskSettings.annotate.settings.searchBox}
+            checked={
+              taskSettings.annotate.settings.searchBox ||
+              taskSettings.annotate.settings.buttonMode === "recent"
+            }
             onChange={(e, d) =>
               setAnnotateSettings({ ...taskSettings.annotate.settings, searchBox: d.checked })
             }
@@ -54,23 +56,6 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
       <Form.Group grouped>
         <label>Code buttons</label>
 
-        <Form.Field>
-          <Radio
-            value="recent"
-            label="Show recently used"
-            checked={taskSettings.annotate.settings.buttonMode === "recent"}
-            onChange={() =>
-              setAnnotateSettings({ ...taskSettings.annotate.settings, buttonMode: "recent" })
-            }
-          />
-          <Help
-            header={"Show recently used codes"}
-            texts={[
-              "Show only (active) codes that the coder used recently",
-              "The Search box is always enabled with this option, and the buttons only serve as quick keys. This is especially usefull for very large codebooks, for instance for tagging specific named entities",
-            ]}
-          />
-        </Form.Field>
         <Form.Field>
           <Radio
             value="all"
@@ -85,6 +70,23 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
             texts={[
               "Only codes that are 'active' will be shown",
               "You can toggle which codes are active in the codebook (top-right in menu bar)",
+            ]}
+          />
+        </Form.Field>
+        <Form.Field>
+          <Radio
+            value="recent"
+            label="Show recently used"
+            checked={taskSettings.annotate.settings.buttonMode === "recent"}
+            onChange={() =>
+              setAnnotateSettings({ ...taskSettings.annotate.settings, buttonMode: "recent" })
+            }
+          />
+          <Help
+            header={"Show recently used codes"}
+            texts={[
+              "Show only (active) codes that the coder used recently",
+              "The Search box is always enabled with this option, and the buttons only serve as quick keys. This is especially usefull for very large codebooks, for instance for tagging specific named entities",
             ]}
           />
         </Form.Field>

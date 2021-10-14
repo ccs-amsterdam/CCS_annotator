@@ -1,10 +1,14 @@
-export const exportAnnotations = annotations => {
+export const exportSpanAnnotations = (annotations, tokens) => {
   // export annotations from the object format (for fast use in the annotator) to array format
   if (Object.keys(annotations).length === 0) return [];
   const uniqueAnnotations = Object.keys(annotations).reduce((un_ann, index) => {
     const ann = annotations[index];
     for (let key of Object.keys(ann)) {
+      console.log(ann[key]);
+      //const endIndex = if (index === 'unit' ? index : )
+
       if (index !== "unit") if (ann[key].index !== ann[key].span[0]) continue;
+
       const ann_obj = {
         variable: key,
         value: ann[key].code,
@@ -19,11 +23,10 @@ export const exportAnnotations = annotations => {
   return uniqueAnnotations;
 };
 
-export const importAnnotations = (annotationsArray, tokens, currentAnnotations = {}) => {
+export const importSpanAnnotations = (annotationsArray, tokens, currentAnnotations = {}) => {
   if (annotationsArray.length === 0) return { ...currentAnnotations };
   // import span annotations. Uses the offset to match annotations to tokens
   const importedAnnotations = prepareSpanAnnotations(annotationsArray);
-  console.log(importedAnnotations);
   let trackAnnotations = {};
   let matchedAnnotations = [];
 
@@ -130,8 +133,8 @@ const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnota
     if (sectionAnnotations[i]) {
       for (let annotation of sectionAnnotations[i].start) {
         trackAnnotations[annotation.code] = { ...token };
-        trackAnnotations[annotation.code].group = annotation.code;
-        trackAnnotations[annotation.code].coding = annotation.coding;
+        trackAnnotations[annotation.code].group = annotation.variable;
+        trackAnnotations[annotation.code].code = annotation.value;
         trackAnnotations[annotation.code].offset = start;
         trackAnnotations[annotation.code].length = null;
         trackAnnotations[annotation.code].span = [token.index];
