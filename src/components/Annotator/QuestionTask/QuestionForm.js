@@ -11,9 +11,9 @@ const QuestionForm = ({ unit, tokens, questions, questionIndex, swipe }) => {
   const [annotations, setAnnotations] = useState(null);
 
   useEffect(() => {
-    createAnnotations(unit, tokens, questions, setAnnotations);
+    prepareAnnotations(unit, tokens, questions, setAnnotations, dispatch);
     answered.current = false;
-  }, [unit, tokens, setAnnotations, questions]);
+  }, [unit, tokens, setAnnotations, questions, dispatch]);
 
   if (!questions || !unit || !annotations) return null;
   if (!questions?.[questionIndex]) {
@@ -66,12 +66,11 @@ const QuestionForm = ({ unit, tokens, questions, questionIndex, swipe }) => {
         annotations={annotations}
         dispatch={dispatch}
       />
-      <div style={{ width: "100%", flex: "1 1 auto" }}>
+      <div style={{ width: "100%", flex: "1 1 auto", paddingBottom: "10px" }}>
         <Header as="h3" style={{ color: "white" }}>
-          {questions[questionIndex].name}
+          {question}
         </Header>
       </div>
-      <p>{question}</p>
       <AnswerSegment
         answerTransition={answerTransition}
         currentAnswer={annotations?.[questionIndex]?.value}
@@ -84,26 +83,29 @@ const QuestionForm = ({ unit, tokens, questions, questionIndex, swipe }) => {
   );
 };
 
-const createAnnotations = (unit, tokens, questions, setAnnotations) => {
+const prepareAnnotations = (unit, tokens, questions, setAnnotations, dispatch) => {
   // create a list with annotations for each question, and see if they have been answered yet
   if (tokens.length === 0) return null;
   const annotations = [];
   if (!unit.annotations) unit.annotations = [];
+  let questionIndex = 0;
   for (let i = 0; i < questions.length; i++) {
     const annotation = createAnnotationObject(tokens, questions[i], i);
     annotation.value = getCurrentAnswer(unit.annotations, annotation);
+    if (annotation.value !== null) questionIndex = i;
     annotations.push(annotation);
   }
   setAnnotations(annotations);
+  dispatch(setQuestionIndex(questionIndex));
 };
 
 const QuestionIndexStep = ({ questions, questionIndex, annotations, dispatch }) => {
-  if (questions.length === 1) return null;
-
+  //if (questions.length === 1) return null;
   const setColor = (i) => {
-    if (annotations[i].value) return "lightgreen";
-    if (i > 0 && annotations[i - 1].value) return "lightblue";
-    return "grey";
+    if (annotations[i].value) return ["black", "yellow"];
+    if (i === 0) return ["white", "#1B1C1D"];
+    if (i > 0 && annotations[i - 1].value) return ["white", "#1B1C1D"];
+    return ["white", "grey"];
   };
 
   return (
@@ -114,19 +116,27 @@ const QuestionIndexStep = ({ questions, questionIndex, annotations, dispatch }) 
         border: "2px solid black",
         top: "-20px",
         left: "0",
-        height: "25px",
+        height: "30px",
       }}
     >
       {questions.map((q, i) => {
+        const [color, background] = setColor(i);
         return (
           <Button
             active={i === questionIndex}
             style={{
-              padding: "0.2em",
+              padding: "0em 0.2em 0.2em 0.2em",
+
               minWidth: "2em",
+              maxWidth: `${100 / questions.length}%`,
+              maxHeight: "30px",
               borderRadius: "0",
-              background: setColor(i),
-              color: "white",
+              fontSize: "12px",
+              border: "1px solid darkgrey",
+              background: background,
+              textOverflow: "clip",
+              overflow: "hidden",
+              color: color,
             }}
             onClick={() => {
               if (annotations[i].value !== null) {
@@ -134,7 +144,8 @@ const QuestionIndexStep = ({ questions, questionIndex, annotations, dispatch }) 
               }
             }}
           >
-            {i + 1}
+            {/* {i + 1} */}
+            <span title={questions[i].name}>{questions[i].name}</span>
           </Button>
         );
       })}
@@ -154,6 +165,7 @@ const AnswerSegment = ({
     return (
       <Segment
         style={{
+          display: "flex",
           flex: "1 1 auto",
           padding: "0",
           overflowY: "auto",
@@ -161,7 +173,9 @@ const AnswerSegment = ({
           width: "100%",
           margin: "0",
           background: answerTransition.color,
-          textAlign: "center",
+
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         <Header as="h1">{answerTransition.code}</Header>
@@ -292,7 +306,7 @@ const showCurrent = (currentAnswer) => {
         }}
       >
         <div style={{ fontSize: "1.5em", marginTop: "0.3em" }}>
-          current answer: <b>{`${currentAnswer}`}</b>
+          you answered <b>{`${currentAnswer}`}</b>
         </div>
       </Segment>
     </div>

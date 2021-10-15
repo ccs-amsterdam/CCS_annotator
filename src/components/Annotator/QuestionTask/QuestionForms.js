@@ -120,7 +120,10 @@ export const ButtonSelection = React.memo(({ options, callback }) => {
                 backgroundColor: option.color,
                 padding: "1em",
                 margin: "0.2em",
-                flex: "1 1 auto",
+                flex: "0.5 1 0",
+                flexBasis: "0",
+                fontWeight: "bold",
+                fontSize: "1em",
                 border: i === selected ? "3px solid black" : "3px solid #ece9e9",
               }}
               key={option.code}
@@ -144,12 +147,13 @@ export const ButtonSelection = React.memo(({ options, callback }) => {
     <div
       style={{
         display: "flex",
+        flexDirection: "row",
         //alignItems: "stretch",
-        alignContent: "stretch",
+        alignItems: "space-eventy",
         maxWidth: "100%",
         height: "100%",
         flexWrap: "wrap",
-        //justifyContent: "space-evenly",
+        justifyContent: "space-around",
       }}
     >
       {mapButtons()}

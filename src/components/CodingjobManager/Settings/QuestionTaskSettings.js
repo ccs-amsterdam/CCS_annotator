@@ -5,12 +5,12 @@ import {
   Radio,
   TextArea,
   Menu,
-  Header,
   Segment,
   Grid,
   Dropdown,
   Button,
   Popup,
+  Input,
 } from "semantic-ui-react";
 import { useSelector, useDispatch } from "react-redux";
 import { setQuestionIndex } from "actions";
@@ -66,7 +66,6 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
 
   const questionMenu = () => {
     const qlist = questionMap();
-    //if (qlist.length === 0) return null;
     return (
       <div>
         <Menu attached="top">
@@ -86,7 +85,15 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
         <Segment attached="bottom">
           <Popup
             on="click"
-            trigger={<Button style={{ float: "right", background: "red" }}> Delete</Button>}
+            trigger={
+              <Button
+                disabled={taskSettings.questions.questions.length === 0}
+                style={{ float: "right", background: "red" }}
+              >
+                {" "}
+                Delete
+              </Button>
+            }
           >
             <p>Really?</p>
 
@@ -95,9 +102,7 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
             </Button>
           </Popup>
           <br />
-          {qlist.length > 0 ? (
-            <Header textAlign="center">{`Question ${questionIndex + 1}`}</Header>
-          ) : null}
+
           {qlist[questionIndex]}
         </Segment>
       </div>
@@ -163,11 +168,11 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
   return (
     <Form>
       <Form.Group grouped>
-        <label>Name</label>
+        <label>Name</label> <span style={{ fontSize: "10px" }}>(keep it short)</span>
         <Form.Field>
-          <TextArea
-            rows={1}
+          <Input
             value={delayed.name}
+            style={{ width: "150px" }}
             onChange={(e, d) => setDelayed({ ...delayed, name: d.value })}
           />
         </Form.Field>{" "}
@@ -283,8 +288,8 @@ const AnnotinderEditor = ({ questionForm, setQuestionForm }) => {
         <Grid.Row style={{ paddingBottom: "0" }}>
           <Grid.Column width={6}>
             <Form.Group grouped>
-              <b>swipe/arrow up</b>
-
+              <b>swipe</b> or <b>arrow up</b>
+              <br />
               <Dropdown
                 placeholder="not used"
                 clearable
@@ -299,7 +304,8 @@ const AnnotinderEditor = ({ questionForm, setQuestionForm }) => {
         </Grid.Row>
         <Grid.Row>
           <Grid.Column width={8}>
-            <b>swipe/arrow left</b>
+            <b>swipe</b> or <b>arrow left</b>
+            <br />
             <Dropdown
               placeholder="not used"
               clearable
@@ -311,8 +317,8 @@ const AnnotinderEditor = ({ questionForm, setQuestionForm }) => {
             />
           </Grid.Column>
           <Grid.Column width={8}>
-            <b>swipe/arrow right</b>
-
+            <b>swipe</b> or <b>arrow right</b>
+            <br />
             <Dropdown
               placeholder="not used"
               clearable
