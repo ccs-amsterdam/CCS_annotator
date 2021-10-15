@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from "react";
 import DeploySettings from "./Settings/DeploySettings";
-import useJobItems from "hooks/useJobItems";
+import useUnits from "hooks/useUnits";
 import { Grid, Header, Button, Form } from "semantic-ui-react";
 import fileDownload from "js-file-download";
 import objectHash from "object-hash";
 
 import db from "apis/dexie";
-import { standardizeItems } from "util/standardizeItem";
+import { standardizeUnits } from "util/standardizeUnits";
 import { getCodebook } from "util/codebook";
 import { useLiveQuery } from "dexie-react-hooks";
 import TaskSelector from "components/TaskSelector/TaskSelector";
 
 const DeployCodingjob = ({ codingjob }) => {
   const [codingjobPackage, setCodingjobPackage] = useState(null);
-  const jobItems = useJobItems(codingjob);
+  const units = useUnits(codingjob);
 
   useEffect(() => {
-    if (!jobItems || jobItems.length === 0) return;
+    if (!units || units.length === 0) return;
     if (!codingjob?.unitSettings || !codingjob?.taskSettings) return;
-    createCodingjobPackage(codingjob, jobItems, setCodingjobPackage);
-  }, [codingjob, jobItems, setCodingjobPackage]);
+    createCodingjobPackage(codingjob, units, setCodingjobPackage);
+  }, [codingjob, units, setCodingjobPackage]);
 
-  const deployButton = medium => {
+  const deployButton = (medium) => {
     if (!medium) return null;
     switch (codingjob.deploySettings.medium) {
       case "file":
@@ -71,7 +71,7 @@ const DownloadButton = ({ codingjobPackage }) => {
 
     try {
       fileDownload(blob, `AmCAT_annotator_${codingjobPackage.title}.json`);
-      const url = "IDB:" + objectHash(codingjobPackage);
+      const url = objectHash(codingjobPackage);
       db.uploadTask(codingjobPackage, url, "local");
     } catch (error) {
       console.error("" + error);
@@ -116,7 +116,7 @@ const AmcatDeploy = ({ codingjobPackage }) => {
   const deploy = async () => {
     try {
       const id = await amcat.postCodingjob(codingjobPackage, title);
-      const url = `${amcat.host}/codingjob/${id.data.id}/codebook`;
+      const url = `${amcat.host}/codingjob/${id.data.id}`;
       db.uploadTask({ title, amcat: { host: amcat.host, username: amcat.user } }, url, "remote");
     } catch (e) {
       console.log(e);
@@ -147,12 +147,12 @@ const AmcatDeploy = ({ codingjobPackage }) => {
   );
 };
 
-const createCodingjobPackage = async (codingjob, jobItems, setCodingjobPackage) => {
+const createCodingjobPackage = async (codingjob, units, setCodingjobPackage) => {
   const cjpackage = {
     title: codingjob.name,
     provenance: { unitSettings: codingjob.unitSettings },
     codebook: getCodebook(codingjob.taskSettings),
-    units: await standardizeItems(codingjob, jobItems),
+    units: await standardizeUnits(codingjob, units),
     rules: {},
     annotations: [],
   };

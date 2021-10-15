@@ -12,9 +12,8 @@ import db from "apis/dexie";
 //   - Unit selection can split documens into coding units (and context units)
 //   - These units are transformed to simplified items
 
-export const standardizeItems = async (codingjob, jobItems) => {
+export const standardizeUnits = async (codingjob, jobItems) => {
   const { contextUnit, contextWindow } = codingjob.unitSettings;
-  const importAnnotations = codingjob?.taskSettings?.importAnnotations;
 
   const docs = {};
   const items = [];
@@ -36,7 +35,7 @@ export const standardizeItems = async (codingjob, jobItems) => {
   return items;
 };
 
-const unparseTokens = tokens => {
+const unparseTokens = (tokens) => {
   // Create texts from tokens in a way that preserves information about original text and textParts (context and unit)
 
   const text_fields = [];
@@ -48,17 +47,6 @@ const unparseTokens = tokens => {
 
   let offset = {};
   if (tokens[0].offset > 0) offset.offset = tokens[0].offset;
-  if (tokens[0].index > 0) offset.offset_index = tokens[0].index;
-  if (tokens[0].sentence > 0) offset.offset_sentence = tokens[0].sentence;
-  if (tokens[0].paragraph > 0) offset.offset_paragraph = tokens[0].paragraph;
-
-  let extraOffset = {
-    // now 'extra', because not sure whether to include this by default
-    // it's not tokenizer agnostic, but at the same time quite usefull information
-    offset_index: tokens[0].index,
-    offset_sentence: tokens[0].sentence,
-    offset_paragraph: tokens[0].paragraph,
-  };
 
   let unit_started = false;
   let unit_ended = false;

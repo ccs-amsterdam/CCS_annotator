@@ -4,22 +4,20 @@ import AnnotateTable from "./AnnotateTable";
 import Document from "components/Document/Document";
 import { codeBookEdgesToMap } from "util/codebook";
 
-const AnnotateTask = ({ item, codebook, preview = false }) => {
-  //const itemBundle = useItemBundle(item, codebook, documentSettings, preview);
-
+const AnnotateTask = ({ unit, codebook }) => {
   const [annotations, setAnnotations] = useState([]);
 
   const [tokens, setTokens] = useState();
 
   useEffect(() => {
     // settings is an array with the settings for each question
-    // This needs a little preprocessing, so we only update it when codebook changes (not per item)
+    // This needs a little preprocessing, so we only update it when codebook changes (not per unit)
     if (codebook?.codeMap) return null;
     if (!codebook?.codes) return null;
     codebook.codeMap = codeBookEdgesToMap(codebook.codes);
   }, [codebook]);
 
-  if (!item || codebook?.codeMap === null) return null;
+  if (!unit || codebook?.codeMap === null) return null;
 
   return (
     <Grid
@@ -30,7 +28,7 @@ const AnnotateTask = ({ item, codebook, preview = false }) => {
     >
       <Grid.Column width={10} style={{ paddingRight: "0em", height: "100%" }}>
         <Document
-          unit={item}
+          unit={unit}
           codes={codebook?.codes}
           settings={codebook?.settings}
           onChangeAnnotations={setAnnotations}

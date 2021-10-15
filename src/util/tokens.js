@@ -10,7 +10,7 @@ nlp.extend(paragraphs);
  *                              If both unit_start and unit_end is omitted, the whole text is considered codingUnit.
  * @returns
  */
-export const parseTokens = text_fields => {
+export const parseTokens = (text_fields) => {
   const tokens = [];
   let token = null;
   let paragraph = 0; // offset can be used if position in original article is known
@@ -27,15 +27,9 @@ export const parseTokens = text_fields => {
   for (let text_field of text_fields) {
     let section = text_field.name || "text";
     let offset = text_field.offset || 0;
-    // let offset_index = text_field.offset_index || 0;
-    // let offset_sentence = text_field.offset_sentence || 0;
-    // let offset_paragraph = text_field.offset_paragraph || 0;
 
     text = text_field.value;
-    t = nlp
-      .tokenize(text)
-      .paragraphs()
-      .json({ offset: true });
+    t = nlp.tokenize(text).paragraphs().json({ offset: true });
     // map to single array.
     for (let par = 0; par < t.length; par++) {
       for (let sent = 0; sent < t[par].sentences.length; sent++) {
@@ -60,8 +54,6 @@ export const parseTokens = text_fields => {
               paragraph: paragraph,
               sentence: sentence,
               index: tokenIndex,
-              // add section_paragraph and such. To keep track of this for meta
-              // then works the same as offset
               text: token.text,
               pre: token.pre,
               post: token.post,
@@ -79,7 +71,7 @@ export const parseTokens = text_fields => {
   return tokens;
 };
 
-export const importTokens = tokens => {
+export const importTokens = (tokens) => {
   let paragraph = 0;
   let last_paragraph = tokens[0].paragraph;
 
@@ -125,11 +117,9 @@ export const importTokens = tokens => {
       if (tokens[i].section === tokens[i + 1].section) {
         if (tokens[i + 1].offset < tokens[i].offset + totalLength) {
           alert(
-            `Invalid token position data. The length of "${tokens[i].pre +
-              tokens[i].text +
-              tokens[i].post}" on position ${
-              tokens[i].offset
-            } exeeds the offset/start position of the next token`
+            `Invalid token position data. The length of "${
+              tokens[i].pre + tokens[i].text + tokens[i].post
+            }" on position ${tokens[i].offset} exeeds the offset/start position of the next token`
           );
           return null;
         }

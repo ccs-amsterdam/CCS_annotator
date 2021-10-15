@@ -2,8 +2,9 @@ import React, { useEffect, useState, useRef } from "react";
 import { Input, Loader, Pagination, Segment } from "semantic-ui-react";
 import { useSelector, useDispatch } from "react-redux";
 
-const IndexController = ({ n, setIndex, canControl = true }) => {
+const IndexController = ({ n, setIndex, canGoForward = true, canGoBack = true }) => {
   const moveUnitIndex = useSelector((state) => state.moveUnitIndex);
+  const reached = useRef(0); // if canGoBack but not canGoForward, can still go forward after going back
   const canMove = useRef(false);
   const dispatch = useDispatch();
 
@@ -15,6 +16,7 @@ const IndexController = ({ n, setIndex, canControl = true }) => {
     if (e.keyCode === 9) {
       e.preventDefault();
       if (e.shiftKey) {
+        if (!canGoBack) return;
         if (e.repeat) {
           setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
         } else {
@@ -22,22 +24,29 @@ const IndexController = ({ n, setIndex, canControl = true }) => {
         }
       } else {
         if (e.repeat) {
-          setDelayedActivePage((current) => (current < n + 1 ? current + 1 : current));
+          setDelayedActivePage((current) => {
+            if (canGoForward || current < reached.current)
+              return current < n + 1 ? current + 1 : current;
+          });
         } else {
-          setActivePage((current) => (current < n + 1 ? current + 1 : current));
+          setActivePage((current) => {
+            if (canGoForward || current < reached.current)
+              return current < n + 1 ? current + 1 : current;
+          });
         }
       }
     }
   };
 
   useEffect(() => {
-    if (canControl) window.addEventListener("keydown", onKeyDown);
+    if (canGoForward || canGoBack) window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
     };
   });
 
   useEffect(() => {
+    reached.current = 0;
     canMove.current = false;
   }, [n]);
 
@@ -57,6 +66,7 @@ const IndexController = ({ n, setIndex, canControl = true }) => {
 
   useEffect(() => {
     if (!n) return null;
+    reached.current = Math.max(activePage, reached.current);
     if (activePage - 1 === n) {
       setIndex(null);
     } else {
@@ -81,6 +91,8 @@ const IndexController = ({ n, setIndex, canControl = true }) => {
 
   if (!n) return null;
 
+  console.log(reached.current);
+
   return (
     <Segment
       style={{
@@ -99,7 +111,10 @@ const IndexController = ({ n, setIndex, canControl = true }) => {
         min={1}
         max={n + 1}
         onChange={(e, d) => {
-          if (canControl) setDelayedActivePage(Number(d.value));
+          if ((canGoForward || activePage < reached.current) && Number(d.value) > delayedActivePage)
+            setDelayedActivePage(Number(d.value));
+          if (canGoBack && Number(d.value) < delayedActivePage)
+            setDelayedActivePage(Number(d.value));
         }}
         type="range"
         labelPosition="left"
@@ -107,19 +122,25 @@ const IndexController = ({ n, setIndex, canControl = true }) => {
           <Pagination
             secondary
             activePage={delayedActivePage}
-            pageItem={delayedActivePage <= n ? `${delayedActivePage} / ${n}` : "done"}
+            pageItem={delayedActivePage <= n ? `${delayedActivePage} / ${n}` : ""}
             size={"mini"}
             firstItem={null}
             lastItem={null}
-            prevItem={canControl ? "back" : null}
-            nextItem={canControl ? "next" : null}
+            prevItem={canGoBack ? "back" : null}
+            nextItem={canGoForward || activePage < reached.current ? "next" : ""}
             siblingRange={0}
             boundaryRange={0}
             ellipsisItem={null}
             totalPages={n + 1}
             onClick={(e, d) => e.stopPropagation()}
             onPageChange={(e, d) => {
-              if (canControl) setActivePage(Number(d.activePage));
+              if (
+                (canGoForward || activePage < reached.current) &&
+                Number(d.activePage) > activePage
+              )
+                setActivePage(Number(d.activePage));
+              if (canGoBack && Number(d.activePage) < activePage)
+                setActivePage(Number(d.activePage));
             }}
             style={{ fontSize: "9px", border: "none", boxShadow: "none", padding: 0, margin: 0 }}
           ></Pagination>

@@ -4,30 +4,33 @@ import { Header, Button, Segment } from "semantic-ui-react";
 import { setQuestionIndex, setMoveUnitIndex } from "actions";
 import { SearchBoxDropdown, ButtonSelection, Annotinder } from "./QuestionForms";
 
-const QuestionForm = ({ unit, tokens, questions, questionIndex, preview, swipe }) => {
+const QuestionForm = ({ unit, tokens, questions, questionIndex, swipe }) => {
   const [answerTransition, setAnswerTransition] = useState();
   const dispatch = useDispatch();
   const answered = useRef(false); // to prevent answering double (e.g. with swipe events)
+  const [annotations, setAnnotations] = useState(null);
 
   useEffect(() => {
+    createAnnotations(unit, tokens, questions, setAnnotations);
     answered.current = false;
-  }, [unit]);
+  }, [unit, tokens, setAnnotations, questions]);
 
-  console.log(unit);
-  if (!questions || !unit) return null;
+  if (!questions || !unit || !annotations) return null;
+  if (!questions?.[questionIndex]) {
+    dispatch(setQuestionIndex(0));
+    return null;
+  }
 
   const question = prepareQuestion(unit, questions[questionIndex]);
-  const annotationObject = createAnnotationObject(tokens, questions[questionIndex], questionIndex);
-  const currentAnswer = getCurrentAnswer(unit.annotations, annotationObject);
 
-  const onSelect = answer => {
-    // write result to IDB/server and skip to next question or next item
+  const onSelect = (answer) => {
+    // write result to IDB/server and skip to next question or next unit
     if (answered.current) return null;
-    if (!annotationObject) return null;
     answered.current = true;
 
-    annotationObject.value = answer.code;
-    unit.post(unit.unitId, [annotationObject]);
+    annotations[questionIndex].value = answer.code;
+    unit.annotations = updateAnnotations(annotations[questionIndex], unit.annotations);
+    unit.post(unit.unitId, unit.annotations);
 
     setAnswerTransition(answer); // show given answer
     setTimeout(() => {
@@ -39,6 +42,7 @@ const QuestionForm = ({ unit, tokens, questions, questionIndex, preview, swipe }
       } else {
         dispatch(setQuestionIndex(questionIndex + 1));
       }
+      answered.current = false;
     }, 250);
   };
 
@@ -56,35 +60,79 @@ const QuestionForm = ({ unit, tokens, questions, questionIndex, preview, swipe }
         backgroundColor: "#1B1C1D",
       }}
     >
+      <QuestionIndexStep
+        questions={questions}
+        questionIndex={questionIndex}
+        annotations={annotations}
+        dispatch={dispatch}
+      />
       <div style={{ width: "100%", flex: "1 1 auto" }}>
-        <QuestionIndexStep questions={questions} questionIndex={questionIndex} />
         <Header as="h3" style={{ color: "white" }}>
           {questions[questionIndex].name}
         </Header>
       </div>
-      {question}
+      <p>{question}</p>
       <AnswerSegment
         answerTransition={answerTransition}
-        currentAnswer={currentAnswer}
+        currentAnswer={annotations?.[questionIndex]?.value}
         questions={questions}
         questionIndex={questionIndex}
         onSelect={onSelect}
-        preview={preview}
         swipe={swipe}
       />
     </div>
   );
 };
 
-const QuestionIndexStep = ({ questions, questionIndex }) => {
+const createAnnotations = (unit, tokens, questions, setAnnotations) => {
+  // create a list with annotations for each question, and see if they have been answered yet
+  if (tokens.length === 0) return null;
+  const annotations = [];
+  if (!unit.annotations) unit.annotations = [];
+  for (let i = 0; i < questions.length; i++) {
+    const annotation = createAnnotationObject(tokens, questions[i], i);
+    annotation.value = getCurrentAnswer(unit.annotations, annotation);
+    annotations.push(annotation);
+  }
+  setAnnotations(annotations);
+};
+
+const QuestionIndexStep = ({ questions, questionIndex, annotations, dispatch }) => {
   if (questions.length === 1) return null;
+
+  const setColor = (i) => {
+    if (annotations[i].value) return "lightgreen";
+    if (i > 0 && annotations[i - 1].value) return "lightblue";
+    return "grey";
+  };
+
   return (
-    <Button.Group style={{ marginLeft: "1em", marginTop: "0", float: "right" }}>
+    <Button.Group
+      fluid
+      style={{
+        position: "absolute",
+        border: "2px solid black",
+        top: "-20px",
+        left: "0",
+        height: "25px",
+      }}
+    >
       {questions.map((q, i) => {
         return (
           <Button
             active={i === questionIndex}
-            style={{ padding: "0.2em", minWidth: "1.3em", background: "grey", color: "white" }}
+            style={{
+              padding: "0.2em",
+              minWidth: "2em",
+              borderRadius: "0",
+              background: setColor(i),
+              color: "white",
+            }}
+            onClick={() => {
+              if (annotations[i].value !== null) {
+                dispatch(setQuestionIndex(i));
+              }
+            }}
           >
             {i + 1}
           </Button>
@@ -100,7 +148,6 @@ const AnswerSegment = ({
   questions,
   questionIndex,
   onSelect,
-  preview,
   swipe,
 }) => {
   if (answerTransition)
@@ -137,18 +184,13 @@ const AnswerSegment = ({
           <SearchBoxDropdown options={questions[questionIndex].options} callback={onSelect} />
         ) : null}
         {questions[questionIndex].type === "select code" ? (
-          <ButtonSelection
-            options={questions[questionIndex].options}
-            callback={onSelect}
-            preview={preview}
-          />
+          <ButtonSelection options={questions[questionIndex].options} callback={onSelect} />
         ) : null}
         {questions[questionIndex].type === "annotinder" ? (
           <Annotinder
             swipeOptions={questions[questionIndex].swipeOptions}
             currentAnswer={currentAnswer}
             callback={onSelect}
-            preview={preview}
             swipe={swipe}
           />
         ) : null}
@@ -207,24 +249,38 @@ const createAnnotationObject = (tokens, question, questionIndex) => {
   };
 };
 
+const sameQuestion = (x, y) => {
+  return (
+    x.variable === y.variable &&
+    x.section === y.section &&
+    x.offset === y.offset &&
+    x.length === y.length
+  );
+};
+
 const getCurrentAnswer = (annotations, annotationObject) => {
-  console.log(annotations);
   if (!annotations) return null;
   for (let annotation of annotations) {
     console.log(annotation);
     console.log(annotationObject);
-    if (
-      annotation.variable === annotationObject.variable &&
-      annotation.section === annotationObject.section &&
-      annotation.offset === annotationObject.offset &&
-      annotation.length === annotationObject.length
-    )
-      return annotation.value;
+    if (sameQuestion(annotation, annotationObject)) return annotation.value;
   }
   return null;
 };
 
-const showCurrent = currentAnswer => {
+const updateAnnotations = (newAnnotation, annotations) => {
+  if (!annotations) annotations = [];
+  for (let i = 0; i < annotations.length; i++) {
+    if (sameQuestion(annotations[i], newAnnotation)) {
+      annotations[i] = newAnnotation;
+      return annotations;
+    }
+  }
+  annotations.push(newAnnotation);
+  return annotations;
+};
+
+const showCurrent = (currentAnswer) => {
   if (currentAnswer == null) return null;
   return (
     <div style={{ backgroundColor: "white", color: "black" }}>
@@ -257,7 +313,7 @@ const prepareQuestion = (unit, question) => {
   return markedString(preparedQuestion);
 };
 
-const markedString = text => {
+const markedString = (text) => {
   const regex = new RegExp(/{{(.*?)}}/); // Match text inside two square brackets
 
   text = text.replace(/(\r\n|\n|\r)/gm, "");

@@ -8,13 +8,13 @@ import AuthRoute from "components/routing/AuthRoute";
 
 // Main pages. Use below in items to include in header menu
 import CodingjobManager from "components/CodingjobManager/CodingjobManager";
-import Annotator from "components/Annotator/Annotator";
+import AnnotatorPage from "components/Annotator/AnnotatorPage";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
 const homepage = "/amcat4annotator";
 const items = [
-  { label: "Annotator", path: homepage + "/annotator", Component: Annotator, menu: false },
+  { label: "Annotator", path: homepage + "/annotator", Component: AnnotatorPage, menu: false },
   {
     label: "Codingjob manager",
     path: homepage + "/manager",

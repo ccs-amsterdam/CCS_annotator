@@ -15,7 +15,7 @@ export const SearchBoxDropdown = React.memo(({ options, callback }) => {
         placeholder={"<type to search>"}
         searchInput={{ autoFocus: true }}
         style={{ minWidth: "12em" }}
-        options={options.map(option => {
+        options={options.map((option) => {
           return {
             key: option.code,
             value: option,
@@ -43,16 +43,16 @@ export const SearchBoxDropdown = React.memo(({ options, callback }) => {
   );
 });
 
-export const ButtonSelection = React.memo(({ options, callback, preview }) => {
+export const ButtonSelection = React.memo(({ options, callback }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const eventsBlocked = useSelector(state => state.eventsBlocked);
+  const eventsBlocked = useSelector((state) => state.eventsBlocked);
 
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const nbuttons = options.length;
 
       // any arrowkey
@@ -79,7 +79,10 @@ export const ButtonSelection = React.memo(({ options, callback, preview }) => {
       }
 
       // delete
-      if (event.keyCode === 46) callback(null);
+      if (event.keyCode === 46) {
+        callback(null);
+        setSelected(0);
+      }
 
       // space or enter
       if (event.keyCode === 32 || event.keyCode === 13) {
@@ -91,20 +94,21 @@ export const ButtonSelection = React.memo(({ options, callback, preview }) => {
         } else {
           callback(options[selected]);
         }
+        setSelected(0);
       }
     },
     [selected, callback, options]
   );
 
   useEffect(() => {
-    if (!eventsBlocked && !preview) {
+    if (!eventsBlocked) {
       window.addEventListener("keydown", onKeydown);
     } else window.removeEventListener("keydown", onKeydown);
 
     return () => {
       window.removeEventListener("keydown", onKeydown);
     };
-  }, [onKeydown, eventsBlocked, preview]);
+  }, [onKeydown, eventsBlocked]);
 
   const mapButtons = () => {
     return options.map((option, i) => {
@@ -122,22 +126,13 @@ export const ButtonSelection = React.memo(({ options, callback, preview }) => {
               key={option.code}
               value={option}
               compact
-              //active={i === selected}
               onMouseOver={() => setSelected(i)}
-              onClick={(e, d) => callback(d.value)}
+              onClick={(e, d) => {
+                callback(d.value);
+                setSelected(0);
+              }}
             >
-              {/* <div
-                  style={{
-                    position: "relative",
-                    float: "left",
-                    fontStyle: "bold",
-                    marginTop: "-0.5em",
-                    marginLeft: "-1em",
-                  }}
-                >
-                  {i + 1}
-                </div> */}
-              {" " + option.code}
+              {option.code}
             </Button>
           </Ref>
         </>
@@ -162,8 +157,8 @@ export const ButtonSelection = React.memo(({ options, callback, preview }) => {
   );
 });
 
-export const Annotinder = React.memo(({ swipeOptions, callback, preview, swipe }) => {
-  const eventsBlocked = useSelector(state => state.eventsBlocked);
+export const Annotinder = React.memo(({ swipeOptions, callback, swipe }) => {
+  const eventsBlocked = useSelector((state) => state.eventsBlocked);
   // const left = options.find(option => option.swipe === "left");
   // const up = options.find(option => option.swipe === "up");
   // const right = options.find(option => option.swipe === "right");
@@ -178,7 +173,7 @@ export const Annotinder = React.memo(({ swipeOptions, callback, preview, swipe }
   }, [swipe, callback, swipeOptions]);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       // any arrowkey
       if (arrowKeys.includes(event.key)) {
         event.preventDefault();
@@ -193,14 +188,14 @@ export const Annotinder = React.memo(({ swipeOptions, callback, preview, swipe }
   );
 
   useEffect(() => {
-    if (!eventsBlocked && !preview) {
+    if (!eventsBlocked) {
       window.addEventListener("keydown", onKeydown);
     } else window.removeEventListener("keydown", onKeydown);
 
     return () => {
       window.removeEventListener("keydown", onKeydown);
     };
-  }, [onKeydown, eventsBlocked, preview]);
+  }, [onKeydown, eventsBlocked]);
 
   return (
     <div

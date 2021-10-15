@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import { drawRandom } from "util/sample";
 
 /**
- * Hook for getting the jobItems (using the current codingjob settings)
+ * Hook for getting the Units (using the current codingjob settings)
  * @param {} codingjob
  * @returns
  */
-const useJobItems = codingjob => {
-  const [jobItems, setJobItems] = useState(null);
+const useUnits = (codingjob) => {
+  const [Units, setUnits] = useState(null);
 
   // When a new codingjob is loaded, set codingjobLoaded ref to false
   // this prevents actually loading the data until unitSettings has loaded
@@ -16,42 +16,42 @@ const useJobItems = codingjob => {
 
   useEffect(() => {
     if (!codingjob?.unitSettings) return null;
-    setJobItems(null);
-    getJobItems(codingjob, setJobItems);
-  }, [codingjob, setJobItems]);
+    setUnits(null);
+    getUnits(codingjob, setUnits);
+  }, [codingjob, setUnits]);
 
   if (!codingjob) return null;
 
-  return jobItems;
+  return Units;
 };
 
-const getJobItems = async (codingjob, setJobItems) => {
-  let [totalItems, items] = await getItemsFromDB(codingjob);
-  setJobItems(items);
+const getUnits = async (codingjob, setUnits) => {
+  let [totalUnits, units] = await getUnitsFromDB(codingjob);
+  setUnits(units);
   if (
     codingjob.unitSettings.n === null ||
     codingjob.unitSettings.n == null ||
-    codingjob.unitSettings.totalItems !== totalItems
+    codingjob.unitSettings.totalUnits !== totalUnits
   ) {
     await db.setCodingjobProp(codingjob, "unitSettings", {
       ...codingjob.unitSettings,
-      n: totalItems,
-      totalItems,
+      n: totalUnits,
+      totalUnits,
     });
   }
 };
 
-const getItemsFromDB = async codingjob => {
+const getUnitsFromDB = async (codingjob) => {
   if (!codingjob?.unitSettings) return null;
   const textUnit = codingjob.unitSettings.textUnit;
   const unitSelection = codingjob.unitSettings;
 
-  let totalItems = 0;
+  let totalUnits = 0;
 
-  const getGroup = cjIndices => {
+  const getGroup = (cjIndices) => {
     if (!unitSelection.balanceDocuments && !unitSelection.statifyAnnotations) return null; // if not balanced
 
-    return cjIndices.map(item => {
+    return cjIndices.map((item) => {
       let group = "";
       if (unitSelection.balanceDocuments) group += item.docIndex;
       if (item.annotation && unitSelection.balanceAnnotations) group += "_" + item.annotation.group;
@@ -63,8 +63,8 @@ const getItemsFromDB = async codingjob => {
   let done;
 
   if (unitSelection.value === "all") {
-    cjIndices = await allJobItems(codingjob, textUnit, new Set([]), true);
-    totalItems = cjIndices.length;
+    cjIndices = await allUnits(codingjob, textUnit, new Set([]), true);
+    totalUnits = cjIndices.length;
     cjIndices = drawRandom(
       cjIndices,
       unitSelection.n,
@@ -78,13 +78,13 @@ const getItemsFromDB = async codingjob => {
     // The annotation options are 'per annotation' and 'has annotation'.
     // The latter is currently not used, but leaving it here for now
     // THe difference is that 'has annotations' gives unique text units with at least one annotation
-    [cjIndices, done] = await annotationJobItems(
+    [cjIndices, done] = await annotationUnits(
       codingjob,
       textUnit,
       unitSelection.value === "has annotation",
       unitSelection.validCodes
     );
-    totalItems = cjIndices.length;
+    totalUnits = cjIndices.length;
     cjIndices = drawRandom(
       cjIndices,
       unitSelection.n,
@@ -97,7 +97,7 @@ const getItemsFromDB = async codingjob => {
       // Annotationmix is now disabled, but leaving it here because it might make a comeback someday
       const noDuplicates = unitSelection.value === "has annotation";
 
-      const all = await allJobItems(codingjob, textUnit, done, noDuplicates);
+      const all = await allUnits(codingjob, textUnit, done, noDuplicates);
       let sampleN = Math.ceil(cjIndices.length * (unitSelection.annotationMix / 100));
       let addSample = drawRandom(
         all,
@@ -124,17 +124,17 @@ const getItemsFromDB = async codingjob => {
     }
   }
 
-  cjIndices = orderJobItems(cjIndices, unitSelection);
+  cjIndices = orderUnits(cjIndices, unitSelection);
 
-  return [totalItems, cjIndices];
+  return [totalUnits, cjIndices];
 };
 
-const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
+const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
   let documents = await db.getDocuments(codingjob);
 
   const cjIndices = [];
   let docIndex = -1;
-  await documents.each(e => {
+  await documents.each((e) => {
     docIndex++;
     if (textUnit === "document" && !done.has(e.doc_uid)) {
       if (noDuplicates && done.has(e.doc_uid)) return;
@@ -180,7 +180,7 @@ const allJobItems = async (codingjob, textUnit, done, noDuplicates) => {
   return cjIndices;
 };
 
-const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
+const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
   let documents = await db.getDocuments(codingjob);
 
   let useCode = null;
@@ -193,7 +193,7 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
   const cjIndices = [];
   const done = new Set([]);
   let docIndex = -1;
-  await documents.each(e => {
+  await documents.each((e) => {
     docIndex++;
     if (e.annotations?.span) {
       for (let i of Object.keys(e.annotations.span)) {
@@ -242,9 +242,9 @@ const annotationJobItems = async (codingjob, textUnit, unique, validCodes) => {
   return [cjIndices, done];
 };
 
-const orderJobItems = (cjIndices, unitSelection) => {
+const orderUnits = (cjIndices, unitSelection) => {
   if (!unitSelection.ordered) return cjIndices;
-  return cjIndices.sort(function(a, b) {
+  return cjIndices.sort(function (a, b) {
     if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;
     if (a.unitIndex !== b.unitIndex) return a.unitIndex - b.unitIndex;
     if (a.annotation != null && a.annotation.index !== b)
@@ -253,4 +253,4 @@ const orderJobItems = (cjIndices, unitSelection) => {
   });
 };
 
-export default useJobItems;
+export default useUnits;

@@ -10,7 +10,7 @@ const Tokens = ({ tokens, centerVertical, setReady }) => {
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
-    const firstTextUnitToken = tokens.find(token => token.codingUnit);
+    const firstTextUnitToken = tokens.find((token) => token.codingUnit);
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
       scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, 1 / 4);
     }
@@ -19,17 +19,10 @@ const Tokens = ({ tokens, centerVertical, setReady }) => {
   useEffect(() => {
     if (!tokens) return null;
     setText(renderText(tokens));
-    if (setReady) setReady(current => current + 1); // setReady is an optional property used to let parents know the text is ready.
+    if (setReady) setReady((current) => current + 1); // setReady is an optional property used to let parents know the text is ready.
   }, [tokens, setReady]);
 
   if (tokens === null) return null;
-
-  // const emptySpace = () => {
-  //   // add empty space before and after text to center coding unit
-  //   // in case it's at the bottom or top of a text
-  //   if (!itemBundle?.settings?.centerVertical) return null;
-  //   return <div style={{ height: "10em" }} />;
-  // };
 
   return (
     <div
@@ -52,14 +45,14 @@ const Tokens = ({ tokens, centerVertical, setReady }) => {
         >
           {/* <div style={{ height: "10em" }} /> */}
           <div style={{ padding: "20px" }}>{text["text"]}</div>
-          {/* <div style={{ height: "10em" }} /> */}
+          <div style={{ height: "25px" }} />
         </div>
       </Ref>
     </div>
   );
 };
 
-const renderText = tokens => {
+const renderText = (tokens) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
 
   let section = [];
@@ -109,7 +102,7 @@ const renderText = tokens => {
 };
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
-  const fontstyle = paragraphs => {
+  const fontstyle = (paragraphs) => {
     if (section === "title") return <h2 key={section + paragraph_nr}>{paragraphs}</h2>;
     return paragraphs;
   };

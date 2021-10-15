@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
 
-import { Form, Radio, TextArea, Menu, Header, Segment, Grid, Dropdown } from "semantic-ui-react";
+import {
+  Form,
+  Radio,
+  TextArea,
+  Menu,
+  Header,
+  Segment,
+  Grid,
+  Dropdown,
+  Button,
+  Popup,
+} from "semantic-ui-react";
 import { useSelector, useDispatch } from "react-redux";
 import { setQuestionIndex } from "actions";
 
@@ -24,6 +35,16 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
     const questions = taskSettings.questions.questions;
     questions.push(questionDefaultSettings);
     setTaskSettings({ ...taskSettings, questions: { questions } });
+  };
+
+  const onDelete = () => {
+    const questions = taskSettings.questions.questions;
+    const newQuestions = [];
+    for (let i = 0; i < questions.length; i++) {
+      if (i !== questionIndex) newQuestions.push(questions[i]);
+    }
+
+    setTaskSettings({ ...taskSettings, questions: { questions: newQuestions } });
   };
 
   const questionMap = () => {
@@ -62,8 +83,18 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
             })}
           <Menu.Item icon="plus" style={{ background: "lightblue" }} onClick={onAdd} />
         </Menu>
-
         <Segment attached="bottom">
+          <Popup
+            on="click"
+            trigger={<Button style={{ float: "right", background: "red" }}> Delete</Button>}
+          >
+            <p>Really?</p>
+
+            <Button style={{ background: "red" }} onClick={onDelete}>
+              yes, really
+            </Button>
+          </Popup>
+          <br />
           {qlist.length > 0 ? (
             <Header textAlign="center">{`Question ${questionIndex + 1}`}</Header>
           ) : null}

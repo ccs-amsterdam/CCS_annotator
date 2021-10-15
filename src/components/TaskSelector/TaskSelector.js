@@ -14,31 +14,28 @@ const TaskSelector = () => {
   const history = useHistory();
   const [taskKey, setTaskKey] = useState(null);
 
-  const uploadFile = e => {
+  const uploadFile = (e) => {
     const fileReader = new FileReader();
     fileReader.readAsText(e.target.files[0], "UTF-8");
-    fileReader.onload = e => {
-      const url = "IDB:" + objectHash(e.target.result);
+    fileReader.onload = (e) => {
+      const url = objectHash(e.target.result);
       db.uploadTask(JSON.parse(e.target.result), url, "local");
     };
   };
 
   const setJobUrlQuery = async () => {
     // set task.url as url query to open job in annotator
-    history.push(homepage + "/annotator?" + taskKey.url);
+    history.push(homepage + "/annotator?url=" + taskKey.url);
   };
 
   const linkAndQr = () => {
     if (taskKey == null) return;
-    const url = "https://kasperwelbers.com/amcat4annotator/annotator?" + taskKey?.url;
+    const url = "https://kasperwelbers.com/amcat4annotator/annotator?url=" + taskKey?.url;
     return (
       <div>
         <TextArea value={url} style={{ width: "512px" }} />
         <Popup hoverable trigger={<Button>Show QR code</Button>}>
-          <QRCode
-            value={"This link opens a codingjob in the AmCAT annotator" + encodeURI(url)}
-            size={256}
-          />
+          <QRCode value={encodeURI(url)} size={256} />
         </Popup>
       </div>
     );

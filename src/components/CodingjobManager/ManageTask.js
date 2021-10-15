@@ -3,16 +3,18 @@ import TaskSettings from "./Settings/TaskSettings";
 import { Grid, Header } from "semantic-ui-react";
 import QuestionTask from "components/Annotator/QuestionTask/QuestionTask";
 import AnnotateTask from "components/Annotator/AnnotateTask/AnnotateTask";
-import useJobItems from "hooks/useJobItems";
-import { standardizeItems } from "util/standardizeItem";
+import useUnits from "hooks/useUnits";
+import { standardizeUnits } from "util/standardizeUnits";
 import { getCodebook } from "util/codebook";
 import IndexController from "components/Annotator/IndexController";
+import { useDispatch } from "react-redux";
+import { blockEvents } from "actions";
 
 const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false
   // this prevents actually loading the data until unitSettings has loaded
   // the unitSettings stored in the codingjob
-  const jobItems = useJobItems(codingjob);
+  const units = useUnits(codingjob);
 
   if (!codingjob) return null;
   let cwidths = [8, 8];
@@ -31,16 +33,16 @@ const ManageTask = ({ codingjob }) => {
           <TaskSettings codingjob={codingjob} />
         </Grid.Column>
         <Grid.Column width={cwidths[1]}>
-          <PreviewTask codingjob={codingjob} jobItems={jobItems} />
+          <PreviewTask codingjob={codingjob} units={units} />
         </Grid.Column>
       </Grid>
     </div>
   );
 };
 
-const PreviewTask = React.memo(({ codingjob, jobItems }) => {
+const PreviewTask = React.memo(({ codingjob, units }) => {
   const [index, setIndex] = useState(null);
-  const [standardizedItem, setStandardizedItem] = useState(null);
+  const [standardizedUnit, setStandardizedUnit] = useState(null);
   const [codebook, setCodebook] = useState(null);
 
   useEffect(() => {
@@ -49,30 +51,32 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
   }, [codingjob.taskSettings]);
 
   useEffect(() => {
-    if (!jobItems || index === null) {
-      setStandardizedItem(null);
+    if (!units || index === null) {
+      setStandardizedUnit(null);
       return null;
     }
-    if (index >= jobItems.length) return null;
-    standardizeItems(codingjob, [jobItems[index]]).then((singleItemArray) => {
-      setStandardizedItem(singleItemArray[0]);
+    if (index >= units.length) return null;
+    standardizeUnits(codingjob, [units[index]]).then((singleUnitArray) => {
+      const previewUnit = singleUnitArray[0];
+      previewUnit.post = (annotations) => console.log(annotations); // don't store annotations
+      setStandardizedUnit(previewUnit);
     });
-  }, [index, jobItems, setStandardizedItem, codingjob]);
+  }, [index, units, setStandardizedUnit, codingjob]);
 
-  if (!jobItems) return null;
+  if (!units) return null;
 
   const renderTaskPreview = (type) => {
     switch (type) {
       case "questions":
         return (
-          <PreviewQuestionTask codebook={codebook} standardizedItem={standardizedItem}>
-            <IndexController n={jobItems?.length} setIndex={setIndex} />
+          <PreviewQuestionTask codebook={codebook} standardizedUnit={standardizedUnit}>
+            <IndexController n={units?.length} setIndex={setIndex} />
           </PreviewQuestionTask>
         );
       case "annotate":
         return (
-          <PreviewAnnotateTask codebook={codebook} standardizedItem={standardizedItem}>
-            <IndexController n={jobItems?.length} setIndex={setIndex} />
+          <PreviewAnnotateTask codebook={codebook} standardizedUnit={standardizedUnit}>
+            <IndexController n={units?.length} setIndex={setIndex} />
           </PreviewAnnotateTask>
         );
       default:
@@ -84,7 +88,16 @@ const PreviewTask = React.memo(({ codingjob, jobItems }) => {
   return renderTaskPreview(codingjob.taskSettings.type);
 });
 
-const PreviewQuestionTask = React.memo(({ children, codebook, standardizedItem }) => {
+const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit }) => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(blockEvents(true));
+    return () => {
+      dispatch(blockEvents(false));
+    };
+  });
+
   return (
     <>
       <Header
@@ -106,14 +119,14 @@ const PreviewQuestionTask = React.memo(({ children, codebook, standardizedItem }
         }}
       >
         <div style={{ padding: "0em", paddingTop: "1em", height: "100%" }}>
-          <QuestionTask item={standardizedItem} codebook={codebook} preview={true} />
+          <QuestionTask unit={standardizedUnit} codebook={codebook} preview={true} />
         </div>
       </div>
     </>
   );
 });
 
-const PreviewAnnotateTask = ({ children, codebook, standardizedItem }) => {
+const PreviewAnnotateTask = ({ children, codebook, standardizedUnit }) => {
   return (
     <>
       <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
@@ -130,7 +143,7 @@ const PreviewAnnotateTask = ({ children, codebook, standardizedItem }) => {
         }}
       >
         <div style={{ padding: "0", height: "100%" }}>
-          <AnnotateTask item={standardizedItem} codebook={codebook} preview={true} />
+          <AnnotateTask unit={standardizedUnit} codebook={codebook} preview={true} />
         </div>
       </div>
     </>

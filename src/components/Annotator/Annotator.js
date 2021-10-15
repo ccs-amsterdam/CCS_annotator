@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import db from "apis/dexie";
-import axios from "axios";
 import { useLocation, useHistory } from "react-router";
 import { Icon, Grid, Modal, Button } from "semantic-ui-react";
 import { useFullScreenHandle } from "react-full-screen";
@@ -13,46 +12,42 @@ import { CSVDownloader } from "react-papaparse";
 
 const homepage = "/amcat4annotator";
 
-const Annotator = () => {
+const Annotator = ({ UnitServer }) => {
   const handle = useFullScreenHandle();
-  const [task, setTask] = useState(null);
-  const [unitIndex, setUnitIndex] = useState(null);
-  const [preparedItem, setPreparedItem] = useState(null);
+  const [unitIndex, setUnitIndex] = useState(0);
+  const [preparedUnit, setPreparedUnit] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
-    if (location.search) {
-      const jobURL = decodeURI(location.search.substring(1));
-      prepareTask(jobURL, setTask);
-    }
-  }, [location, setTask, handle]);
-
-  useEffect(() => {
-    if (!task) return;
-    task.server
-      .get(unitIndex)
-      .then(unit => {
-        console.log(unit);
-        setPreparedItem({ post: task.server.post, unitId: unit.data.id, ...unit.data.unit });
+    if (!UnitServer) return;
+    UnitServer.get(unitIndex)
+      .then((unit) => {
+        setPreparedUnit({
+          post: UnitServer.post,
+          rules: UnitServer.rules,
+          unitId: unit.id,
+          ...unit.unit,
+        });
       })
-      .catch(e => {
+      .catch((e) => {
         if (e.response?.status === 404) {
           console.log(
             "404 error. Probably amcat ran out of stuff to give you, but we should handle this differently"
           );
         }
       });
-  }, [unitIndex, task, setPreparedItem]);
+  }, [unitIndex, UnitServer, setPreparedUnit]);
 
   let maxWidth = "100%";
-  if (task?.codebook?.type) {
-    if (task.codebook.type === "questions") maxWidth = "1000px";
-    if (task.codebook.type === "annotate") maxWidth = "2000px";
+  let maxHeight = "100%";
+  if (UnitServer?.codebook?.type) {
+    if (UnitServer?.codebook.type === "questions") [maxWidth, maxHeight] = ["800px", "1000px"];
+    if (UnitServer?.codebook.type === "annotate") [maxWidth, maxHeight] = ["2000px", "2000px"];
   }
 
   const renderTask = () => {
-    if (unitIndex === null) return <Finished task={task} />;
-    return <Task codebook={task?.codebook} item={preparedItem} />;
+    if (unitIndex === null) return <Finished UnitServer={UnitServer} />;
+    return <Task codebook={UnitServer?.codebook} unit={preparedUnit} />;
   };
 
   return (
@@ -60,6 +55,7 @@ const Annotator = () => {
       <div
         style={{
           maxWidth,
+          maxHeight,
           background: "white",
           margin: "0 auto",
           padding: "0",
@@ -71,9 +67,10 @@ const Annotator = () => {
         <div style={{ height: "50px", padding: "0", position: "relative" }}>
           <div style={{ width: "85%", paddingLeft: "7.5%" }}>
             <IndexController
-              n={task?.units?.length}
+              n={UnitServer?.rules.n}
               setIndex={setUnitIndex}
-              canControl={task?.unitMode === "list"}
+              canGoBack={UnitServer?.rules.canGoBack}
+              canGoForward={UnitServer?.rules.canGoForward}
             />
           </div>
           <div>
@@ -87,20 +84,19 @@ const Annotator = () => {
   );
 };
 
-const Finished = ({ task }) => {
+const Finished = ({ UnitServer }) => {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    if (!task) return;
-    db.listAnnotations(task.url).then(data => {
-      console.log(data);
+    if (!UnitServer) return;
+    db.listAnnotations(UnitServer.url).then((data) => {
       setData(data);
     });
-  }, [task]);
+  }, [UnitServer]);
 
-  if (!task) return null;
+  if (!UnitServer) return null;
 
-  if (!task === "local")
+  if (!UnitServer.where === "local")
     return (
       <Grid container centered verticalAlign="middle" style={{ margin: "0", padding: "0" }}>
         <Grid.Row style={{ marginTop: "40vh" }}>
@@ -111,30 +107,12 @@ const Finished = ({ task }) => {
       </Grid>
     );
 
-  const onDownload = async () => {
-    const user = await this.idb.user.get(1);
-    const annotations = await db.listAnnotations(task.url);
-    //const json = [JSON.stringify(annotations)];
-    //const blob = new Blob(json, { type: "text/plain;charset=utf-8" });
-    return annotations;
-    // try {
-    //   fileDownload(blob, `annotations_${user.name}.json`);
-    // } catch (error) {
-    //   console.error("" + error);
-    // }
-  };
-
   return (
     <Grid container centered verticalAlign="middle" style={{ margin: "0", padding: "0" }}>
       <Grid.Row style={{ marginTop: "40vh" }}>
-        <Grid.Column width={8}>
-          <Icon name="flag checkered" size="huge" style={{ transform: "scale(5)" }} />
-        </Grid.Column>
-        <Grid.Column width={8}>
-          <CSVDownloader filename={`annotations_${task.url}.json`} data={data}>
-            Download
-          </CSVDownloader>
-        </Grid.Column>
+        <CSVDownloader filename={`annotations_${UnitServer.url}.json`} data={data}>
+          Download
+        </CSVDownloader>
       </Grid.Row>
     </Grid>
   );
@@ -210,73 +188,15 @@ const ExitButton = () => {
   );
 };
 
-const prepareTask = async (jobURL, setTask) => {
-  let task = await db.idb.tasks.get({ url: jobURL });
+const Task = React.memo(({ codebook, unit }) => {
+  if (!codebook || !unit) return null;
 
-  // make this two steps:
-  // if task does not exist, retrieve it, and add to db
-  // In time, retrieved task can itself say type is local or remote, but for now assume it's always remote
-
-  // second step is to prepare the task for either local or remote
-  // preparedTask should have its own get and post functions
-  // get should take an item index as input (even if it doesn't use it).
-  // post should take the unit_id and data as input.
-
-  // !! make task a proper class
-
-  if (task && task.where === "local") {
-    task.unitMode = "list";
-    const get = async i => {
-      const unit_id = task.units[i].unit_id;
-      let annotations = await db.getAnnotations(unit_id);
-      annotations = annotations?.annotations || [];
-      return {
-        data: {
-          url: task.url,
-          id: unit_id,
-          unit: { ...task.units[i], annotations },
-        },
-      };
-    };
-    const post = async (unit_id, data) => {
-      db.postAnnotations(task.url, unit_id, data);
-    };
-    task.server = { get, post };
-    task.local = task.where === "local";
-  } else {
-    const user = await db.idb.user.get(1);
-    const response = await axios.get(jobURL);
-
-    // works if url always has this structure. Otherwise maybe include id in codebook
-    const id = jobURL.split("codingjob/")[1].split("/codebook")[0];
-    const host = jobURL.split("codingjob/")[0];
-    const get = async i => axios.get(`${host}/codingjob/${id}/unit?user=${user.name}`);
-    const post = async (unit_id, data) =>
-      axios.post(`${host}/codingjob/${id}/unit/${unit_id}/annotation?user=${user.name}`, data);
-
-    // this is just a temp hack. need to make itemselector smarter
-    const units_range = [];
-    for (let i = 1; i <= 20; i++) units_range.push(i);
-
-    task = {
-      codebook: response.data,
-      units: units_range,
-      unitMode: "perUnit",
-      server: { get, post },
-    };
-  }
-  setTask(task);
-};
-
-const Task = React.memo(({ codebook, item }) => {
-  if (!codebook || !item) return null;
-
-  const renderTaskPreview = type => {
+  const renderTaskPreview = (type) => {
     switch (type) {
       case "questions":
-        return <QuestionTask item={item} codebook={codebook} preview={false} />;
+        return <QuestionTask unit={unit} codebook={codebook} preview={false} />;
       case "annotate":
-        return <AnnotateTask item={item} codebook={codebook} preview={false} />;
+        return <AnnotateTask unit={unit} codebook={codebook} preview={false} />;
       default:
         return null;
     }

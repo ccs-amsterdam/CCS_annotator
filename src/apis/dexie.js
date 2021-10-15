@@ -42,16 +42,10 @@ class AnnotationDB {
     return (await this.idb.user.toArray()).length === 0;
   }
   async setAmcatAuth(host, email, token) {
-    return await this.idb.user
-      .where("id")
-      .equals(1)
-      .modify({ amcat: { host, email, token } });
+    return await this.idb.user.where("id").equals(1).modify({ amcat: { host, email, token } });
   }
   async resetAmcatAuth() {
-    return await this.idb.user
-      .where("id")
-      .equals(1)
-      .modify({ amcat: undefined });
+    return await this.idb.user.where("id").equals(1).modify({ amcat: undefined });
   }
   async amcatSession() {
     const user = await this.idb.user.get(1);
@@ -129,7 +123,7 @@ class AnnotationDB {
     }
 
     // making absolutely sure no garbage is added
-    codebook.codes = codebook.codes.filter(code => code.code !== "");
+    codebook.codes = codebook.codes.filter((code) => code.code !== "");
 
     return await this.writeCodebook(codingjob, codebook);
   }
@@ -137,10 +131,7 @@ class AnnotationDB {
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
-      await this.idb.documents
-        .where("job_id")
-        .equals(codingjob.job_id)
-        .primaryKeys()
+      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
     );
 
     const [preparedDocuments, codes] = prepareDocumentBatch(
@@ -156,7 +147,7 @@ class AnnotationDB {
   }
 
   async deleteDocuments(documents) {
-    const documentIds = documents.map(document => document.doc_uid);
+    const documentIds = documents.map((document) => document.doc_uid);
     return this.idb.documents.bulkDelete(documentIds);
   }
 
@@ -170,10 +161,7 @@ class AnnotationDB {
   }
 
   async getJobDocumentCount(codingjob) {
-    return this.idb.documents
-      .where("job_id")
-      .equals(codingjob.job_id)
-      .count();
+    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
   }
 
   async getDocuments(codingjob) {
@@ -185,10 +173,7 @@ class AnnotationDB {
   }
 
   async writeTokens(document, tokens) {
-    return this.idb.documents
-      .where("doc_uid")
-      .equals(document.doc_uid)
-      .modify({ tokens: tokens });
+    return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
   }
 
   // async writeAnnotations(document, annotations) {
@@ -218,10 +203,7 @@ class AnnotationDB {
     return this.idb.annotations.get({ unit_id });
   }
   async listAnnotations(url) {
-    return this.idb.annotations
-      .where("url")
-      .equals(url)
-      .toArray();
+    return this.idb.annotations.where("url").equals(url).toArray();
   }
   async postAnnotations(url, unit_id, annotations) {
     return this.idb.annotations.put({ unit_id, url, annotations }, [unit_id]);

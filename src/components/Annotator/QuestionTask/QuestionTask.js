@@ -1,22 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
 import QuestionForm from "./QuestionForm";
 import Document from "components/Document/Document";
-import useItemBundle from "hooks/useItemBundle";
 import { useSelector } from "react-redux";
 import { useSwipeable } from "react-swipeable";
 import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
+import { Icon } from "semantic-ui-react";
 
 const documentSettings = {
   centerVertical: true,
 };
 
-const QuestionTask = ({ item, codebook, preview = false }) => {
+const QuestionTask = ({ unit, codebook }) => {
   //const [menuHeight, setMenuHeight] = useState(50);
   const [tokens, setTokens] = useState([]);
-  const questionIndex = useSelector(state => state.questionIndex);
+  const questionIndex = useSelector((state) => state.questionIndex);
   const [questions, setQuestions] = useState(null);
   const refs = { text: useRef(), box: useRef() };
   const [textReady, setTextReady] = useState(0);
+  const [splitHeight, setSplitHeight] = useState(60);
+  const divref = useRef(null);
 
   useEffect(() => {
     if (!codebook?.questions) return;
@@ -30,13 +32,21 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
     refs.box.current.style.transition = ``;
     refs.box.current.style.opacity = 0;
     refs.text.current.style.transform = "translateX(0%) translateY(0%)";
-  }, [refs.text, refs.box, item]);
+  }, [refs.text, refs.box, unit]);
 
   useEffect(() => {
     if (!refs?.text.current) return null;
     refs.box.current.style.transition = `opacity 200ms ease-out`;
     refs.box.current.style.opacity = 1;
   }, [textReady, refs.text, refs.box]);
+
+  const onDragSplit = (e) => {
+    if (e?.nativeEvent?.offsetY && divref?.current?.offsetHeight) {
+      setSplitHeight(
+        (current) => current + (100 * e.nativeEvent.offsetY) / divref.current.offsetHeight
+      );
+    }
+  };
 
   // swipe controlls need to be up here due to working on the div wrapping the while question screen
   // use separate swipe for text (document) and menu rows, to disable swiping up
@@ -46,15 +56,15 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
   const menuSwipe = useSwipeable(swipeControl(questions?.[questionIndex], refs, setSwipe, true));
   //const upSwipe = useSwipeable(swipeControl(questions?.[questionIndex], swipeAnimationRefs.up));
 
-  if (!item) return null;
-  let splitHeight = 50;
+  if (!unit) return null;
+  // let splitHeight = 50;
 
-  if (codebook?.questions?.[questionIndex].type === "annotinder") {
-    splitHeight = 70;
-  }
+  // if (codebook?.questions?.[questionIndex].type === "annotinder") {
+  //   splitHeight = 70;
+  // }
 
   return (
-    <div style={{ height: "100%" }}>
+    <div ref={divref} style={{ height: "100%" }}>
       <div {...textSwipe} style={{ border: "1px solid", height: `${splitHeight}%` }}>
         <div ref={refs.box} style={{ height: "100%", overflow: "hidden" }}>
           <div
@@ -67,7 +77,7 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
             }}
           >
             <Document
-              unit={item}
+              unit={unit}
               settings={documentSettings}
               setReady={setTextReady}
               returnTokens={setTokens}
@@ -75,13 +85,28 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
           </div>
         </div>
       </div>
-      <div {...menuSwipe} style={{ height: `${100 - splitHeight}%` }}>
+      <div {...menuSwipe} style={{ position: "relative", height: `${100 - splitHeight}%` }}>
+        <Icon
+          name="arrows alternate vertical"
+          size="large"
+          draggable
+          onDragEnd={onDragSplit}
+          style={{
+            color: "white",
+            cursor: "move",
+            position: "absolute",
+            top: "0px",
+            right: "0",
+            height: "50px",
+            width: "20px",
+            padding: "15px 5px",
+          }}
+        />
         <QuestionForm
-          unit={item}
+          unit={unit}
           tokens={tokens}
           questions={questions}
           questionIndex={questionIndex}
-          preview={preview}
           swipe={swipe}
         />
       </div>
@@ -89,9 +114,10 @@ const QuestionTask = ({ item, codebook, preview = false }) => {
   );
 };
 
-const prepareQuestions = codebook => {
+const prepareQuestions = (codebook) => {
   const questions = codebook.questions;
-  return questions.map(question => {
+  console.log(questions);
+  return questions.map((question) => {
     const codeMap = codeBookEdgesToMap(question.codes);
     const cta = getCodeTreeArray(codeMap);
     const [options, swipeOptions] = getOptions(cta);
@@ -99,13 +125,13 @@ const prepareQuestions = codebook => {
   });
 };
 
-const getOptions = cta => {
+const getOptions = (cta) => {
   const options = [];
   const swipeOptions = {}; // object, for fast lookup in swipeControl
 
   for (let code of cta) {
-    if (!code.active) return options;
-    if (!code.activeParent) return options;
+    if (!code.active) continue;
+    if (!code.activeParent) continue;
     let tree = code.tree.join(" - ");
     //if (tree === "") tree = "Root";
     const option = {
@@ -134,7 +160,7 @@ const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 100) =
     rotationAngle: 0, // set a rotation angle
   };
 
-  const getDeltas = d => {
+  const getDeltas = (d) => {
     let deltaX = d.deltaX;
     let deltaY = d.deltaY;
     if (Math.abs(deltaX) > Math.abs(deltaY) + 10) deltaY = 0;
@@ -144,7 +170,7 @@ const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 100) =
   };
 
   return {
-    onSwiping: d => {
+    onSwiping: (d) => {
       const [deltaX, deltaY] = getDeltas(d);
 
       refs.text.current.style.transition = ``;
@@ -155,7 +181,7 @@ const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 100) =
       if (deltaX < 0) bgc = question.swipeOptions.left.color;
       refs.box.current.style.backgroundColor = bgc;
     },
-    onSwiped: d => {
+    onSwiped: (d) => {
       const [deltaX, deltaY] = getDeltas(d);
 
       refs.text.current.style.transition = `transform ${transitionTime}ms ease-out, opacity ${transitionTime}ms ease-out`;

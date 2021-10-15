@@ -4,11 +4,10 @@ import { Grid, Header, Dimmer, Loader } from "semantic-ui-react";
 
 import UnitSettings from "./Settings/UnitSettings";
 import Document from "components/Document/Document";
-import useItemBundle from "hooks/useItemBundle";
-import useJobItems from "hooks/useJobItems";
-import { standardizeItems } from "util/standardizeItem";
+import useUnits from "hooks/useUnits";
+import { standardizeUnits } from "util/standardizeUnits";
 
-const getTableColumns = unitSettings => {
+const getTableColumns = (unitSettings) => {
   if (!unitSettings) return [];
 
   const columns = [
@@ -40,17 +39,8 @@ const getTableColumns = unitSettings => {
   return columns;
 };
 
-const previewDocumentSettings = {
-  height: 50,
-  textUnitPosition: 1 / 4,
-  centerVertical: false,
-  showAnnotations: false,
-  canAnnotate: true,
-  saveAnnotations: false,
-};
-
 const ManageCodingUnits = ({ codingjob }) => {
-  const jobItems = useJobItems(codingjob);
+  const units = useUnits(codingjob);
 
   if (!codingjob) return null;
 
@@ -65,28 +55,30 @@ const ManageCodingUnits = ({ codingjob }) => {
           <UnitSettings codingjob={codingjob} />
         </Grid.Column>
 
-        <PreviewUnits codingjob={codingjob} jobItems={jobItems} />
+        <PreviewUnits codingjob={codingjob} units={units} />
       </Grid>
     </div>
   );
 };
 
-const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
+const PreviewUnits = React.memo(({ codingjob, units }) => {
   const [jobItem, setJobItem] = useState(null);
   const [standardizedItem, setStandardizedItem] = useState(null);
 
   useEffect(() => {
     if (!jobItem) return null;
-    standardizeItems(codingjob, [jobItem]).then(singleItemArray => {
-      setStandardizedItem(singleItemArray[0]);
+    standardizeUnits(codingjob, [jobItem]).then((singleItemArray) => {
+      const previewItem = singleItemArray[0];
+      previewItem.post = (annotations) => console.log(annotations); // don't store annotations
+      setStandardizedItem(previewItem);
     });
   }, [jobItem, setStandardizedItem, codingjob]);
 
   useEffect(() => {
-    if (jobItems && jobItems.length > 0) {
-      setJobItem({ ...jobItems[0], ROW_ID: "0" });
+    if (units && units.length > 0) {
+      setJobItem({ ...units[0], ROW_ID: "0" });
     } else setJobItem(null);
-  }, [jobItems, setJobItem]);
+  }, [units, setJobItem]);
 
   return (
     <>
@@ -94,17 +86,17 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
         <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
           Selected units
         </Header>
-        <Dimmer inverted active={codingjob?.unitSettings?.textUnit && jobItems === null}>
+        <Dimmer inverted active={codingjob?.unitSettings?.textUnit && units === null}>
           <Loader />
         </Dimmer>
         <SelectionTable
           columns={getTableColumns(codingjob?.unitSettings)}
           selectedRow={jobItem}
           setSelectedRow={setJobItem}
-          data={jobItems || []}
+          data={units || []}
           defaultSize={10}
         />
-        {/* <ItemDetails items={jobItems || []} /> */}
+        {/* <ItemDetails items={units || []} /> */}
       </Grid.Column>
       <Grid.Column width={5}>
         <PreviewDocument item={standardizedItem} codebook={{}} />
@@ -114,7 +106,6 @@ const PreviewUnits = React.memo(({ codingjob, jobItems }) => {
 });
 
 const PreviewDocument = ({ item, codebook }) => {
-  //const itemBundle = useItemBundle(item, codebook, previewDocumentSettings);
   console.log(item);
 
   const renderDocument = () => {
