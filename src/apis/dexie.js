@@ -8,9 +8,12 @@ const dbName = "AmCAT_Annotator_DB";
 const idbStores = {
   user: "++id, name", // other fields: 'id'
   codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
-  annotations: "unit_id, url",
   documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
   tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
+
+  deployedJobs: "url", // unindexed: title, created
+  localJobs: "[title+id], last_modified, id", // unindexed fields:  codebook, items
+  localAnnotations: "[id+unit_id], id",
 };
 
 class AnnotationDB {
@@ -18,8 +21,8 @@ class AnnotationDB {
     this.idb = new Dexie(dbName);
 
     //for testing, clean db on refresh
-    // this.idb.delete();
-    // this.idb = new Dexie("AmCAT_Annotator");
+    //this.idb.delete();
+    //this.idb = new Dexie(dbName);
     try {
       this.idb.version(2).stores(idbStores);
     } catch (e) {
@@ -183,15 +186,30 @@ class AnnotationDB {
   //     .modify({ annotations: annotations });
   // }
 
-  // TASKS
-  async uploadTask(codingjobPackage, url, where) {
-    const exists = await this.idb.tasks.get({ url });
+  // DEPLOYED JOBS
+  async createDeployedJob(title, url) {
+    const exists = await this.idb.deployedJobs.get({ url });
+
     if (!exists) {
-      this.idb.tasks.add({
+      this.idb.deployedJobs.add({
+        title,
         url,
-        last_modified: new Date(),
-        where,
+        created: new Date(),
+      });
+    } else {
+      this.idb.deployedJobs.get({ url }).modify({ created: new Date() });
+    }
+  }
+
+  // LOCAL JOBS
+  async createLocalJob(codingjobPackage, id) {
+    const exists = await this.idb.localJobs.get({ id });
+
+    if (!exists) {
+      this.idb.localJobs.add({
         ...codingjobPackage,
+        id,
+        last_modified: new Date(),
       });
     } else {
       alert("This job has already been created before");
@@ -199,14 +217,14 @@ class AnnotationDB {
   }
 
   // ANNOTATIONS
-  async getAnnotations(unit_id) {
-    return this.idb.annotations.get({ unit_id });
+  async getUnitAnnotations(job_id, unit_id) {
+    return this.idb.localAnnotations.get({ id: job_id, unit_id });
   }
-  async listAnnotations(url) {
-    return this.idb.annotations.where("url").equals(url).toArray();
+  async getAllAnnotations(job_id) {
+    return this.idb.localAnnotations.where("id").equals(job_id).toArray();
   }
-  async postAnnotations(url, unit_id, annotations) {
-    return this.idb.annotations.put({ unit_id, url, annotations }, [unit_id]);
+  async postAnnotations(job_id, unit_id, annotations) {
+    return this.idb.localAnnotations.put({ unit_id, id: job_id, annotations }, [job_id, unit_id]);
   }
 
   // CLEANUP

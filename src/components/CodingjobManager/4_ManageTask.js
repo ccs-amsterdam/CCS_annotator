@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-import TaskSettings from "./Settings/TaskSettings";
+import TaskSettings from "./subcomponents/TaskSettings";
 import { Grid, Header } from "semantic-ui-react";
-import QuestionTask from "components/Annotator/QuestionTask/QuestionTask";
-import AnnotateTask from "components/Annotator/AnnotateTask/AnnotateTask";
 import useUnits from "hooks/useUnits";
 import { standardizeUnits } from "util/standardizeUnits";
 import { getCodebook } from "util/codebook";
-import IndexController from "components/Annotator/IndexController";
-import { useDispatch } from "react-redux";
-import { blockEvents } from "actions";
+import { useSelector } from "react-redux";
+
+// imported from annotator
+import IndexController from "components/Annotator/subcomponents/IndexController";
+import AnnotateTask from "components/Annotator/AnnotateTask";
+import QuestionTask from "components/Annotator/QuestionTask";
 
 const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false
@@ -58,7 +59,7 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
     if (index >= units.length) return null;
     standardizeUnits(codingjob, [units[index]]).then((singleUnitArray) => {
       const previewUnit = singleUnitArray[0];
-      previewUnit.post = (annotations) => console.log(annotations); // don't store annotations
+      previewUnit.jobServer = { postAnnotations: (annotations) => console.log(annotations) }; // don't store annotations
       previewUnit.rules = { canGoBack: true, canGoForward: true };
       setStandardizedUnit(previewUnit);
     });
@@ -70,14 +71,22 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
     switch (type) {
       case "questions":
         return (
-          <PreviewQuestionTask codebook={codebook} standardizedUnit={standardizedUnit}>
-            <IndexController n={units?.length} setIndex={setIndex} />
+          <PreviewQuestionTask
+            codebook={codebook}
+            standardizedUnit={standardizedUnit}
+            setUnitIndex={setIndex}
+          >
+            <IndexController n={units?.length} index={index} setIndex={setIndex} />
           </PreviewQuestionTask>
         );
       case "annotate":
         return (
-          <PreviewAnnotateTask codebook={codebook} standardizedUnit={standardizedUnit}>
-            <IndexController n={units?.length} setIndex={setIndex} />
+          <PreviewAnnotateTask
+            codebook={codebook}
+            standardizedUnit={standardizedUnit}
+            setUnitIndex={setIndex}
+          >
+            <IndexController n={units?.length} index={index} setIndex={setIndex} />
           </PreviewAnnotateTask>
         );
       default:
@@ -89,15 +98,9 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
   return renderTaskPreview(codingjob.taskSettings.type);
 });
 
-const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit }) => {
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(blockEvents(true));
-    return () => {
-      dispatch(blockEvents(false));
-    };
-  });
+const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit, setUnitIndex }) => {
+  if (!codebook) return null;
+  if (!codebook?.type === "questions") return null;
 
   return (
     <>
@@ -120,14 +123,23 @@ const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit }
         }}
       >
         <div style={{ padding: "0em", paddingTop: "1em", height: "100%" }}>
-          <QuestionTask unit={standardizedUnit} codebook={codebook} preview={true} />
+          <QuestionTask
+            unit={standardizedUnit}
+            codebook={codebook}
+            setUnitIndex={setUnitIndex}
+            blockEvents={true}
+          />
         </div>
       </div>
     </>
   );
 });
 
-const PreviewAnnotateTask = ({ children, codebook, standardizedUnit }) => {
+const PreviewAnnotateTask = ({ children, codebook, standardizedUnit, setUnitIndex }) => {
+  const blockEvents = useSelector((state) => state.eventsBlocked);
+  if (!codebook) return null;
+  if (codebook.type !== "annotate") return null;
+
   return (
     <>
       <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
@@ -144,7 +156,12 @@ const PreviewAnnotateTask = ({ children, codebook, standardizedUnit }) => {
         }}
       >
         <div style={{ padding: "0", height: "100%" }}>
-          <AnnotateTask unit={standardizedUnit} codebook={codebook} preview={true} />
+          <AnnotateTask
+            unit={standardizedUnit}
+            codebook={codebook}
+            setUnitIndex={setUnitIndex}
+            blockEvents={blockEvents}
+          />
         </div>
       </div>
     </>

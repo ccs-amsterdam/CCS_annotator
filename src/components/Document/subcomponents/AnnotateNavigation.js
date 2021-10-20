@@ -59,20 +59,18 @@ const showAnnotations = (tokens, annotations, codeMap) => {
 
     let tokenAnnotations = allowedAnnotations(annotations?.[token.index], codeMap);
 
-    if (!tokenAnnotations) {
+    if (!tokenAnnotations || Object.keys(tokenAnnotations).length === 0) {
       if (token.ref.current.classList.contains("annotated")) {
         token.ref.current.classList.remove("annotated");
         setTokenColor(token, null, null, null);
       }
       continue;
     }
-
     annotateToken(token, tokenAnnotations, codeMap);
   }
 };
 
 const allowedAnnotations = (annotations, codeMap) => {
-  console.log(annotations);
   if (!annotations) return null;
 
   if (annotations && codeMap) {
@@ -86,25 +84,27 @@ const allowedAnnotations = (annotations, codeMap) => {
   return annotations;
 };
 
-const annotatedColor = (annotations, codeMap) => {
-  let tokenCodes = Object.keys(annotations);
-  let colors = tokenCodes.map(code => getColor(code, codeMap));
-  return getColorGradient(colors);
-};
-
 const annotateToken = (token, annotations, codeMap) => {
   // Set specific classes for nice css to show the start/end of codes
+  let nLeft = 0;
+  let nRight = 0;
+  const colors = { pre: [], text: [], post: [] };
+  for (let key of Object.keys(annotations)) {
+    const code = annotations[key];
+    const color = getColor(key, codeMap);
+    colors.text.push(color);
+    if (code.span[0] === code.index) {
+      nLeft++;
+    } else colors.pre.push(color);
+    if (code.span[1] === code.index) {
+      nRight++;
+    } else colors.post.push(color);
+  }
 
-  const isLeft = Object.values(annotations).filter(code => code.span[0] === code.index);
-  const isRight = Object.values(annotations).filter(code => code.span[1] === code.index);
-  const allLeft = isLeft.length === Object.values(annotations).length;
-  const allRight = isRight.length === Object.values(annotations).length;
-  const anyLeft = isLeft.length > 0;
-  const anyRight = isRight.length > 0;
-
-  // let annotatedTokenClass = token.ref.current.classList.contains("selected")
-  //   ? ["token", "selected", "annotated"]
-  //   : ["annotated"];
+  const allLeft = nLeft === Object.values(annotations).length;
+  const allRight = nRight === Object.values(annotations).length;
+  const anyLeft = nLeft > 0;
+  const anyRight = nRight > 0;
 
   const cl = token.ref.current.classList;
   cl.add("annotated");
@@ -112,11 +112,10 @@ const annotateToken = (token, annotations, codeMap) => {
   anyLeft & !allLeft ? cl.add("anyLeft") : cl.remove("anyLeft");
   allRight ? cl.add("allRight") : cl.remove("allRight");
   anyRight & !allRight ? cl.add("anyRight") : cl.remove("anyRight");
-  //token.ref.current.classList.add(...annotatedTokenClass);
 
-  const textColor = annotatedColor(annotations, codeMap);
-  const preColor = allLeft ? "white" : textColor;
-  const postColor = allRight ? "white" : textColor;
+  const textColor = getColorGradient(colors.text);
+  const preColor = allLeft ? "white" : getColorGradient(colors.pre);
+  const postColor = allRight ? "white" : getColorGradient(colors.post);
   setTokenColor(token, preColor, textColor, postColor);
 };
 
@@ -139,9 +138,14 @@ const showSelection = (tokens, selection) => {
     //if (to === null) return false;
     if (from > to) [to, from] = [from, to];
     let selected = token.arrayIndex >= from && token.arrayIndex <= to;
+    const cl = token.ref.current.classList;
     if (selected && token.codingUnit) {
-      token.ref.current.classList.add("selected");
-    } else token.ref.current.classList.remove("selected");
+      const left = from === token.arrayIndex;
+      const right = to === token.arrayIndex;
+      cl.add("selected");
+      left ? cl.add("start") : cl.remove("start");
+      right ? cl.add("end") : cl.remove("end");
+    } else cl.remove("selected");
   }
 };
 

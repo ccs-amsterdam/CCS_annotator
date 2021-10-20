@@ -11,11 +11,6 @@
   table-layout: fixed;
 }
 
-::selection {
-  background-color: rgba(192, 49, 49, 0);
-  color: rgb(0, 0, 0);
-}
-
 .codes-table {
   border-collapse: collapse;
 }
@@ -34,23 +29,16 @@
   padding: 1px;
 }
 
-span.token {
-  padding-top: 3px;
-  padding-bottom: 3px;
-}
-
-span.token.selected {
+span.token.selected > span {
   background-color: rgb(61, 61, 61) !important;
   color: rgb(255, 255, 255);
   border-color: black;
 }
-
-span.token.highlight {
-  font-weight: bold;
-  font-size: 1.2em;
-  background-color: #5f5feb33 !important;
-  padding-top: 3px;
-  padding-bottom: 3px;
+span.token.selected.start > span.pre {
+  background-color: lightblue !important;
+}
+span.token.selected.end > span.post {
+  background-color: lightblue !important;
 }
 
 button.active {
@@ -59,13 +47,14 @@ button.active {
 }
 
 span.token.annotated > span {
+  line-height: 1.5em;
   border: solid;
-  border-width: 1px;
-  border-left-width: 1px;
-  border-right-width: 1px;
+  border-width: 2px;
+  border-top-right-radius: 1px;
   border-left: none;
   border-right: none;
   cursor: pointer;
+  box-shadow: none;
 }
 
 span.token.annotated.anyLeft > span.text {
@@ -73,33 +62,32 @@ span.token.annotated.anyLeft > span.text {
   border-left-width: 0.1px;
   border-bottom-left-radius: 0px;
 }
-
+span.token.annotated.anyLeft > span.text {
+  border-left: 1px solid;
+  border-left-width: 0.1px;
+  border-bottom-left-radius: 0px;
+}
 span.token.annotated.allLeft > span.pre {
   border: none;
-  background: none !important;
+  background: none;
 }
-
 span.token.annotated.allLeft > span.text {
   border-left: solid;
   border-left-width: 1px;
-  border-bottom-left-radius: 1px;
+  border-bottom-left-radius: 7px;
   border-top-left-radius: 7px;
 }
 
-span.token.annotated.anyLeft > span.text {
-  border-left: solid;
-  border-left-width: 0.1px;
-  border-bottom-left-radius: 0px;
+span.token.annotated.anyRight > span.text {
+  border-right: 1px solid;
 }
-
 span.token.annotated.allRight > span.post {
   border: none;
-  background: white !important;
+  background: none;
 }
-
 span.token.annotated.allRight > span.text {
   border-right: solid;
   border-right-width: 1px;
-  border-bottom-right-radius: 1px;
+  border-bottom-right-radius: 7px;
   border-top-right-radius: 7px;
 }

@@ -12,7 +12,7 @@ import db from "apis/dexie";
 //   - Unit selection can split documens into coding units (and context units)
 //   - These units are transformed to simplified items
 
-export const standardizeUnits = async (codingjob, jobItems) => {
+export const standardizeUnits = async (codingjob, units) => {
   const { contextUnit, contextWindow } = codingjob.unitSettings;
 
   const docs = {};
@@ -20,14 +20,15 @@ export const standardizeUnits = async (codingjob, jobItems) => {
 
   const jobhash = hash(codingjob);
 
-  for (let i = 0; i < jobItems.length; i++) {
-    const doc_uid = jobItems[i].doc_uid;
+  for (let i = 0; i < units.length; i++) {
+    const doc_uid = units[i].doc_uid;
     if (!docs[doc_uid]) docs[doc_uid] = await db.getDocument(doc_uid);
 
-    const tokens = selectTokens(docs[doc_uid].tokens, jobItems[i], contextUnit, contextWindow);
+    const tokens = selectTokens(docs[doc_uid].tokens, units[i], contextUnit, contextWindow);
     const item = {
       text_fields: unparseTokens(tokens),
-      meta: { unit: jobItems[i].textUnit, unit_index: jobItems[i].unitIndex },
+      document_id: units[i].document_id,
+      meta: { unit: units[i].textUnit, unit_index: units[i].unitIndex },
     };
     item.unit_id = hash({ jobhash, item, date: Date() });
     items.push(item);

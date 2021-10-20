@@ -146,7 +146,7 @@ const renderSentence = (position, sentence_nr, tokens) => {
 };
 
 const renderToken = (token, codingUnit) => {
-  const style = codingUnit ? { lineHeight: "1.2em", fontSize: "1.5em" } : { color: "#746363" };
+  const style = codingUnit ? { lineHeight: "1em", fontSize: "1.5em" } : { color: "#746363" };
 
   return (
     <span

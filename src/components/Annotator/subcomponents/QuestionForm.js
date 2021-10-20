@@ -1,23 +1,31 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useDispatch } from "react-redux";
 import { Header, Button, Segment } from "semantic-ui-react";
-import { setQuestionIndex, setMoveUnitIndex } from "actions";
 import { SearchBoxDropdown, ButtonSelection, Annotinder } from "./QuestionForms";
 
-const QuestionForm = ({ unit, tokens, questions, questionIndex, swipe }) => {
+const DONE_COLOR = "lightgreen";
+
+const QuestionForm = ({
+  unit,
+  tokens,
+  questions,
+  questionIndex,
+  setQuestionIndex,
+  setUnitIndex,
+  swipe,
+  blockEvents,
+}) => {
   const [answerTransition, setAnswerTransition] = useState();
-  const dispatch = useDispatch();
   const answered = useRef(false); // to prevent answering double (e.g. with swipe events)
   const [annotations, setAnnotations] = useState(null);
 
   useEffect(() => {
-    prepareAnnotations(unit, tokens, questions, setAnnotations, dispatch);
+    prepareAnnotations(unit, tokens, questions, setAnnotations, setQuestionIndex);
     answered.current = false;
-  }, [unit, tokens, setAnnotations, questions, dispatch]);
+  }, [unit, tokens, setAnnotations, questions, setQuestionIndex]);
 
   if (!questions || !unit || !annotations) return null;
   if (!questions?.[questionIndex]) {
-    dispatch(setQuestionIndex(0));
+    setQuestionIndex(0);
     return null;
   }
 
@@ -30,60 +38,76 @@ const QuestionForm = ({ unit, tokens, questions, questionIndex, swipe }) => {
 
     annotations[questionIndex].value = answer.code;
     unit.annotations = updateAnnotations(annotations[questionIndex], unit.annotations);
-    unit.post(unit.unitId, unit.annotations);
+    unit.jobServer.postAnnotations(unit.unitId, unit.annotations);
 
     setAnswerTransition(answer); // show given answer
     setTimeout(() => {
-      // wait a little bit, so coder can confirm their answer
+      // wait a little bit, so coder can see their answer and breathe
       setAnswerTransition(null);
-      if (questionIndex === questions.length - 1) {
-        dispatch(setMoveUnitIndex("next"));
-        dispatch(setQuestionIndex(0));
+
+      if (answer.branching === "nextUnit") {
+        setUnitIndex((state) => state + 1);
+        setQuestionIndex(0);
       } else {
-        dispatch(setQuestionIndex(questionIndex + 1));
+        let newQuestionIndex = questionIndex + 1;
+        if (answer.branching === "skipOne") newQuestionIndex += 1;
+        if (answer.branching === "skipTwo") newQuestionIndex += 2;
+        if (answer.branching === "skipThree") newQuestionIndex += 3;
+
+        if (newQuestionIndex >= questions.length) {
+          setUnitIndex((state) => state + 1);
+          setQuestionIndex(0);
+        } else {
+          setQuestionIndex(newQuestionIndex);
+        }
       }
+
       answered.current = false;
     }, 250);
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexFlow: "column",
-        height: "100%",
-        width: "100%",
-        maxHeight: "100%",
-        padding: "1em",
-        color: "white",
-        borderTop: "5px double grey",
-        backgroundColor: "#1B1C1D",
-      }}
-    >
+    <div style={{ height: "100%", width: "100%" }}>
       <QuestionIndexStep
         questions={questions}
         questionIndex={questionIndex}
         annotations={annotations}
-        dispatch={dispatch}
+        setQuestionIndex={setQuestionIndex}
       />
-      <div style={{ width: "100%", flex: "1 1 auto", paddingBottom: "10px" }}>
-        <Header as="h3" style={{ color: "white" }}>
-          {question}
-        </Header>
+
+      <div
+        style={{
+          display: "flex",
+          position: "relative",
+          flexFlow: "column",
+          height: "calc(100% - 30px)",
+          width: "100%",
+          maxHeight: "100%",
+          padding: "1em",
+          color: "white",
+          backgroundColor: "#1B1C1D",
+        }}
+      >
+        <div style={{ width: "100%", flex: "1 1 auto", paddingBottom: "10px" }}>
+          <Header as="h3" style={{ color: "white" }}>
+            {question}
+          </Header>
+        </div>
+        <AnswerSegment
+          answerTransition={answerTransition}
+          currentAnswer={annotations?.[questionIndex]?.value}
+          questions={questions}
+          questionIndex={questionIndex}
+          onSelect={onSelect}
+          swipe={swipe}
+          blockEvents={blockEvents}
+        />
       </div>
-      <AnswerSegment
-        answerTransition={answerTransition}
-        currentAnswer={annotations?.[questionIndex]?.value}
-        questions={questions}
-        questionIndex={questionIndex}
-        onSelect={onSelect}
-        swipe={swipe}
-      />
     </div>
   );
 };
 
-const prepareAnnotations = (unit, tokens, questions, setAnnotations, dispatch) => {
+const prepareAnnotations = (unit, tokens, questions, setAnnotations, setQuestionIndex) => {
   // create a list with annotations for each question, and see if they have been answered yet
   if (tokens.length === 0) return null;
   const annotations = [];
@@ -96,60 +120,75 @@ const prepareAnnotations = (unit, tokens, questions, setAnnotations, dispatch) =
     annotations.push(annotation);
   }
   setAnnotations(annotations);
-  dispatch(setQuestionIndex(questionIndex));
+  setQuestionIndex(questionIndex);
 };
 
-const QuestionIndexStep = ({ questions, questionIndex, annotations, dispatch }) => {
+const QuestionIndexStep = ({ questions, questionIndex, annotations, setQuestionIndex }) => {
   //if (questions.length === 1) return null;
+  const [canSelect, setCanSelect] = useState();
+
+  useEffect(() => {
+    const cs = Array(annotations.length).fill(false);
+    cs[0] = true;
+    setCanSelect(cs);
+  }, [annotations, setCanSelect]);
+
+  useEffect(() => {
+    setCanSelect((state) => {
+      const newState = [...state];
+      newState[questionIndex] = true;
+      return newState;
+    });
+  }, [questionIndex, setCanSelect]);
+
   const setColor = (i) => {
-    if (annotations[i].value) return ["black", "yellow"];
-    if (i === 0) return ["white", "#1B1C1D"];
-    if (i > 0 && annotations[i - 1].value) return ["white", "#1B1C1D"];
-    return ["white", "grey"];
+    if (canSelect && i > questionIndex && !canSelect[i]) return ["white", "grey"];
+    if (annotations[i].value) return ["black", DONE_COLOR];
+    if (i === 0) return [DONE_COLOR, "#1B1C1D"];
+    if (canSelect && canSelect[i]) return [DONE_COLOR, "#1B1C1D"];
+    return [DONE_COLOR, "grey"];
   };
 
   return (
-    <Button.Group
-      fluid
-      style={{
-        position: "absolute",
-        border: "2px solid black",
-        top: "-20px",
-        left: "0",
-        height: "30px",
-      }}
-    >
-      {questions.map((q, i) => {
-        const [color, background] = setColor(i);
-        return (
-          <Button
-            active={i === questionIndex}
-            style={{
-              padding: "0em 0.2em 0.2em 0.2em",
+    <div>
+      <Button.Group
+        fluid
+        style={{
+          border: "1px solid",
+          height: "30px",
+        }}
+      >
+        {questions.map((q, i) => {
+          const [color, background] = setColor(i);
+          return (
+            <Button
+              active={i === questionIndex}
+              style={{
+                padding: "0em 0.2em 0.2em 0.2em",
 
-              minWidth: "2em",
-              maxWidth: `${100 / questions.length}%`,
-              maxHeight: "30px",
-              borderRadius: "0",
-              fontSize: "12px",
-              border: "1px solid darkgrey",
-              background: background,
-              textOverflow: "clip",
-              overflow: "hidden",
-              color: color,
-            }}
-            onClick={() => {
-              if (annotations[i].value !== null) {
-                dispatch(setQuestionIndex(i));
-              }
-            }}
-          >
-            {/* {i + 1} */}
-            <span title={questions[i].name}>{questions[i].name}</span>
-          </Button>
-        );
-      })}
-    </Button.Group>
+                minWidth: "2em",
+                height: "30px",
+                borderRadius: "0",
+                fontSize: "12px",
+                border: "1px solid darkgrey",
+                background: background,
+                textOverflow: "clip",
+                overflow: "hidden",
+                color: color,
+              }}
+              onClick={() => {
+                if (canSelect[i]) {
+                  setQuestionIndex(i);
+                }
+              }}
+            >
+              {/* {i + 1} */}
+              <span title={questions[i].name}>{questions[i].name}</span>
+            </Button>
+          );
+        })}
+      </Button.Group>
+    </div>
   );
 };
 
@@ -160,6 +199,7 @@ const AnswerSegment = ({
   questionIndex,
   onSelect,
   swipe,
+  blockEvents,
 }) => {
   if (answerTransition)
     return (
@@ -195,10 +235,18 @@ const AnswerSegment = ({
         }}
       >
         {questions[questionIndex].type === "search code" ? (
-          <SearchBoxDropdown options={questions[questionIndex].options} callback={onSelect} />
+          <SearchBoxDropdown
+            options={questions[questionIndex].options}
+            callback={onSelect}
+            blockEvents={blockEvents}
+          />
         ) : null}
         {questions[questionIndex].type === "select code" ? (
-          <ButtonSelection options={questions[questionIndex].options} callback={onSelect} />
+          <ButtonSelection
+            options={questions[questionIndex].options}
+            callback={onSelect}
+            blockEvents={blockEvents}
+          />
         ) : null}
         {questions[questionIndex].type === "annotinder" ? (
           <Annotinder
@@ -206,6 +254,7 @@ const AnswerSegment = ({
             currentAnswer={currentAnswer}
             callback={onSelect}
             swipe={swipe}
+            blockEvents={blockEvents}
           />
         ) : null}
       </Segment>
@@ -223,7 +272,7 @@ const createAnnotationObject = (tokens, question, questionIndex) => {
   const lastToken = tokens[tokens.length - 1];
 
   const charspan = [0, lastToken.offset + lastToken.length];
-  const indexspan = [0, tokens.length];
+  const indexspan = [0, tokens.length - 1];
   let [unitStarted, unitEnded] = [false, false];
 
   let i = 0;
@@ -236,30 +285,26 @@ const createAnnotationObject = (tokens, question, questionIndex) => {
     }
     if (!unitEnded && !token.codingUnit && unitStarted) {
       unitEnded = true;
-      charspan[1] = token.offset + token.length;
-      indexspan[1] = i;
+      charspan[1] = token.offset - 1;
+      indexspan[1] = i - 1;
     }
     i++;
   }
 
-  const extras = {};
   // make these optional? Because they're not tokenizer agnostic
-  // also only make sense if text_units include all offsets
-  // maybe only include IF the offsets are set, OR if offset === 0
-  extras.token_start = tokens[0].index;
-  extras.token_end = tokens[1].index;
-  extras.paragraph_start = tokens[0].paragraph;
-  extras.paragraph_end = tokens[1].paragraph;
-  extras.sentence_start = tokens[0].sentence;
-  extras.sentence_end = tokens[1].sentence;
+  const meta = {
+    length_tokens: 1 + indexspan[1] - indexspan[0],
+    length_paragraphs: 1 + tokens[indexspan[1]].paragraph - tokens[indexspan[0]].paragraph,
+    length_sentences: 1 + tokens[indexspan[1]].sentence - tokens[indexspan[0]].sentence,
+  };
 
   return {
-    variable: `${questionIndex + 1}: ${question.name}`,
+    variable: `Q${questionIndex + 1}_${question.name.replace(" ", "_")}`,
     value: null,
     section: Object.keys(sections).join(" + "),
     offset: charspan[0],
     length: charspan[1] - charspan[0],
-    ...extras,
+    meta,
   };
 };
 
@@ -275,8 +320,6 @@ const sameQuestion = (x, y) => {
 const getCurrentAnswer = (annotations, annotationObject) => {
   if (!annotations) return null;
   for (let annotation of annotations) {
-    console.log(annotation);
-    console.log(annotationObject);
     if (sameQuestion(annotation, annotationObject)) return annotation.value;
   }
   return null;
@@ -300,13 +343,17 @@ const showCurrent = (currentAnswer) => {
     <div style={{ backgroundColor: "white", color: "black" }}>
       <Segment
         style={{
-          padding: "0.2em",
+          padding: "0 0 0.5em 0",
           margin: "0",
+          borderRadius: "0",
+          background: "#1B1C1D",
+          color: DONE_COLOR,
           textAlign: "center",
         }}
       >
-        <div style={{ fontSize: "1.5em", marginTop: "0.3em" }}>
-          you answered <b>{`${currentAnswer}`}</b>
+        <div style={{ marginTop: "0.3em" }}>
+          you answered:{"  "}
+          <b style={{ fontSize: "1.5em" }}>{`${currentAnswer}`}</b>
         </div>
       </Segment>
     </div>

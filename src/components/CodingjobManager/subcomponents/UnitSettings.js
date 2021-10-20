@@ -10,8 +10,8 @@ import {
   Button,
   Grid,
 } from "semantic-ui-react";
-import Help from "components/Help";
-import CodesEditor from "components/CodesEditor/CodesEditor";
+import Help from "./Help";
+import CodesEditor from "./CodesEditor";
 import db from "apis/dexie";
 
 const defaultUnitSettings = {
@@ -64,7 +64,7 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
         textUnit: "document",
         value: "all",
         n: null,
-        totalItems: null,
+        totalUnits: null,
       });
   }, [unitSettings, setUnitSettings]);
 
@@ -86,7 +86,7 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
               textUnit: value,
               value: codingUnit,
               n: null,
-              totalItems: null,
+              totalUnits: null,
             })
           }
           style={{ marginLeft: jump ? "1em" : "0em" }}
@@ -168,12 +168,12 @@ const ContextUnitForm = ({ unitSettings, setUnitSettings }) => {
 const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
   const [delayed, setDelayed] = useState(null); // delayed unitSettings
   const [pct, setPct] = useState(100);
-  const totalItems = unitSettings.totalItems || 0;
+  const totalUnits = unitSettings.totalUnits || 0;
 
   useEffect(() => {
-    setPct(Math.round((100 * unitSettings.n) / totalItems));
+    setPct(Math.round((100 * unitSettings.n) / totalUnits));
     setDelayed(unitSettings);
-  }, [totalItems, unitSettings, setDelayed]);
+  }, [totalUnits, unitSettings, setDelayed]);
 
   useEffect(() => {
     if (delayed === unitSettings) return null;
@@ -208,15 +208,15 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
 
   const onChangeN = (e, d) => {
     let value = Number(d.value);
-    //value = value > n ? Math.min(totalItems, value + 4) : Math.max(0, value - 4);
-    setPct(Math.round((100 * value) / totalItems));
+    //value = value > n ? Math.min(totalUnits, value + 4) : Math.max(0, value - 4);
+    setPct(Math.round((100 * value) / totalUnits));
     setDelayed((current) => ({ ...current, n: value }));
   };
 
   const onChangePCT = (e, d) => {
     let value = Number(d.value);
     //value = value > pct ? Math.min(100, value + 4) : Math.max(0, value - 4);
-    let valueN = Math.ceil((value / 100) * totalItems);
+    let valueN = Math.ceil((value / 100) * totalUnits);
     if (valueN >= 0) {
       setPct(value);
       setDelayed((current) => ({ ...current, n: valueN }));
@@ -248,7 +248,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
         <Form.Field
           width={8}
           min={1}
-          max={totalItems}
+          max={totalUnits}
           label="N"
           size="mini"
           control={Input}
@@ -288,7 +288,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
           <Help
             header={"Balanced sampling"}
             texts={[
-              "Balance sampled items evenly over groups. Uses a simple approach where unique groups are created (documents, codes, or documentsXcodes), and samples are drawn from these groups one by one",
+              "Balance sampled Units evenly over groups. Uses a simple approach where unique groups are created (documents, codes, or documentsXcodes), and samples are drawn from these groups one by one",
               "For documents: get an equal number of paragraphs, sentences or annotations per document",
               "For codes: if units are annotations, get an equal number annotations for each unique code. (You can toggle which codes to include in the codebook, see top-right corner)",
             ]}
@@ -364,7 +364,7 @@ const ContextWindow = ({ contextUnit, contextWindow, setContextWindow }) => {
 
 const SelectValidCodes = ({ codingjob }) => {
   if (!codingjob?.unitSettings) return null;
-  if (!codingjob.unitSettings.totalItems) return null;
+  if (!codingjob.unitSettings.totalUnits) return null;
   if (codingjob.unitSettings.textUnit !== "span") return null;
 
   const unitSettings = codingjob.unitSettings;

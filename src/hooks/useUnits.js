@@ -54,7 +54,8 @@ const getUnitsFromDB = async (codingjob) => {
     return cjIndices.map((item) => {
       let group = "";
       if (unitSelection.balanceDocuments) group += item.docIndex;
-      if (item.annotation && unitSelection.balanceAnnotations) group += "_" + item.annotation.group;
+      if (item.annotation && unitSelection.balanceAnnotations)
+        group += "_" + item.annotation.variable;
       return group;
     });
   };
@@ -112,12 +113,12 @@ const getUnitsFromDB = async (codingjob) => {
         // add random annotation to mix by drawing from the annotations in the cjIndices sample.
         // this is random, and automatically gives approximately the same distribution of codes/groups
         if (unitSelection.balanceAnnotations) {
-          item.group = unitSelection.validCodes[i % nCodes];
+          item.variable = unitSelection.validCodes[i % nCodes];
         } else {
           const annSample = cjIndices[i % cjIndices.length];
-          if (annSample?.group) item.group = annSample.group;
+          if (annSample?.variable) item.variable = annSample.variable;
         }
-        item.annotation = { i, group: item.group };
+        item.annotation = { i, group: item.variable };
         return { ...item };
       });
       cjIndices = cjIndices.concat(addSample);

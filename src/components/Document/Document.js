@@ -24,10 +24,19 @@ import hash from "object-hash";
  * @param {*} setReady       A function for passing a boolean to the parent to indicate that the
  *                           text is ready (which is usefull if the parent wants to transition
  *                           to new texts nicely)
+ * @param {*} blockEvents    boolean. If true, disable event listeners
  * @returns
  */
-const Document = ({ unit, codes, settings, onChangeAnnotations, returnTokens, setReady }) => {
-  const fullScreenNode = useSelector(state => state.fullScreenNode);
+const Document = ({
+  unit,
+  codes,
+  settings,
+  onChangeAnnotations,
+  returnTokens,
+  setReady,
+  blockEvents,
+}) => {
+  const fullScreenNode = useSelector((state) => state.fullScreenNode);
   const safetyCheck = useRef(null); // ensures only new annotations for the current unit are passed to onChangeAnnotations
 
   const [tokensReady, setTokensReady] = useState(0);
@@ -56,8 +65,8 @@ const Document = ({ unit, codes, settings, onChangeAnnotations, returnTokens, se
   }, [tokens, annotations, onChangeAnnotations]);
 
   useEffect(() => {
-    if (setReady) setReady(current => current + 1);
-    setAnnotations(state => ({ ...state })); //trigger DOM update after token refs have been prepared
+    if (setReady) setReady((current) => current + 1);
+    setAnnotations((state) => ({ ...state })); //trigger DOM update after token refs have been prepared
   }, [tokensReady, setAnnotations, setReady]);
 
   if (!tokens) return null;
@@ -70,7 +79,7 @@ const Document = ({ unit, codes, settings, onChangeAnnotations, returnTokens, se
         codeMap={codeMap}
         annotations={annotations}
         triggerCodePopup={triggerCodePopup}
-        eventsBlocked={codeSelectorOpen}
+        eventsBlocked={codeSelectorOpen || blockEvents}
         fullScreenNode={fullScreenNode}
         disableAnnotations={!onChangeAnnotations || !codeMap}
       />

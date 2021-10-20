@@ -4,7 +4,7 @@ import randomColor from "randomcolor";
  * Transform the taskSettings into the codebook. The difference is that taskSettings also contains information that's only relevant in the manager. The codebook contains only the information relevant for the annotator
  * @param {*} taskSettings
  */
-export const getCodebook = taskSettings => {
+export const getCodebook = (taskSettings) => {
   const codebook = {
     type: taskSettings.type,
     ...taskSettings[taskSettings.type],
@@ -13,18 +13,19 @@ export const getCodebook = taskSettings => {
   return codebook;
 };
 
-export const standardizeCodes = codes => {
+export const standardizeCodes = (codes) => {
   return codes.map((code, i) => {
     if (typeof code !== "object") code = { code };
     if (code.active == null) code.active = true;
     if (code.tree == null) code.tree = [];
     if (code.parent == null) code.parent = "";
+    if (code.branching == null) code.branching = "next";
     if (code.color == null) code.color = randomColor({ seed: code.code, luminosity: "light" });
     return code;
   });
 };
 
-export const codeBookEdgesToMap = codes => {
+export const codeBookEdgesToMap = (codes) => {
   const standardizedCodes = standardizeCodes(codes);
 
   // the payload is an array of objects, but for efficients operations
@@ -75,7 +76,7 @@ export const codeBookEdgesToMap = codes => {
 
 export const getCodeTreeArray = (codeMap, showColors) => {
   let parents = Object.keys(codeMap).filter(
-    code => !codeMap[code].parent || codeMap[code].parent === ""
+    (code) => !codeMap[code].parent || codeMap[code].parent === ""
   );
   const codeTreeArray = [];
   fillCodeTreeArray(codeMap, parents, codeTreeArray, [], showColors);
@@ -124,4 +125,88 @@ const parentData = (codeMap, code) => {
     parent = codeMap[parent].parent;
   }
   return [parents.reverse(), activeParent, foldToParent];
+};
+
+export const ctaToText = (cta, indentSpaces = 2, paramOffset = 25) => {
+  let txt = "";
+  let line;
+  for (let code of cta) {
+    line = "";
+    line += Array(1 + code.level * indentSpaces).join(" ");
+    line += code.code;
+
+    const addSpace = paramOffset - line.length;
+    if (addSpace > 0) line += Array(addSpace).join(" ");
+    line += ` #color(${code.color})`;
+    if (!code.active) line += " #disabled";
+    if (code.folded) line += " #folded";
+    if (code.branching !== "next") line += ` #branching(${code.branching})`;
+    txt += line + "\n";
+  }
+  return txt;
+};
+
+export const textToCodes = (text, root, codes) => {
+  const codeMap = codes.reduce((obj, code) => {
+    if (typeof code === "object") {
+      obj[code.code] = 1;
+      obj[code.parent] = 1;
+    } else obj[code] = 1;
+    return obj;
+  }, {});
+  const duplicates = [];
+  const updatedCodes = [...codes];
+  const parentLevel = {};
+  const lines = text.split("\n");
+  for (let line of lines) {
+    const spaces = line.search(/\S/);
+    let newCode = line.split("#color")[0].split("#disabled")[0].split("#folded")[0].trim();
+    if (newCode === "") continue;
+    if (codeMap[newCode]) duplicates.push(newCode);
+    codeMap[newCode] = 1;
+
+    const newCodeObj = {
+      code: newCode,
+      parent: findParent(parentLevel, root, newCode, spaces),
+      active: !line.includes("#disabled"),
+      folded: line.includes("#folded"),
+    };
+
+    if (line.includes("#branching")) {
+      newCodeObj.branching = line.split("#branching(")[1].split(")")[0];
+      if (!["nextUnit", "skipOne", "skipTwo", "skipThree"].includes(newCodeObj.branching))
+        newCodeObj.branching = "next";
+    }
+    if (line.includes("#color")) {
+      let color = line.split("#color(")[1].split(")")[0];
+      newCodeObj.color = standardizeColor(color);
+    }
+    updatedCodes.push(newCodeObj);
+  }
+  return [updatedCodes, duplicates];
+};
+
+const findParent = (parentLevel, code, newCode, spaces) => {
+  // also updates parentLevel
+  let parent = code;
+  for (let pspaces of Object.keys(parentLevel)) {
+    pspaces = Number(pspaces);
+    if (spaces > pspaces) {
+      parent = parentLevel[pspaces];
+    } else {
+      delete parentLevel[pspaces];
+      parentLevel[spaces] = newCode;
+    }
+  }
+  parentLevel[spaces] = newCode;
+  return parent;
+};
+
+const standardizeColor = (str) => {
+  if (!str) return "#FFFFFF";
+  // https://stackoverflow.com/questions/1573053/javascript-function-to-convert-color-names-to-hex-codes
+  const ctx = document.createElement("canvas").getContext("2d");
+  ctx.fillStyle = str.trim();
+  const color = ctx.fillStyle; // make lighter
+  return color;
 };

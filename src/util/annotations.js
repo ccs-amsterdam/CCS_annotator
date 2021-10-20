@@ -4,14 +4,13 @@ export const exportSpanAnnotations = (annotations, tokens) => {
   const uniqueAnnotations = Object.keys(annotations).reduce((un_ann, index) => {
     const ann = annotations[index];
     for (let key of Object.keys(ann)) {
-      console.log(ann[key]);
       //const endIndex = if (index === 'unit' ? index : )
 
       if (index !== "unit") if (ann[key].index !== ann[key].span[0]) continue;
 
       const ann_obj = {
         variable: key,
-        value: ann[key].code,
+        value: ann[key].value,
         section: ann[key].section,
         offset: ann[key].offset,
         length: ann[key].length,
@@ -33,12 +32,11 @@ export const importSpanAnnotations = (annotationsArray, tokens, currentAnnotatio
   for (let token of tokens) {
     findMatches(token, importedAnnotations, trackAnnotations, matchedAnnotations);
   }
-
   const codeCounter = {};
   const annArray = [];
   for (let matchedAnnotation of matchedAnnotations) {
-    if (!codeCounter[matchedAnnotation.group]) codeCounter[matchedAnnotation.group] = 0;
-    codeCounter[matchedAnnotation.group]++;
+    if (!codeCounter[matchedAnnotation.variable]) codeCounter[matchedAnnotation.variable] = 0;
+    codeCounter[matchedAnnotation.variable]++;
     annArray.push(matchedAnnotation);
   }
 
@@ -75,12 +73,12 @@ export const toggleSpanAnnotations = (annotations, annList, rm) => {
   for (let a of annList) {
     // if group in annotations, remove it
     if (annotations[a.index]) {
-      if (annotations[a.index][a.group]) {
-        const span = annotations[a.index][a.group].span;
+      if (annotations[a.index][a.variable]) {
+        const span = annotations[a.index][a.variable].span;
         for (let i = span[0]; i <= span[1]; i++) {
           if (annotations[i]) {
-            if (annotations[i][a.group]) {
-              delete annotations[i][a.group];
+            if (annotations[i][a.variable]) {
+              delete annotations[i][a.variable];
               if (Object.keys(annotations[i]).length === 0) {
                 delete annotations[i];
               }
@@ -92,23 +90,24 @@ export const toggleSpanAnnotations = (annotations, annList, rm) => {
 
     if (!rm) {
       if (!annotations[a.index]) annotations[a.index] = {};
-      annotations[a.index][a.group] = {
+      annotations[a.index][a.variable] = {
         index: a.index,
         span: [a.span[0], a.span[1]],
         length: a.length,
-        code: a.code,
+        code: a.value,
         section: a.section,
         offset: a.offset,
       };
     }
   }
+
   return annotations;
 };
 
-const prepareSpanAnnotations = annotations => {
+const prepareSpanAnnotations = (annotations) => {
   if (!annotations || annotations === "") return {};
   // create an object where the key is a section+offset, and the
-  // value is an array that tells which codes start and end there
+  // value is an array that tells which variables start and end there
   // used in Tokens for matching to token indices
   return annotations.reduce((obj, ann) => {
     if (!obj[ann.section]) obj[ann.section] = {};
@@ -116,7 +115,7 @@ const prepareSpanAnnotations = annotations => {
     if (!obj[ann.section][ann.offset + ann.length])
       obj[ann.section][ann.offset + ann.length] = { start: [], end: [] };
     obj[ann.section][ann.offset].start.push(ann); // for the starting point the full annotation is given, so that we have all the information
-    obj[ann.section][ann.offset + ann.length].end.push(ann.code); // for the ending point we just need to know the code to close the annotation off
+    obj[ann.section][ann.offset + ann.length].end.push(ann.variable); // for the ending point we just need to know the variable
     return obj;
   }, {});
 };
@@ -132,20 +131,21 @@ const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnota
 
     if (sectionAnnotations[i]) {
       for (let annotation of sectionAnnotations[i].start) {
-        trackAnnotations[annotation.code] = { ...token };
-        trackAnnotations[annotation.code].group = annotation.variable;
-        trackAnnotations[annotation.code].code = annotation.value;
-        trackAnnotations[annotation.code].offset = start;
-        trackAnnotations[annotation.code].length = null;
-        trackAnnotations[annotation.code].span = [token.index];
+        trackAnnotations[annotation.variable] = { ...token };
+        trackAnnotations[annotation.variable].variable = annotation.variable;
+        trackAnnotations[annotation.variable].value = annotation.value;
+        trackAnnotations[annotation.variable].offset = start;
+        trackAnnotations[annotation.variable].length = null;
+        trackAnnotations[annotation.variable].span = [token.index];
       }
 
-      for (let code of sectionAnnotations[i].end) {
-        if (!trackAnnotations[code]) continue;
-        trackAnnotations[code].span.push(token.index);
-        trackAnnotations[code].length = token.offset + token.length - trackAnnotations[code].offset;
-        matchedAnnotations.push(trackAnnotations[code]);
-        delete trackAnnotations[code];
+      for (let variable of sectionAnnotations[i].end) {
+        if (!trackAnnotations[variable]) continue;
+        trackAnnotations[variable].span.push(token.index);
+        trackAnnotations[variable].length =
+          token.offset + token.length - trackAnnotations[variable].offset;
+        matchedAnnotations.push(trackAnnotations[variable]);
+        delete trackAnnotations[variable];
       }
     }
   }

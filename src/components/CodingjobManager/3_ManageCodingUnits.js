@@ -1,8 +1,8 @@
-import SelectionTable from "./SelectionTable";
+import SelectionTable from "./subcomponents/SelectionTable";
 import React, { useEffect, useState } from "react";
 import { Grid, Header, Dimmer, Loader } from "semantic-ui-react";
 
-import UnitSettings from "./Settings/UnitSettings";
+import UnitSettings from "./subcomponents/UnitSettings";
 import Document from "components/Document/Document";
 import useUnits from "hooks/useUnits";
 import { standardizeUnits } from "util/standardizeUnits";
@@ -106,8 +106,6 @@ const PreviewUnits = React.memo(({ codingjob, units }) => {
 });
 
 const PreviewDocument = ({ item, codebook }) => {
-  console.log(item);
-
   const renderDocument = () => {
     if (!item) return null;
     return (

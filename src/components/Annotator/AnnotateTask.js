@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Container, Grid, Header, List, ListItem, Table, Popup, Button } from "semantic-ui-react";
-import AnnotateTable from "./AnnotateTable";
+import AnnotateTable from "./subcomponents/AnnotateTable";
 import Document from "components/Document/Document";
 import { codeBookEdgesToMap } from "util/codebook";
 
-const AnnotateTask = ({ unit, codebook }) => {
+const AnnotateTask = ({ unit, codebook, blockEvents }) => {
   const [annotations, setAnnotations] = useState([]);
 
   const [tokens, setTokens] = useState();
@@ -33,6 +33,7 @@ const AnnotateTask = ({ unit, codebook }) => {
           settings={codebook?.settings}
           onChangeAnnotations={setAnnotations}
           returnTokens={setTokens}
+          blockEvents={blockEvents}
         />
       </Grid.Column>
       <Grid.Column
@@ -55,7 +56,6 @@ const AnnotateTask = ({ unit, codebook }) => {
 const Instructions = ({ codebook }) => {
   const [open, setOpen] = useState(false);
   if (!codebook) return null;
-
   return (
     <Popup
       flowing
@@ -133,7 +133,7 @@ const Instructions = ({ codebook }) => {
               </Table.HeaderCell>
               <Table.HeaderCell colSpan="3">
                 <List as="ul">
-                  {codebook.searchBox || codebook.buttonMode === "recent" ? (
+                  {codebook.settings.searchBox || codebook.settings.buttonMode === "recent" ? (
                     <ListItem as="li">
                       <i>text input</i> automatically opens dropdown{" "}
                     </ListItem>

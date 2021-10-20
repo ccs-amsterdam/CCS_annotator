@@ -1,8 +1,8 @@
 import React from "react";
 
 import { Grid, Header } from "semantic-ui-react";
-import UploadDocuments from "./UploadDocuments";
-import DocumentTable from "components/CodingjobManager/DocumentTable";
+import UploadDocuments from "./subcomponents/UploadDocuments";
+import DocumentTable from "./subcomponents/DocumentTable";
 
 const ManageDocuments = ({ codingjob }) => {
   return (

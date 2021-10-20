@@ -196,13 +196,13 @@ export const importTokenAnnotations = (tokens, codes) => {
       if (codeTracker[annotation.name] == null)
         codeTracker[annotation.name] = {
           index: i,
-          code: annotation.value,
+          value: annotation.value,
           offset: tokens[i].offset,
           text: tokens[i].text,
           section: tokens[i].section,
           length: tokens[i].length,
         };
-      if (codeTracker[annotation.name].code === annotation.value) {
+      if (codeTracker[annotation.name].value === annotation.value) {
         codeTracker[annotation.name].length =
           tokens[i].offset + tokens[i].length - codeTracker[annotation.name].offset;
         codeTracker[annotation.name].text += prevTokenPost + tokens[i].pre + tokens[i].post;
@@ -215,7 +215,7 @@ export const importTokenAnnotations = (tokens, codes) => {
         delete codeTracker[key];
         continue;
       }
-      if (annotationDict[key] !== codeTracker[key].code) {
+      if (annotationDict[key] !== codeTracker[key].value) {
         annotations.push(codeTracker[key]);
         codeTracker[key] = {
           index: i,

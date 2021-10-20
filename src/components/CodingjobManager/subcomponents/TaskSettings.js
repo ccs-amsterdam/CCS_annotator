@@ -37,7 +37,7 @@ const defaultTaskSettings = {
 const TaskSettings = ({ codingjob }) => {
   const unitSettings = codingjob?.unitSettings;
   const taskSettings = codingjob?.taskSettings || defaultTaskSettings;
-  const setTaskSettings = us => {
+  const setTaskSettings = (us) => {
     db.setCodingjobProp(codingjob, "taskSettings", us);
   };
 

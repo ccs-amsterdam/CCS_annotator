@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { blockEvents } from "actions";
-import { Button, ButtonGroup, Dropdown, Form, Icon, Input, Popup } from "semantic-ui-react";
+import { textToCodes } from "util/codebook";
+import { Button, ButtonGroup, Dropdown, Form, Input, Popup, TextArea } from "semantic-ui-react";
 
-const EditCodePopup = ({ children, codeMap, code, codes, setCodes, setChangeColor }) => {
+const EditCodePopup = ({ codeMap, code, codes, setCodes, toggleActiveCode, setChangeColor }) => {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
@@ -15,15 +16,56 @@ const EditCodePopup = ({ children, codeMap, code, codes, setCodes, setChangeColo
     };
   }, [dispatch, open]);
 
+  const buttonStyle = {
+    padding: "0",
+    margin: "0",
+    width: "15px",
+    borderRadius: "0",
+    minHeight: "10px",
+  };
+
   const buttonContent = () => {
+    if (code === "")
+      return (
+        <ButtonGroup fluid color="black">
+          <Button content="Add more codes" onClick={() => addCodePopup(true)} style={buttonStyle} />
+          ;
+        </ButtonGroup>
+      );
     return (
-      <ButtonGroup basic>
+      <ButtonGroup color="black" attached fluid size="mini" style={{ padding: "0", margin: "0" }}>
+        <Button
+          size="mini"
+          icon={code.active && code.activeParent ? "toggle on" : "toggle off"}
+          onClick={() => toggleActiveCode(codes, code.code, !code.active, setCodes)}
+          style={{ ...buttonStyle, color: code.active && code.activeParent ? "green" : "red" }}
+        />
         {changeColorPopup()}
-        <Button icon="plus" compact size="mini" onClick={() => addCodePopup(false)} />
-        <Button icon="minus" compact size="mini" onClick={rmCodePopup} />
-        <Button icon="edit" compact size="mini" onClick={moveCodePopup} />
-        <Button icon="arrow up" compact size="mini" onClick={() => changePosition("up")} />
-        <Button icon="arrow down" compact size="mini" onClick={() => changePosition("down")} />
+
+        <Button
+          icon="plus"
+          compact
+          size="mini"
+          onClick={() => addCodePopup(false)}
+          style={buttonStyle}
+        />
+        <Button icon="minus" compact size="mini" onClick={rmCodePopup} style={buttonStyle} />
+        <Button icon="edit" compact size="mini" onClick={moveCodePopup} style={buttonStyle} />
+
+        <Button
+          icon="arrow up"
+          compact
+          size="mini"
+          onClick={() => changePosition("up")}
+          style={buttonStyle}
+        />
+        <Button
+          icon="arrow down"
+          compact
+          size="mini"
+          onClick={() => changePosition("down")}
+          style={buttonStyle}
+        />
       </ButtonGroup>
     );
   };
@@ -32,13 +74,11 @@ const EditCodePopup = ({ children, codeMap, code, codes, setCodes, setChangeColo
     if (!code.code && code.active == null) return null;
     return (
       <Button
+        size="mini"
         as={"Input"}
         style={{
-          padding: "0",
-          margin: "0",
-          width: "2em",
-          height: "2em",
-          background: "white",
+          ...buttonStyle,
+
           color: code.color ? code.color : "white",
         }}
         onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
@@ -58,6 +98,7 @@ const EditCodePopup = ({ children, codeMap, code, codes, setCodes, setChangeColo
         setOpen={setOpen}
       />
     );
+    setOpen(true);
   };
 
   const rmCodePopup = () => {
@@ -70,6 +111,7 @@ const EditCodePopup = ({ children, codeMap, code, codes, setCodes, setChangeColo
         setOpen={setOpen}
       />
     );
+    setOpen(true);
   };
 
   const moveCodePopup = () => {
@@ -82,6 +124,7 @@ const EditCodePopup = ({ children, codeMap, code, codes, setCodes, setChangeColo
         setOpen={setOpen}
       />
     );
+    setOpen(true);
   };
 
   const changePosition = (direction) => {
@@ -91,43 +134,17 @@ const EditCodePopup = ({ children, codeMap, code, codes, setCodes, setChangeColo
 
   return (
     <Popup
+      inverted
+      size="mini"
       flowing
       hoverable
-      wide
-      position="top right"
-      onClose={() => {
-        setPopupContent(buttonContent());
-        setOpen(false);
-      }}
+      mouseLeaveDelay={99999999}
       open={open}
-      mouseLeaveDelay={10000000} // just don't use mouse leave
-      style={{ padding: "0px" }}
-      trigger={
-        code === "" ? (
-          <Button
-            onClick={() => {
-              addCodePopup(true);
-              setOpen(true);
-            }}
-            style={{ marginTop: "1em", marginLeft: "1em" }}
-            compact
-            size="mini"
-          >
-            Add code
-          </Button>
-        ) : (
-          <span
-            onClick={() => {
-              setPopupContent(buttonContent);
-              setOpen(true);
-            }}
-          >
-            {children}
-          </span>
-        )
-      }
+      onClose={() => setOpen(false)}
+      trigger={buttonContent()}
+      style={{ padding: "0", margin: "0" }}
     >
-      {popupContent}{" "}
+      {popupContent}
     </Popup>
   );
 };
@@ -159,52 +176,52 @@ const movePosition = (codes, code, direction, setCodes) => {
 };
 
 const AddCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
-  const [alreadyExists, setAlreadyExists] = useState(false);
+  const [alreadyExists, setAlreadyExists] = useState([]);
   const [textInput, setTextInput] = useState("");
 
-  const addCode = (newCode) => {
-    if (newCode === "") return null;
-    if (codeMap[newCode]) {
-      setAlreadyExists(true);
+  const addCode = (text) => {
+    if (text === "") return null;
+    const [updatedCodes, duplicates] = textToCodes(text, code, codes);
+    if (duplicates.length > 0) {
+      setAlreadyExists(duplicates);
       return null;
     }
-
-    const updatedCodes = [...codes];
-    updatedCodes.push({ code: newCode, parent: code, active: true });
     setCodes(updatedCodes);
     setOpen(false);
   };
 
   return (
-    <div style={{ margin: "1em" }}>
+    <div style={{ margin: "1em", height: "200px" }}>
       <p>
         {code === "" ? (
-          "Create new code"
+          "Create new codes"
         ) : (
           <>
-            Add code under <b>{code}</b>
+            Add codes under <b>{code}</b>
           </>
         )}
         <Button floated="right" compact size="mini" icon="delete" onClick={() => setOpen(false)} />
       </p>
       <Form onSubmit={() => addCode(textInput)}>
         <Popup
-          open={alreadyExists}
+          open={alreadyExists.length > 0}
           trigger={
-            <Input
+            <TextArea
               autoFocus
               onChange={(e, d) => {
                 setTextInput(d.value);
-                setAlreadyExists(false);
+                setAlreadyExists([]);
               }}
               value={textInput}
-              icon={<Icon name="plus" inverted circular link onClick={() => addCode(textInput)} />}
-              placeholder="new code"
+              style={{ height: "130px" }}
+              placeholder="Every line becomes a new code"
             />
           }
         >
-          Code label already exists
+          Duplicate labels: <br />
+          <b>{alreadyExists.join(", ")}</b>
         </Popup>
+        <Button fluid content="Create" onClick={() => addCode(textInput)} />
       </Form>
     </div>
   );
@@ -296,7 +313,7 @@ const MoveCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
 
       <Form onSubmit={() => mvCode(textInput, newParent)}>
         <Form.Field inline>
-          <label>Parent:</label>
+          <label style={{ color: "white" }}>Parent:</label>
           <Dropdown
             value={newParent}
             style={{ minWidth: "10em" }}
@@ -317,7 +334,7 @@ const MoveCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
           />
         </Form.Field>
         <Form.Field inline>
-          <label>Code:</label>
+          <label style={{ color: "white" }}>Code:</label>
           <Input
             autoFocus
             onChange={(e, d) => {

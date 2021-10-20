@@ -2,21 +2,20 @@ import React from "react";
 
 import { Input, Form, Radio, Icon, Checkbox } from "semantic-ui-react";
 
-import CodesEditor from "components/CodesEditor/CodesEditor";
+import CodesEditor from "./CodesEditor";
 import { standardizeCodes } from "util/codebook";
 
-import Help from "components/Help";
+import Help from "components/CodingjobManager/subcomponents/Help";
 
 // also need option to import annotations and import codebook
 // to use the same annotations/codebook
 // The codebook can then be edited, but the imported codes cannot be removed or renamed.
 
 const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
-  console.log(taskSettings);
-  const setAnnotateForm = value => {
+  const setAnnotateForm = (value) => {
     setTaskSettings({ ...taskSettings, annotate: value });
   };
-  const setAnnotateSettings = value => {
+  const setAnnotateSettings = (value) => {
     setAnnotateForm({ ...taskSettings.annotate, settings: value });
   };
 
@@ -24,7 +23,7 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
     return (
       <CodesEditor
         codes={standardizeCodes(taskSettings.annotate.codes)}
-        setCodes={newCodes => setAnnotateForm({ ...taskSettings.annotate, codes: newCodes })}
+        setCodes={(newCodes) => setAnnotateForm({ ...taskSettings.annotate, codes: newCodes })}
       />
     );
   };

@@ -5,11 +5,11 @@ import { Segment, Step } from "semantic-ui-react";
 import db from "apis/dexie";
 import { useLiveQuery } from "dexie-react-hooks";
 
-import CodingjobSelector from "./CodingjobSelector";
-import ManageDocuments from "./ManageDocuments";
-import ManageCodingUnits from "./ManageCodingUnits";
-import ManageTask from "./ManageTask";
-import DeployCodingjob from "./DeployCodingjob";
+import CodingjobSelector from "./1_CodingjobSelector";
+import ManageDocuments from "./2_ManageDocuments";
+import ManageCodingUnits from "./3_ManageCodingUnits";
+import ManageTask from "./4_ManageTask";
+import DeployCodingjob from "./5_DeployCodingjob";
 
 const CodingjobManager = () => {
   const [menuItem, setMenuItem] = useState("codingjobs");

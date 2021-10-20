@@ -1,12 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Input, Loader, Pagination, Segment } from "semantic-ui-react";
-import { useSelector, useDispatch } from "react-redux";
 
-const IndexController = ({ n, setIndex, canGoForward = true, canGoBack = true }) => {
-  const moveUnitIndex = useSelector((state) => state.moveUnitIndex);
+const IndexController = ({ n, index, setIndex, canGoForward = true, canGoBack = true }) => {
   const reached = useRef(0); // if canGoBack but not canGoForward, can still go forward after going back
   const canMove = useRef(false);
-  const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
   const [activePage, setActivePage] = useState(1);
@@ -39,6 +36,11 @@ const IndexController = ({ n, setIndex, canGoForward = true, canGoBack = true })
   };
 
   useEffect(() => {
+    if (index !== null) setActivePage(Math.min(index + 1, n + 1));
+    if (index === null) setActivePage(n + 1);
+  }, [index, n, setActivePage]);
+
+  useEffect(() => {
     if (canGoForward || canGoBack) window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
@@ -51,18 +53,10 @@ const IndexController = ({ n, setIndex, canGoForward = true, canGoBack = true })
   }, [n]);
 
   useEffect(() => {
-    if (!canMove.current) return;
-    if (n) {
-      const newn = moveUnitIndex > 0 ? n + 1 : n - 1;
-      setActivePage((current) => Math.min(newn, current + 1));
-    }
-  }, [n, moveUnitIndex]);
-
-  useEffect(() => {
     if (!n) return null;
     setActivePage(1);
     canMove.current = true;
-  }, [n, setActivePage, dispatch]);
+  }, [n, setActivePage]);
 
   useEffect(() => {
     if (!n) return null;
@@ -91,8 +85,6 @@ const IndexController = ({ n, setIndex, canGoForward = true, canGoBack = true })
 
   if (!n) return null;
 
-  console.log(reached.current);
-
   return (
     <Segment
       style={{
@@ -102,6 +94,7 @@ const IndexController = ({ n, setIndex, canGoForward = true, canGoBack = true })
         leftMargin: "0px",
         width: "100%",
         maxHeight: "35px",
+        borderRadius: "0",
       }}
     >
       <Loader active={loading} content="" />
@@ -111,7 +104,10 @@ const IndexController = ({ n, setIndex, canGoForward = true, canGoBack = true })
         min={1}
         max={n + 1}
         onChange={(e, d) => {
-          if ((canGoForward || activePage < reached.current) && Number(d.value) > delayedActivePage)
+          if (
+            (canGoForward || Number(d.value) < reached.current) &&
+            Number(d.value) > delayedActivePage
+          )
             setDelayedActivePage(Number(d.value));
           if (canGoBack && Number(d.value) < delayedActivePage)
             setDelayedActivePage(Number(d.value));
@@ -122,7 +118,7 @@ const IndexController = ({ n, setIndex, canGoForward = true, canGoBack = true })
           <Pagination
             secondary
             activePage={delayedActivePage}
-            pageItem={delayedActivePage <= n ? `${delayedActivePage} / ${n}` : ""}
+            pageItem={delayedActivePage <= n ? `${delayedActivePage} / ${n}` : `done / ${n}`}
             size={"mini"}
             firstItem={null}
             lastItem={null}

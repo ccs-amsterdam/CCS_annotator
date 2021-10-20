@@ -12,24 +12,21 @@ import {
   Popup,
   Input,
 } from "semantic-ui-react";
-import { useSelector, useDispatch } from "react-redux";
-import { setQuestionIndex } from "actions";
 
-import Help from "components/Help";
-import CodesEditor from "components/CodesEditor/CodesEditor";
+import Help from "./Help";
+import CodesEditor from "./CodesEditor";
 import { standardizeCodes } from "util/codebook";
 
 const questionDefaultSettings = {
   type: "select code",
-  name: "[Question name]",
-  question: "[The question itself]",
+  name: "Question name",
+  question: "The question itself",
   codes: ["No", "Skip", "Yes"],
 };
 
 const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) => {
-  // question index via redux, so that it can be linked with question index in the question task preview
-  const questionIndex = useSelector((state) => state.questionIndex);
-  const dispatch = useDispatch();
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const onAdd = () => {
     const questions = taskSettings.questions.questions;
@@ -45,6 +42,7 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
     }
 
     setTaskSettings({ ...taskSettings, questions: { questions: newQuestions } });
+    setDeleteOpen(false);
   };
 
   const questionMap = () => {
@@ -58,10 +56,36 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
         <QuestionFormSettings
           questionForm={question}
           setQuestionForm={setQuestionForm}
+          questionIndex={questionIndex}
           unitSettings={unitSettings}
         />
       );
     });
+  };
+
+  const deleteQuestionButton = () => {
+    if (taskSettings.questions.questions.length === 0) return null;
+    return (
+      <Popup
+        hoverable
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        trigger={
+          <Menu.Item
+            icon="minus"
+            position="right"
+            style={{ background: "red" }}
+            onClick={() => setDeleteOpen(!deleteOpen)}
+          />
+        }
+      >
+        <p>Delete Question {questionIndex + 1}?</p>
+
+        <Button style={{ background: "red" }} onClick={onDelete}>
+          yes please
+        </Button>
+      </Popup>
+    );
   };
 
   const questionMenu = () => {
@@ -76,31 +100,14 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
                 <Menu.Item
                   name={`Q ${i + 1}`}
                   active={questionIndex === i}
-                  onClick={(e, d) => dispatch(setQuestionIndex(i))}
+                  onClick={(e, d) => setQuestionIndex(i)}
                 />
               );
             })}
           <Menu.Item icon="plus" style={{ background: "lightblue" }} onClick={onAdd} />
+          {deleteQuestionButton()}
         </Menu>
         <Segment attached="bottom">
-          <Popup
-            on="click"
-            trigger={
-              <Button
-                disabled={taskSettings.questions.questions.length === 0}
-                style={{ float: "right", background: "red" }}
-              >
-                {" "}
-                Delete
-              </Button>
-            }
-          >
-            <p>Really?</p>
-
-            <Button style={{ background: "red" }} onClick={onDelete}>
-              yes, really
-            </Button>
-          </Popup>
           <br />
 
           {qlist[questionIndex]}
@@ -112,7 +119,7 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
   return <>{questionMenu()}</>;
 };
 
-const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) => {
+const QuestionFormSettings = ({ questionForm, setQuestionForm, questionIndex, unitSettings }) => {
   const [delayed, setDelayed] = useState("");
   const [warn, setWarn] = useState([]);
 
@@ -129,29 +136,16 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
     let newWarn = [];
 
     const hasCodeRef = questionForm.question.search("\\[code\\]") >= 0;
-    const hasTextRef = questionForm.question.search("\\[text\\]") >= 0;
+    console.log(unitSettings);
 
-    if (hasCodeRef && unitSelection.value === "all")
+    if (hasCodeRef && unitSettings?.value === "all")
       newWarn.push(
         "Referring to a specific code with [code] is only possible if coding units are annotations"
       );
-    if (hasTextRef) {
-      if (unitSelection.value === "per annotation" && unitSelection.annotationMix > 0) {
-        newWarn.push(
-          `Referring to the specific [text] of an annotation is not possible if random units are added to the sample (because picking random words would make no sense... I think). This percentage (currently ${unitSelection.annotationMix}%) can be set in the Unit selection menu.`
-        );
-      } else {
-        if (unitSelection.value === "all")
-          newWarn.push(
-            "Reffering to the specific [text] of an annotation is only possible if coding units are annotations"
-          );
-      }
-    }
 
     setWarn(newWarn);
     setDelayed({ name: questionForm.name, question: questionForm.question });
-  }, [setDelayed, questionForm, setWarn, unitSelection]);
-  console.log(warn);
+  }, [setDelayed, questionForm, setWarn, unitSettings]);
 
   const codesEditor = () => {
     //if (questionForm.type !== "search code" && questionForm.type !== "select code") return null;
@@ -163,8 +157,12 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
     );
   };
 
-  if (!questionForm) return null;
+  const variableName = () => {
+    if (!delayed?.name) return "";
+    return `Q${questionIndex + 1}_${delayed.name.replace(" ", "_")}`;
+  };
 
+  if (!questionForm) return null;
   return (
     <Form>
       <Form.Group grouped>
@@ -175,7 +173,9 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
             style={{ width: "150px" }}
             onChange={(e, d) => setDelayed({ ...delayed, name: d.value })}
           />
+          <p style={{ marginLeft: "1em", color: "grey" }}>{`Variable: ${variableName()}`}</p>
         </Form.Field>{" "}
+        <br />
         <label>
           Question
           <Help
@@ -185,6 +185,7 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
             ]}
           />
         </label>
+        {warn.length > 0 ? <Help type="warn" header="" texts={warn} /> : null}
         <Form.Field>
           <TextArea
             value={delayed.question}
@@ -221,6 +222,19 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, unitSelection }) 
           />
         </Form.Field>
       </Form.Group>
+      <br />
+      {/* <Form.Group grouped>
+        <label>Type of answer</label>
+        <Form.Field>
+          <Dropdown
+            options={questionForm.codes.map((code) => ({ key: code, text: code, value: code }))}
+            placeholder="answers that should "
+            fluid
+            multiple
+            selection
+          />
+        </Form.Field>
+      </Form.Group> */}
       <br />
       <AnnotinderEditor questionForm={questionForm} setQuestionForm={setQuestionForm} />
       {codesEditor()}

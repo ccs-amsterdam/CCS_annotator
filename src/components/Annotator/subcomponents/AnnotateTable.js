@@ -12,6 +12,7 @@ const AnnotateTable = ({ tokens, codeMap, annotations }) => {
   if (!tokens || tokens.length === 0) return null;
 
   console.log(annotations);
+  console.log(importSpanAnnotations(annotations, tokens));
   return (
     <Table
       style={{ fontSize: "10px" }}

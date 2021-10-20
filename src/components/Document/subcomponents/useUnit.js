@@ -8,7 +8,6 @@ const useUnit = (unit, safetyCheck, returnTokens) => {
 
   useEffect(() => {
     if (!unit?.text && !unit.text_fields) return null;
-    console.log(unit);
     const document = prepareDocument(unit);
 
     safetyCheck.current = {

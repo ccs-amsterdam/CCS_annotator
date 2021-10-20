@@ -134,11 +134,11 @@ const CodeSelectorPopup = ({ children, fullScreenNode, open, setOpen, tokenRef, 
 const CurrentCodePage = ({ current, settings, annotations, canBeNew, codeMap, setCurrent }) => {
   const annotationCodes = Object.keys(annotations);
 
-  const onButtonSelect = value => {
+  const onButtonSelect = (value) => {
     setCurrent(value);
   };
 
-  const getOptions = annotationCodes => {
+  const getOptions = (annotationCodes) => {
     const options = [];
     if (canBeNew) options.push({ label: "Create new", value: "UNASSIGNED", color: "white" }); // 'value' is optional, but lets us use a different label
     for (let code of annotationCodes)
@@ -184,7 +184,7 @@ const NewCodePage = ({
   const [focusOnButtons, setFocusOnButtons] = useState(true);
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       if (settings && !settings.searchBox) return null;
       const focusOnTextInput = textInputRef?.current?.children[0] === document.activeElement;
       if (!focusOnTextInput) setFocusOnButtons(true);
@@ -204,7 +204,7 @@ const NewCodePage = ({
     };
   });
 
-  const onButtonSelect = value => {
+  const onButtonSelect = (value) => {
     if (value === null) {
       // value is null means delete, so in that case update annotations with current value (to toggle it off)
       updateAnnotations(
@@ -265,7 +265,7 @@ const NewCodePage = ({
     return [buttonOptions, dropdownOptions];
   };
 
-  const buttonSelection = options => {
+  const buttonSelection = (options) => {
     if (options.length === 0) return null;
     return (
       <ButtonSelection
@@ -279,7 +279,7 @@ const NewCodePage = ({
     );
   };
 
-  const dropdownSelection = options => {
+  const dropdownSelection = (options) => {
     if (options.length === 0) return null;
 
     // use searchBox if specified OR if settings are missing
@@ -365,7 +365,7 @@ const ButtonSelection = ({ active, options, settings, canDelete, callback }) => 
   const rowSize = settings?.rowSize || 5;
 
   const onKeydown = React.useCallback(
-    event => {
+    (event) => {
       const nbuttons = canDelete ? options.length + 1 : options.length;
 
       // any arrowkey
@@ -487,13 +487,13 @@ const updateAnnotations = (
   } else {
     ann = { ...selection };
   }
-  ann.group = current;
+  ann.variable = current;
 
   let oldAnnotation = { ...ann };
   oldAnnotation.span = [oldAnnotation.index, oldAnnotation.index];
-  setAnnotations(state => toggleSpanAnnotations({ ...state }, [oldAnnotation], true));
 
   if (value === current) {
+    setAnnotations((state) => toggleSpanAnnotations({ ...state }, [oldAnnotation], true));
     setOpen(false);
     return null;
   }
@@ -501,14 +501,17 @@ const updateAnnotations = (
   let newAnnotations = [];
   for (let i = ann.span[0]; i <= ann.span[1]; i++) {
     let newAnnotation = { ...ann };
-    newAnnotation.group = value;
-    newAnnotation.code = value;
+    newAnnotation.variable = value;
+    newAnnotation.value = value;
     newAnnotation.index = i;
     newAnnotations.push(newAnnotation);
   }
 
-  setAnnotations(state => toggleSpanAnnotations({ ...state }, newAnnotations, false));
-  setCodeHistory(state => [value, ...state.filter(v => v !== value)].slice(0, 5));
+  setAnnotations((state) => {
+    const newstate = toggleSpanAnnotations({ ...state }, [oldAnnotation], true);
+    return toggleSpanAnnotations(newstate, newAnnotations, false);
+  });
+  setCodeHistory((state) => [value, ...state.filter((v) => v !== value)].slice(0, 5));
   setOpen(false);
 };
 

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
 import { Button, Dropdown, Ref, Icon } from "semantic-ui-react";
 import { moveUp, moveDown } from "util/refNavigation";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-export const SearchBoxDropdown = React.memo(({ options, callback }) => {
+export const SearchBoxDropdown = React.memo(({ options, callback, blockEvents }) => {
   const ref = useRef();
 
   return (
@@ -13,7 +12,7 @@ export const SearchBoxDropdown = React.memo(({ options, callback }) => {
       <Dropdown
         fluid
         placeholder={"<type to search>"}
-        searchInput={{ autoFocus: true }}
+        searchInput={{ autoFocus: !blockEvents }}
         style={{ minWidth: "12em" }}
         options={options.map((option) => {
           return {
@@ -43,12 +42,10 @@ export const SearchBoxDropdown = React.memo(({ options, callback }) => {
   );
 });
 
-export const ButtonSelection = React.memo(({ options, callback }) => {
+export const ButtonSelection = React.memo(({ options, callback, blockEvents }) => {
   // render buttons for options (an array of objects with keys 'label' and 'color')
   // On selection perform callback function with the button label as input
   // if canDelete is TRUE, also contains a delete button, which passes null to callback
-  const eventsBlocked = useSelector((state) => state.eventsBlocked);
-
   const [selected, setSelected] = useState(0);
 
   const onKeydown = React.useCallback(
@@ -101,14 +98,14 @@ export const ButtonSelection = React.memo(({ options, callback }) => {
   );
 
   useEffect(() => {
-    if (!eventsBlocked) {
+    if (!blockEvents) {
       window.addEventListener("keydown", onKeydown);
     } else window.removeEventListener("keydown", onKeydown);
 
     return () => {
       window.removeEventListener("keydown", onKeydown);
     };
-  }, [onKeydown, eventsBlocked]);
+  }, [onKeydown, blockEvents]);
 
   const mapButtons = () => {
     return options.map((option, i) => {
@@ -161,8 +158,7 @@ export const ButtonSelection = React.memo(({ options, callback }) => {
   );
 });
 
-export const Annotinder = React.memo(({ swipeOptions, callback, swipe }) => {
-  const eventsBlocked = useSelector((state) => state.eventsBlocked);
+export const Annotinder = React.memo(({ swipeOptions, callback, swipe, blockEvents }) => {
   // const left = options.find(option => option.swipe === "left");
   // const up = options.find(option => option.swipe === "up");
   // const right = options.find(option => option.swipe === "right");
@@ -192,14 +188,14 @@ export const Annotinder = React.memo(({ swipeOptions, callback, swipe }) => {
   );
 
   useEffect(() => {
-    if (!eventsBlocked) {
+    if (!blockEvents) {
       window.addEventListener("keydown", onKeydown);
     } else window.removeEventListener("keydown", onKeydown);
 
     return () => {
       window.removeEventListener("keydown", onKeydown);
     };
-  }, [onKeydown, eventsBlocked]);
+  }, [onKeydown, blockEvents]);
 
   return (
     <div
@@ -211,24 +207,26 @@ export const Annotinder = React.memo(({ swipeOptions, callback, swipe }) => {
         height: "100%",
       }}
     >
-      <Button
-        fluid
-        disabled={swipeOptions.up == null}
-        onClick={(e, d) => callback(swipeOptions.up)}
-        style={{
-          margin: "0",
-          padding: "0",
-          flex: "1 1 auto",
-          borderRadius: "0",
-          border: "1px solid",
-          background: swipeOptions.up?.color || "white",
-        }}
-      >
-        <div style={{ color: "black", fontWeight: "bold", fontSize: "1em" }}>
-          <Icon name={swipeOptions.up?.code ? "arrow up" : null} />
-          <span>{swipeOptions.up?.code || ""}</span>
-        </div>
-      </Button>
+      {swipeOptions.up == null ? null : (
+        <Button
+          fluid
+          disabled={swipeOptions.up == null}
+          onClick={(e, d) => callback(swipeOptions.up)}
+          style={{
+            margin: "0",
+            padding: "0",
+            flex: "1 1 auto",
+            borderRadius: "0",
+            border: "1px solid",
+            background: swipeOptions.up?.color || "white",
+          }}
+        >
+          <div style={{ color: "black", fontWeight: "bold", fontSize: "1em" }}>
+            <Icon name={swipeOptions.up?.code ? "arrow up" : null} />
+            <span>{swipeOptions.up?.code || ""}</span>
+          </div>
+        </Button>
+      )}
       <div style={{ flex: "1 1 auto" }}>
         <div
           style={{
