@@ -4,7 +4,7 @@ import newAmcatSession from "./amcat";
 
 import { prepareDocumentBatch } from "util/createDocuments";
 
-const dbName = "AmCAT_Annotator_DB";
+const dbName = "CSSannotator_V1";
 const idbStores = {
   user: "++id, name", // other fields: 'id'
   codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
