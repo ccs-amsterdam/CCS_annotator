@@ -34,12 +34,14 @@ const AnnotatorScreen = ({ jobServer }) => {
       })
       .catch((e) => {
         if (e.response?.status === 404) {
-          console.log(
-            "404 error. Probably amcat ran out of stuff to give you, but we should handle this differently"
-          );
+          alert("Could not get unit from server");
+          setPreparedUnit(null);
+          // if (unitIndex !== null && unitIndex < jobServer.rules.n)
+          //   setUnitIndex((state) => state + 1);
+          console.log(e);
         }
       });
-  }, [unitIndex, jobServer, setPreparedUnit]);
+  }, [unitIndex, jobServer, setUnitIndex, setPreparedUnit]);
 
   let maxWidth = "100%";
   let maxHeight = "100%";

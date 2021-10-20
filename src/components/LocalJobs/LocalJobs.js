@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useHistory } from "react-router";
 import { Button, Grid, Header } from "semantic-ui-react";
 import TaskTable from "./LocalJobTable";
+import JSZip from "jszip";
 
 const homepage = "/amcat4annotator";
 
@@ -11,7 +12,7 @@ const LocalJobs = () => {
   const history = useHistory();
   const [jobKey, setJobKey] = useState(null);
 
-  const uploadFile = (e) => {
+  const uploadFile = async (e) => {
     const fileReader = new FileReader();
     const fileblob = e.target.files[0];
     const type = getExtension(fileblob.name);
@@ -24,6 +25,15 @@ const LocalJobs = () => {
       };
     }
     if (type === "zip") {
+      console.log("test");
+      let newZip = new JSZip();
+      const zipped = await newZip.loadAsync(fileblob);
+      zipped.forEach(async (relpath, file) => {
+        if (file.name.slice(0, 3) !== "set") return;
+        const content = await zipped.file(file.name).async("text");
+        const id = objectHash(content);
+        db.createLocalJob(JSON.parse(content), id);
+      });
     }
   };
 
