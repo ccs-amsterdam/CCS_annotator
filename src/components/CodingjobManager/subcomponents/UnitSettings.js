@@ -15,10 +15,11 @@ import CodesEditor from "./CodesEditor";
 import db from "apis/dexie";
 
 const defaultUnitSettings = {
-  textUnit: null,
-  contextUnit: "document",
+  textUnit: null, // document, paragraph, sentence or span (span only if codingUnit is annotations)
+  unitSelection: "allTextUnits", // or: annotations
+  contextUnit: "document", // or: paragraph, sentence, no context
   contextWindow: [1, 1],
-  value: "all",
+
   n: null,
   seed: 42,
   ordered: false,
@@ -57,22 +58,19 @@ const UnitSettings = ({ codingjob }) => {
 
 const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
   useEffect(() => {
-    console.log(unitSettings);
     if (unitSettings?.textUnit === null)
       setUnitSettings({
         ...unitSettings,
         textUnit: "document",
-        value: "all",
+        value: "allTextUnits",
         n: null,
         totalUnits: null,
       });
   }, [unitSettings, setUnitSettings]);
 
   const radioButton = (value, label, annotated, jump) => {
-    const codingUnit = annotated ? "per annotation" : "all";
-    let checked = unitSettings.textUnit === value && unitSettings.value === codingUnit;
-    //if (value === "span" && unitSettings.value === "per annotation") checked = true;
-    //const disabled = annotated && value !== "span" && unitSettings.value !== "per annotation";
+    const unitSelection = annotated ? "annotation" : "allTextUnits";
+    let checked = unitSettings.textUnit === value && unitSettings.unitSelection === unitSelection;
 
     return (
       <Form.Field>
@@ -84,7 +82,7 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
             setUnitSettings({
               ...unitSettings,
               textUnit: value,
-              value: codingUnit,
+              unitSelection: unitSelection,
               n: null,
               totalUnits: null,
             })
@@ -304,7 +302,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
         </Form.Field>
         <Form.Field>
           <Checkbox
-            disabled={unitSettings.value !== "per annotation"}
+            disabled={unitSettings.unitSelection !== "annotations"}
             size="mini"
             label="codes"
             checked={unitSettings.balanceAnnotations}
@@ -312,9 +310,58 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
           />
         </Form.Field>
       </Form.Group>
+      <br />
     </Form>
   );
 });
+
+// at some point maybe implement document filters
+// like min paragraph and max tokens and such
+//
+// const DocumentFilters = () => {
+//   const onChangeUseMinUnitIndex = (e, d) => {
+//     setWithoutDelay("useMinUnitIndex", d.checked);
+//   };
+//   const onChangeUseMaxUnitIndex = (e, d) => {
+//     setWithoutDelay("useMaxUnitIndex", d.checked);
+//   };
+//   const onChangeMinUnitIndex = (e, d) => {
+//     let value = Number(d.value);
+//     setDelayed((current) => ({ ...current, minUnitIndex: value }));
+//   };
+//   const onChangeMaxUnitIndex = (e, d) => {
+//     let value = Number(d.value);
+//     setDelayed((current) => ({ ...current, maxUnitIndex: value }));
+//   };
+
+//   return (
+//     <Form>
+//       <Form.Group>
+//         <Form.Field width={8}>
+//           <label>Maximum {unitSettings.textUnit}</label>
+
+//           <Input
+//             width={5}
+//             min={0}
+//             label={
+//               <Checkbox
+//                 toggle
+//                 style={{ width: "6em" }}
+//                 disabled={unitSettings.textUnit === "document"}
+//                 checked={unitSettings.useMaxUnitIndex}
+//                 onChange={onChangeUseMaxUnitIndex}
+//               />
+//             }
+//             size="mini"
+//             type="number"
+//             value={unitSettings.maxUnitIndex}
+//             onChange={onChangeMaxUnitIndex}
+//           ></Input>
+//         </Form.Field>
+//       </Form.Group>
+//     </Form>
+//   );
+// };
 
 const ContextWindow = ({ contextUnit, contextWindow, setContextWindow }) => {
   if (contextUnit === "document") return null;

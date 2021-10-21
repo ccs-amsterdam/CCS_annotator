@@ -28,8 +28,7 @@ const EditCodePopup = ({ codeMap, code, codes, setCodes, toggleActiveCode, setCh
     if (code === "")
       return (
         <ButtonGroup fluid color="black">
-          <Button content="Add more codes" onClick={() => addCodePopup(true)} style={buttonStyle} />
-          ;
+          <Button content="Add codes" onClick={() => addCodePopup(true)} style={buttonStyle} />;
         </ButtonGroup>
       );
     return (

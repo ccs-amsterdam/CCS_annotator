@@ -46,6 +46,7 @@ const QuestionForm = ({
       setAnswerTransition(null);
 
       if (answer.branching === "nextUnit") {
+        //markSkippedAsIrrelevant(annotations);
         setUnitIndex((state) => state + 1);
         setQuestionIndex(0);
       } else {

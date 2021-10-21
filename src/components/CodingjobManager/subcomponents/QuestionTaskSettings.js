@@ -26,11 +26,20 @@ const questionDefaultSettings = {
 
 const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) => {
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [deleteOpen, setDeleteOpen] = useState(false);
 
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const onAdd = () => {
     const questions = taskSettings.questions.questions;
-    questions.push(questionDefaultSettings);
+    const newQuestion = {
+      ...questionDefaultSettings,
+      name: uniqueNewQuestionName(
+        questionDefaultSettings.name,
+        taskSettings.questions.questions,
+        questionIndex
+      ),
+    };
+
+    questions.push(newQuestion);
     setTaskSettings({ ...taskSettings, questions: { questions } });
   };
 
@@ -45,17 +54,36 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
     setDeleteOpen(false);
   };
 
+  const onMove = (direction, i) => {
+    const questions = [...taskSettings.questions.questions];
+    const j = direction === "left" ? Math.max(0, i - 1) : Math.min(questions.length - 1, i + 1);
+    const temp = questions[i];
+    questions[i] = questions[j];
+    questions[j] = temp;
+
+    setTaskSettings({ ...taskSettings, questions: { questions } });
+    setQuestionIndex(j);
+  };
+
   const questionMap = () => {
     return taskSettings.questions.questions.map((question, i) => {
       const setQuestionForm = (value) => {
         const newTaskSettings = { ...taskSettings };
-        newTaskSettings.questions.questions[i] = value;
+        const newValue = { ...value };
+        newValue.name = uniqueNewQuestionName(
+          newValue.name,
+          taskSettings.questions.questions,
+          questionIndex
+        );
+        newTaskSettings.questions.questions[i] = newValue;
         setTaskSettings(newTaskSettings);
       };
       return (
         <QuestionFormSettings
           questionForm={question}
           setQuestionForm={setQuestionForm}
+          setTaskSettings={setTaskSettings}
+          questions={taskSettings.questions.questions}
           questionIndex={questionIndex}
           unitSettings={unitSettings}
         />
@@ -79,12 +107,46 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
           />
         }
       >
-        <p>Delete Question {questionIndex + 1}?</p>
+        <p>
+          Delete <b>{taskSettings.questions.questions[questionIndex].name}</b>?
+        </p>
 
         <Button style={{ background: "red" }} onClick={onDelete}>
           yes please
         </Button>
       </Popup>
+    );
+  };
+
+  const moveButtons = (i) => {
+    if (questionIndex !== i) return null;
+    return (
+      <Button.Group fluid>
+        {i > 0 ? (
+          <Button
+            icon="arrow left"
+            onClick={() => {
+              onMove("left", i);
+            }}
+            style={{
+              borderRadius: "0",
+              padding: "0em",
+              background: "rgba(0,0,0,0)",
+            }}
+          />
+        ) : null}
+        {i < taskSettings.questions.questions.length - 1 ? (
+          <Button
+            icon="arrow right"
+            onClick={() => onMove("right", i)}
+            style={{
+              borderRadius: "0",
+              padding: "0em",
+              background: "rgba(0,0,0,0)",
+            }}
+          />
+        ) : null}
+      </Button.Group>
     );
   };
 
@@ -98,10 +160,22 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
             .map((v, i) => {
               return (
                 <Menu.Item
-                  name={`Q ${i + 1}`}
                   active={questionIndex === i}
-                  onClick={(e, d) => setQuestionIndex(i)}
-                />
+                  style={{ padding: "0em", position: "relative" }}
+                >
+                  <div>
+                    <div
+                      onClick={(e, d) => setQuestionIndex(i)}
+                      style={{ padding: "0.5em", cursor: "pointer" }}
+                    >
+                      {taskSettings.questions.questions[i].name}
+                    </div>
+
+                    <div style={{ position: "absolute", zIndex: 10, bottom: "-1.5em" }}>
+                      {moveButtons(i)}
+                    </div>
+                  </div>
+                </Menu.Item>
               );
             })}
           <Menu.Item icon="plus" style={{ background: "lightblue" }} onClick={onAdd} />
@@ -119,7 +193,13 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
   return <>{questionMenu()}</>;
 };
 
-const QuestionFormSettings = ({ questionForm, setQuestionForm, questionIndex, unitSettings }) => {
+const QuestionFormSettings = ({
+  questionForm,
+  setQuestionForm,
+  questions,
+  questionIndex,
+  unitSettings,
+}) => {
   const [delayed, setDelayed] = useState("");
   const [warn, setWarn] = useState([]);
 
@@ -127,6 +207,8 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, questionIndex, un
     if (!delayed) return;
     if (questionForm.name === delayed.name && questionForm.question === delayed.question) return;
     const timer = setTimeout(() => {
+      // if (questionForm.name !== delayed.name)
+      //   updateRelevanceBranching(questionForm.name, delayed.name, setTaskSettings);
       setQuestionForm({ ...questionForm, name: delayed.name, question: delayed.question });
     }, 500);
     return () => clearTimeout(timer);
@@ -138,7 +220,7 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, questionIndex, un
     const hasCodeRef = questionForm.question.search("\\[code\\]") >= 0;
     console.log(unitSettings);
 
-    if (hasCodeRef && unitSettings?.value === "all")
+    if (hasCodeRef && unitSettings?.unitSelection === "allTextUnits")
       newWarn.push(
         "Referring to a specific code with [code] is only possible if coding units are annotations"
       );
@@ -153,6 +235,7 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, questionIndex, un
       <CodesEditor
         codes={standardizeCodes(questionForm.codes)}
         setCodes={(newCodes) => setQuestionForm({ ...questionForm, codes: newCodes })}
+        questions={questions}
       />
     );
   };
@@ -350,5 +433,32 @@ const AnnotinderEditor = ({ questionForm, setQuestionForm }) => {
     </Form>
   );
 };
+
+const uniqueNewQuestionName = (newName, questions, questionIndex) => {
+  let uniqueNewName = newName;
+  let i = 2;
+
+  const existingNames = [];
+  for (let i = 0; i < questions.length; i++) {
+    if (i === questionIndex) continue;
+    existingNames.push(questions[i].name);
+  }
+
+  while (existingNames.includes(uniqueNewName)) {
+    uniqueNewName = newName + ` ${i}`;
+    i++;
+  }
+  return uniqueNewName;
+};
+
+// /**
+//  * Ok, this get's complicates. When a question name changes, it also needs to be
+//  * updated in
+//  *
+//  * @param {*} oldName
+//  * @param {*} newName
+//  * @param {*} setTaskSettings
+//  */
+// const updateRelevanceBranching = (oldName, newName, setTaskSettings) => {};
 
 export default QuestionTaskSettings;

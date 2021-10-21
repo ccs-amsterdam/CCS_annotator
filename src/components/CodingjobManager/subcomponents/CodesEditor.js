@@ -14,7 +14,7 @@ import { useDispatch } from "react-redux";
 /**
  * Display an editable codebook
  */
-const CodesEditor = ({ codes, setCodes, height = "100%" }) => {
+const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
   const [codeMap, setCodeMap] = useState({});
   const [codeTreeArray, setCodeTreeArray] = useState([]);
   const [changeColor, setChangeColor] = useState(null);
@@ -55,29 +55,11 @@ const CodesEditor = ({ codes, setCodes, height = "100%" }) => {
     setCodes(newCodes);
   };
 
-  const onAnswerOptions = [
-    { key: "next", text: "next", value: "next", description: "Go to next question" },
-    {
-      key: "nextUnit",
-      text: "next unit",
-      value: "nextUnit",
-      description: "Go to next unit",
-    },
-    { key: "skipOne", text: "skip one", value: "skipOne", description: "Skip next question" },
-    { key: "skipTwo", text: "skip two", value: "skipTwo", description: "Skip two questions" },
-    {
-      key: "skipThree",
-      text: "skip three",
-      value: "skipThree",
-      description: "Skip three question",
-    },
-  ];
-
   return (
     <div>
       <Table
         singleLine
-        columns={1}
+        columns={3}
         unstackable
         textAlign="left"
         style={{ border: "0", boxShadow: "0", width: "100%" }}
@@ -97,10 +79,14 @@ const CodesEditor = ({ codes, setCodes, height = "100%" }) => {
             <Table.HeaderCell style={{ textAlign: "right" }}>
               Branching
               <Help
-                header="Simple branching"
+                header="Branching"
                 texts={[
-                  `By default, answering a question moves the coder to the 'next' question, and to the next unit if it was the last question.`,
-                  `Sometimes, you instead want a certain answer to immediately move to the 'next unit', or to 'skip' a follow up question`,
+                  `By default, answering a question moves the coder to the 'next' question, and to the next unit if it was the last question. 
+                   But sometimes, you instead want a certain answer to mark certain or all subsequent questions as irrelevant.`,
+                  `For example, you might first ask if a text is about the topic your interested in. If it isn't, you don't need your coder to 
+                   waste time answering all the subsequent questions. In this case, you can select the "all" option`,
+                  `Alternatively, you might want certain answers to exclude certain questions. This way you can implement conditions for follow-up questions.
+                   Every answer can exclude one or multiple other questions.`,
                 ]}
               />
             </Table.HeaderCell>
@@ -146,7 +132,7 @@ const CodesEditor = ({ codes, setCodes, height = "100%" }) => {
                     //borderBottom: code.level === 0 ? "1px solid black" : null,
                   }}
                 >
-                  <span style={{ ...formatCode(code), marginLeft: `${2 * code.level}em` }}>
+                  <span style={{ ...formatCode(code), marginLeft: `${1 * code.level}em` }}>
                     {code.code}
                     {code.totalChildren === 0 || code.active == null ? null : (
                       <>
@@ -181,16 +167,19 @@ const CodesEditor = ({ codes, setCodes, height = "100%" }) => {
                   style={{
                     textAlign: "right",
                     paddingLeft: "0.5em",
+
                     borderTop: code.level === 0 ? "1px solid black" : null,
                     //borderBottom: code.level === 0 ? "1px solid black" : null,
                   }}
                 >
                   <Dropdown
-                    inline
-                    pointing="right"
-                    options={onAnswerOptions}
+                    multiple
+                    direction="right"
+                    options={makesIrrelevantOptions(questions)}
                     value={code.branching}
+                    renderLabel={renderLabel}
                     onChange={(e, d) => onBranchSelect(code.code, d.value)}
+                    style={{ marginRight: "-1.5em" }}
                   />
                 </Table.Cell>
               </Table.Row>
@@ -211,6 +200,31 @@ const CodesEditor = ({ codes, setCodes, height = "100%" }) => {
     </div>
   );
 };
+
+const makesIrrelevantOptions = (questions) => {
+  //const n = nQuestions || 5;
+  const options = [
+    {
+      key: "all",
+      text: "all",
+      value: "all",
+      description: "All questions after this answer are irrelevant",
+    },
+  ];
+  for (let question of questions)
+    options.push({
+      key: question.name,
+      text: question.name,
+      value: question.name,
+      description: `makes question ${question.name} irrelevant`,
+    });
+  return options;
+};
+
+const renderLabel = (label) => ({
+  content: label.text,
+  style: { fontSize: "12px", padding: "0", background: "white", border: "0", boxShadow: "none" },
+});
 
 const PlainTextEditor = ({ codes, codeTreeArray, setCodes }) => {
   const dispatch = useDispatch();

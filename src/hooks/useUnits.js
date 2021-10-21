@@ -44,17 +44,17 @@ const getUnits = async (codingjob, setUnits) => {
 const getUnitsFromDB = async (codingjob) => {
   if (!codingjob?.unitSettings) return null;
   const textUnit = codingjob.unitSettings.textUnit;
-  const unitSelection = codingjob.unitSettings;
+  const unitSettings = codingjob.unitSettings;
 
   let totalUnits = 0;
 
   const getGroup = (cjIndices) => {
-    if (!unitSelection.balanceDocuments && !unitSelection.statifyAnnotations) return null; // if not balanced
+    if (!unitSettings.balanceDocuments && !unitSettings.statifyAnnotations) return null; // if not balanced
 
     return cjIndices.map((item) => {
       let group = "";
-      if (unitSelection.balanceDocuments) group += item.docIndex;
-      if (item.annotation && unitSelection.balanceAnnotations)
+      if (unitSettings.balanceDocuments) group += item.docIndex;
+      if (item.annotation && unitSettings.balanceAnnotations)
         group += "_" + item.annotation.variable;
       return group;
     });
@@ -63,57 +63,49 @@ const getUnitsFromDB = async (codingjob) => {
   let cjIndices;
   let done;
 
-  if (unitSelection.value === "all") {
+  if (unitSettings.unitSelection === "allTextUnits") {
     cjIndices = await allUnits(codingjob, textUnit, new Set([]), true);
     totalUnits = cjIndices.length;
     cjIndices = drawRandom(
       cjIndices,
-      unitSelection.n,
+      unitSettings.n,
       false,
-      unitSelection.seed,
+      unitSettings.seed,
       getGroup(cjIndices)
     );
   }
 
-  if (unitSelection.value.includes("annotation")) {
-    // The annotation options are 'per annotation' and 'has annotation'.
-    // The latter is currently not used, but leaving it here for now
-    // THe difference is that 'has annotations' gives unique text units with at least one annotation
-    [cjIndices, done] = await annotationUnits(
-      codingjob,
-      textUnit,
-      unitSelection.value === "has annotation",
-      unitSelection.validCodes
-    );
+  if (unitSettings.unitSelection === "annotations") {
+    [cjIndices, done] = await annotationUnits(codingjob, textUnit, false, unitSettings.validCodes);
     totalUnits = cjIndices.length;
     cjIndices = drawRandom(
       cjIndices,
-      unitSelection.n,
+      unitSettings.n,
       false,
-      unitSelection.seed,
+      unitSettings.seed,
       getGroup(cjIndices)
     );
 
-    if (unitSelection.annotationMix && unitSelection.annotationMix > 0) {
+    if (unitSettings.annotationMix && unitSettings.annotationMix > 0) {
       // Annotationmix is now disabled, but leaving it here because it might make a comeback someday
-      const noDuplicates = unitSelection.value === "has annotation";
+      const noDuplicates = false;
 
       const all = await allUnits(codingjob, textUnit, done, noDuplicates);
-      let sampleN = Math.ceil(cjIndices.length * (unitSelection.annotationMix / 100));
+      let sampleN = Math.ceil(cjIndices.length * (unitSettings.annotationMix / 100));
       let addSample = drawRandom(
         all,
         sampleN,
         !noDuplicates,
-        unitSelection.seed,
+        unitSettings.seed,
         getGroup(cjIndices)
       );
 
-      let nCodes = unitSelection.validCodes.length;
+      let nCodes = unitSettings.validCodes.length;
       addSample = addSample.map((item, i) => {
         // add random annotation to mix by drawing from the annotations in the cjIndices sample.
         // this is random, and automatically gives approximately the same distribution of codes/groups
-        if (unitSelection.balanceAnnotations) {
-          item.variable = unitSelection.validCodes[i % nCodes];
+        if (unitSettings.balanceAnnotations) {
+          item.variable = unitSettings.validCodes[i % nCodes];
         } else {
           const annSample = cjIndices[i % cjIndices.length];
           if (annSample?.variable) item.variable = annSample.variable;
@@ -125,13 +117,20 @@ const getUnitsFromDB = async (codingjob) => {
     }
   }
 
-  cjIndices = orderUnits(cjIndices, unitSelection);
+  cjIndices = orderUnits(cjIndices, unitSettings);
 
   return [totalUnits, cjIndices];
 };
 
 const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
   let documents = await db.getDocuments(codingjob);
+
+  let minIndex = 0;
+  let maxIndex = Infinity;
+  if (codingjob.unitSettings.useIndexWindow) {
+    minIndex = codingjob.unitSettings.indexWindow[0];
+    maxIndex = codingjob.unitSettings.indexWindow[1];
+  }
 
   const cjIndices = [];
   let docIndex = -1;
@@ -150,7 +149,7 @@ const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
 
     if (textUnit === "paragraph") {
       const paragraphs = e.tokens[e.tokens.length - 1].paragraph;
-      for (let parIndex = 0; parIndex <= paragraphs; parIndex++) {
+      for (let parIndex = minIndex; parIndex <= Math.min(maxIndex, paragraphs); parIndex++) {
         if (noDuplicates && done.has(e.doc_uid + "_" + parIndex)) return;
         cjIndices.push({
           textUnit,
@@ -165,7 +164,7 @@ const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
 
     if (textUnit === "sentence") {
       const sentences = e.tokens[e.tokens.length - 1].sentence;
-      for (let sentIndex = 0; sentIndex <= sentences; sentIndex++) {
+      for (let sentIndex = minIndex; sentIndex <= Math.min(maxIndex, sentences); sentIndex++) {
         if (noDuplicates && done.has(e.doc_uid + "_" + sentIndex)) return;
         cjIndices.push({
           textUnit,
@@ -219,17 +218,13 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
             docIndex,
             group,
           };
-          //if (textUnit === "paragraph") item.parIndex = e.tokens[Number(i)].paragraph;
-          //if (textUnit === "sentence") item.sentIndex = e.tokens[Number(i)].sentence;
+
           if (textUnit === "document" || textUnit === "span") item.unitIndex = Number(i);
           if (textUnit === "paragraph") item.unitIndex = e.tokens[Number(i)].paragraph;
           if (textUnit === "sentence") item.unitIndex = e.tokens[Number(i)].sentence;
 
           if (unique) {
             let itemId = item.doc_uid + "_" + item.textUnit + "_" + item.unitIndex;
-            // if (textUnit === "document") itemId = item.doc_uid;
-            // if (textUnit === "paragraph") itemId = item.doc_uid + "_" + item.parIndex;
-            // if (textUnit === "sentence") itemId = item.doc_uid + "_" + item.sentIndex;
             if (done.has(itemId)) continue;
             done.add(itemId);
           } else {
@@ -243,8 +238,8 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
   return [cjIndices, done];
 };
 
-const orderUnits = (cjIndices, unitSelection) => {
-  if (!unitSelection.ordered) return cjIndices;
+const orderUnits = (cjIndices, unitSettings) => {
+  if (!unitSettings.ordered) return cjIndices;
   return cjIndices.sort(function (a, b) {
     if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;
     if (a.unitIndex !== b.unitIndex) return a.unitIndex - b.unitIndex;
