@@ -14,6 +14,7 @@ import LocalJobs from "components/LocalJobs/LocalJobs";
 // Change to add new components to the header
 // The first item will be the opening page after login
 const homepage = "/amcat4annotator";
+
 // TODO: annotate, manage jobs, monitor jobs
 const items = [
   { label: "Annotator", path: homepage + "/annotator", Component: Annotator, menu: false },

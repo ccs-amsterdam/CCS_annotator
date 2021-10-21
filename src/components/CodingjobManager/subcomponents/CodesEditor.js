@@ -13,6 +13,9 @@ import { useDispatch } from "react-redux";
 
 /**
  * Display an editable codebook
+ * @param {Array} codes an array of strings, or an array of objects with at least the key 'code'
+ * @param {Function} setCodes the callback for setting codes state
+ * @param {Array} questions Optional, an array with questions. This enables the 'makes irrelevant' column
  */
 const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
   const [codeMap, setCodeMap] = useState({});
@@ -49,9 +52,9 @@ const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
     return { fontSize: "10px", color };
   };
 
-  const onBranchSelect = (code, value) => {
+  const onChangeMakesIrrelevant = (code, value) => {
     const newCodes = [...codes];
-    newCodes.find((nc) => nc.code === code).branching = value;
+    newCodes.find((nc) => nc.code === code).makes_irrelevant = value;
     setCodes(newCodes);
   };
 
@@ -77,33 +80,14 @@ const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
               Codebook
             </Table.HeaderCell>
             <Table.HeaderCell style={{ textAlign: "right" }}>
-              Branching
-              <Help
-                header="Branching"
-                texts={[
-                  `By default, answering a question moves the coder to the 'next' question, and to the next unit if it was the last question. 
-                   But sometimes, you instead want a certain answer to mark certain or all subsequent questions as irrelevant.`,
-                  `For example, you might first ask if a text is about the topic your interested in. If it isn't, you don't need your coder to 
-                   waste time answering all the subsequent questions. In this case, you can select the "all" option`,
-                  `Alternatively, you might want certain answers to exclude certain questions. This way you can implement conditions for follow-up questions.
-                   Every answer can exclude one or multiple other questions.`,
-                ]}
-              />
+              {makesIrrelevantHeader(questions)}
             </Table.HeaderCell>
           </Table.Row>
           {[...codeTreeArray].map((code, i) => {
             if (code.foldToParent) return null;
 
             return (
-              <Table.Row
-                className="codes-tr"
-                key={i}
-                style={
-                  {
-                    // backgroundColor: code.level === 0 ? "lightgrey" : null,
-                  }
-                }
-              >
+              <Table.Row className="codes-tr" key={i} style={{}}>
                 <Table.Cell
                   className="codes-td"
                   width={1}
@@ -111,6 +95,8 @@ const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
                     border: "1px solid black",
                     padding: "0",
                     margin: "0",
+                    background: "#1B1C1D",
+
                     borderRight: code.active == null ? null : "1px solid black",
                   }}
                 >
@@ -167,20 +153,11 @@ const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
                   style={{
                     textAlign: "right",
                     paddingLeft: "0.5em",
-
                     borderTop: code.level === 0 ? "1px solid black" : null,
                     //borderBottom: code.level === 0 ? "1px solid black" : null,
                   }}
                 >
-                  <Dropdown
-                    multiple
-                    direction="right"
-                    options={makesIrrelevantOptions(questions)}
-                    value={code.branching}
-                    renderLabel={renderLabel}
-                    onChange={(e, d) => onBranchSelect(code.code, d.value)}
-                    style={{ marginRight: "-1.5em" }}
-                  />
+                  {makesIrrelevantDropdown(questions, code, onChangeMakesIrrelevant)}
                 </Table.Cell>
               </Table.Row>
             );
@@ -201,27 +178,77 @@ const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
   );
 };
 
-const makesIrrelevantOptions = (questions) => {
-  //const n = nQuestions || 5;
+const makesIrrelevantHeader = (questions) => {
+  if (!questions) return null;
+
+  return (
+    <>
+      Makes irrelevant
+      <Help
+        header="Make other questions conditional on this answer"
+        texts={[
+          `Certain answers can make other questions irrelevant. 
+           For example, you might first ask if a text is relevant (for your study). 
+           If it isn't, you don't need your coder to waste time answering the remaining questions.
+           In this case, you can set "makes irrelevant" to "remaining". All remaning questions in the current
+           unit will then be annotated with the value IRRELEVANT`,
+          `You can also let an answer make specific other questions irrelevant. 
+           This way you can implement simple branching patterns, where certain follow-up questions
+           are only asked if certain conditions are met.`,
+          `NOTE that specific other questions are referenced by the question number,
+            so be careful if you change the order of questions.`,
+        ]}
+      />
+    </>
+  );
+};
+
+const makesIrrelevantDropdown = (questions, code, onChange) => {
+  if (!questions) return null;
+
+  return (
+    <Dropdown
+      multiple
+      header="Make which questions irrelevant?"
+      direction="right"
+      options={makesIrrelevantOptions(questions, code)}
+      value={code.makes_irrelevant}
+      renderLabel={renderMakesIrrelevantLabel}
+      onChange={(e, d) => {
+        let values = d.value;
+        //if (values.includes("remaining")) values = ["remaining"];
+        onChange(code.code, values);
+      }}
+      style={{ paddingRight: "0" }}
+    />
+  );
+};
+
+const makesIrrelevantOptions = (questions, code) => {
   const options = [
     {
-      key: "all",
-      text: "all",
-      value: "all",
-      description: "All questions after this answer are irrelevant",
+      key: "remaining",
+      text: "remaining",
+      value: "remaining",
+      description: "All questions after the current",
     },
   ];
-  for (let question of questions)
+
+  // if 'all' is selected, don't show the other options
+  //if (code.makes_irrelevant.includes("remaining")) return options;
+  const n = questions.length || 5;
+  for (let i = 0; i < n; i++)
     options.push({
-      key: question.name,
-      text: question.name,
-      value: question.name,
-      description: `makes question ${question.name} irrelevant`,
+      key: i + 1,
+      text: i + 1,
+      value: `${i}`, // question index starts at 0, only present i+1 to outside
+      description: `Q${i + 1} (${questions[i].name})`,
     });
+
   return options;
 };
 
-const renderLabel = (label) => ({
+const renderMakesIrrelevantLabel = (label) => ({
   content: label.text,
   style: { fontSize: "12px", padding: "0", background: "white", border: "0", boxShadow: "none" },
 });
@@ -257,7 +284,7 @@ const PlainTextEditor = ({ codes, codeTreeArray, setCodes }) => {
     <Modal
       on="click"
       open={open}
-      style={{ width: "700px", maxWidth: "100%", overflowX: "auto" }}
+      style={{ width: "700px", maxWidth: "100%", overflowX: "auto", padding: "0.3em" }}
       trigger={
         <Button fluid onClick={() => setOpen(true)} style={{ padding: "0.3em 1em" }}>
           Plain text editor

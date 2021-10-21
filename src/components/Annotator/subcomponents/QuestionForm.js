@@ -3,6 +3,7 @@ import { Header, Button, Segment } from "semantic-ui-react";
 import { SearchBoxDropdown, ButtonSelection, Annotinder } from "./QuestionForms";
 
 const DONE_COLOR = "lightgreen";
+const IRRELEVANT_COLOR = "red";
 
 const QuestionForm = ({
   unit,
@@ -38,6 +39,7 @@ const QuestionForm = ({
 
     annotations[questionIndex].value = answer.code;
     unit.annotations = updateAnnotations(annotations[questionIndex], unit.annotations);
+    makeIrrelevant(unit, annotations, answer.makes_irrelevant, questionIndex);
     unit.jobServer.postAnnotations(unit.unitId, unit.annotations);
 
     setAnswerTransition(answer); // show given answer
@@ -45,22 +47,20 @@ const QuestionForm = ({
       // wait a little bit, so coder can see their answer and breathe
       setAnswerTransition(null);
 
-      if (answer.branching === "nextUnit") {
-        //markSkippedAsIrrelevant(annotations);
+      // check if there is a non irrelevant question remaining
+      let newQuestionIndex = null;
+      for (let i = questionIndex + 1; i < questions.length; i++) {
+        if (annotations[i].value === "IRRELEVANT") continue;
+        newQuestionIndex = i;
+        break;
+      }
+
+      // if none remain, go to next unit
+      if (newQuestionIndex === null) {
         setUnitIndex((state) => state + 1);
         setQuestionIndex(0);
       } else {
-        let newQuestionIndex = questionIndex + 1;
-        if (answer.branching === "skipOne") newQuestionIndex += 1;
-        if (answer.branching === "skipTwo") newQuestionIndex += 2;
-        if (answer.branching === "skipThree") newQuestionIndex += 3;
-
-        if (newQuestionIndex >= questions.length) {
-          setUnitIndex((state) => state + 1);
-          setQuestionIndex(0);
-        } else {
-          setQuestionIndex(newQuestionIndex);
-        }
+        setQuestionIndex(newQuestionIndex);
       }
 
       answered.current = false;
@@ -108,6 +108,30 @@ const QuestionForm = ({
   );
 };
 
+const makeIrrelevant = (unit, annotations, makesIrrelevant, questionIndex) => {
+  // if answer has makes_irrelevant, marks these annotations as irrelevant,
+  // and adds irrelevant annotatons to unit.annotations
+  // (doesn't return anything, but changes the objects)
+  console.log(makesIrrelevant);
+  if (makesIrrelevant == null || makesIrrelevant === null) return unit;
+  const which = new Set();
+
+  for (let value of makesIrrelevant) {
+    if (value === "remaining") {
+      for (let i = questionIndex + 1; i < annotations.length; i++) which.add(i);
+    }
+    if (isNaN(value)) continue;
+    which.add(Number(value));
+  }
+
+  console.log(which);
+
+  for (let makeIrrelevant of which) {
+    annotations[makeIrrelevant].value = "IRRELEVANT";
+    unit.annotations = updateAnnotations(annotations[makeIrrelevant], unit.annotations);
+  }
+};
+
 const prepareAnnotations = (unit, tokens, questions, setAnnotations, setQuestionIndex) => {
   // create a list with annotations for each question, and see if they have been answered yet
   if (tokens.length === 0) return null;
@@ -143,6 +167,7 @@ const QuestionIndexStep = ({ questions, questionIndex, annotations, setQuestionI
   }, [questionIndex, setCanSelect]);
 
   const setColor = (i) => {
+    if (annotations[i].value === "IRRELEVANT") return ["black", IRRELEVANT_COLOR];
     if (canSelect && i > questionIndex && !canSelect[i]) return ["white", "grey"];
     if (annotations[i].value) return ["black", DONE_COLOR];
     if (i === 0) return [DONE_COLOR, "#1B1C1D"];

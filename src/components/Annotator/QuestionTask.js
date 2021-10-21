@@ -166,7 +166,7 @@ const getOptions = (cta) => {
       //ref: React.createRef(),
       code: code.code,
       tree: tree,
-      branching: code.branching,
+      makes_irrelevant: code.makes_irrelevant,
       color: code.color,
     };
     if (code.swipe) swipeOptions[code.swipe] = option;

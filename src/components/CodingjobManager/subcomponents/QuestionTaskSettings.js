@@ -26,8 +26,8 @@ const questionDefaultSettings = {
 
 const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) => {
   const [questionIndex, setQuestionIndex] = useState(0);
-
   const [deleteOpen, setDeleteOpen] = useState(false);
+
   const onAdd = () => {
     const questions = taskSettings.questions.questions;
     const newQuestion = {
@@ -65,32 +65,6 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
     setQuestionIndex(j);
   };
 
-  const questionMap = () => {
-    return taskSettings.questions.questions.map((question, i) => {
-      const setQuestionForm = (value) => {
-        const newTaskSettings = { ...taskSettings };
-        const newValue = { ...value };
-        newValue.name = uniqueNewQuestionName(
-          newValue.name,
-          taskSettings.questions.questions,
-          questionIndex
-        );
-        newTaskSettings.questions.questions[i] = newValue;
-        setTaskSettings(newTaskSettings);
-      };
-      return (
-        <QuestionFormSettings
-          questionForm={question}
-          setQuestionForm={setQuestionForm}
-          setTaskSettings={setTaskSettings}
-          questions={taskSettings.questions.questions}
-          questionIndex={questionIndex}
-          unitSettings={unitSettings}
-        />
-      );
-    });
-  };
-
   const deleteQuestionButton = () => {
     if (taskSettings.questions.questions.length === 0) return null;
     return (
@@ -121,7 +95,7 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
   const moveButtons = (i) => {
     if (questionIndex !== i) return null;
     return (
-      <Button.Group fluid>
+      <Button.Group>
         {i > 0 ? (
           <Button
             icon="arrow left"
@@ -150,47 +124,94 @@ const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) =
     );
   };
 
-  const questionMenu = () => {
-    const qlist = questionMap();
-    return (
-      <div>
-        <Menu attached="top">
-          {Array(taskSettings.questions.questions.length)
-            .fill(0)
-            .map((v, i) => {
-              return (
-                <Menu.Item
-                  active={questionIndex === i}
-                  style={{ padding: "0em", position: "relative" }}
-                >
-                  <div>
-                    <div
-                      onClick={(e, d) => setQuestionIndex(i)}
-                      style={{ padding: "0.5em", cursor: "pointer" }}
-                    >
-                      {taskSettings.questions.questions[i].name}
-                    </div>
-
-                    <div style={{ position: "absolute", zIndex: 10, bottom: "-1.5em" }}>
-                      {moveButtons(i)}
-                    </div>
+  return (
+    <div>
+      <Menu attached="top">
+        {Array(taskSettings.questions.questions.length)
+          .fill(0)
+          .map((v, i) => {
+            return (
+              <Menu.Item
+                active={questionIndex === i}
+                style={{ padding: "0em", position: "relative" }}
+              >
+                <div>
+                  <div
+                    onClick={(e, d) => setQuestionIndex(i)}
+                    style={{ padding: "0.5em", cursor: "pointer" }}
+                  >
+                    {taskSettings.questions.questions[i].name}
                   </div>
-                </Menu.Item>
-              );
-            })}
-          <Menu.Item icon="plus" style={{ background: "lightblue" }} onClick={onAdd} />
-          {deleteQuestionButton()}
-        </Menu>
-        <Segment attached="bottom">
-          <br />
 
-          {qlist[questionIndex]}
-        </Segment>
-      </div>
-    );
+                  <div style={{ position: "absolute", zIndex: 10, bottom: "-1.5em" }}>
+                    {moveButtons(i)}
+                  </div>
+                </div>
+              </Menu.Item>
+            );
+          })}
+        <Menu.Item icon="plus" style={{ background: "lightblue" }} onClick={onAdd} />
+        {deleteQuestionButton()}
+      </Menu>
+      <Segment attached="bottom">
+        <br />
+        <QuestionForm
+          taskSettings={taskSettings}
+          setTaskSettings={setTaskSettings}
+          unitSettings={unitSettings}
+          questionIndex={questionIndex}
+        />{" "}
+      </Segment>
+    </div>
+  );
+};
+
+const QuestionForm = ({ taskSettings, setTaskSettings, unitSettings, questionIndex }) => {
+  const questions = taskSettings.questions.questions;
+
+  const setQuestionForm = (value) => {
+    const newTaskSettings = { ...taskSettings };
+    const newValue = { ...value };
+
+    if (newValue.name !== questions[questionIndex].name) {
+      // if name changed...
+      // ensure name is unique
+      newValue.name = uniqueNewQuestionName(
+        newValue.name,
+        taskSettings.questions.questions,
+        questionIndex
+      );
+      // update possible branching references in the codes of other questions
+      // for (let i = 0; i < questions.length; i++) {
+      //   if (i === questionIndex) continue
+      //   const question = questions[i]
+      //   for (let j = 0; j < question.codes.length; j++) {
+      //     const code = question.codes[j]
+      //     if (!code.makes_irrelevant) continue
+      //     if (typeof code.makes_irrelevant !== 'object') code.makes_irrelevant = [code.makes_irrelevant]
+      //     for (let k = 0; k < code.makes_irrelevant; k++) {
+      //       if ()
+      //       if (questions[i].codes[j]
+
+      //     }
+      //   }
+      // }
+    }
+
+    newTaskSettings.questions.questions[questionIndex] = newValue;
+    setTaskSettings(newTaskSettings);
   };
 
-  return <>{questionMenu()}</>;
+  return (
+    <QuestionFormSettings
+      questionForm={questions[questionIndex]}
+      setQuestionForm={setQuestionForm}
+      setTaskSettings={setTaskSettings}
+      questions={questions}
+      questionIndex={questionIndex}
+      unitSettings={unitSettings}
+    />
+  );
 };
 
 const QuestionFormSettings = ({

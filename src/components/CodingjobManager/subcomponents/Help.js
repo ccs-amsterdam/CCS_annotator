@@ -30,7 +30,7 @@ const Help = ({ children, header, texts, type }) => {
   };
 
   return (
-    <Popup position="right center" trigger={questionMark()}>
+    <Popup wide trigger={questionMark()}>
       {header ? <h3>{header}</h3> : null}
       {texts ? texts.map((text, i) => <p key={i}>{text}</p>) : null}
       {children}

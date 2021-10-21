@@ -19,7 +19,8 @@ export const standardizeCodes = (codes) => {
     if (code.active == null) code.active = true;
     if (code.tree == null) code.tree = [];
     if (code.parent == null) code.parent = "";
-    if (code.branching == null) code.branching = "next";
+    if (code.makes_irrelevant == null) code.makes_irrelevant = [];
+    if (typeof code.makes_irrelevant !== "object") code.makes_irrelevant = [code.makes_irrelevant];
     if (code.color == null) code.color = randomColor({ seed: code.code, luminosity: "light" });
     return code;
   });
@@ -140,7 +141,8 @@ export const ctaToText = (cta, indentSpaces = 2, paramOffset = 25) => {
     line += ` #color(${code.color})`;
     if (!code.active) line += " #disabled";
     if (code.folded) line += " #folded";
-    if (code.branching !== "next") line += ` #branching(${code.branching})`;
+    if (code.makes_irrelevant && code.makes_irrelevant.length > 0)
+      line += ` #irrelevant(${code.makes_irrelevant.join(",")})`;
     txt += line + "\n";
   }
   return txt;
@@ -160,7 +162,11 @@ export const textToCodes = (text, root, codes) => {
   const lines = text.split("\n");
   for (let line of lines) {
     const spaces = line.search(/\S/);
-    let newCode = line.split("#color")[0].split("#disabled")[0].split("#folded")[0].trim();
+
+    let newCode = line;
+    for (let flag of ["color", "disabled", "folded", "irrelevant"]) {
+      newCode = newCode.split(`#${flag}`)[0].trim();
+    }
     if (newCode === "") continue;
     if (codeMap[newCode]) duplicates.push(newCode);
     codeMap[newCode] = 1;
@@ -172,10 +178,9 @@ export const textToCodes = (text, root, codes) => {
       folded: line.includes("#folded"),
     };
 
-    if (line.includes("#branching")) {
-      newCodeObj.branching = line.split("#branching(")[1].split(")")[0];
-      if (!["nextUnit", "skipOne", "skipTwo", "skipThree"].includes(newCodeObj.branching))
-        newCodeObj.branching = "next";
+    if (line.includes("#irrelevant")) {
+      const irrelevantString = line.split("#irrelevant(")[1].split(")")[0];
+      newCodeObj.makes_irrelevant = irrelevantString.split(",");
     }
     if (line.includes("#color")) {
       let color = line.split("#color(")[1].split(")")[0];
