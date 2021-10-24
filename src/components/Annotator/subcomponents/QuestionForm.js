@@ -311,7 +311,7 @@ const createAnnotationObject = (tokens, question, questionIndex) => {
     }
     if (!unitEnded && !token.codingUnit && unitStarted) {
       unitEnded = true;
-      charspan[1] = token.offset - 1;
+      charspan[1] = tokens[i - 1].offset + tokens[i - 1].length;
       indexspan[1] = i - 1;
     }
     i++;

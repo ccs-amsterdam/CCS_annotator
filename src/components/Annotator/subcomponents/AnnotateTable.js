@@ -6,13 +6,10 @@ import { getColor } from "util/tokenDesign";
 import { importSpanAnnotations } from "util/annotations";
 import "components/Document/subcomponents/spanAnnotationsStyle.css";
 
-const COLWIDTHS = [4, 2, 2]; // for offset and text
+const COLWIDTHS = [4, 4, 2, 2]; // for offset and text
 
-const AnnotateTable = ({ tokens, codeMap, annotations }) => {
+const AnnotateTable = ({ tokens, variableMap, annotations }) => {
   if (!tokens || tokens.length === 0) return null;
-
-  console.log(annotations);
-  console.log(importSpanAnnotations(annotations, tokens));
   return (
     <Table
       style={{ fontSize: "10px" }}
@@ -27,29 +24,30 @@ const AnnotateTable = ({ tokens, codeMap, annotations }) => {
     >
       <Table.Header className="annotations-thead">
         <Table.Row>
-          <Table.HeaderCell width={COLWIDTHS[0]}>Code</Table.HeaderCell>
-          <Table.HeaderCell width={COLWIDTHS[1]}>Section</Table.HeaderCell>
-          <Table.HeaderCell width={COLWIDTHS[2]}>Tokens</Table.HeaderCell>
+          <Table.HeaderCell width={COLWIDTHS[0]}>Variable</Table.HeaderCell>
+          <Table.HeaderCell width={COLWIDTHS[1]}>Value</Table.HeaderCell>
+          <Table.HeaderCell width={COLWIDTHS[2]}>Section</Table.HeaderCell>
+          <Table.HeaderCell width={COLWIDTHS[3]}>Tokens</Table.HeaderCell>
           <Table.HeaderCell>Text</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body className="annotations-tbody">
-        {annotationRows(tokens, codeMap, importSpanAnnotations(annotations, tokens))}
+        {annotationRows(tokens, variableMap, importSpanAnnotations(annotations, tokens))}
       </Table.Body>
     </Table>
   );
 };
 
-const annotationRows = (tokens, codeMap, annotations) => {
+const annotationRows = (tokens, variableMap, annotations) => {
   const rows = [];
   let text = null;
   let annotation = null;
 
   for (const tokenIndex of Object.keys(annotations)) {
-    for (const code of Object.keys(annotations[tokenIndex])) {
-      annotation = annotations[tokenIndex][code];
+    for (const variable of Object.keys(annotations[tokenIndex])) {
+      annotation = annotations[tokenIndex][variable];
 
-      // annotations are stored per token index, and so are duplicated
+      // annotations are stored percode token index, and so are duplicated
       // to get unique annotations we only use the first one.
       if (annotation.index !== annotation.span[0]) continue;
 
@@ -79,11 +77,11 @@ const annotationRows = (tokens, codeMap, annotations) => {
 
       const row = (
         <AnnotationRow
-          key={tokenIndex + code}
+          key={tokenIndex + annotation.value}
           tokens={tokens}
-          codeMap={codeMap}
+          variable={variable}
+          variableMap={variableMap}
           annotation={annotation}
-          code={code}
           text={text}
           offset={offset}
         />
@@ -94,31 +92,17 @@ const annotationRows = (tokens, codeMap, annotations) => {
   return rows;
 };
 
-const AnnotationRow = ({ tokens, codeMap, annotation, code, text, offset }) => {
-  // const infocus = useSelector((state) => {
-  //   let currentIndex = tokens[state.currentToken]?.index; // currentToken is the arrayIndex
-  //   if (currentIndex === null) return null;
-  //   return currentIndex >= annotation.span[0] && currentIndex <= annotation.span[1];
-  // });
-
+const AnnotationRow = ({ tokens, variable, variableMap, annotation, text, offset }) => {
   const ref = useRef();
   const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   if (infocus) {
-  //     if (ref.current) {
-  //       ref.current.style.backgroundColor = "grey";
-  //       ref.current.scrollIntoView(false, {
-  //         block: "nearest",
-  //       });
-  //     }
-  //   } else {
-  //     if (ref.current) ref.current.style.backgroundColor = null;
-  //   }
-  // }, [infocus]);
+  if (!variableMap) return null;
 
-  const color = getColor(code, codeMap);
-  const label = codeMap[code]?.foldToParent ? `${codeMap[code].foldToParent} - ${code}` : code;
+  const codeMap = variableMap[variable].codeMap;
+  const color = getColor(annotation.value, codeMap);
+  const label = codeMap[annotation.value]?.foldToParent
+    ? `${codeMap[annotation.value].foldToParent} - ${annotation.value}`
+    : annotation.value;
 
   return (
     <Ref innerRef={ref}>
@@ -127,18 +111,22 @@ const AnnotationRow = ({ tokens, codeMap, annotation, code, text, offset }) => {
         onClick={() => {
           tokens[annotation.index + offset].ref.current.scrollIntoView(false, { block: "center" });
           dispatch(triggerCodeselector(null, null, null, null));
-          dispatch(triggerCodeselector("menu", "token", annotation.index, code));
+          dispatch(triggerCodeselector("menu", "token", annotation.index, annotation.value));
         }}
         onMouseOver={() => {
           //dispatch(setTokenSelection(token.span));
           //tokens[token.index].ref.current.scrollIntoView(false);
         }}
       >
-        <Table.Cell width={COLWIDTHS[0]} style={color ? { background: color } : null}>
+        <Table.Cell width={COLWIDTHS[0]}>
+          <span title={variable}>{variable}</span>
+        </Table.Cell>
+
+        <Table.Cell width={COLWIDTHS[1]} style={color ? { background: color } : null}>
           <span title={label}>{label}</span>
         </Table.Cell>
-        <Table.Cell width={COLWIDTHS[1]}>{annotation.section}</Table.Cell>
-        <Table.Cell width={COLWIDTHS[2]} cref={ref}>
+        <Table.Cell width={COLWIDTHS[2]}>{annotation.section}</Table.Cell>
+        <Table.Cell width={COLWIDTHS[3]} cref={ref}>
           {`${annotation.span[0]}-${annotation.span[1]}`}
         </Table.Cell>
         <Table.Cell>

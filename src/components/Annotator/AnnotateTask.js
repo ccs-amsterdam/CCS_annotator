@@ -6,18 +6,22 @@ import { codeBookEdgesToMap } from "util/codebook";
 
 const AnnotateTask = ({ unit, codebook, blockEvents }) => {
   const [annotations, setAnnotations] = useState([]);
-
+  const [variableMap, setVariableMap] = useState(null);
   const [tokens, setTokens] = useState();
 
   useEffect(() => {
     // settings is an array with the settings for each question
     // This needs a little preprocessing, so we only update it when codebook changes (not per unit)
-    if (codebook?.codeMap) return null;
-    if (!codebook?.codes) return null;
-    codebook.codeMap = codeBookEdgesToMap(codebook.codes);
-  }, [codebook]);
+    const vm = {};
+    for (let variable of codebook.variables) {
+      if (!variable?.codes) return null;
+      if (!variable?.codeMap) variable.codeMap = codeBookEdgesToMap(variable.codes);
+      vm[variable.name] = { ...variable };
+    }
+    setVariableMap(vm);
+  }, [codebook, setVariableMap]);
 
-  if (!unit || codebook?.codeMap === null) return null;
+  if (!unit || codebook?.variables === null) return null;
 
   return (
     <Grid
@@ -26,10 +30,10 @@ const AnnotateTask = ({ unit, codebook, blockEvents }) => {
       verticalAlign={"top"}
       columns={2}
     >
-      <Grid.Column width={10} style={{ paddingRight: "0em", height: "100%" }}>
+      <Grid.Column width={10} scodestyle={{ paddingRight: "0em", height: "100%" }}>
         <Document
           unit={unit}
-          codes={codebook?.codes}
+          variables={codebook?.variables}
           settings={codebook?.settings}
           onChangeAnnotations={setAnnotations}
           returnTokens={setTokens}
@@ -47,15 +51,14 @@ const AnnotateTask = ({ unit, codebook, blockEvents }) => {
       >
         <Instructions codebook={codebook} />
 
-        <AnnotateTable tokens={tokens} codeMap={codebook?.codeMap} annotations={annotations} />
+        <AnnotateTable tokens={tokens} variableMap={variableMap} annotations={annotations} />
       </Grid.Column>
     </Grid>
   );
 };
 
-const Instructions = ({ codebook }) => {
+const Instructions = () => {
   const [open, setOpen] = useState(false);
-  if (!codebook) return null;
   return (
     <Popup
       flowing
@@ -133,11 +136,9 @@ const Instructions = ({ codebook }) => {
               </Table.HeaderCell>
               <Table.HeaderCell colSpan="3">
                 <List as="ul">
-                  {codebook.settings.searchBox || codebook.settings.buttonMode === "recent" ? (
-                    <ListItem as="li">
-                      <i>text input</i> automatically opens dropdown{" "}
-                    </ListItem>
-                  ) : null}
+                  <ListItem as="li">
+                    <i>text input</i> automatically opens dropdown{" "}
+                  </ListItem>
                   <ListItem as="li">
                     navigate buttons with <i>arrow keys</i>, select with <i>spacebar</i>
                   </ListItem>

@@ -29,7 +29,7 @@ import hash from "object-hash";
  */
 const Document = ({
   unit,
-  codes,
+  variables, //codes,
   settings,
   onChangeAnnotations,
   returnTokens,
@@ -41,9 +41,9 @@ const Document = ({
 
   const [tokensReady, setTokensReady] = useState(0);
   const [tokens, annotations, setAnnotations] = useUnit(unit, safetyCheck, returnTokens);
-  const [popup, triggerCodePopup, codeMap, codeSelectorOpen] = useCodeSelector(
+  const [popup, triggerCodePopup, variableMap, codeSelectorOpen] = useCodeSelector(
     tokens,
-    codes,
+    variables,
     settings,
     annotations,
     setAnnotations,
@@ -76,12 +76,12 @@ const Document = ({
       <Tokens tokens={tokens} centerVertical={settings.centerVertical} setReady={setTokensReady} />
       <AnnotateNavigation
         tokens={tokens}
-        codeMap={codeMap}
+        variableMap={variableMap}
         annotations={annotations}
         triggerCodePopup={triggerCodePopup}
         eventsBlocked={codeSelectorOpen || blockEvents}
         fullScreenNode={fullScreenNode}
-        disableAnnotations={!onChangeAnnotations || !codeMap}
+        disableAnnotations={!onChangeAnnotations || !variableMap}
       />
 
       {popup || null}

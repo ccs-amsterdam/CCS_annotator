@@ -8,16 +8,22 @@ import db from "apis/dexie";
 
 const defaultTaskSettings = {
   // contains the type of task (annotate, question) and settings for this task
+  // note that each type corresponds to a key. So if for instance type = 'questions',
+  // the questions settings will be used.
   type: null,
 
   // annotate type settings
   annotate: {
-    settings: {
-      buttonMode: "all",
-      searchBox: false,
-      rowSize: 5,
-    },
-    codes: ["Some", "example", "options"],
+    settings: {},
+    variables: [
+      {
+        name: "Variable name",
+        buttonMode: "all",
+        searchBox: false,
+        rowSize: 5,
+        codes: ["Some", "example", "options"],
+      },
+    ],
   },
 
   // question type settings
@@ -25,8 +31,8 @@ const defaultTaskSettings = {
     settings: {},
     questions: [
       {
+        name: "Question name",
         type: "select code",
-        name: "[Question name]",
         question: "[The question itself]",
         codes: ["No", "Skip", "Yes"],
       },

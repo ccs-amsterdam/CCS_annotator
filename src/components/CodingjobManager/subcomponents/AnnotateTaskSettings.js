@@ -1,34 +1,68 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { Input, Form, Radio, Icon, Checkbox } from "semantic-ui-react";
 
 import CodesEditor from "./CodesEditor";
 import { standardizeCodes } from "util/codebook";
+import VariableMenu from "./VariableMenu";
 
 import Help from "components/CodingjobManager/subcomponents/Help";
 
-// also need option to import annotations and import codebook
-// to use the same annotations/codebook
-// The codebook can then be edited, but the imported codes cannot be removed or renamed.
+const variableDefaultSettings = {
+  name: "Variable name",
+  buttonMode: "all",
+  searchBox: false,
+  rowSize: 5,
+  codes: ["No", "Skip", "Yes"],
+};
 
 const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
-  const setAnnotateForm = (value) => {
-    setTaskSettings({ ...taskSettings, annotate: value });
+  const [variableIndex, setVariableIndex] = useState(0);
+
+  const setVariables = (variables) => {
+    setTaskSettings({
+      ...taskSettings,
+      annotate: { settings: taskSettings.annotate.settings, variables: variables },
+    });
   };
-  const setAnnotateSettings = (value) => {
-    setAnnotateForm({ ...taskSettings.annotate, settings: value });
+
+  return (
+    <VariableMenu
+      variables={taskSettings.annotate.variables}
+      setVariables={setVariables}
+      index={variableIndex}
+      setIndex={setVariableIndex}
+      newVariableDefaults={variableDefaultSettings}
+    >
+      <AnnotateForm
+        taskSettings={taskSettings}
+        setTaskSettings={setTaskSettings}
+        variableIndex={variableIndex}
+      />{" "}
+    </VariableMenu>
+  );
+};
+
+const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
+  const annotateForm = taskSettings.annotate.variables[variableIndex];
+  const setAnnotateForm = (value) => {
+    const newTaskSettings = { ...taskSettings };
+    const newValue = { ...value };
+
+    newTaskSettings.annotate.variables[variableIndex] = newValue;
+    setTaskSettings(newTaskSettings);
   };
 
   const codesEditor = () => {
     return (
       <CodesEditor
-        codes={standardizeCodes(taskSettings.annotate.codes)}
-        setCodes={(newCodes) => setAnnotateForm({ ...taskSettings.annotate, codes: newCodes })}
+        codes={standardizeCodes(annotateForm.codes)}
+        setCodes={(newCodes) => setAnnotateForm({ ...annotateForm, codes: newCodes })}
       />
     );
   };
 
-  if (!taskSettings?.annotate) return null;
+  if (!taskSettings?.annotate?.variables?.[variableIndex]) return null;
 
   return (
     <Form>
@@ -41,14 +75,9 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
         <Form.Field>
           <Checkbox
             label="Search box"
-            disabled={taskSettings.annotate.settings.buttonMode === "recent"}
-            checked={
-              taskSettings.annotate.settings.searchBox ||
-              taskSettings.annotate.settings.buttonMode === "recent"
-            }
-            onChange={(e, d) =>
-              setAnnotateSettings({ ...taskSettings.annotate.settings, searchBox: d.checked })
-            }
+            disabled={annotateForm.buttonMode === "recent"}
+            checked={annotateForm.searchBox || annotateForm.buttonMode === "recent"}
+            onChange={(e, d) => setAnnotateForm({ ...annotateForm, searchBox: d.checked })}
           />
         </Form.Field>
       </Form.Group>
@@ -59,10 +88,8 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
           <Radio
             value="all"
             label="Show all codes"
-            checked={taskSettings.annotate.settings.buttonMode === "all"}
-            onChange={() =>
-              setAnnotateSettings({ ...taskSettings.annotate.settings, buttonMode: "all" })
-            }
+            checked={annotateForm.buttonMode === "all"}
+            onChange={() => setAnnotateForm({ ...annotateForm, buttonMode: "all" })}
           />
           <Help
             header={"Show all active codes"}
@@ -76,10 +103,8 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
           <Radio
             value="recent"
             label="Show recently used"
-            checked={taskSettings.annotate.settings.buttonMode === "recent"}
-            onChange={() =>
-              setAnnotateSettings({ ...taskSettings.annotate.settings, buttonMode: "recent" })
-            }
+            checked={annotateForm.buttonMode === "recent"}
+            onChange={() => setAnnotateForm({ ...annotateForm, buttonMode: "recent" })}
           />
           <Help
             header={"Show recently used codes"}
@@ -97,17 +122,15 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
             size="mini"
             min={1}
             max={10}
-            value={taskSettings.annotate.settings.rowSize}
+            value={annotateForm.rowSize}
             type="number"
             style={{ width: "6em" }}
             label={"Buttons per row"}
-            onChange={(e, d) =>
-              setAnnotateSettings({ ...taskSettings.annotate.settings, rowSize: d.value })
-            }
+            onChange={(e, d) => setAnnotateForm({ ...annotateForm, rowSize: d.value })}
           />
         </Form.Field>
       </Form.Group>
-      {codesEditor()}
+      <div style={{ overflow: "auto" }}>{codesEditor()}</div>
     </Form>
   );
 };

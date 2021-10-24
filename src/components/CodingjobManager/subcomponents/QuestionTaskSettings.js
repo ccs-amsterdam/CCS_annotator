@@ -1,21 +1,11 @@
 import React, { useEffect, useState } from "react";
 
-import {
-  Form,
-  Radio,
-  TextArea,
-  Menu,
-  Segment,
-  Grid,
-  Dropdown,
-  Button,
-  Popup,
-  Input,
-} from "semantic-ui-react";
+import { Form, Radio, TextArea, Grid, Dropdown } from "semantic-ui-react";
 
 import Help from "./Help";
 import CodesEditor from "./CodesEditor";
 import { standardizeCodes } from "util/codebook";
+import VariableMenu from "./VariableMenu";
 
 const questionDefaultSettings = {
   type: "select code",
@@ -26,143 +16,29 @@ const questionDefaultSettings = {
 
 const QuestionTaskSettings = ({ taskSettings, setTaskSettings, unitSettings }) => {
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const onAdd = () => {
-    const questions = taskSettings.questions.questions;
-    const newQuestion = {
-      ...questionDefaultSettings,
-      name: uniqueNewQuestionName(
-        questionDefaultSettings.name,
-        taskSettings.questions.questions,
-        questionIndex
-      ),
-    };
-
-    questions.push(newQuestion);
-    setTaskSettings({ ...taskSettings, questions: { questions } });
-  };
-
-  const onDelete = () => {
-    const questions = taskSettings.questions.questions;
-    const newQuestions = [];
-    for (let i = 0; i < questions.length; i++) {
-      if (i !== questionIndex) newQuestions.push(questions[i]);
-    }
-
-    setTaskSettings({ ...taskSettings, questions: { questions: newQuestions } });
-    setDeleteOpen(false);
-  };
-
-  const onMove = (direction, i) => {
-    const questions = [...taskSettings.questions.questions];
-    const j = direction === "left" ? Math.max(0, i - 1) : Math.min(questions.length - 1, i + 1);
-    const temp = questions[i];
-    questions[i] = questions[j];
-    questions[j] = temp;
-
-    setTaskSettings({ ...taskSettings, questions: { questions } });
-    setQuestionIndex(j);
-  };
-
-  const deleteQuestionButton = () => {
-    if (taskSettings.questions.questions.length === 0) return null;
-    return (
-      <Popup
-        hoverable
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        trigger={
-          <Menu.Item
-            icon="minus"
-            position="right"
-            style={{ background: "red" }}
-            onClick={() => setDeleteOpen(!deleteOpen)}
-          />
-        }
-      >
-        <p>
-          Delete <b>{taskSettings.questions.questions[questionIndex].name}</b>?
-        </p>
-
-        <Button style={{ background: "red" }} onClick={onDelete}>
-          yes please
-        </Button>
-      </Popup>
-    );
-  };
-
-  const moveButtons = (i) => {
-    if (questionIndex !== i) return null;
-    return (
-      <Button.Group>
-        {i > 0 ? (
-          <Button
-            icon="arrow left"
-            onClick={() => {
-              onMove("left", i);
-            }}
-            style={{
-              borderRadius: "0",
-              padding: "0em",
-              background: "rgba(0,0,0,0)",
-            }}
-          />
-        ) : null}
-        {i < taskSettings.questions.questions.length - 1 ? (
-          <Button
-            icon="arrow right"
-            onClick={() => onMove("right", i)}
-            style={{
-              borderRadius: "0",
-              padding: "0em",
-              background: "rgba(0,0,0,0)",
-            }}
-          />
-        ) : null}
-      </Button.Group>
-    );
+  const setQuestions = (variables) => {
+    setTaskSettings({
+      ...taskSettings,
+      questions: { settings: taskSettings.questions.settings, questions: variables },
+    });
   };
 
   return (
-    <div>
-      <Menu attached="top">
-        {Array(taskSettings.questions.questions.length)
-          .fill(0)
-          .map((v, i) => {
-            return (
-              <Menu.Item
-                active={questionIndex === i}
-                style={{ padding: "0em", position: "relative" }}
-              >
-                <div>
-                  <div
-                    onClick={(e, d) => setQuestionIndex(i)}
-                    style={{ padding: "0.5em", cursor: "pointer" }}
-                  >
-                    {taskSettings.questions.questions[i].name}
-                  </div>
-
-                  <div style={{ position: "absolute", zIndex: 10, bottom: "-1.5em" }}>
-                    {moveButtons(i)}
-                  </div>
-                </div>
-              </Menu.Item>
-            );
-          })}
-        <Menu.Item icon="plus" style={{ background: "lightblue" }} onClick={onAdd} />
-        {deleteQuestionButton()}
-      </Menu>
-      <Segment attached="bottom">
-        <br />
-        <QuestionForm
-          taskSettings={taskSettings}
-          setTaskSettings={setTaskSettings}
-          unitSettings={unitSettings}
-          questionIndex={questionIndex}
-        />{" "}
-      </Segment>
-    </div>
+    <VariableMenu
+      variables={taskSettings.questions.questions}
+      setVariables={setQuestions}
+      index={questionIndex}
+      setIndex={setQuestionIndex}
+      newVariableDefaults={questionDefaultSettings}
+    >
+      <QuestionForm
+        taskSettings={taskSettings}
+        setTaskSettings={setTaskSettings}
+        unitSettings={unitSettings}
+        questionIndex={questionIndex}
+      />{" "}
+    </VariableMenu>
   );
 };
 
@@ -172,31 +48,6 @@ const QuestionForm = ({ taskSettings, setTaskSettings, unitSettings, questionInd
   const setQuestionForm = (value) => {
     const newTaskSettings = { ...taskSettings };
     const newValue = { ...value };
-
-    if (newValue.name !== questions[questionIndex].name) {
-      // if name changed...
-      // ensure name is unique
-      newValue.name = uniqueNewQuestionName(
-        newValue.name,
-        taskSettings.questions.questions,
-        questionIndex
-      );
-      // update possible branching references in the codes of other questions
-      // for (let i = 0; i < questions.length; i++) {
-      //   if (i === questionIndex) continue
-      //   const question = questions[i]
-      //   for (let j = 0; j < question.codes.length; j++) {
-      //     const code = question.codes[j]
-      //     if (!code.makes_irrelevant) continue
-      //     if (typeof code.makes_irrelevant !== 'object') code.makes_irrelevant = [code.makes_irrelevant]
-      //     for (let k = 0; k < code.makes_irrelevant; k++) {
-      //       if ()
-      //       if (questions[i].codes[j]
-
-      //     }
-      //   }
-      // }
-    }
 
     newTaskSettings.questions.questions[questionIndex] = newValue;
     setTaskSettings(newTaskSettings);
@@ -214,19 +65,13 @@ const QuestionForm = ({ taskSettings, setTaskSettings, unitSettings, questionInd
   );
 };
 
-const QuestionFormSettings = ({
-  questionForm,
-  setQuestionForm,
-  questions,
-  questionIndex,
-  unitSettings,
-}) => {
+const QuestionFormSettings = ({ questionForm, setQuestionForm, questions, unitSettings }) => {
   const [delayed, setDelayed] = useState("");
   const [warn, setWarn] = useState([]);
 
   useEffect(() => {
     if (!delayed) return;
-    if (questionForm.name === delayed.name && questionForm.question === delayed.question) return;
+    if (questionForm.question === delayed.question) return;
     const timer = setTimeout(() => {
       // if (questionForm.name !== delayed.name)
       //   updateRelevanceBranching(questionForm.name, delayed.name, setTaskSettings);
@@ -261,24 +106,10 @@ const QuestionFormSettings = ({
     );
   };
 
-  const variableName = () => {
-    if (!delayed?.name) return "";
-    return `Q${questionIndex + 1}_${delayed.name.replace(" ", "_")}`;
-  };
-
   if (!questionForm) return null;
   return (
     <Form>
       <Form.Group grouped>
-        <label>Name</label> <span style={{ fontSize: "10px" }}>(keep it short)</span>
-        <Form.Field>
-          <Input
-            value={delayed.name}
-            style={{ width: "150px" }}
-            onChange={(e, d) => setDelayed({ ...delayed, name: d.value })}
-          />
-          <p style={{ marginLeft: "1em", color: "grey" }}>{`Variable: ${variableName()}`}</p>
-        </Form.Field>{" "}
         <br />
         <label>
           Question
@@ -454,32 +285,5 @@ const AnnotinderEditor = ({ questionForm, setQuestionForm }) => {
     </Form>
   );
 };
-
-const uniqueNewQuestionName = (newName, questions, questionIndex) => {
-  let uniqueNewName = newName;
-  let i = 2;
-
-  const existingNames = [];
-  for (let i = 0; i < questions.length; i++) {
-    if (i === questionIndex) continue;
-    existingNames.push(questions[i].name);
-  }
-
-  while (existingNames.includes(uniqueNewName)) {
-    uniqueNewName = newName + ` ${i}`;
-    i++;
-  }
-  return uniqueNewName;
-};
-
-// /**
-//  * Ok, this get's complicates. When a question name changes, it also needs to be
-//  * updated in
-//  *
-//  * @param {*} oldName
-//  * @param {*} newName
-//  * @param {*} setTaskSettings
-//  */
-// const updateRelevanceBranching = (oldName, newName, setTaskSettings) => {};
 
 export default QuestionTaskSettings;

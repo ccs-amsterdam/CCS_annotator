@@ -10,7 +10,7 @@ import { getColor, getColorGradient } from "util/tokenDesign";
  */
 const AnnotateNavigation = ({
   tokens,
-  codeMap,
+  variableMap,
   annotations,
   triggerCodePopup,
   eventsBlocked,
@@ -21,9 +21,9 @@ const AnnotateNavigation = ({
   const [tokenSelection, setTokenSelection] = useState([]);
 
   useEffect(() => {
-    if (!codeMap) return null;
-    showAnnotations(tokens, annotations, codeMap);
-  }, [tokens, annotations, codeMap]);
+    if (!variableMap) return null;
+    showAnnotations(tokens, annotations, variableMap);
+  }, [tokens, annotations, variableMap]);
 
   useEffect(() => {
     showSelection(tokens, tokenSelection);
@@ -35,7 +35,7 @@ const AnnotateNavigation = ({
         tokens={tokens}
         currentToken={currentToken}
         annotations={annotations}
-        codeMap={codeMap}
+        variableMap={variableMap}
         fullScreenNode={fullScreenNode}
       />
       {disableAnnotations ? null : (
@@ -53,11 +53,11 @@ const AnnotateNavigation = ({
   );
 };
 
-const showAnnotations = (tokens, annotations, codeMap) => {
+const showAnnotations = (tokens, annotations, variableMap) => {
   for (let token of tokens) {
     if (!token.ref?.current) continue;
 
-    let tokenAnnotations = allowedAnnotations(annotations?.[token.index], codeMap);
+    let tokenAnnotations = allowedAnnotations(annotations?.[token.index], variableMap);
 
     if (!tokenAnnotations || Object.keys(tokenAnnotations).length === 0) {
       if (token.ref.current.classList.contains("annotated")) {
@@ -66,17 +66,19 @@ const showAnnotations = (tokens, annotations, codeMap) => {
       }
       continue;
     }
-    annotateToken(token, tokenAnnotations, codeMap);
+    annotateToken(token, tokenAnnotations, variableMap);
   }
 };
 
-const allowedAnnotations = (annotations, codeMap) => {
+const allowedAnnotations = (annotations, variableMap) => {
   if (!annotations) return null;
 
-  if (annotations && codeMap) {
+  if (annotations && variableMap) {
     annotations = { ...annotations };
-    for (let code of Object.keys(annotations)) {
-      if (!codeMap[code]) continue;
+    for (let variable of Object.keys(annotations)) {
+      if (!variableMap[variable]) continue;
+      const codeMap = variableMap[variable].codeMap;
+      const code = annotations[variable].value;
       if (!codeMap[code] || !codeMap[code].active || !codeMap[code].activeParent)
         delete annotations[code];
     }
@@ -84,14 +86,16 @@ const allowedAnnotations = (annotations, codeMap) => {
   return annotations;
 };
 
-const annotateToken = (token, annotations, codeMap) => {
+const annotateToken = (token, annotations, variableMap) => {
   // Set specific classes for nice css to show the start/end of codes
   let nLeft = 0;
   let nRight = 0;
   const colors = { pre: [], text: [], post: [] };
-  for (let key of Object.keys(annotations)) {
-    const code = annotations[key];
-    const color = getColor(key, codeMap);
+  for (let variable of Object.keys(annotations)) {
+    if (!variableMap[variable]) continue;
+    const codeMap = variableMap[variable].codeMap;
+    const code = annotations[variable];
+    const color = getColor(code.value, codeMap);
     colors.text.push(color);
     if (code.span[0] === code.index) {
       nLeft++;
@@ -149,11 +153,14 @@ const showSelection = (tokens, selection) => {
   }
 };
 
-const AnnotationPopup = ({ tokens, currentToken, annotations, codeMap, fullScreenNode }) => {
+const AnnotationPopup = ({ tokens, currentToken, annotations, variableMap, fullScreenNode }) => {
   if (!tokens?.[currentToken]?.ref) return null;
   if (!annotations?.[tokens[currentToken].index]) return null;
-  if (!codeMap) return null;
-  const codes = Object.keys(annotations[tokens[currentToken].index]);
+  if (!variableMap) return null;
+
+  const tokenAnnotations = annotations[tokens[currentToken].index];
+  const variables = Object.keys(tokenAnnotations);
+  const codes = variables.map((variable) => tokenAnnotations[variable].value);
 
   return (
     <Popup
@@ -167,9 +174,16 @@ const AnnotationPopup = ({ tokens, currentToken, annotations, codeMap, fullScree
       style={{ padding: "0", border: "1px solid" }}
     >
       <List>
-        {codes.map((code, i) => (
-          <List.Item key={i} style={{ backgroundColor: getColor(code, codeMap), padding: "0.3em" }}>
-            {code}
+        {variables.map((variable, i) => (
+          <List.Item
+            key={i}
+            style={{
+              backgroundColor: getColor(codes[i], variableMap[variable].codeMap),
+              padding: "0.3em",
+            }}
+          >
+            <b>{variable}</b>
+            {": " + codes[i]}
           </List.Item>
         ))}
       </List>

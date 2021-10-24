@@ -94,7 +94,7 @@ export const toggleSpanAnnotations = (annotations, annList, rm) => {
         index: a.index,
         span: [a.span[0], a.span[1]],
         length: a.length,
-        code: a.value,
+        value: a.value,
         section: a.section,
         offset: a.offset,
       };

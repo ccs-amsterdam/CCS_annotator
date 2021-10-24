@@ -161,9 +161,7 @@ const getOptions = (cta) => {
     if (!code.active) continue;
     if (!code.activeParent) continue;
     let tree = code.tree.join(" - ");
-    //if (tree === "") tree = "Root";
     const option = {
-      //ref: React.createRef(),
       code: code.code,
       tree: tree,
       makes_irrelevant: code.makes_irrelevant,

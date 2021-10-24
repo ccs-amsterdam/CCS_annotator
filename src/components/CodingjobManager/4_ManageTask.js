@@ -20,7 +20,7 @@ const ManageTask = ({ codingjob }) => {
   if (!codingjob) return null;
   let cwidths = [8, 8];
   if (codingjob.taskSettings?.type) {
-    if (codingjob.taskSettings.type === "annotate") cwidths = [4, 12];
+    if (codingjob.taskSettings.type === "annotate") cwidths = [6, 10];
     if (codingjob.taskSettings.type === "questions") cwidths = [8, 6];
   }
 
