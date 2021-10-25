@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FullScreen } from "react-full-screen";
 import { setFullScreenNode } from "actions";
 import { useDispatch } from "react-redux";
@@ -23,9 +23,16 @@ const FullScreenFix = ({ handle, children }) => {
 };
 
 const DOMNodeProvider = ({ children }) => {
-  const dispatch = useDispatch();
   const [node, setNode] = useState(null);
-  dispatch(setFullScreenNode(node));
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(setFullScreenNode(node));
+    return () => {
+      dispatch(setFullScreenNode(null));
+    };
+  }, [node, dispatch]);
+
   return (
     <div className="dom-node-provider" ref={setNode}>
       {children(node)}

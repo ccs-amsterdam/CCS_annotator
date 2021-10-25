@@ -146,7 +146,9 @@ const renderSentence = (position, sentence_nr, tokens) => {
 };
 
 const renderToken = (token, codingUnit) => {
-  const style = codingUnit ? { lineHeight: "1em", fontSize: "1.5em" } : { color: "#746363" };
+  const style = codingUnit
+    ? { lineHeight: "1em", fontSize: "1.5em", position: "relative" }
+    : { color: "#746363", position: "relative" };
 
   return (
     <span
@@ -159,6 +161,10 @@ const renderToken = (token, codingUnit) => {
       <span className="pre">{token.pre}</span>
       <span className="text">{token.text}</span>
       <span className="post">{token.post}</span>
+      <div
+        className="variable"
+        style={{ position: "absolute", top: "-0.4em", left: "0", fontSize: "0.4em" }}
+      ></div>
     </span>
   );
 };

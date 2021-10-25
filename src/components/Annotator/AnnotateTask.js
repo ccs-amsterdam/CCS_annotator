@@ -15,8 +15,8 @@ const AnnotateTask = ({ unit, codebook, blockEvents }) => {
     const vm = {};
     for (let variable of codebook.variables) {
       if (!variable?.codes) return null;
-      if (!variable?.codeMap) variable.codeMap = codeBookEdgesToMap(variable.codes);
-      vm[variable.name] = { ...variable };
+      const codeMap = codeBookEdgesToMap([...variable.codes]);
+      vm[variable.name] = { ...variable, codeMap };
     }
     setVariableMap(vm);
   }, [codebook, setVariableMap]);
@@ -30,7 +30,7 @@ const AnnotateTask = ({ unit, codebook, blockEvents }) => {
       verticalAlign={"top"}
       columns={2}
     >
-      <Grid.Column width={10} scodestyle={{ paddingRight: "0em", height: "100%" }}>
+      <Grid.Column width={10} style={{ paddingRight: "0em", height: "100%" }}>
         <Document
           unit={unit}
           variables={codebook?.variables}

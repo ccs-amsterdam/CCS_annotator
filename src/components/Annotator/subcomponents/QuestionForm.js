@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Header, Button, Segment } from "semantic-ui-react";
-import { SearchBoxDropdown, ButtonSelection, Annotinder } from "./QuestionForms";
+import { SearchBoxDropdown, ButtonSelection, Annotinder } from "./AnswerForms";
 
 const DONE_COLOR = "lightgreen";
 const IRRELEVANT_COLOR = "red";

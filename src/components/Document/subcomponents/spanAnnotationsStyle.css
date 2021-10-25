@@ -29,6 +29,10 @@
   padding: 1px;
 }
 
+span.token {
+  /* vertical-align: bottom; */
+}
+
 span.token.selected > span {
   background-color: rgb(61, 61, 61) !important;
   color: rgb(255, 255, 255);
@@ -48,12 +52,12 @@ button.active {
 
 span.token.annotated > span {
   line-height: 1.5em;
-  border: solid;
-  border-width: 2px;
-  border-top-right-radius: 1px;
+  border: 1px solid;
   border-left: none;
   border-right: none;
-  cursor: pointer;
+  cursor: pointer;;
+  /* vertical-align: bottom; */
+  padding-bottom: 0.2em;
   box-shadow: none;
 }
 
@@ -74,8 +78,8 @@ span.token.annotated.allLeft > span.pre {
 span.token.annotated.allLeft > span.text {
   border-left: solid;
   border-left-width: 1px;
-  border-bottom-left-radius: 7px;
-  border-top-left-radius: 7px;
+  /* border-bottom-left-radius: 7px;
+  border-top-left-radius: 7px; */
 }
 
 span.token.annotated.anyRight > span.text {
@@ -88,6 +92,6 @@ span.token.annotated.allRight > span.post {
 span.token.annotated.allRight > span.text {
   border-right: solid;
   border-right-width: 1px;
-  border-bottom-right-radius: 7px;
-  border-top-right-radius: 7px;
+  /* border-bottom-right-radius: 7px;
+  border-top-right-radius: 7px; */
 }

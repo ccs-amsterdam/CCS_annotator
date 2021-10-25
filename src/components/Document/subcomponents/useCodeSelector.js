@@ -72,6 +72,7 @@ const useCodeSelector = (
         setCurrent={setCurrent}
         variableMap={variableMap}
         annotations={tokenAnnotations}
+        setOpen={setOpen}
         canBeNew={selection !== null} // if no selection is provided, can only edit existing codes
       />
 
@@ -122,14 +123,15 @@ const CodeSelectorPopup = ({
         }
       }}
       position="top left"
-      style={{ padding: "0px" }}
+      style={{ padding: "0px", maxWidth: "80vw" }}
     >
       <div
         style={{
           minWidth: "12em",
           textAlign: "center",
-          height: "1.9em",
-          background: "lightgrey",
+
+          background: "#1B1C1D",
+          color: "white",
           border: "1px solid",
         }}
       >
@@ -147,7 +149,7 @@ const CodeSelectorPopup = ({
           floated="right"
           icon="delete"
           size="mini"
-          style={{ background: "#80808000", margin: "0px" }}
+          style={{ background: "#80808000", margin: "0px", color: "white" }}
           onClick={() => {
             setOpen(false);
           }}
@@ -164,6 +166,7 @@ const SelectVariablePage = ({
   setCurrent,
   annotations,
   canBeNew,
+  setOpen,
   variableMap,
 }) => {
   const setValue = (value) => {
@@ -193,9 +196,10 @@ const SelectVariablePage = ({
       <ButtonSelection
         key={"currentCodePageButtons"}
         active={true}
+        current={null}
         settings={{ rowSize: 5 }}
         options={options}
-        canDelete={false}
+        setOpen={setOpen}
         callback={setValue}
       />
     </div>
@@ -276,7 +280,7 @@ const NewCodePage = ({
       if (singleSelection && annotations[code]) continue;
 
       if (settings && settings.buttonMode === "all")
-        buttonOptions.push({ key: code, label: code, color: getColor(code, codeMap) });
+        buttonOptions.push({ key: code, label: code, value: code, color: getColor(code, codeMap) });
 
       let tree = codeMap[code].tree.join(" - ");
       dropdownOptions.push({
@@ -297,7 +301,7 @@ const NewCodePage = ({
     if (!settings || settings.buttonMode === "recent") {
       for (let code of codeHistory) {
         if (buttonOptions.length > historyN) break;
-        buttonOptions.push({ key: code, label: code, color: getColor(code, codeMap) });
+        buttonOptions.push({ key: code, label: code, value: code, color: getColor(code, codeMap) });
       }
     }
     return [buttonOptions, dropdownOptions];
@@ -309,9 +313,10 @@ const NewCodePage = ({
       <ButtonSelection
         key={"newCodePageButtons"}
         active={focusOnButtons}
+        current={current}
         settings={settings}
         options={options}
-        canDelete={true}
+        setOpen={setOpen}
         callback={onButtonSelect}
       />
     );
@@ -396,18 +401,23 @@ const NewCodePage = ({
     </>
   );
 };
-
-const ButtonSelection = ({ active, options, settings, canDelete, callback }) => {
-  // render buttons for options (an array of objects with keys 'label' and 'color')
-  // On selection perform callback function with the button label as input
-  // if canDelete is TRUE, also contains a delete button, which passes null to callback
+const ButtonSelection = ({ active, options, current, settings, setOpen, callback }) => {
   const [selected, setSelected] = useState(0);
+  const [allOptions, setAllOptions] = useState([]);
 
-  const rowSize = settings?.rowSize || 5;
+  useEffect(() => {
+    const allOptions = [...options];
+    if (current !== null && current !== "UNASSIGNED")
+      allOptions.push({ label: "DELETE", color: "red", value: null, textColor: "white" });
+    allOptions.push({ label: "CANCEL", color: "grey", value: "CANCEL", textColor: "white" });
+    setAllOptions(allOptions);
+  }, [options, current, setAllOptions]);
+
+  const rowSize = Number(settings?.rowSize) || 5;
 
   const onKeydown = React.useCallback(
     (event) => {
-      const nbuttons = canDelete ? options.length + 1 : options.length;
+      const nbuttons = allOptions.length;
 
       // any arrowkey
       if (arrowKeys.includes(event.key)) {
@@ -440,14 +450,13 @@ const ButtonSelection = ({ active, options, settings, canDelete, callback }) => 
         event.preventDefault();
         event.stopPropagation();
 
-        if (selected === options.length) {
-          callback(null); // this means delete button was selected
-        } else {
-          callback(options[selected].label);
-        }
+        let value = allOptions[selected].value;
+        if (value === "CANCEL") {
+          setOpen(false);
+        } else callback(value);
       }
     },
-    [selected, callback, options, canDelete, rowSize]
+    [selected, callback, allOptions, setOpen, rowSize]
   );
 
   useEffect(() => {
@@ -462,19 +471,30 @@ const ButtonSelection = ({ active, options, settings, canDelete, callback }) => 
   }, [active, onKeydown]);
 
   const mapButtons = () => {
-    return options.map((option, i) => {
+    return allOptions.map((option, i) => {
       return (
         <>
-          {i % rowSize === 0 ? <br /> : null}
           <Button
-            style={{ backgroundColor: option.color, margin: "0" }}
+            style={{
+              flex: `1 1 calc(${Math.floor(100 / rowSize)}% - 6px)`,
+              backgroundColor: option.color,
+              color: option.textColor || "black",
+              border: "3px solid",
+              borderColor: i === selected ? "black" : "lightgrey",
+              margin: "0",
+            }}
             key={option.label}
-            value={option.value || option.label}
+            value={option.value}
             compact
             size="mini"
-            active={i === selected}
+            //active={i === selected}
             onMouseOver={() => setSelected(i)}
-            onClick={(e, d) => callback(d.value)}
+            onClick={(e, d) => {
+              console.log(d.value);
+              if (d.value === "CANCEL") {
+                setOpen(false);
+              } else callback(d.value);
+            }}
           >
             {" " + option.label}
           </Button>
@@ -483,29 +503,7 @@ const ButtonSelection = ({ active, options, settings, canDelete, callback }) => 
     });
   };
 
-  const deleteButton = () => {
-    if (!canDelete) return null;
-    return (
-      <Button
-        key={"trash"}
-        icon="trash"
-        size="mini"
-        floated="right"
-        active={selected === options.length}
-        compact
-        style={{ backgroundColor: "red", borderColor: "black" }}
-        onMouseOver={() => setSelected(options.length)}
-        onClick={(e, d) => callback(null)}
-      />
-    );
-  };
-
-  return (
-    <span>
-      {mapButtons()}
-      {deleteButton()}
-    </span>
-  );
+  return <div style={{ display: "flex", flexWrap: "wrap" }}>{mapButtons()}</div>;
 };
 
 const updateAnnotations = (

@@ -93,11 +93,6 @@ const ChangeName = ({ variables, setVariables, index }) => {
     setDelayedName(variables[index].name);
   }, [variables, index, setDelayedName]);
 
-  const variableName = () => {
-    if (!delayedName) return "";
-    return `Q${index + 1}_${delayedName.replace(" ", "_")}`;
-  };
-
   return (
     <Form>
       <Form.Group grouped>
@@ -110,7 +105,6 @@ const ChangeName = ({ variables, setVariables, index }) => {
             onBlur={() => dispatch(blockEvents(false))}
             onChange={(e, d) => setDelayedName(d.value)}
           />
-          <p style={{ marginLeft: "1em", color: "grey" }}>{`Variable: ${variableName()}`}</p>
         </Form.Field>{" "}
       </Form.Group>
     </Form>

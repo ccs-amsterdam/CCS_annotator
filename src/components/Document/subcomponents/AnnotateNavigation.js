@@ -121,7 +121,13 @@ const annotateToken = (token, annotations, variableMap) => {
   const preColor = allLeft ? "white" : getColorGradient(colors.pre);
   const postColor = allRight ? "white" : getColorGradient(colors.post);
   setTokenColor(token, preColor, textColor, postColor);
+  //setTokenLabels(token, ["test", "this"]);
 };
+
+// const setTokenLabels = (token, labels) => {
+//   token.ref.current.style.lineHeight = `${labels.length * 1}em`;
+//   token.ref.current.style.marginBottom = "-1em";
+// };
 
 const setTokenColor = (token, pre, text, post) => {
   const children = token.ref.current.children;
@@ -167,11 +173,11 @@ const AnnotationPopup = ({ tokens, currentToken, annotations, variableMap, fullS
       mountNode={fullScreenNode || undefined}
       context={tokens?.[currentToken]?.ref}
       basic
-      hoverable="false"
+      hoverable={false}
       position="top left"
-      mouseLeaveDelay={0}
+      mouseLeaveDelay={1}
       open={true}
-      style={{ padding: "0", border: "1px solid" }}
+      style={{ margin: "0", padding: "0", border: "1px solid" }}
     >
       <List>
         {variables.map((variable, i) => (

@@ -118,7 +118,6 @@ const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit, 
           maxWidth: "400px",
           height: "calc(100vh - 250px)",
           minHeight: "500px",
-
           maxHeight: "800px",
         }}
       >
@@ -152,7 +151,7 @@ const PreviewAnnotateTask = ({ children, codebook, standardizedUnit, setUnitInde
           padding: "0",
           width: "100%",
           height: "calc(100vh - 250px)",
-          minHeight: "300px",
+          minHeight: "500px",
         }}
       >
         <div style={{ padding: "0", height: "100%" }}>

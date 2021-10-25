@@ -34,6 +34,7 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
       setIndex={setVariableIndex}
       newVariableDefaults={variableDefaultSettings}
     >
+      <br />
       <AnnotateForm
         taskSettings={taskSettings}
         setTaskSettings={setTaskSettings}

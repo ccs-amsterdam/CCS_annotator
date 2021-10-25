@@ -28,7 +28,6 @@ export const standardizeCodes = (codes) => {
 
 export const codeBookEdgesToMap = (codes) => {
   const standardizedCodes = standardizeCodes(codes);
-
   // the payload is an array of objects, but for efficients operations
   // in the annotator we convert it to an object with the codes as keys
   const codeMap = standardizedCodes.reduce((result, code) => {
