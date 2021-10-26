@@ -44,7 +44,6 @@ const AnnotateTask = ({ unit, codebook, blockEvents }) => {
         width={6}
         style={{
           paddingRight: "0em",
-          marginTop: "1em",
           height: "100%",
           overflow: "auto",
         }}

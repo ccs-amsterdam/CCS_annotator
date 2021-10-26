@@ -31,6 +31,7 @@
 
 span.token {
   /* vertical-align: bottom; */
+  padding-bottom: 0px;
 }
 
 span.token.selected > span {
@@ -46,18 +47,17 @@ span.token.selected.end > span.post {
 }
 
 button.active {
-  height: "120%";
   border: solid !important;
 }
 
 span.token.annotated > span {
-  line-height: 1.5em;
+  /* line-height: 1.5em; */
+  
   border: 1px solid;
   border-left: none;
   border-right: none;
-  cursor: pointer;;
+  /* cursor: pointer;; */
   /* vertical-align: bottom; */
-  padding-bottom: 0.2em;
   box-shadow: none;
 }
 

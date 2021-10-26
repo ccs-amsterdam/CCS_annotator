@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { exportSpanAnnotations } from "util/annotations";
 import useUnit from "./subcomponents/useUnit";
 import hash from "object-hash";
+import SelectVariable from "./subcomponents/SelectVariable";
 
 /**
  * This is hopefully the only Component in this folder that you'll ever see. It should be fairly isolated
@@ -38,13 +39,14 @@ const Document = ({
 }) => {
   const fullScreenNode = useSelector((state) => state.fullScreenNode);
   const safetyCheck = useRef(null); // ensures only new annotations for the current unit are passed to onChangeAnnotations
+  const [variable, setVariable] = useState(null);
 
   const [tokensReady, setTokensReady] = useState(0);
   const [tokens, annotations, setAnnotations] = useUnit(unit, safetyCheck, returnTokens);
   const [popup, triggerCodePopup, variableMap, codeSelectorOpen] = useCodeSelector(
     tokens,
     variables,
-    settings,
+    variable,
     annotations,
     setAnnotations,
     fullScreenNode
@@ -73,7 +75,18 @@ const Document = ({
 
   return (
     <>
-      <Tokens tokens={tokens} centerVertical={settings.centerVertical} setReady={setTokensReady} />
+      <SelectVariable
+        variables={variables}
+        variable={variable}
+        setVariable={setVariable}
+        height={"30px"}
+      />
+      <Tokens
+        tokens={tokens}
+        centerVertical={settings.centerVertical}
+        setReady={setTokensReady}
+        height={variables && variables.length > 1 ? "calc(100% - 30px)" : "100%"}
+      />
       <AnnotateNavigation
         tokens={tokens}
         variableMap={variableMap}

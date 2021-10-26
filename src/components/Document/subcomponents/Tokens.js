@@ -4,7 +4,7 @@ import { scrollToMiddle } from "util/scroll";
 
 import "components/Document/subcomponents/spanAnnotationsStyle.css";
 
-const Tokens = ({ tokens, centerVertical, setReady }) => {
+const Tokens = ({ tokens, centerVertical, setReady, height }) => {
   const [text, setText] = useState({});
   const containerRef = useRef(null);
 
@@ -30,7 +30,7 @@ const Tokens = ({ tokens, centerVertical, setReady }) => {
       style={{
         display: "flex",
         alignItems: centerVertical ? "center" : null,
-        height: "100%",
+        height: height,
       }}
     >
       <Ref innerRef={containerRef}>
@@ -38,9 +38,9 @@ const Tokens = ({ tokens, centerVertical, setReady }) => {
           style={{
             flex: "1 97%",
             width: "100%",
-            maxHeight: "100%",
+            maxHeight: height,
             overflowY: "auto",
-            //textAlign: "justify",
+            textAlign: "justify",
           }}
         >
           {/* <div style={{ height: "10em" }} /> */}
@@ -103,7 +103,7 @@ const renderText = (tokens) => {
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
   const fontstyle = (paragraphs) => {
-    if (section === "title") return <h2 key={section + paragraph_nr}>{paragraphs}</h2>;
+    if (section === "title") return <h4 key={section + paragraph_nr}>{paragraphs}</h4>;
     return paragraphs;
   };
 
@@ -147,7 +147,7 @@ const renderSentence = (position, sentence_nr, tokens) => {
 
 const renderToken = (token, codingUnit) => {
   const style = codingUnit
-    ? { lineHeight: "1em", fontSize: "1.5em", position: "relative" }
+    ? { lineHeight: "1.4em", fontSize: "1.5em", position: "relative" }
     : { color: "#746363", position: "relative" };
 
   return (

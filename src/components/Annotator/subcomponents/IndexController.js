@@ -9,43 +9,43 @@ const IndexController = ({ n, index, setIndex, canGoForward = true, canGoBack = 
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
 
-  const onKeyDown = (e) => {
-    if (e.keyCode === 9) {
-      e.preventDefault();
-      if (e.shiftKey) {
-        if (!canGoBack) return;
-        if (e.repeat) {
-          setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
-        } else {
-          setActivePage((current) => (current > 1 ? current - 1 : current));
-        }
-      } else {
-        if (e.repeat) {
-          setDelayedActivePage((current) => {
-            if (canGoForward || current < reached.current)
-              return current < n + 1 ? current + 1 : current;
-          });
-        } else {
-          setActivePage((current) => {
-            if (canGoForward || current < reached.current)
-              return current < n + 1 ? current + 1 : current;
-          });
-        }
-      }
-    }
-  };
+  // const onKeyDown = (e) => {
+  //   if (e.keyCode === 9) {
+  //     e.preventDefault();
+  //     if (e.shiftKey) {
+  //       if (!canGoBack) return;
+  //       if (e.repeat) {
+  //         setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
+  //       } else {
+  //         setActivePage((current) => (current > 1 ? current - 1 : current));
+  //       }
+  //     } else {
+  //       if (e.repeat) {
+  //         setDelayedActivePage((current) => {
+  //           if (canGoForward || current < reached.current)
+  //             return current < n + 1 ? current + 1 : current;
+  //         });
+  //       } else {
+  //         setActivePage((current) => {
+  //           if (canGoForward || current < reached.current)
+  //             return current < n + 1 ? current + 1 : current;
+  //         });
+  //       }
+  //     }
+  //   }
+  // };
 
   useEffect(() => {
     if (index !== null) setActivePage(Math.min(index + 1, n + 1));
     if (index === null) setActivePage(n + 1);
   }, [index, n, setActivePage]);
 
-  useEffect(() => {
-    if (canGoForward || canGoBack) window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  });
+  // useEffect(() => {
+  //   if (canGoForward || canGoBack) window.addEventListener("keydown", onKeyDown);
+  //   return () => {
+  //     window.removeEventListener("keydown", onKeyDown);
+  //   };
+  // });
 
   useEffect(() => {
     reached.current = 0;

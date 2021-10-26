@@ -54,6 +54,7 @@ const AnnotateNavigation = ({
 };
 
 const showAnnotations = (tokens, annotations, variableMap) => {
+  console.log(variableMap);
   for (let token of tokens) {
     if (!token.ref?.current) continue;
 
@@ -76,11 +77,14 @@ const allowedAnnotations = (annotations, variableMap) => {
   if (annotations && variableMap) {
     annotations = { ...annotations };
     for (let variable of Object.keys(annotations)) {
-      if (!variableMap[variable]) continue;
+      if (!variableMap[variable]) {
+        delete annotations[variable];
+        continue;
+      }
       const codeMap = variableMap[variable].codeMap;
       const code = annotations[variable].value;
       if (!codeMap[code] || !codeMap[code].active || !codeMap[code].activeParent)
-        delete annotations[code];
+        delete annotations[variable];
     }
   }
   return annotations;
@@ -91,8 +95,13 @@ const annotateToken = (token, annotations, variableMap) => {
   let nLeft = 0;
   let nRight = 0;
   const colors = { pre: [], text: [], post: [] };
-  for (let variable of Object.keys(annotations)) {
-    if (!variableMap[variable]) continue;
+  for (let variable of Object.keys(variableMap)) {
+    if (!annotations[variable]) {
+      colors.text.push("#ffffff50");
+      colors.pre.push("#ffffff50");
+      colors.post.push("#ffffff50");
+      continue;
+    }
     const codeMap = variableMap[variable].codeMap;
     const code = annotations[variable];
     const color = getColor(code.value, codeMap);
@@ -180,18 +189,21 @@ const AnnotationPopup = ({ tokens, currentToken, annotations, variableMap, fullS
       style={{ margin: "0", padding: "0", border: "1px solid" }}
     >
       <List>
-        {variables.map((variable, i) => (
-          <List.Item
-            key={i}
-            style={{
-              backgroundColor: getColor(codes[i], variableMap[variable].codeMap),
-              padding: "0.3em",
-            }}
-          >
-            <b>{variable}</b>
-            {": " + codes[i]}
-          </List.Item>
-        ))}
+        {variables.map((variable, i) => {
+          if (!variableMap[variable]) return null;
+          return (
+            <List.Item
+              key={i}
+              style={{
+                backgroundColor: getColor(codes[i], variableMap[variable].codeMap),
+                padding: "0.3em",
+              }}
+            >
+              <b>{variable}</b>
+              {": " + codes[i]}
+            </List.Item>
+          );
+        })}
       </List>
     </Popup>
   );

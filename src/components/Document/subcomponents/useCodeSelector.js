@@ -9,7 +9,7 @@ const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 const useCodeSelector = (
   tokens,
   variables,
-  settings,
+  selectedVariable,
   annotations,
   setAnnotations,
   fullScreenNode
@@ -20,10 +20,13 @@ const useCodeSelector = (
   const [variable, setVariable] = useState(null);
   const [tokenRef, setTokenRef] = useState(null);
   const [tokenAnnotations, setTokenAnnotations] = useState({});
-  const [variableMap, setVariableMap] = useState(null);
   const [codeHistory, setCodeHistory] = useState([]);
 
+  const [fullVariableMap, setFullVariableMap] = useState(null);
+  const [variableMap, setVariableMap] = useState(null);
+
   useEffect(() => {
+    // creates fullVariableMap
     if (!variables || variables.length === 0) return null;
     const vm = {};
     for (let variable of variables) {
@@ -35,9 +38,21 @@ const useCodeSelector = (
       }, {});
       vm[variable.name] = { ...variable, codeMap: cm };
     }
-    setVariableMap(vm);
+    setFullVariableMap(vm);
     setCodeHistory([]);
-  }, [variables, setVariableMap, setCodeHistory]);
+  }, [variables, setFullVariableMap, setCodeHistory]);
+
+  useEffect(() => {
+    // creates the actually used variableMap from the fullVariableMap
+    // this lets us select specific variables without recreating full map
+    if (fullVariableMap === null) return;
+    if (selectedVariable === null || selectedVariable === "ALL") {
+      setVariableMap(fullVariableMap);
+    } else {
+      setVariableMap({ [selectedVariable]: fullVariableMap[selectedVariable] });
+      setVariable(selectedVariable);
+    }
+  }, [fullVariableMap, selectedVariable, setVariable, setVariableMap]);
 
   useEffect(() => {
     setOpen(false);
@@ -138,10 +153,12 @@ const CodeSelectorPopup = ({
         {!variable ? (
           <b>Select variable</b>
         ) : current === "UNASSIGNED" ? (
-          <b>Create new code</b>
+          <>
+            Select <b>{variable}</b>{" "}
+          </>
         ) : (
           <>
-            Edit <b>{variable}</b>
+            Select <b>{variable}</b> <font style={{ color: "red" }}>!! overwrites current !!</font>
           </>
         )}
         <Button
