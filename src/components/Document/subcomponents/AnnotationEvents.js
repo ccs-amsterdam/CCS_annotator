@@ -121,8 +121,7 @@ const KeyEvents = ({
     if (event.keyCode === 32 && HoldSpace) {
       setHoldSpace(false);
       if (tokenSelection.length > 0) {
-        const code = tokenSelection[0] === tokenSelection[1] ? null : "UNASSIGNED";
-        annotationFromSelection(tokens, tokenSelection, code, triggerCodePopup);
+        annotationFromSelection(tokens, tokenSelection, triggerCodePopup);
       }
       return;
     }
@@ -209,14 +208,9 @@ const MouseEvents = ({
       setTokenSelection((state) => updateSelection(state, tokens, currentNode, true));
 
       if (token?.annotated && currentNode === tokenSelection[0]) {
-        annotationFromSelection(tokens, [currentNode, currentNode], null, triggerCodePopup);
+        annotationFromSelection(tokens, [currentNode, currentNode], triggerCodePopup);
       } else {
-        annotationFromSelection(
-          tokens,
-          [tokenSelection[0], currentNode],
-          "UNASSIGNED",
-          triggerCodePopup
-        );
+        annotationFromSelection(tokens, [tokenSelection[0], currentNode], triggerCodePopup);
       }
       tapped.current = null;
       return;
@@ -276,14 +270,13 @@ const MouseEvents = ({
     // yet updated within this scope. This results in single clicks (without mousemove)
     // not registering. So if there is no current selection, directly use currentNode as position.
     if (tokenSelection.length > 0 && tokenSelection[0] !== null && tokenSelection[1] !== null) {
-      annotationFromSelection(tokens, tokenSelection, "UNASSIGNED", triggerCodePopup);
+      annotationFromSelection(tokens, tokenSelection, triggerCodePopup);
     } else {
       if (currentNode !== null) {
         annotationFromSelection(
           tokens,
           [currentNode, currentNode],
 
-          null,
           triggerCodePopup
         );
       }
@@ -309,7 +302,7 @@ const MouseEvents = ({
   return <></>;
 };
 
-const annotationFromSelection = (tokens, selection, code, triggerCodePopup) => {
+const annotationFromSelection = (tokens, selection, triggerCodePopup) => {
   let [from, to] = selection;
   if (from > to) [from, to] = [to, from];
 
@@ -320,7 +313,7 @@ const annotationFromSelection = (tokens, selection, code, triggerCodePopup) => {
     section: tokens[from].section,
     offset: tokens[from].offset,
   };
-  triggerCodePopup(tokens[to].index, code, annotation);
+  triggerCodePopup(tokens[to].index, annotation);
 };
 
 const movePosition = (tokens, key, mover, space, setCurrentToken, setTokenSelection) => {

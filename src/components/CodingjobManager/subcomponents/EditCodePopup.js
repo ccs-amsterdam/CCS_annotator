@@ -71,18 +71,19 @@ const EditCodePopup = ({ codeMap, code, codes, setCodes, toggleActiveCode, setCh
 
   const changeColorPopup = () => {
     if (!code.code && code.active == null) return null;
+
     return (
       <Button
         size="mini"
         as={"Input"}
         style={{
           ...buttonStyle,
-
-          color: code.color ? code.color : "white",
+          padding: "10px 0px",
+          background: code.color || "white",
         }}
-        onChange={(e) => setChangeColor({ code: code.code, color: e.target.value })}
+        onInput={(e) => setChangeColor({ code: code.code, color: e.target.value })}
         type="color"
-        value={code.color}
+        value={code.color || "white"}
       />
     );
   };

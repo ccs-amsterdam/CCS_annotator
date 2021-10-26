@@ -20,7 +20,6 @@ const defaultTaskSettings = {
         name: "Variable name",
         buttonMode: "all",
         searchBox: false,
-        rowSize: 5,
         codes: ["Some", "example", "options"],
       },
     ],

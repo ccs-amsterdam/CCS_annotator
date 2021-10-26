@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { Input, Form, Radio, Icon, Checkbox } from "semantic-ui-react";
+import { Form, Radio, Icon, Checkbox } from "semantic-ui-react";
 
 import CodesEditor from "./CodesEditor";
 import { standardizeCodes } from "util/codebook";
@@ -12,7 +12,6 @@ const variableDefaultSettings = {
   name: "Variable name",
   buttonMode: "all",
   searchBox: false,
-  rowSize: 5,
   codes: ["No", "Skip", "Yes"],
 };
 
@@ -117,20 +116,7 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
         </Form.Field>
       </Form.Group>
 
-      <Form.Group>
-        <Form.Field>
-          <Input
-            size="mini"
-            min={1}
-            max={10}
-            value={annotateForm.rowSize}
-            type="number"
-            style={{ width: "6em" }}
-            label={"Buttons per row"}
-            onChange={(e, d) => setAnnotateForm({ ...annotateForm, rowSize: d.value })}
-          />
-        </Form.Field>
-      </Form.Group>
+      <br />
       <div style={{ overflow: "auto" }}>{codesEditor()}</div>
     </Form>
   );
