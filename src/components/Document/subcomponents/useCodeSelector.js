@@ -49,6 +49,7 @@ const useCodeSelector = (
     if (fullVariableMap === null) return;
     if (selectedVariable === null || selectedVariable === "ALL") {
       setVariableMap(fullVariableMap);
+      setVariable(null);
     } else {
       setVariableMap({ [selectedVariable]: fullVariableMap[selectedVariable] });
       setVariable(selectedVariable);
