@@ -1,7 +1,5 @@
 import React, { useRef } from "react";
-import { useDispatch } from "react-redux";
 import { Ref, Table } from "semantic-ui-react";
-import { triggerCodeselector } from "actions";
 import { getColor } from "util/tokenDesign";
 import { importSpanAnnotations } from "util/annotations";
 import "components/Document/subcomponents/spanAnnotationsStyle.css";
@@ -94,7 +92,6 @@ const annotationRows = (tokens, variableMap, annotations) => {
 
 const AnnotationRow = ({ tokens, variable, variableMap, annotation, text, offset }) => {
   const ref = useRef();
-  const dispatch = useDispatch();
 
   if (!variableMap) return null;
 
@@ -106,18 +103,7 @@ const AnnotationRow = ({ tokens, variable, variableMap, annotation, text, offset
 
   return (
     <Ref innerRef={ref}>
-      <Table.Row
-        className="annotations-tr"
-        onClick={() => {
-          tokens[annotation.index + offset].ref.current.scrollIntoView(false, { block: "center" });
-          dispatch(triggerCodeselector(null, null, null, null));
-          dispatch(triggerCodeselector("menu", "token", annotation.index, annotation.value));
-        }}
-        onMouseOver={() => {
-          //dispatch(setTokenSelection(token.span));
-          //tokens[token.index].ref.current.scrollIntoView(false);
-        }}
-      >
+      <Table.Row className="annotations-tr">
         <Table.Cell width={COLWIDTHS[0]}>
           <span title={variable}>{variable}</span>
         </Table.Cell>

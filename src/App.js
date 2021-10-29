@@ -2,10 +2,6 @@ import React from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import HeaderMenu from "components/HeaderMenu/HeaderMenu";
 
-// login and authenticated route
-import Welcome from "components/routing/Welcome";
-import AuthRoute from "components/routing/AuthRoute";
-
 // Main pages. Use below in items to include in header menu
 import CodingjobManager from "components/CodingjobManager/CodingjobManager";
 import Annotator from "components/Annotator/Annotator";
@@ -27,27 +23,20 @@ const items = [
   },
 ];
 
-const App = () => {
-  const createNavigation = (items) => {
-    return items.map((item) => {
-      return (
-        <AuthRoute
-          key={item.path}
-          path={item.path}
-          homepage={homepage}
-          Component={item.Component}
-        />
-      );
-    });
-  };
+const createRoutes = (items) => {
+  return items.map((item) => {
+    return <Route exact path={item.path} render={() => <item.Component />} />;
+  });
+};
 
+const App = () => {
   return (
     <BrowserRouter>
       <HeaderMenu items={items} homepage={homepage}>
         <Switch>
-          <Route exact path={homepage} render={() => <Welcome />} />
-          {createNavigation(items)}
-          <Route exact path={"/"} render={() => <Welcome />} />
+          <Route exact path={homepage} render={() => <CodingjobManager />} />
+          {createRoutes(items)}
+          <Route exact path={"/"} render={() => <CodingjobManager />} />
         </Switch>
       </HeaderMenu>
     </BrowserRouter>

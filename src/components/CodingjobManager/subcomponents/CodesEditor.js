@@ -286,7 +286,11 @@ const PlainTextEditor = ({ codes, codeTreeArray, setCodes }) => {
       open={open}
       style={{ width: "700px", maxWidth: "100%", overflowX: "auto", padding: "0.3em" }}
       trigger={
-        <Button fluid onClick={() => setOpen(true)} style={{ padding: "0.3em 1em" }}>
+        <Button
+          fluid
+          onClick={() => setOpen(true)}
+          style={{ padding: "0.3em 1em", borderRadius: "0" }}
+        >
           Plain text editor
         </Button>
       }

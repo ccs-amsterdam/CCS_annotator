@@ -1,39 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router";
 
-import db from "apis/dexie";
 import AnnotatorScreen from "components/Annotator/AnnotatorScreen";
 import { JobServerRemote, JobServerLocal } from "components/Annotator/JobServerClass";
+import { useCookies } from "react-cookie";
 
 const Annotator = () => {
   const location = useLocation();
   const [jobServer, setJobServer] = useState(null);
+  const [cookies] = useCookies(["user"]);
 
   useEffect(() => {
     if (location.search) {
       const queries = parseQueryString(location);
-      if (queries?.url) createRemoteJobServer(queries.url, setJobServer);
-      if (queries?.id) createLocalJobServer(queries.id, setJobServer);
+      if (queries?.url) createRemoteJobServer(queries.url, cookies, setJobServer);
+      if (queries?.id) createLocalJobServer(queries.id, cookies, setJobServer);
     } else {
       setJobServer(null);
     }
-  }, [location, setJobServer]);
+  }, [location, cookies, setJobServer]);
 
   //if (!JobServer) return <TaskSelector />;
   if (!jobServer) return null;
   return <AnnotatorScreen jobServer={jobServer} />;
 };
 
-const createLocalJobServer = async (id, setJobServer) => {
-  const user = await db.idb.user.get(1);
-  const us = new JobServerLocal(id, user.name);
+const createLocalJobServer = async (id, cookies, setJobServer) => {
+  const us = new JobServerLocal(id, cookies.name);
   await us.init();
   setJobServer(us);
 };
 
-const createRemoteJobServer = async (url, setJobServer) => {
-  const user = await db.idb.user.get(1);
-  const us = new JobServerRemote(url, user.name);
+const createRemoteJobServer = async (url, cookies, setJobServer) => {
+  const us = new JobServerRemote(url, cookies.name);
   await us.init();
   setJobServer(us);
 };

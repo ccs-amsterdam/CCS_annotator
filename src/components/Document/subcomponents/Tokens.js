@@ -103,7 +103,12 @@ const renderText = (tokens) => {
 
 const renderSection = (paragraph_nr, paragraphs, section) => {
   const fontstyle = (paragraphs) => {
-    if (section === "title") return <h4 key={section + paragraph_nr}>{paragraphs}</h4>;
+    if (section === "title")
+      return (
+        <p style={{ fontSize: "1.2em", fontWeight: "bold" }} key={section + paragraph_nr}>
+          {paragraphs}
+        </p>
+      );
     return paragraphs;
   };
 

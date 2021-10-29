@@ -5,6 +5,8 @@ import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router";
 import { Button, Grid, Header, Popup, TextArea } from "semantic-ui-react";
 import QRCode from "qrcode.react";
+import { useCookies } from "react-cookie";
+import newAmcatSession from "apis/amcat";
 
 const homepage = "/amcat4annotator";
 
@@ -127,13 +129,14 @@ const resultsTableColumns = [
 
 const ResultsTable = ({ jobKey }) => {
   const [annotations, setAnnotations] = useState([]);
-  const amcat = useLiveQuery(() => db.amcatSession());
+  const [cookies] = useCookies(["user"]);
 
   useEffect(() => {
     if (!jobKey) return null;
+    const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.email, cookies.amcat.token);
     setAnnotations([]);
     getResultUrl(jobKey, amcat, setAnnotations);
-  }, [jobKey, amcat, setAnnotations]);
+  }, [jobKey, cookies, setAnnotations]);
 
   return <SelectionTable columns={resultsTableColumns} data={annotations} />;
 };

@@ -9,8 +9,9 @@ import db from "apis/dexie";
 import { drawRandom } from "util/sample";
 import { standardizeUnits } from "util/standardizeUnits";
 import { getCodebook } from "util/codebook";
-import { useLiveQuery } from "dexie-react-hooks";
 import DeployedJobs from "./subcomponents/DeployedJobs";
+import { useCookies } from "react-cookie";
+import newAmcatSession from "apis/amcat";
 
 const DeployCodingjob = ({ codingjob }) => {
   const [codingjobPackage, setCodingjobPackage] = useState(null);
@@ -129,25 +130,27 @@ const DownloadButton = ({ codingjobPackage }) => {
 };
 
 const AmcatDeploy = ({ codingjobPackage }) => {
+  const [, , removeCookie] = useCookies(["user"]);
   const [title, setTitle] = useState("");
-  const amcat = useLiveQuery(() => db.amcatSession());
+  const [cookies] = useCookies(["user"]);
 
   useEffect(() => {
     if (codingjobPackage?.title) setTitle(codingjobPackage.title);
   }, [codingjobPackage]);
 
   const deploy = async () => {
+    const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.email, cookies.amcat.token);
     try {
       const id = await amcat.postCodingjob(codingjobPackage, title);
       const url = `${amcat.host}/codingjob/${id.data.id}`;
       db.createDeployedJob(title, url);
     } catch (e) {
       console.log(e);
-      db.resetAmcatAuth();
+      removeCookie("amcat");
     }
   };
 
-  if (!amcat) return <p>You need to log in to AmCAT first. (see top-right in the menu)</p>;
+  if (!cookies.amcat) return <p>You need to log in to AmCAT first. (see top-right in the menu)</p>;
 
   return (
     <div>

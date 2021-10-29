@@ -117,7 +117,7 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
       </Form.Group>
 
       <br />
-      <div style={{ overflow: "auto" }}>{codesEditor()}</div>
+      <div style={{ overflow: "auto", margin: "-1em" }}>{codesEditor()}</div>
     </Form>
   );
 };

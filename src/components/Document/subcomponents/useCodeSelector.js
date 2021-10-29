@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, Dropdown, Grid, Popup, Ref } from "semantic-ui-react";
-import { toggleSpanAnnotations } from "util/annotations";
+import { toggleSpanAnnotation } from "util/annotations";
 import { codeBookEdgesToMap } from "util/codebook";
 import { getColor } from "util/tokenDesign";
 import { moveDown, moveUp } from "util/refNavigation";
@@ -162,7 +162,7 @@ const CodeSelectorPopup = ({
           <b>Select variable</b>
         ) : (
           <>
-            Select <b>{variable}</b>{" "}
+            <b>{variable}</b>{" "}
           </>
         )}
         <Button
@@ -193,14 +193,16 @@ const SelectVariablePage = ({
   variableMap,
 }) => {
   const setValue = (value) => {
-    const current = [];
+    const current = new Set();
     for (let i = selection.span[0]; i <= selection.span[1]; i++) {
       if (annotations?.[i]?.[value]) {
-        current.push(annotations?.[i]?.[value].value);
+        const annId = annotations?.[i]?.[value].span[0] + "_" + annotations?.[i]?.[value].value;
+        current.add(annId);
       }
     }
-    if (current.length > 0) {
-      setOverwrites(current);
+
+    if (current.size > 0) {
+      setOverwrites(Array.from(current));
     } else {
       setOverwrites([]);
     }
@@ -550,36 +552,17 @@ const updateAnnotations = (
     return null;
   }
 
-  let ann;
-  // if (annotations[variable]) {
-  //   ann = { ...annotations[variable] };
-  // } else {
-  //   ann = { ...selection };
-  // }
-  ann = { ...selection };
-  ann.variable = variable;
-
-  let oldAnnotation = { ...ann };
-  oldAnnotation.span = [oldAnnotation.index, oldAnnotation.index];
-
+  let rmAnnotation = { ...selection, variable };
   if (deleteCurrent) {
-    setAnnotations((state) => toggleSpanAnnotations({ ...state }, [oldAnnotation], true));
+    setAnnotations((state) => toggleSpanAnnotation({ ...state }, rmAnnotation, true));
     setOpen(false);
     return null;
   }
 
-  let newAnnotations = [];
-  for (let i = ann.span[0]; i <= ann.span[1]; i++) {
-    let newAnnotation = { ...ann };
-    newAnnotation.variable = variable;
-    newAnnotation.value = value;
-    newAnnotation.index = i;
-    newAnnotations.push(newAnnotation);
-  }
-
+  let newAnnotation = { ...selection, variable, value };
   setAnnotations((state) => {
-    const newstate = toggleSpanAnnotations({ ...state }, [oldAnnotation], true);
-    return toggleSpanAnnotations(newstate, newAnnotations, false);
+    const newstate = toggleSpanAnnotation({ ...state }, rmAnnotation, true);
+    return toggleSpanAnnotation(newstate, newAnnotation, false);
   });
   setCodeHistory((state) => [value, ...state.filter((v) => v !== value)].slice(0, 5));
   setOpen(false);

@@ -172,7 +172,7 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, questions, unitSe
       </Form.Group> */}
       <br />
       <AnnotinderEditor questionForm={questionForm} setQuestionForm={setQuestionForm} />
-      {codesEditor()}
+      <div style={{ margin: "-1em" }}>{codesEditor()}</div>
     </Form>
   );
 };

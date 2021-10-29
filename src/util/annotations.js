@@ -49,7 +49,11 @@ export const importSpanAnnotations = (annotationsArray, tokens, currentAnnotatio
     }
   }
 
-  return toggleSpanAnnotations(currentAnnotations, addAnnotations, false);
+  for (let ann of annArray) {
+    currentAnnotations = toggleSpanAnnotation(currentAnnotations, ann, false);
+  }
+
+  return currentAnnotations;
 };
 
 export const toggleAnnotation = (annotations, unit, index, group, annotation) => {
@@ -67,15 +71,19 @@ export const toggleAnnotation = (annotations, unit, index, group, annotation) =>
   return annotations;
 };
 
-export const toggleSpanAnnotations = (annotations, annList, rm) => {
+export const toggleSpanAnnotation = (annotations, newAnnotation, rm) => {
+  console.log(newAnnotation);
   // Add span annotations in a way that prevents double assignments of the same group to a token
 
-  for (let a of annList) {
+  for (let index = newAnnotation.span[0]; index <= newAnnotation.span[1]; index++) {
+    let a = newAnnotation;
+
     // if group in annotations, remove it
-    if (annotations[a.index]) {
-      if (annotations[a.index][a.variable]) {
-        const span = annotations[a.index][a.variable].span;
+    if (annotations[index]) {
+      if (annotations[index][a.variable]) {
+        const span = annotations[index][a.variable].span;
         for (let i = span[0]; i <= span[1]; i++) {
+          console.log(i);
           if (annotations[i]) {
             if (annotations[i][a.variable]) {
               delete annotations[i][a.variable];
@@ -89,9 +97,9 @@ export const toggleSpanAnnotations = (annotations, annList, rm) => {
     }
 
     if (!rm) {
-      if (!annotations[a.index]) annotations[a.index] = {};
-      annotations[a.index][a.variable] = {
-        index: a.index,
+      if (!annotations[index]) annotations[index] = {};
+      annotations[index][a.variable] = {
+        index: index,
         span: [a.span[0], a.span[1]],
         length: a.length,
         value: a.value,

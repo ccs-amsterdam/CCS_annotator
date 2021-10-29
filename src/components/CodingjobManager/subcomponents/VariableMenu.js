@@ -59,7 +59,7 @@ const VariableMenu = ({
           setIndex={setIndex}
         />
       </Menu>
-      <Segment attached="bottom">
+      <Segment attached="bottom" style={{ padding: "1em" }}>
         <br />
         <ChangeName variables={variables} setVariables={setVariables} index={index} />
         {children}

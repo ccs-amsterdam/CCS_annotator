@@ -1,19 +1,15 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { resetDB } from "actions";
 import { Menu, Button, Header, Icon, Modal } from "semantic-ui-react";
 import { useHistory } from "react-router-dom";
 import db from "apis/dexie";
 
 const Reset = ({ homepage }) => {
-  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const history = useHistory();
 
   const onClick = async () => {
     try {
       await db.deleteDB();
-      dispatch(resetDB());
       setOpen(false);
       history.push(homepage);
     } catch (e) {

@@ -1,12 +1,10 @@
 import Dexie from "dexie";
 import hash from "object-hash";
-import newAmcatSession from "./amcat";
 
 import { prepareDocumentBatch } from "util/createDocuments";
 
 const dbName = "CSSannotator_V1";
 const idbStores = {
-  user: "++id, name", // other fields: 'id'
   codingjobs: "job_id, name", // unindexed fields: jobcreator, codingscheme, codebook, codebookEdit, returnAddress
   documents: "doc_uid, job_id", // unindexed fields: title, text, meta, tokens, annotations
   tasks: "[title+url], last_modified, url", // unindexed fields:  codebook, items
@@ -21,8 +19,8 @@ class AnnotationDB {
     this.idb = new Dexie(dbName);
 
     //for testing, clean db on refresh
-    //this.idb.delete();
-    //this.idb = new Dexie(dbName);
+    // this.idb.delete();
+    // this.idb = new Dexie(dbName);
     try {
       this.idb.version(2).stores(idbStores);
     } catch (e) {
@@ -32,28 +30,6 @@ class AnnotationDB {
       this.idb = new Dexie(dbName);
       this.idb.version(2).stores(idbStores);
     }
-  }
-
-  // USER
-  async firstLogin(name) {
-    if (await this.newUser()) {
-      this.idb.user.add({ name });
-    }
-    return null;
-  }
-  async newUser() {
-    return (await this.idb.user.toArray()).length === 0;
-  }
-  async setAmcatAuth(host, email, token) {
-    return await this.idb.user.where("id").equals(1).modify({ amcat: { host, email, token } });
-  }
-  async resetAmcatAuth() {
-    return await this.idb.user.where("id").equals(1).modify({ amcat: undefined });
-  }
-  async amcatSession() {
-    const user = await this.idb.user.get(1);
-    if (user?.amcat) return newAmcatSession(user.amcat.host, user.amcat.email, user.amcat.token);
-    return null;
   }
 
   // CODINGJOBS

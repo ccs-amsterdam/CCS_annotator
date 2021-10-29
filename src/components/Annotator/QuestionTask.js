@@ -3,7 +3,9 @@ import QuestionForm from "./subcomponents/QuestionForm";
 import Document from "components/Document/Document";
 import { useSwipeable } from "react-swipeable";
 import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
-import { Icon } from "semantic-ui-react";
+import { Form, Icon, Input, Popup } from "semantic-ui-react";
+import { useCookies } from "react-cookie";
+import { useSelector } from "react-redux";
 
 const documentSettings = {
   centerVertical: true,
@@ -15,10 +17,15 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
   const [questions, setQuestions] = useState(null);
   const refs = { text: useRef(), box: useRef(), code: useRef() };
   const [textReady, setTextReady] = useState(0);
-  const [splitHeight, setSplitHeight] = useState(60);
+  const [cookies, setCookie] = useCookies(["user"]);
+  const [settings, setSettings] = useState(
+    cookies.questionTaskSettings || { splitHeight: 60, textSize: 1 }
+  );
   const divref = useRef(null);
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    setCookie("questionTaskSettings", JSON.stringify(settings));
+  }, [settings, setCookie]);
 
   useEffect(() => {
     if (!codebook?.questions) return;
@@ -53,7 +60,11 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
     <div ref={divref} style={{ height: "100%" }}>
       <div
         {...textSwipe}
-        style={{ position: "relative", border: "1px solid", height: `${splitHeight}%` }}
+        style={{
+          position: "relative",
+          border: "1px solid",
+          height: `${settings.splitHeight}%`,
+        }}
       >
         <div
           ref={refs.box}
@@ -78,6 +89,7 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
               top: "0",
               backgroundColor: "white",
               overflow: "hidden",
+              fontSize: `${settings.textSize}em`,
             }}
           >
             <Document
@@ -88,9 +100,9 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
             />
           </div>
         </div>
-        <MoveSplit setSplitHeight={setSplitHeight} />
+        <SettingsPopup settings={settings} setSettings={setSettings} />
       </div>
-      <div {...menuSwipe} style={{ height: `${100 - splitHeight}%` }}>
+      <div {...menuSwipe} style={{ height: `${100 - settings.splitHeight}%` }}>
         <QuestionForm
           unit={unit}
           tokens={tokens}
@@ -106,40 +118,61 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
   );
 };
 
-const MoveSplit = ({ setSplitHeight }) => {
-  const onSplitUp = () => setSplitHeight((state) => Math.max(20, state - 10));
-  const onSplitDown = () => setSplitHeight((state) => Math.min(80, state + 10));
+const SettingsPopup = ({ settings, setSettings }) => {
+  const fullScreenNode = useSelector((state) => state.fullScreenNode);
+  console.log(fullScreenNode);
   return (
-    <>
-      <Icon
-        name="arrow up"
-        onClick={onSplitUp}
-        style={{
-          color: "grey",
-          cursor: "pointer",
-          position: "absolute",
-          bottom: "30px",
-          left: "0px",
-          height: "30px",
-          width: "20px",
-          padding: "5px 5px",
-        }}
-      />
-      <Icon
-        name="arrow down"
-        onClick={onSplitDown}
-        style={{
-          color: "grey",
-          cursor: "pointer",
-          position: "absolute",
-          bottom: "0px",
-          left: "0px",
-          height: "30px",
-          width: "20px",
-          padding: "5px 5px",
-        }}
-      />
-    </>
+    <Popup
+      on="click"
+      mountNode={fullScreenNode || undefined}
+      trigger={
+        <Icon
+          name="setting"
+          style={{
+            position: "absolute",
+            cursor: "pointer",
+            top: "0px",
+            left: "0px",
+            color: "grey",
+            padding: "5px 3px",
+            height: "30px",
+          }}
+        />
+      }
+    >
+      <Form>
+        <Form.Group grouped>
+          <Form.Field>
+            <label>
+              text window size <font style={{ color: "blue" }}>{`${settings.splitHeight}%`}</font>
+            </label>
+            <Input
+              size="mini"
+              step={2}
+              min={20}
+              max={80}
+              type="range"
+              value={settings.splitHeight}
+              onChange={(e, d) => setSettings((state) => ({ ...state, splitHeight: d.value }))}
+            />
+          </Form.Field>
+          <Form.Field>
+            <label>
+              text size scaling <font style={{ color: "blue" }}>{`${settings.textSize}`}</font>
+            </label>
+            <Input
+              size="mini"
+              step={0.025}
+              min={0.4}
+              max={1.2}
+              type="range"
+              value={settings.textSize}
+              onChange={(e, d) => setSettings((state) => ({ ...state, textSize: d.value }))}
+            />
+          </Form.Field>
+        </Form.Group>
+      </Form>
+    </Popup>
   );
 };
 
@@ -237,7 +270,7 @@ const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 150) =
 
       if (Math.abs(deltaX) < triggerdist && Math.abs(deltaY) < triggerdist) {
         refs.text.current.style.transform = `translateX(0%) translateY(0%)`;
-        refs.box.current.style.backgroundColor = "white";
+        //refs.box.current.style.backgroundColor = "white";
       } else {
         refs.text.current.style.transform = `translateX(${
           deltaX > 0 ? 100 : deltaX < 0 ? -100 : 0

@@ -5,14 +5,17 @@ import App from "App";
 import { createStore } from "redux";
 import rootReducer from "reducers";
 import { Provider } from "react-redux";
+import { CookiesProvider } from "react-cookie";
 
 const store = createStore(rootReducer);
 
 ReactDOM.render(
   <React.StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
+    <CookiesProvider>
+      <Provider store={store}>
+        <App />
+      </Provider>
+    </CookiesProvider>
   </React.StrictMode>,
   document.querySelector("#root")
 );

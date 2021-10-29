@@ -84,7 +84,7 @@ const QuestionForm = ({
           height: "calc(100% - 30px)",
           width: "100%",
           maxHeight: "100%",
-          padding: "1em",
+          padding: "10px",
           color: "white",
           backgroundColor: "#1B1C1D",
         }}
