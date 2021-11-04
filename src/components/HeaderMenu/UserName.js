@@ -5,16 +5,17 @@ import { useCookies } from "react-cookie";
 const UserName = () => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [cookies, setCookies] = useCookies(["user"]);
+  const [cookies, setCookies] = useCookies(["name"]);
 
+  console.log(cookies);
   const storeName = () => {
     if (name.length < 5) return;
-    setCookies("name", name);
+    setCookies("name", name, { path: "/" });
     setOpen(false);
   };
 
   useEffect(() => {
-    setName(cookies.name);
+    if (cookies.name) setName(cookies.name);
   }, [cookies.name]);
 
   return (

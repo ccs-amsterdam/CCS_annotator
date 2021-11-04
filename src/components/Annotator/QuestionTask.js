@@ -17,14 +17,14 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
   const [questions, setQuestions] = useState(null);
   const refs = { text: useRef(), box: useRef(), code: useRef() };
   const [textReady, setTextReady] = useState(0);
-  const [cookies, setCookie] = useCookies(["user"]);
+  const [cookies, setCookie] = useCookies(["questionTaskSettings"]);
   const [settings, setSettings] = useState(
     cookies.questionTaskSettings || { splitHeight: 60, textSize: 1 }
   );
   const divref = useRef(null);
 
   useEffect(() => {
-    setCookie("questionTaskSettings", JSON.stringify(settings));
+    setCookie("questionTaskSettings", JSON.stringify(settings), { path: "/" });
   }, [settings, setCookie]);
 
   useEffect(() => {

@@ -8,7 +8,7 @@ import { useCookies } from "react-cookie";
 const Annotator = () => {
   const location = useLocation();
   const [jobServer, setJobServer] = useState(null);
-  const [cookies] = useCookies(["user"]);
+  const [cookies] = useCookies(["name"]);
 
   useEffect(() => {
     if (location.search) {

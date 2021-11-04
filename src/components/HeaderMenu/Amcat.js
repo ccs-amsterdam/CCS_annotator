@@ -5,7 +5,7 @@ import { useCookies } from "react-cookie";
 
 const Amcat = () => {
   const [open, setOpen] = useState(false);
-  const [cookies, setCookie] = useCookies(["user"]);
+  const [cookies, setCookie] = useCookies(["amcat"]);
   console.log(cookies);
 
   return (
@@ -44,7 +44,7 @@ const AmcatLogin = ({ setOpen, setCookie }) => {
       const token = await getToken(host, email, password);
       if (token) {
         console.log("test");
-        setCookie("amcat", JSON.stringify({ host, email, token }));
+        setCookie("amcat", JSON.stringify({ host, email, token }), { path: "/" });
         setStatus("success");
         setOpen(false);
       } else setStatus("error");

@@ -130,9 +130,8 @@ const DownloadButton = ({ codingjobPackage }) => {
 };
 
 const AmcatDeploy = ({ codingjobPackage }) => {
-  const [, , removeCookie] = useCookies(["user"]);
   const [title, setTitle] = useState("");
-  const [cookies] = useCookies(["user"]);
+  const [cookies, , removeCookie] = useCookies(["amcat"]);
 
   useEffect(() => {
     if (codingjobPackage?.title) setTitle(codingjobPackage.title);

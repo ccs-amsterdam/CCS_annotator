@@ -129,7 +129,7 @@ const resultsTableColumns = [
 
 const ResultsTable = ({ jobKey }) => {
   const [annotations, setAnnotations] = useState([]);
-  const [cookies] = useCookies(["user"]);
+  const [cookies] = useCookies(["amcat"]);
 
   useEffect(() => {
     if (!jobKey) return null;
