@@ -6,8 +6,6 @@ import { Button, Grid, Header } from "semantic-ui-react";
 import TaskTable from "./LocalJobTable";
 import JSZip from "jszip";
 
-const homepage = "/CCS_annotator";
-
 const LocalJobs = () => {
   const history = useHistory();
   const [jobKey, setJobKey] = useState(null);
@@ -39,7 +37,7 @@ const LocalJobs = () => {
 
   const setJobUrlQuery = async () => {
     // set task.url as url query to open job in annotator
-    history.push(homepage + "/annotator?id=" + jobKey.id);
+    history.push("/annotator?id=" + jobKey.id);
   };
 
   return (

@@ -3,7 +3,7 @@ import { Menu, Button, Header, Icon, Modal } from "semantic-ui-react";
 import { useHistory } from "react-router-dom";
 import db from "apis/dexie";
 
-const Reset = ({ homepage }) => {
+const Reset = () => {
   const [open, setOpen] = useState(false);
   const history = useHistory();
 
@@ -11,7 +11,7 @@ const Reset = ({ homepage }) => {
     try {
       await db.deleteDB();
       setOpen(false);
-      history.push(homepage);
+      history.push("/");
     } catch (e) {
       console.log(e);
     }

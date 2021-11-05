@@ -8,15 +8,13 @@ import QRCode from "qrcode.react";
 import { useCookies } from "react-cookie";
 import newAmcatSession from "apis/amcat";
 
-const homepage = "/CCS_annotator";
-
 const DeployedJobs = () => {
   const history = useHistory();
   const [jobKey, setJobKey] = useState(null);
 
   const setJobUrlQuery = async () => {
     // set task.url as url query to open job in annotator
-    history.push(homepage + "/annotator?url=" + jobKey.url);
+    history.push("/annotator?url=" + jobKey.url);
   };
 
   const linkAndQr = () => {
