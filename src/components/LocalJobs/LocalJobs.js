@@ -6,7 +6,7 @@ import { Button, Grid, Header } from "semantic-ui-react";
 import TaskTable from "./LocalJobTable";
 import JSZip from "jszip";
 
-const homepage = "/amcat4annotator";
+const homepage = "/CCS_annotator";
 
 const LocalJobs = () => {
   const history = useHistory();

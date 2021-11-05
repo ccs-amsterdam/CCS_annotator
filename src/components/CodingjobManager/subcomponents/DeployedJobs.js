@@ -8,7 +8,7 @@ import QRCode from "qrcode.react";
 import { useCookies } from "react-cookie";
 import newAmcatSession from "apis/amcat";
 
-const homepage = "/amcat4annotator";
+const homepage = "/CCS_annotator";
 
 const DeployedJobs = () => {
   const history = useHistory();
