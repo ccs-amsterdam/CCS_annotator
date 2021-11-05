@@ -16,7 +16,7 @@ const Annotator = () => {
       if (queries?.url) {
         // QR codes generated in CSS Manager replace colon with %colon%
         // cleaner solution would probably be url shorteners
-        queries.url.replace("%colon%", ":").replace("%25colon%25", ":");
+        queries.url = queries.url.replace("%colon%", ":").replace("%25colon%25", ":");
         createRemoteJobServer(queries.url, cookies, setJobServer);
       }
       if (queries?.id) createLocalJobServer(queries.id, cookies, setJobServer);
