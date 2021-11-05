@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route, Switch } from "react-router-dom";
+import { HashRouter, Route, Switch } from "react-router-dom";
 import HeaderMenu from "components/HeaderMenu/HeaderMenu";
 
 // Main pages. Use below in items to include in header menu
@@ -31,7 +31,7 @@ const createRoutes = (items) => {
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <HashRouter basename="/">
       <HeaderMenu items={items} homepage={homepage}>
         <Switch>
           <Route exact path={homepage} render={() => <CodingjobManager />} />
@@ -39,7 +39,7 @@ const App = () => {
           <Route exact path={"/"} render={() => <CodingjobManager />} />
         </Switch>
       </HeaderMenu>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 
