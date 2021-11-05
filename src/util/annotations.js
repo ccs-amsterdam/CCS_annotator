@@ -72,7 +72,6 @@ export const toggleAnnotation = (annotations, unit, index, group, annotation) =>
 };
 
 export const toggleSpanAnnotation = (annotations, newAnnotation, rm) => {
-  console.log(newAnnotation);
   // Add span annotations in a way that prevents double assignments of the same group to a token
 
   for (let index = newAnnotation.span[0]; index <= newAnnotation.span[1]; index++) {
@@ -83,7 +82,6 @@ export const toggleSpanAnnotation = (annotations, newAnnotation, rm) => {
       if (annotations[index][a.variable]) {
         const span = annotations[index][a.variable].span;
         for (let i = span[0]; i <= span[1]; i++) {
-          console.log(i);
           if (annotations[i]) {
             if (annotations[i][a.variable]) {
               delete annotations[i][a.variable];

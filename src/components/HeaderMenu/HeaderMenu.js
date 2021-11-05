@@ -10,7 +10,7 @@ import UserName from "./UserName";
 // This is the index file of HeaderMenu, but importing via index
 // breaks. Probably due to the withRouter()
 
-const HeaderMenu = ({ items, homepage, children }) => {
+const HeaderMenu = ({ items, children }) => {
   const location = useLocation();
   const menuItems = items.map((item, index) => {
     if (!item.menu) return null;
@@ -28,7 +28,7 @@ const HeaderMenu = ({ items, homepage, children }) => {
     );
   });
 
-  if (location.pathname === homepage + "/annotator") return children;
+  if (location.pathname === "/annotator") return children;
   return (
     <Sidebar.Pushable style={{ height: "100vh" }}>
       <Sidebar as={Menu} inverted animation="push" visible={true} direction={"top"} size="mini">
@@ -37,7 +37,7 @@ const HeaderMenu = ({ items, homepage, children }) => {
           <UserName />
           <Amcat />
           <Persist />
-          <Reset homepage={homepage} />
+          <Reset />
         </Menu.Menu>
       </Sidebar>
       <Sidebar.Pusher>{children}</Sidebar.Pusher>

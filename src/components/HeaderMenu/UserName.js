@@ -7,7 +7,6 @@ const UserName = () => {
   const [name, setName] = useState("");
   const [cookies, setCookies] = useCookies(["name"]);
 
-  console.log(cookies);
   const storeName = () => {
     if (name.length < 5) return;
     setCookies("name", name, { path: "/" });

@@ -9,15 +9,13 @@ import LocalJobs from "components/LocalJobs/LocalJobs";
 
 // Change to add new components to the header
 // The first item will be the opening page after login
-const homepage = "/CCS_annotator";
-
 // TODO: annotate, manage jobs, monitor jobs
 const items = [
-  { label: "Annotator", path: homepage + "/annotator", Component: Annotator, menu: false },
-  { label: "Jobs", path: homepage + "/jobs", Component: LocalJobs, menu: true },
+  { label: "Annotator", path: "/annotator", Component: Annotator, menu: false },
+  { label: "Jobs", path: "/jobs", Component: LocalJobs, menu: true },
   {
     label: "Codingjob manager",
-    path: homepage + "/manager",
+    path: "/manager",
     Component: CodingjobManager,
     menu: true,
   },
@@ -32,11 +30,10 @@ const createRoutes = (items) => {
 const App = () => {
   return (
     <HashRouter basename="/">
-      <HeaderMenu items={items} homepage={homepage}>
+      <HeaderMenu items={items}>
         <Switch>
-          <Route exact path={homepage} render={() => <CodingjobManager />} />
-          {createRoutes(items)}
           <Route exact path={"/"} render={() => <CodingjobManager />} />
+          {createRoutes(items)}
         </Switch>
       </HeaderMenu>
     </HashRouter>

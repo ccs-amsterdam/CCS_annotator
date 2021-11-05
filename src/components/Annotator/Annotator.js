@@ -11,6 +11,7 @@ const Annotator = () => {
   const [cookies] = useCookies(["name"]);
 
   useEffect(() => {
+    console.log(location);
     if (location.search) {
       const queries = parseQueryString(location);
       if (queries?.url) createRemoteJobServer(queries.url, cookies, setJobServer);

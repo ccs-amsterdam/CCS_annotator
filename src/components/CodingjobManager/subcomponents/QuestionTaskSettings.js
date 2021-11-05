@@ -84,7 +84,6 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, questions, unitSe
     let newWarn = [];
 
     const hasCodeRef = questionForm.question.search("\\[code\\]") >= 0;
-    console.log(unitSettings);
 
     if (hasCodeRef && unitSettings?.unitSelection === "allTextUnits")
       newWarn.push(

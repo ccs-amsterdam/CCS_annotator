@@ -124,8 +124,6 @@ const makeIrrelevant = (unit, annotations, makesIrrelevant, questionIndex) => {
     which.add(Number(value));
   }
 
-  console.log(which);
-
   for (let makeIrrelevant of which) {
     annotations[makeIrrelevant].value = "IRRELEVANT";
     unit.annotations = updateAnnotations(annotations[makeIrrelevant], unit.annotations);

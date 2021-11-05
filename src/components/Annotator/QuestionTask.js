@@ -120,7 +120,6 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
 
 const SettingsPopup = ({ settings, setSettings }) => {
   const fullScreenNode = useSelector((state) => state.fullScreenNode);
-  console.log(fullScreenNode);
   return (
     <Popup
       on="click"

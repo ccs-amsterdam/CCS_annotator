@@ -23,7 +23,6 @@ const LocalJobs = () => {
       };
     }
     if (type === "zip") {
-      console.log("test");
       let newZip = new JSZip();
       const zipped = await newZip.loadAsync(fileblob);
       zipped.forEach(async (relpath, file) => {

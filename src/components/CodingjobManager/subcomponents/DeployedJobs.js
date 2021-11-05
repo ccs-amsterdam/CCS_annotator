@@ -129,8 +129,6 @@ const ResultsTable = ({ jobKey }) => {
   const [annotations, setAnnotations] = useState([]);
   const [cookies] = useCookies(["amcat"]);
 
-  console.log(cookies);
-
   useEffect(() => {
     if (!jobKey) return null;
     if (!cookies.amcat) return null;
