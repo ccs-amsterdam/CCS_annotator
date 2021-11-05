@@ -1,6 +1,6 @@
 {
-  "name": "amcat4annotator",
-  "homepage": "http://kasperwelbers.com/",
+  "name": "CCS_annotator",
+  "homepage": "http://ccs-amsterdam.github.io/CCS_annotator",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
