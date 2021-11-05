@@ -19,7 +19,7 @@ const DeployedJobs = () => {
 
   const linkAndQr = () => {
     if (jobKey == null) return <div style={{ height: "6em" }} />;
-    const url = "http://ccs-amsterdam.github.io/CCS_annotator/annotator?url=" + jobKey?.url;
+    const url = "http://ccs-amsterdam.github.io/CCS_annotator/#/annotator?url=" + jobKey?.url;
     return (
       <div style={{ height: "6em" }}>
         <TextArea value={url} style={{ width: "100%", height: "4em", fontSize: "10px" }} />
