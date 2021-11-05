@@ -54,6 +54,7 @@ const Tokens = ({ tokens, centerVertical, setReady, height }) => {
 
 const renderText = (tokens) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
+  if (tokens.length === 0) return text;
 
   let section = [];
   let paragraph = [];

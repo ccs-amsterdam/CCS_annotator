@@ -11,6 +11,8 @@ export const SearchBoxDropdown = React.memo(({ options, callback, blockEvents })
     <Ref innerRef={ref}>
       <Dropdown
         fluid
+        scrolling
+        upward={false}
         placeholder={"<type to search>"}
         searchInput={{ autoFocus: !blockEvents }}
         style={{ minWidth: "12em" }}

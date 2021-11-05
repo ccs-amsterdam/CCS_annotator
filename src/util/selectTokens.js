@@ -1,5 +1,6 @@
 export const selectTokens = (tokens, item, contextUnit, contextWindow) => {
   let newTokens = [];
+  if (tokens.length === 0) return newTokens;
 
   let tokenRange = [0, tokens.length - 1];
   let tokenContext = [0, tokens.length - 1];

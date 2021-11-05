@@ -26,7 +26,7 @@ const DeployedJobs = () => {
       <div style={{ height: "6em" }}>
         <TextArea value={url} style={{ width: "100%", height: "4em", fontSize: "10px" }} />
         <Popup hoverable trigger={<Button>Show QR code</Button>}>
-          <QRCode value={encodeURI(url)} size={256} />
+          <QRCode value={encodeURI(url)} size={128} />
         </Popup>
       </div>
     );
@@ -103,12 +103,12 @@ const resultsTableColumns = [
   {
     Header: "document_id",
     accessor: "document_id",
-    headerClass: "one wide",
+    headerClass: "three wide",
   },
   {
     Header: "unit_id",
     accessor: "unit_id",
-    headerClass: "one wide",
+    headerClass: "two wide",
   },
   {
     Header: "Coder",
@@ -131,8 +131,11 @@ const ResultsTable = ({ jobKey }) => {
   const [annotations, setAnnotations] = useState([]);
   const [cookies] = useCookies(["amcat"]);
 
+  console.log(cookies);
+
   useEffect(() => {
     if (!jobKey) return null;
+    if (!cookies.amcat) return null;
     const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.email, cookies.amcat.token);
     setAnnotations([]);
     getResultUrl(jobKey, amcat, setAnnotations);
