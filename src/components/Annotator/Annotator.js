@@ -11,10 +11,14 @@ const Annotator = () => {
   const [cookies] = useCookies(["name"]);
 
   useEffect(() => {
-    console.log(location);
     if (location.search) {
       const queries = parseQueryString(location);
-      if (queries?.url) createRemoteJobServer(queries.url, cookies, setJobServer);
+      if (queries?.url) {
+        // QR codes generated in CSS Manager replace colon with %colon%
+        // cleaner solution would probably be url shorteners
+        queries.url.replace("%colon%", ":").replace("%25colon%25", ":");
+        createRemoteJobServer(queries.url, cookies, setJobServer);
+      }
       if (queries?.id) createLocalJobServer(queries.id, cookies, setJobServer);
     } else {
       setJobServer(null);

@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router";
 import { Button, Grid, Header, Popup, TextArea } from "semantic-ui-react";
-import QRCode from "qrcode.react";
+import QRCode from "react-qr-code";
 import { useCookies } from "react-cookie";
 import newAmcatSession from "apis/amcat";
 
@@ -19,12 +19,15 @@ const DeployedJobs = () => {
 
   const linkAndQr = () => {
     if (jobKey == null) return <div style={{ height: "6em" }} />;
-    const url = "http://ccs-amsterdam.github.io/CCS_annotator/#/annotator?url=" + jobKey?.url;
+    const url = "https://ccs-amsterdam.github.io/CCS_annotator/#/annotator?url=" + jobKey?.url;
+    const qrUrl =
+      "https://ccs-amsterdam.github.io/CCS_annotator/#/annotator?url=" +
+      jobKey?.url.replace(":", "%colon%");
     return (
       <div style={{ height: "6em" }}>
         <TextArea value={url} style={{ width: "100%", height: "4em", fontSize: "10px" }} />
         <Popup hoverable trigger={<Button>Show QR code</Button>}>
-          <QRCode value={encodeURI(url)} size={128} />
+          <QRCode value={encodeURI(qrUrl)} size={256} />
         </Popup>
       </div>
     );

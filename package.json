@@ -1,6 +1,6 @@
 {
   "name": "CCS_annotator",
-  "homepage": "http://ccs-amsterdam.github.io/CCS_annotator",
+  "homepage": "https://ccs-amsterdam.github.io/CCS_annotator",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -18,7 +18,6 @@
     "gh-pages": "^3.1.0",
     "jszip": "^3.7.1",
     "object-hash": "^2.1.1",
-    "qrcode.react": "^1.0.1",
     "query-string": "^7.0.0",
     "randomcolor": "^0.6.2",
     "react": "^17.0.1",
@@ -28,6 +27,7 @@
     "react-full-screen": "^1.1.0",
     "react-load-script": "0.0.6",
     "react-papaparse": "^3.11.1",
+    "react-qr-code": "^2.0.2",
     "react-redux": "^7.2.2",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
