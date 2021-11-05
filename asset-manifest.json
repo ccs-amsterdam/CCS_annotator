@@ -1,24 +1,24 @@
 {
   "files": {
-    "main.css": "/amcat4annotator/static/css/main.c156aedc.chunk.css",
-    "main.js": "/amcat4annotator/static/js/main.13932245.chunk.js",
-    "main.js.map": "/amcat4annotator/static/js/main.13932245.chunk.js.map",
-    "runtime-main.js": "/amcat4annotator/static/js/runtime-main.6e1fd0f6.js",
-    "runtime-main.js.map": "/amcat4annotator/static/js/runtime-main.6e1fd0f6.js.map",
-    "static/css/2.4153cdb0.chunk.css": "/amcat4annotator/static/css/2.4153cdb0.chunk.css",
-    "static/js/2.cf75fa4d.chunk.js": "/amcat4annotator/static/js/2.cf75fa4d.chunk.js",
-    "static/js/2.cf75fa4d.chunk.js.map": "/amcat4annotator/static/js/2.cf75fa4d.chunk.js.map",
-    "index.html": "/amcat4annotator/index.html",
-    "static/css/2.4153cdb0.chunk.css.map": "/amcat4annotator/static/css/2.4153cdb0.chunk.css.map",
-    "static/css/main.c156aedc.chunk.css.map": "/amcat4annotator/static/css/main.c156aedc.chunk.css.map",
-    "static/js/2.cf75fa4d.chunk.js.LICENSE.txt": "/amcat4annotator/static/js/2.cf75fa4d.chunk.js.LICENSE.txt",
-    "static/media/semantic.min.css": "/amcat4annotator/static/media/outline-icons.ddae9b1b.woff"
+    "main.css": "/CCS_annotator/static/css/main.37bb7336.chunk.css",
+    "main.js": "/CCS_annotator/static/js/main.02ca5160.chunk.js",
+    "main.js.map": "/CCS_annotator/static/js/main.02ca5160.chunk.js.map",
+    "runtime-main.js": "/CCS_annotator/static/js/runtime-main.49c2d899.js",
+    "runtime-main.js.map": "/CCS_annotator/static/js/runtime-main.49c2d899.js.map",
+    "static/css/2.1445d913.chunk.css": "/CCS_annotator/static/css/2.1445d913.chunk.css",
+    "static/js/2.95f515ea.chunk.js": "/CCS_annotator/static/js/2.95f515ea.chunk.js",
+    "static/js/2.95f515ea.chunk.js.map": "/CCS_annotator/static/js/2.95f515ea.chunk.js.map",
+    "index.html": "/CCS_annotator/index.html",
+    "static/css/2.1445d913.chunk.css.map": "/CCS_annotator/static/css/2.1445d913.chunk.css.map",
+    "static/css/main.37bb7336.chunk.css.map": "/CCS_annotator/static/css/main.37bb7336.chunk.css.map",
+    "static/js/2.95f515ea.chunk.js.LICENSE.txt": "/CCS_annotator/static/js/2.95f515ea.chunk.js.LICENSE.txt",
+    "static/media/semantic.min.css": "/CCS_annotator/static/media/outline-icons.ddae9b1b.woff"
   },
   "entrypoints": [
-    "static/js/runtime-main.6e1fd0f6.js",
-    "static/css/2.4153cdb0.chunk.css",
-    "static/js/2.cf75fa4d.chunk.js",
-    "static/css/main.c156aedc.chunk.css",
-    "static/js/main.13932245.chunk.js"
+    "static/js/runtime-main.49c2d899.js",
+    "static/css/2.1445d913.chunk.css",
+    "static/js/2.95f515ea.chunk.js",
+    "static/css/main.37bb7336.chunk.css",
+    "static/js/main.02ca5160.chunk.js"
   ]
 }
