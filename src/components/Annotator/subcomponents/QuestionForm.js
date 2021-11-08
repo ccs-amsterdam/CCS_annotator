@@ -38,8 +38,9 @@ const QuestionForm = ({
     answered.current = true;
 
     annotations[questionIndex].value = answer.code;
+    annotations[questionIndex].makes_irrelevant = answer.makes_irrelevant;
     unit.annotations = updateAnnotations(annotations[questionIndex], unit.annotations);
-    makeIrrelevant(unit, annotations, answer.makes_irrelevant, questionIndex);
+    processIrrelevantBranching(unit, annotations, answer.makes_irrelevant, questionIndex);
     unit.jobServer.postAnnotations(unit.unitId, unit.annotations);
 
     setAnswerTransition(answer); // show given answer
@@ -108,25 +109,33 @@ const QuestionForm = ({
   );
 };
 
-const makeIrrelevant = (unit, annotations, makesIrrelevant, questionIndex) => {
-  // if answer has makes_irrelevant, marks these annotations as irrelevant,
-  // and adds irrelevant annotatons to unit.annotations
-  // (doesn't return anything, but changes the objects)
-  console.log(makesIrrelevant);
-  if (makesIrrelevant == null || makesIrrelevant === null) return unit;
+const processIrrelevantBranching = (unit, annotations, makesIrrelevant, questionIndex) => {
+  // checks all the makesIrrelevant branching in the given answers
   const which = new Set();
-
-  for (let value of makesIrrelevant) {
-    if (value === "remaining") {
-      for (let i = questionIndex + 1; i < annotations.length; i++) which.add(i);
+  for (let a in Object.keys(unit.annotations)) {
+    const makesIrrelevant = unit.annotations[a].makes_irrelevant;
+    if (makesIrrelevant == null || makesIrrelevant === null) continue;
+    for (let value of makesIrrelevant) {
+      if (value === "remaining") {
+        for (let i = questionIndex + 1; i < annotations.length; i++) which.add(i);
+      }
+      if (isNaN(value)) continue;
+      which.add(Number(value));
     }
-    if (isNaN(value)) continue;
-    which.add(Number(value));
   }
 
-  for (let makeIrrelevant of which) {
-    annotations[makeIrrelevant].value = "IRRELEVANT";
-    unit.annotations = updateAnnotations(annotations[makeIrrelevant], unit.annotations);
+  for (let i = 0; i < annotations.length; i++) {
+    if (which.has(i)) {
+      // gives the value "IRRELEVANT" to targeted questions
+      annotations[i].value = "IRRELEVANT";
+      unit.annotations = updateAnnotations(annotations[i], unit.annotations);
+    } else {
+      // this happens if a coders goes back and changes all answers that marked a question as "IRRELEVANT"
+      if (annotations[i].value === "IRRELEVANT") {
+        delete annotations[i].value;
+        unit.annotations = updateAnnotations(annotations[i], unit.annotations);
+      }
+    }
   }
 };
 

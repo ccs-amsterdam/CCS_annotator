@@ -35,6 +35,7 @@ const Tokens = ({ tokens, centerVertical, setReady, height }) => {
     >
       <Ref innerRef={containerRef}>
         <div
+          className="TokensContainer"
           style={{
             flex: "1 97%",
             width: "100%",

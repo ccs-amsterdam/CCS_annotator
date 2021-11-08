@@ -205,7 +205,7 @@ const getOptions = (cta) => {
   return [options, swipeOptions];
 };
 
-const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 150) => {
+const swipeControl = (question, refs, setSwipe, alwaysDoVertical, triggerdist = 150) => {
   if (!question) return {};
   if (question.type !== "annotinder") return {};
   const transitionTime = 200;
@@ -224,7 +224,15 @@ const swipeControl = (question, refs, setSwipe, doVertical, triggerdist = 150) =
     let deltaY = d.deltaY;
     if (Math.abs(deltaX) > Math.abs(deltaY) + 10) deltaY = 0;
     if (Math.abs(deltaX) < Math.abs(deltaY) + 10) deltaX = 0;
-    if (!doVertical) deltaY = 0;
+    if (!alwaysDoVertical) {
+      // the bottom menu always allows vertical upward swipe, but for the
+      // text div we only allow swiping up if scrolled all the way to bottom
+
+      // get the tokensContainer
+      const el = refs.text.current.getElementsByClassName("TokensContainer")[0];
+      const bottom = el.scrollHeight - Math.ceil(el.scrollTop) === el.clientHeight;
+      if (!bottom) deltaY = 0;
+    }
     return [deltaX, deltaY];
   };
 
