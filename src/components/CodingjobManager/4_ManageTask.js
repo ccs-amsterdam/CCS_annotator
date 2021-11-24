@@ -21,7 +21,7 @@ const ManageTask = ({ codingjob }) => {
   let cwidths = [8, 8];
   if (codingjob.taskSettings?.type) {
     if (codingjob.taskSettings.type === "annotate") cwidths = [6, 10];
-    if (codingjob.taskSettings.type === "questions") cwidths = [8, 6];
+    if (codingjob.taskSettings.type === "questions") cwidths = [8, 8];
   }
 
   return (
@@ -104,10 +104,7 @@ const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit, 
 
   return (
     <>
-      <Header
-        textAlign="center"
-        style={{ maxWidth: "400px", background: "#1B1C1D", color: "white" }}
-      >
+      <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
         Preview
         {children}
       </Header>
@@ -115,13 +112,21 @@ const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit, 
       <div
         style={{
           padding: "0",
-          maxWidth: "400px",
+          display: "flex",
+          justifyContent: "center",
           height: "calc(100vh - 250px)",
           minHeight: "500px",
           maxHeight: "800px",
         }}
       >
-        <div style={{ padding: "0em", paddingTop: "1em", height: "100%" }}>
+        <div
+          style={{
+            padding: "0em",
+            width: "70%",
+            paddingTop: "1em",
+            height: "100%",
+          }}
+        >
           <QuestionTask
             unit={standardizedUnit}
             codebook={codebook}

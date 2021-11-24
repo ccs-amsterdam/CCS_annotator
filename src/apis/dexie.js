@@ -2,6 +2,7 @@ import Dexie from "dexie";
 import hash from "object-hash";
 
 import { prepareDocumentBatch } from "util/createDocuments";
+import { standardizeCodes } from "util/codebook";
 
 const dbName = "CSSannotator_V1";
 const idbStores = {
@@ -61,52 +62,6 @@ class AnnotationDB {
       .modify({ [prop]: value });
   }
 
-  async writeCodebook(codingjob, codebook) {
-    console.log("writing to db");
-    return this.idb.codingjobs
-      .where("job_id")
-      .equals(codingjob.job_id)
-      .modify({ codebook: codebook });
-  }
-
-  async writeCodes(codingjob, codes, append = false) {
-    const cj = await this.idb.codingjobs.get(codingjob.job_id);
-    const codebook = cj.codebook ? cj.codebook : {};
-
-    if (!codebook.codes || !append) codebook.codes = codes;
-    const maps = codebook.codes.reduce(
-      (obj, code, i) => {
-        obj.codeMap[code.code] = { parent: code.parent, index: i };
-        obj.parentMap[code.parent] = true;
-        return obj;
-      },
-      { codeMap: {}, parentMap: {} }
-    );
-
-    if (append) {
-      for (let code of codes) {
-        if (maps.codeMap[code.code]) {
-          if (code.parent === maps.codeMap[code.code].parent) continue;
-          const newcode = safeNewCode(
-            code.code + " (" + code.parent + ")",
-            maps.codeMap,
-            maps.parentMap
-          );
-          codebook.codes[maps.codeMap[code].index].code = newcode;
-          codebook.codes.push({ ...code, code: newcode, parent: code.parent });
-        } else {
-          const newcode = safeNewCode(code.code, maps.codeMap, maps.parentMap, 2);
-          codebook.codes.push({ ...code, code: newcode, parent: code.parent });
-        }
-      }
-    }
-
-    // making absolutely sure no garbage is added
-    codebook.codes = codebook.codes.filter((code) => code.code !== "");
-
-    return await this.writeCodebook(codingjob, codebook);
-  }
-
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
     let ids = new Set(
@@ -120,7 +75,16 @@ class AnnotationDB {
       silent
     );
 
-    this.writeCodes(codingjob, codes, true);
+    // write codes
+    const importedCodes = Object.keys(codes).reduce((obj, key) => {
+      const codesArray = standardizeCodes(Array.from(codes[key]));
+      obj[key] = codesArray.map((code) => ({ ...code, frozen: true }));
+      return obj;
+    }, {});
+    console.log(importedCodes);
+    throw "neeee";
+
+    this.idb.codingjobs.where("job_id").equals(codingjob.job_id).modify({ importedCodes });
 
     return this.idb.documents.bulkAdd(preparedDocuments);
   }

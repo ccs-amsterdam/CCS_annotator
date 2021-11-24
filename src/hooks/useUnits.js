@@ -75,8 +75,10 @@ const getUnitsFromDB = async (codingjob) => {
     );
   }
 
+  console.log(unitSettings);
   if (unitSettings.unitSelection === "annotations") {
     [cjIndices, done] = await annotationUnits(codingjob, textUnit, false, unitSettings.validCodes);
+
     totalUnits = cjIndices.length;
     cjIndices = drawRandom(
       cjIndices,
@@ -194,6 +196,7 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
   const done = new Set([]);
   let docIndex = -1;
   await documents.each((e) => {
+    console.log(e);
     docIndex++;
     if (e.annotations?.span) {
       for (let i of Object.keys(e.annotations.span)) {

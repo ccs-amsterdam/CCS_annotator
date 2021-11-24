@@ -69,7 +69,7 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
   }, [unitSettings, setUnitSettings]);
 
   const radioButton = (value, label, annotated, jump) => {
-    const unitSelection = annotated ? "annotation" : "allTextUnits";
+    const unitSelection = annotated ? "annotations" : "allTextUnits";
     let checked = unitSettings.textUnit === value && unitSettings.unitSelection === unitSelection;
 
     return (

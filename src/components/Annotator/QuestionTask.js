@@ -85,6 +85,7 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
             style={{
               border: "1px solid",
               height: "100%",
+              width: "100%",
               position: "absolute",
               top: "0",
               backgroundColor: "white",

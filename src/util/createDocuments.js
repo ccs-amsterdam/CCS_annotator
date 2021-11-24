@@ -42,17 +42,6 @@ export const prepareDocumentBatch = (
     alert(message);
   }
 
-  codes = Object.keys(codes).reduce((a, code) => {
-    if (codes[code].length === 1) {
-      if (codes[code][0] !== "") a.push({ code, parent: codes[code][0], active: true });
-    } else {
-      for (let parent of codes[code]) {
-        if (parent !== "") a.push({ code: `${code} (${parent})`, parent, active: true });
-      }
-    }
-    return a;
-  }, []);
-
   return [preparedDocuments, codes];
 };
 

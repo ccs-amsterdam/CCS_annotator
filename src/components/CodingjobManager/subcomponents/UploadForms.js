@@ -51,6 +51,9 @@ const renderTokenForms = (columns, options, fields, setFields) => {
       <Form.Group widths="equal">
         {renderForm("document id", "document_id", columns, options, fields, setFields)}
         {renderForm("token", "token", columns, options, fields, setFields)}
+      </Form.Group>
+      <Form.Group widths="equal">
+        {renderForm("section", "section", columns, options, fields, setFields)}
         {renderForm("paragraph", "paragraph", columns, options, fields, setFields)}
         {renderForm("sentence", "sentence", columns, options, fields, setFields)}
       </Form.Group>
@@ -58,7 +61,6 @@ const renderTokenForms = (columns, options, fields, setFields) => {
         {renderForm("start / offset", "offset", columns, options, fields, setFields)}
         {renderForm("end", "end", columns, options, fields, setFields)}
         {renderForm("space / post", "post", columns, options, fields, setFields)}
-        {renderForm("section (title, text..)", "section", columns, options, fields, setFields)}
       </Form.Group>
       <Form.Group widths="equal">
         {renderForm("annotation columns", "annotations", columns, options, fields, setFields, true)}
@@ -78,7 +80,7 @@ const UploadCsv = ({ codingjob, type = "text", columns }) => {
           <CSVReader
             ref={fileRef}
             nodrag
-            onFileLoad={data => setData(data)}
+            onFileLoad={(data) => setData(data)}
             addRemoveButton
             onRemoveFile={() => setData([])}
           >
@@ -113,7 +115,7 @@ const SubmitForm = ({ type, data, codingjob, fileRef, columns }) => {
     }
 
     setOptions(
-      data[0].data.map(colname => {
+      data[0].data.map((colname) => {
         return { key: colname, value: colname, text: colname };
       })
     );
@@ -142,14 +144,14 @@ const SubmitForm = ({ type, data, codingjob, fileRef, columns }) => {
       if (columns[field].multiple) {
         fieldIndices[field] = {};
         for (let subfield of fields[field]) {
-          fieldIndices[field][subfield] = keys.findIndex(k => k === subfield);
+          fieldIndices[field][subfield] = keys.findIndex((k) => k === subfield);
         }
       } else {
-        fieldIndices[field] = keys.findIndex(k => k === fields[field]);
+        fieldIndices[field] = keys.findIndex((k) => k === fields[field]);
       }
     }
 
-    return data.slice(1).map(row => {
+    return data.slice(1).map((row) => {
       const original = keys.map((key, i) => {
         return { name: key, value: row.data[i] };
       });
@@ -221,7 +223,7 @@ const SubmitForm = ({ type, data, codingjob, fileRef, columns }) => {
   );
 };
 
-const tokensToDocumentList = data => {
+const tokensToDocumentList = (data) => {
   const documents = [];
   let tokens = [data[0]];
   for (let i = 1; i < data.length; i++) {
@@ -258,8 +260,8 @@ const renderForm = (label, column, columns, options, fields, setFields) => {
 const PreviewTable = ({ data }) => {
   const n = 5;
 
-  const createHeader = data => {
-    return data[0].data.map(colname => {
+  const createHeader = (data) => {
+    return data[0].data.map((colname) => {
       return (
         <Table.HeaderCell style={{ width: "7em" }}>
           <span title={colname}>{colname}</span>
@@ -270,13 +272,13 @@ const PreviewTable = ({ data }) => {
 
   const createRows = (data, n) => {
     const previewdata = data.slice(0, n + 1);
-    return previewdata.slice(1).map(row => {
+    return previewdata.slice(1).map((row) => {
       return <Table.Row>{createRowCells(row.data)}</Table.Row>;
     });
   };
 
-  const createRowCells = row => {
-    return row.map(cell => {
+  const createRowCells = (row) => {
+    return row.map((cell) => {
       return (
         <Table.Cell>
           <span title={cell}>{cell}</span>
@@ -296,7 +298,7 @@ const PreviewTable = ({ data }) => {
         border: "solid 1px",
       }}
     >
-      <Table singleLine fixed size="small" compact>
+      <Table unstackable singleLine fixed size="small" compact>
         <Table.Header>
           <Table.Row>{createHeader(data)}</Table.Row>
         </Table.Header>

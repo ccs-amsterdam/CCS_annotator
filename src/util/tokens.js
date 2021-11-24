@@ -80,6 +80,7 @@ export const importTokens = (tokens) => {
 
   let offset = 0;
   let totalLength = 0;
+
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i].text == null) {
       if (tokens[i].token != null) {
@@ -106,7 +107,7 @@ export const importTokens = (tokens) => {
     }
 
     totalLength = tokens[i].length + tokens[i].post.length;
-    if (i < tokens.length - 1) totalLength = totalLength + tokens[i + 1].pre.length;
+    if (i < tokens.length - 1) totalLength = totalLength + (tokens[i + 1].pre?.length || 0);
 
     if (tokens[i].offset == null) {
       tokens[i].offset = offset;
@@ -114,8 +115,10 @@ export const importTokens = (tokens) => {
     }
 
     if (i < tokens.length - 1) {
-      if (tokens[i].section === tokens[i + 1].section) {
-        if (tokens[i + 1].offset < tokens[i].offset + totalLength) {
+      if (!tokens[i].section || tokens[i].section === tokens[i + 1].section) {
+        if (tokens[i + 1].offset == null && tokens[i + 1].start != null)
+          tokens[i + 1].offset = tokens[i + 1].start;
+        if (tokens[i + 1].offset && tokens[i + 1].offset < tokens[i].offset + totalLength) {
           alert(
             `Invalid token position data. The length of "${
               tokens[i].pre + tokens[i].text + tokens[i].post
@@ -181,14 +184,15 @@ export const importTokenAnnotations = (tokens, codes) => {
       if (annotation.value === "NA" || annotation.value === "NaN") continue; // Should be a checkbox when importing
 
       if (!codes[annotation.name]) {
-        codes[annotation.name] = [""];
+        codes[annotation.name] = new Set();
       }
-      if (!codes[annotation.value]) {
-        codes[annotation.value] = [annotation.name];
-      } else {
-        if (!codes[annotation.value].includes(annotation.name))
-          codes[annotation.value].push(annotation.name);
-      }
+      codes[annotation.name].add(annotation.value);
+      // if (!codes[annotation.value]) {
+      //   codes[annotation.value] = [annotation.name];
+      // } else {
+      //   if (!codes[annotation.value].includes(annotation.name))
+      //     codes[annotation.value].push(annotation.name);
+      // }
 
       annotationDict[annotation.name] = annotation.value;
 
@@ -196,6 +200,7 @@ export const importTokenAnnotations = (tokens, codes) => {
       if (codeTracker[annotation.name] == null)
         codeTracker[annotation.name] = {
           index: i,
+          variable: annotation.name,
           value: annotation.value,
           offset: tokens[i].offset,
           text: tokens[i].text,
@@ -219,7 +224,8 @@ export const importTokenAnnotations = (tokens, codes) => {
         annotations.push(codeTracker[key]);
         codeTracker[key] = {
           index: i,
-          code: annotationDict[key],
+          variable: key,
+          value: annotationDict[key],
           offset: tokens[i].offset,
           text: tokens[i].text,
           section: tokens[i].section,
