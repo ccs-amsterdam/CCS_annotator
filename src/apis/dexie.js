@@ -75,17 +75,11 @@ class AnnotationDB {
       silent
     );
 
-    // write codes
-    const importedCodes = Object.keys(codes).reduce((obj, key) => {
-      const codesArray = standardizeCodes(Array.from(codes[key]));
-      obj[key] = codesArray.map((code) => ({ ...code, frozen: true }));
-      return obj;
-    }, {});
+    let importedCodes = await this.getCodingjobProp(codingjob, "importedCodes");
+    importedCodes = updateImportedCodes(codingjob, importedCodes, codes);
+
     console.log(importedCodes);
-    throw "neeee";
-
     this.idb.codingjobs.where("job_id").equals(codingjob.job_id).modify({ importedCodes });
-
     return this.idb.documents.bulkAdd(preparedDocuments);
   }
 
@@ -175,13 +169,36 @@ class AnnotationDB {
   }
 }
 
-const safeNewCode = (code, codeMap, parentMap, i) => {
-  // for preventing overlapping code names
-  if (!codeMap[code] && !parentMap[code]) return code;
-  if (i > 2) code = code.slice(0, code.length - code.toString().length);
-  code += " " + i;
-  safeNewCode(code, codeMap, i + 1);
+const updateImportedCodes = (codingjob, importedCodes, codes) => {
+  const addCodes = Object.keys(codes).reduce((obj, key) => {
+    const codesArray = standardizeCodes(Array.from(codes[key]));
+    obj[key] = codesArray.map((code) => ({ ...code, frozen: true }));
+    return obj;
+  }, {});
+
+  if (!importedCodes) return addCodes;
+
+  for (let key of Object.keys(addCodes)) {
+    if (!importedCodes[key]) {
+      importedCodes[key] = addCodes[key];
+    } else {
+      for (let code of addCodes[key]) {
+        if (!importedCodes[key].some((c) => c.code === code.code)) {
+          importedCodes[key].push(code);
+        }
+      }
+    }
+  }
+  return importedCodes;
 };
+
+// const safeNewCode = (code, codeMap, parentMap, i) => {
+//   // for preventing overlapping code names
+//   if (!codeMap[code] && !parentMap[code]) return code;
+//   if (i > 2) code = code.slice(0, code.length - code.toString().length);
+//   code += " " + i;
+//   safeNewCode(code, codeMap, i + 1);
+// };
 
 const db = new AnnotationDB();
 export default db;

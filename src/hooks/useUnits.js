@@ -8,7 +8,7 @@ import { drawRandom } from "util/sample";
  * @returns
  */
 const useUnits = (codingjob) => {
-  const [Units, setUnits] = useState(null);
+  const [units, setUnits] = useState(null);
 
   // When a new codingjob is loaded, set codingjobLoaded ref to false
   // this prevents actually loading the data until unitSettings has loaded
@@ -22,7 +22,7 @@ const useUnits = (codingjob) => {
 
   if (!codingjob) return null;
 
-  return Units;
+  return units;
 };
 
 const getUnits = async (codingjob, setUnits) => {
@@ -75,7 +75,6 @@ const getUnitsFromDB = async (codingjob) => {
     );
   }
 
-  console.log(unitSettings);
   if (unitSettings.unitSelection === "annotations") {
     [cjIndices, done] = await annotationUnits(codingjob, textUnit, false, unitSettings.validCodes);
 
@@ -105,14 +104,17 @@ const getUnitsFromDB = async (codingjob) => {
       let nCodes = unitSettings.validCodes.length;
       addSample = addSample.map((item, i) => {
         // add random annotation to mix by drawing from the annotations in the cjIndices sample.
-        // this is random, and automatically gives approximately the same distribution of codes/groups
+        // this is random, and automatically gives approximately the same distribution of codes
+        let value;
         if (unitSettings.balanceAnnotations) {
-          item.variable = unitSettings.validCodes[i % nCodes];
+          value = unitSettings.validCodes[i % nCodes];
         } else {
           const annSample = cjIndices[i % cjIndices.length];
-          if (annSample?.variable) item.variable = annSample.variable;
+          value = annSample.value;
+          //if (annSample?.variable) item.variable = annSample.variable;
+          //if (annSample?.value) item.value = annSample.value;
         }
-        item.annotation = { i, group: item.variable };
+        item.variables = { [unitSettings.annotation]: value };
         return { ...item };
       });
       cjIndices = cjIndices.concat(addSample);
@@ -196,12 +198,12 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
   const done = new Set([]);
   let docIndex = -1;
   await documents.each((e) => {
-    console.log(e);
     docIndex++;
-    if (e.annotations?.span) {
-      for (let i of Object.keys(e.annotations.span)) {
-        for (let group of Object.keys(e.annotations.span[i])) {
-          const span = e.annotations.span[i][group].span;
+    if (e.annotations) {
+      for (let i of Object.keys(e.annotations)) {
+        for (let variable of Object.keys(e.annotations[i])) {
+          if (variable !== codingjob.unitSettings.annotation) continue;
+          const span = e.annotations[i][variable];
           if (i > span[0]) {
             if (textUnit === "document") continue;
             if (textUnit === "span") continue;
@@ -212,14 +214,14 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
               continue;
           }
 
-          if (useCode && useCode[group] == null) continue;
+          if (useCode && useCode[variable] == null) continue;
 
           const item = {
             textUnit,
             doc_uid: e.doc_uid,
             document_id: e.document_id,
             docIndex,
-            group,
+            span: e.annotations[i][variable].span,
           };
 
           if (textUnit === "document" || textUnit === "span") item.unitIndex = Number(i);
@@ -231,7 +233,7 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
             if (done.has(itemId)) continue;
             done.add(itemId);
           } else {
-            item.annotation = { ...e.annotations.span[i][group], group };
+            item.variables = { [variable]: e.annotations[i][variable].value };
           }
           cjIndices.push(item);
         }

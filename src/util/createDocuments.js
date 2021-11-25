@@ -68,7 +68,7 @@ export const prepareDocument = (document, codes = {}) => {
 
   const tokenAnnotations = importTokenAnnotations(doc.tokens, codes); // also fills codes
   if (tokenAnnotations.length > 0)
-    doc.annotations.span = importSpanAnnotations(tokenAnnotations, doc.tokens, doc.annotations);
+    doc.annotations = importSpanAnnotations(tokenAnnotations, doc.tokens, doc.annotations);
 
   return doc;
 };

@@ -27,12 +27,17 @@ const getTableColumns = (unitSettings) => {
   if (unitSettings.textUnit === "span") {
     columns.push({
       Header: "Token",
-      accessor: "annotation.index",
+      accessor: "unitIndex",
       headerClass: "three wide",
     });
     columns.push({
-      Header: "Code",
-      accessor: "group",
+      Header: `Variables`,
+      accessor: (row) => {
+        if (!row.variables) return null;
+        return Object.keys(row.variables)
+          .map((key) => key + ": " + row.variables[key])
+          .join(" ");
+      },
       headerClass: "five wide",
     });
   }

@@ -4,7 +4,15 @@ import { blockEvents } from "actions";
 import { textToCodes } from "util/codebook";
 import { Button, ButtonGroup, Dropdown, Form, Input, Popup, TextArea } from "semantic-ui-react";
 
-const EditCodePopup = ({ codeMap, code, codes, setCodes, toggleActiveCode, setChangeColor }) => {
+const EditCodePopup = ({
+  codeMap,
+  code,
+  codes,
+  setCodes,
+  toggleActiveCode,
+  setChangeColor,
+  canAdd,
+}) => {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
@@ -25,12 +33,14 @@ const EditCodePopup = ({ codeMap, code, codes, setCodes, toggleActiveCode, setCh
   };
 
   const buttonContent = () => {
-    if (code === "")
+    if (code === "") {
+      if (!canAdd) return null;
       return (
         <ButtonGroup fluid color="black">
           <Button content="Add codes" onClick={() => addCodePopup(true)} style={buttonStyle} />;
         </ButtonGroup>
       );
+    }
     return (
       <ButtonGroup color="black" attached fluid size="mini" style={{ padding: "0", margin: "0" }}>
         <Button
@@ -39,18 +49,6 @@ const EditCodePopup = ({ codeMap, code, codes, setCodes, toggleActiveCode, setCh
           onClick={() => toggleActiveCode(codes, code.code, !code.active, setCodes)}
           style={{ ...buttonStyle, color: code.active && code.activeParent ? "green" : "red" }}
         />
-        {changeColorPopup()}
-
-        <Button
-          icon="plus"
-          compact
-          size="mini"
-          onClick={() => addCodePopup(false)}
-          style={buttonStyle}
-        />
-        <Button icon="minus" compact size="mini" onClick={rmCodePopup} style={buttonStyle} />
-        <Button icon="edit" compact size="mini" onClick={moveCodePopup} style={buttonStyle} />
-
         <Button
           icon="arrow up"
           compact
@@ -65,6 +63,26 @@ const EditCodePopup = ({ codeMap, code, codes, setCodes, toggleActiveCode, setCh
           onClick={() => changePosition("down")}
           style={buttonStyle}
         />
+
+        <Button
+          disabled={!canAdd}
+          icon="plus"
+          compact
+          size="mini"
+          onClick={() => addCodePopup(false)}
+          style={buttonStyle}
+        />
+
+        <Button
+          disabled={code.frozen}
+          icon="minus"
+          compact
+          size="mini"
+          onClick={rmCodePopup}
+          style={buttonStyle}
+        />
+        <Button icon="edit" compact size="mini" onClick={moveCodePopup} style={buttonStyle} />
+        {changeColorPopup()}
       </ButtonGroup>
     );
   };
@@ -122,6 +140,7 @@ const EditCodePopup = ({ codeMap, code, codes, setCodes, toggleActiveCode, setCh
         codes={codes}
         setCodes={setCodes}
         setOpen={setOpen}
+        frozen={code.frozen}
       />
     );
     setOpen(true);
@@ -181,7 +200,12 @@ const AddCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
 
   const addCode = (text) => {
     if (text === "") return null;
-    const [updatedCodes, duplicates] = textToCodes(text, code, codes);
+    const [updatedCodes, duplicates] = textToCodes(
+      text,
+      code,
+      codes,
+      codes.filter((c) => c.frozen)
+    );
     if (duplicates.length > 0) {
       setAlreadyExists(duplicates);
       return null;
@@ -274,7 +298,7 @@ const RmCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
   );
 };
 
-const MoveCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
+const MoveCodePopup = ({ codeMap, code, codes, setCodes, setOpen, frozen }) => {
   const [newParent, setNewParent] = useState(codeMap[code].parent);
   const [textInput, setTextInput] = useState(code);
 
@@ -307,7 +331,7 @@ const MoveCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
   return (
     <div style={{ margin: "1em" }}>
       <p>
-        Change parent and/or label
+        {frozen ? "Change parent" : "Change parent and/or label"}
         <Button floated="right" compact size="mini" icon="delete" onClick={() => setOpen(false)} />
       </p>
 
@@ -333,17 +357,19 @@ const MoveCodePopup = ({ codeMap, code, codes, setCodes, setOpen }) => {
             }}
           />
         </Form.Field>
-        <Form.Field inline>
-          <label style={{ color: "white" }}>Code:</label>
-          <Input
-            autoFocus
-            onChange={(e, d) => {
-              setTextInput(d.value);
-            }}
-            value={textInput}
-            placeholder="new code"
-          />
-        </Form.Field>
+        {frozen ? null : (
+          <Form.Field inline>
+            <label style={{ color: "white" }}>Code:</label>
+            <Input
+              autoFocus
+              onChange={(e, d) => {
+                setTextInput(d.value);
+              }}
+              value={textInput}
+              placeholder="new code"
+            />
+          </Form.Field>
+        )}
         <Button fluid onClick={() => mvCode(textInput, newParent)}>
           Change
         </Button>

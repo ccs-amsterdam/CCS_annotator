@@ -17,6 +17,7 @@ import db from "apis/dexie";
 const defaultUnitSettings = {
   textUnit: null, // document, paragraph, sentence or span (span only if codingUnit is annotations)
   unitSelection: "allTextUnits", // or: annotations
+  annotation: null,
   contextUnit: "document", // or: paragraph, sentence, no context
   contextWindow: [1, 1],
 
@@ -40,7 +41,11 @@ const UnitSettings = ({ codingjob }) => {
     <div style={{ verticalAlign: "top", float: "top", paddingLeft: "1em" }}>
       <Grid style={{ paddingTop: "1em" }}>
         <Grid.Column width={8}>
-          <CodingUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+          <CodingUnitForm
+            codingjob={codingjob}
+            unitSettings={unitSettings}
+            setUnitSettings={setUnitSettings}
+          />
         </Grid.Column>
         <Grid.Column width={8}>
           <ContextUnitForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
@@ -56,7 +61,7 @@ const UnitSettings = ({ codingjob }) => {
   );
 };
 
-const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
+const CodingUnitForm = ({ codingjob, unitSettings, setUnitSettings }) => {
   useEffect(() => {
     if (unitSettings?.textUnit === null)
       setUnitSettings({
@@ -93,6 +98,40 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
     );
   };
 
+  const annotationDropdown = () => {
+    if (!codingjob.importedCodes) return null;
+    if (Object.keys(codingjob.importedCodes).length === 0) return null;
+    const options = Object.keys(codingjob.importedCodes).map((code) => ({
+      key: code,
+      value: code,
+      text: code,
+    }));
+    if (unitSettings.annotation === null)
+      setUnitSettings({ ...unitSettings, annotation: options[0].value });
+    return (
+      <span style={{ fontWeight: "bold" }}>
+        Annotation:{"   "}
+        <Dropdown
+          options={options}
+          value={unitSettings.annotation}
+          onChange={(e, d) => setUnitSettings({ ...unitSettings, annotation: d.value })}
+        />
+      </span>
+    );
+  };
+
+  const annotationButtons = () => {
+    if (!unitSettings.annotation) return null;
+    return (
+      <>
+        {radioButton("span", "Span annotation", true, true)}
+        {radioButton("document", "Span + document", true, true)}
+        {radioButton("paragraph", "Span + paragraph", true, true)}
+        {radioButton("sentence", "Span + sentence", true, true)}
+      </>
+    );
+  };
+
   return (
     <Form>
       <Form.Group>
@@ -103,10 +142,8 @@ const CodingUnitForm = ({ unitSettings, setUnitSettings }) => {
         {radioButton("document", "Document", false)}
         {radioButton("paragraph", "Paragraph", false)}
         {radioButton("sentence", "Sentence", false)}
-        {radioButton("span", "Span annotation", true)}
-        {radioButton("document", "incl. document", true, true)}
-        {radioButton("paragraph", "incl.  paragraph", true, true)}
-        {radioButton("sentence", "incl.  sentence", true, true)}
+        {annotationDropdown()}
+        {annotationButtons()}
       </Form.Group>
     </Form>
   );
@@ -414,6 +451,12 @@ const SelectValidCodes = ({ codingjob }) => {
   if (!codingjob.unitSettings.totalUnits) return null;
   if (codingjob.unitSettings.textUnit !== "span") return null;
 
+  const setCodes = (codes) => {
+    const newImportedCodes = { ...codingjob.importedCodes };
+    newImportedCodes[codingjob.unitSettings.annotation] = codes;
+    db.setCodingjobProp(codingjob, "importedCodes", newImportedCodes);
+  };
+
   const unitSettings = codingjob.unitSettings;
   // const setUnitSettings = (us) => {
   //   db.setCodingjobProp(codingjob, "unitSettings", us);
@@ -435,7 +478,11 @@ const SelectValidCodes = ({ codingjob }) => {
           />
         </div>
       </Form.Group>
-      <CodesEditor codingjob={codingjob} height="40%" />
+      <CodesEditor
+        codes={codingjob.importedCodes[codingjob.unitSettings.annotation]}
+        setCodes={setCodes}
+        canAdd={false}
+      />
     </Form>
   );
 };

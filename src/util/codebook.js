@@ -147,7 +147,7 @@ export const ctaToText = (cta, indentSpaces = 2, paramOffset = 25) => {
   return txt;
 };
 
-export const textToCodes = (text, root, codes) => {
+export const textToCodes = (text, root, codes, frozen) => {
   const codeMap = codes.reduce((obj, code) => {
     if (typeof code === "object") {
       obj[code.code] = 1;
@@ -172,6 +172,7 @@ export const textToCodes = (text, root, codes) => {
 
     const newCodeObj = {
       code: newCode,
+      frozen: frozen.some((c) => c.code === newCode),
       parent: findParent(parentLevel, root, newCode, spaces),
       active: !line.includes("#disabled"),
       folded: line.includes("#folded"),
@@ -187,6 +188,13 @@ export const textToCodes = (text, root, codes) => {
     }
     updatedCodes.push(newCodeObj);
   }
+
+  for (let code of frozen) {
+    if (updatedCodes.some((e) => e.code === code.code)) continue;
+    code.parent = "";
+    updatedCodes.push(code);
+  }
+
   return [updatedCodes, duplicates];
 };
 

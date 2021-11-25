@@ -24,6 +24,7 @@ export const standardizeUnits = async (codingjob, units) => {
     const doc_uid = units[i].doc_uid;
     if (!docs[doc_uid]) docs[doc_uid] = await db.getDocument(doc_uid);
 
+    
     const tokens = selectTokens(docs[doc_uid].tokens, units[i], contextUnit, contextWindow);
     const item = {
       text_fields: unparseTokens(tokens),

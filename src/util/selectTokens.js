@@ -6,7 +6,7 @@ export const selectTokens = (tokens, item, contextUnit, contextWindow) => {
   let tokenContext = [0, tokens.length - 1];
 
   if (item.textUnit === "span") {
-    tokenRange = item.annotation.span;
+    tokenRange = item.span;
   }
 
   if (item.textUnit === "paragraph" || item.textUnit === "sentence") {

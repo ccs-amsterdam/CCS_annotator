@@ -17,7 +17,7 @@ import { useDispatch } from "react-redux";
  * @param {Function} setCodes the callback for setting codes state
  * @param {Array} questions Optional, an array with questions. This enables the 'makes irrelevant' column
  */
-const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
+const CodesEditor = ({ codes, setCodes, questions, canAdd = true, height = "100%" }) => {
   const [codeMap, setCodeMap] = useState({});
   const [codeTreeArray, setCodeTreeArray] = useState([]);
   const [changeColor, setChangeColor] = useState(null);
@@ -107,6 +107,7 @@ const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
                     setCodes={setCodes}
                     toggleActiveCode={toggleActiveCode}
                     setChangeColor={setChangeColor}
+                    canAdd={canAdd}
                   />
                 </Table.Cell>
 
@@ -168,6 +169,7 @@ const CodesEditor = ({ codes, setCodes, questions, height = "100%" }) => {
             codes={codes}
             setCodes={setCodes}
             setChangeColor={setChangeColor}
+            canAdd={canAdd}
           >
             <Icon name="cog" style={{ marginLeft: "0.7em", cursor: "pointer" }} />
           </EditCodePopup>
@@ -271,7 +273,12 @@ const PlainTextEditor = ({ codes, codeTreeArray, setCodes }) => {
   }, [codeTreeArray]);
 
   const onSave = () => {
-    const [updatedCodes, duplicates] = textToCodes(textInput, "", []);
+    const [updatedCodes, duplicates] = textToCodes(
+      textInput,
+      "",
+      [],
+      codes.filter((c) => c.frozen)
+    );
     if (duplicates.length > 0) {
       setAlreadyExists(duplicates);
       return null;

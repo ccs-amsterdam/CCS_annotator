@@ -21,8 +21,22 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob }) => {
   const codingjobs = useLiveQuery(() => db.idb.codingjobs.toArray());
 
   useEffect(() => {
+    // If no codingjob is selected, pick the top row
     if (!codingjob?.job_id && codingjobs) {
       setSelectedCodingjob(codingjobs.length > 0 ? { ...codingjobs[0], ROW_ID: "0" } : null);
+    }
+  }, [codingjob, codingjobs, setSelectedCodingjob]);
+
+  useEffect(() => {
+    // if codingjob does not have a row_id (for table row selection), look up the index from codingjobs
+    if (!codingjobs) return;
+    if (codingjob?.ROW_ID != null) return;
+    if (!codingjob?.job_id) return;
+    for (let i = 0; i < codingjobs.length; i++) {
+      if (codingjobs[i].job_id === codingjob.job_id) {
+        setSelectedCodingjob({ ...codingjob, ROW_ID: String(i) });
+        return;
+      }
     }
   }, [codingjob, codingjobs, setSelectedCodingjob]);
 
@@ -100,8 +114,8 @@ const CreateCodingjob = ({ setSelectedCodingjob }) => {
     setStatus("pending");
 
     try {
-      await db.createCodingjob(codingjobName);
-      setSelectedCodingjob(null);
+      const cj = await db.createCodingjob(codingjobName);
+      setSelectedCodingjob(cj);
       setStatus("inactive");
     } catch (e) {
       console.log(e);
