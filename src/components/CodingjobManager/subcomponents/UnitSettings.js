@@ -11,8 +11,8 @@ import {
   Grid,
 } from "semantic-ui-react";
 import Help from "./Help";
-import CodesEditor from "./CodesEditor";
 import db from "apis/dexie";
+import CheckboxTable from "./CheckboxTable";
 
 const defaultUnitSettings = {
   textUnit: null, // document, paragraph, sentence or span (span only if codingUnit is annotations)
@@ -26,7 +26,7 @@ const defaultUnitSettings = {
   ordered: false,
   balanceDocuments: true,
   balanceAnnotations: true,
-  validCodes: null,
+  validCodes: {},
   highlightAnnotation: false,
 };
 
@@ -446,42 +446,59 @@ const ContextWindow = ({ contextUnit, contextWindow, setContextWindow }) => {
   );
 };
 
+const validCodesColumns = [
+  {
+    Header: "Code",
+    accessor: "code",
+    headerClass: "thirteen wide",
+  },
+];
+
 const SelectValidCodes = ({ codingjob }) => {
-  if (!codingjob?.unitSettings) return null;
-  if (!codingjob.unitSettings.totalUnits) return null;
-  if (codingjob.unitSettings.textUnit !== "span") return null;
+  const annotation = codingjob?.unitSettings?.annotation;
+  const validCodes = codingjob?.unitSettings?.validCodes;
+  const isSpan = codingjob?.unitSettings?.textUnit === "span";
 
-  const setCodes = (codes) => {
-    const newImportedCodes = { ...codingjob.importedCodes };
-    newImportedCodes[codingjob.unitSettings.annotation] = codes;
-    db.setCodingjobProp(codingjob, "importedCodes", newImportedCodes);
-  };
+  const setValidCodes = React.useCallback(
+    (newValidCodes) => {
+      const unitSettings = {
+        ...codingjob.unitSettings,
+        validCodes: { ...validCodes, [annotation]: newValidCodes },
+      };
+      db.setCodingjobProp(codingjob, "unitSettings", unitSettings);
+    },
+    [codingjob, validCodes, annotation]
+  );
 
-  const unitSettings = codingjob.unitSettings;
-  // const setUnitSettings = (us) => {
-  //   db.setCodingjobProp(codingjob, "unitSettings", us);
-  // };
+  useEffect(() => {
+    if (!validCodes || !annotation || !isSpan) return null;
+    if (validCodes[annotation]) return;
+    const importedCodes = codingjob.importedCodes?.[annotation];
+    if (!importedCodes) return;
+    setValidCodes(importedCodes.map((code) => ({ code: code.code, valid: true })));
+  }, [codingjob, annotation, isSpan, setValidCodes, validCodes]);
 
-  if (!unitSettings) return null;
+  if (!validCodes || !annotation || !isSpan) return null;
+  if (!validCodes[annotation]) return null;
+
   return (
     <Form>
       <Form.Group>
         <Icon name="setting" />
         <div>
-          <label>Manage annotation codes</label>
-          <Help
-            header={"Annotation codes"}
-            texts={[
-              "Click on the gear icon to add, remove, move, rename and change the colors of codes",
-              "You can also toggle codes off if you just want to disable them in the current unit selection",
-            ]}
-          />
+          <label>Select annotation codes</label>
         </div>
       </Form.Group>
-      <CodesEditor
+      {/* <CodesEditor
         codes={codingjob.importedCodes[codingjob.unitSettings.annotation]}
         setCodes={setCodes}
         canAdd={false}
+      /> */}
+
+      <CheckboxTable
+        columns={validCodesColumns}
+        data={validCodes[annotation]}
+        setData={setValidCodes}
       />
     </Form>
   );

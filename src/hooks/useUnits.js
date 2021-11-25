@@ -186,11 +186,13 @@ const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
 
 const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
   let documents = await db.getDocuments(codingjob);
+  const annotation = codingjob.unitSettings.annotation;
 
   let useCode = null;
-  if (validCodes)
-    useCode = validCodes.reduce((obj, code) => {
-      obj[code] = true;
+  if (validCodes?.[annotation])
+    useCode = validCodes[annotation].reduce((obj, code) => {
+      if (!code.valid) return obj;
+      obj[code.code] = true;
       return obj;
     }, {});
 
@@ -202,7 +204,7 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
     if (e.annotations) {
       for (let i of Object.keys(e.annotations)) {
         for (let variable of Object.keys(e.annotations[i])) {
-          if (variable !== codingjob.unitSettings.annotation) continue;
+          if (variable !== annotation) continue;
           const span = e.annotations[i][variable];
           if (i > span[0]) {
             if (textUnit === "document") continue;
@@ -214,7 +216,7 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
               continue;
           }
 
-          if (useCode && useCode[variable] == null) continue;
+          if (useCode && useCode[e.annotations[i][variable].value] == null) continue;
 
           const item = {
             textUnit,
