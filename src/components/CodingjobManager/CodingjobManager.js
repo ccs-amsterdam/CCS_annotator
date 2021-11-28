@@ -26,7 +26,7 @@ const CodingjobManager = () => {
         .catch((e) => {
           console.log(e);
         });
-    }
+    } else return null;
   }, [selectedCodingjob]);
 
   const nDocuments = useLiveQuery(() => {

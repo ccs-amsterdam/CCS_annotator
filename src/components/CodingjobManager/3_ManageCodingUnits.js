@@ -4,7 +4,7 @@ import { Grid, Header, Dimmer, Loader } from "semantic-ui-react";
 
 import UnitSettings from "./subcomponents/UnitSettings";
 import Document from "components/Document/Document";
-import useUnits from "hooks/useUnits";
+import useUnits from "components/CodingjobManager/subcomponents/useUnits";
 import { standardizeUnits } from "util/standardizeUnits";
 
 const getTableColumns = (unitSettings) => {
@@ -24,10 +24,13 @@ const getTableColumns = (unitSettings) => {
       headerClass: "five wide",
     });
   }
-  if (unitSettings.textUnit === "span") {
+  if (unitSettings.unitSelection === "annotations") {
     columns.push({
-      Header: "Token",
-      accessor: "unitIndex",
+      Header: "Span",
+      accessor: (row) => {
+        if (!row.span) return "";
+        return row.span[0] + "-" + row.span[1];
+      },
       headerClass: "three wide",
     });
     columns.push({
@@ -36,7 +39,7 @@ const getTableColumns = (unitSettings) => {
         if (!row.variables) return null;
         return Object.keys(row.variables)
           .map((key) => key + ": " + row.variables[key])
-          .join(" ");
+          .join(" | ");
       },
       headerClass: "five wide",
     });
@@ -46,6 +49,13 @@ const getTableColumns = (unitSettings) => {
 
 const ManageCodingUnits = ({ codingjob }) => {
   const units = useUnits(codingjob);
+  const [jobItem, setJobItem] = useState(null);
+
+  useEffect(() => {
+    if (units && units.length > 0) {
+      setJobItem({ ...units[0], ROW_ID: "0" });
+    } else setJobItem(null);
+  }, [units, setJobItem]);
 
   if (!codingjob) return null;
 
@@ -57,72 +67,76 @@ const ManageCodingUnits = ({ codingjob }) => {
             Settings
           </Header>
 
-          <UnitSettings codingjob={codingjob} />
+          <UnitSettings codingjob={codingjob} units={units} />
         </Grid.Column>
 
-        <PreviewUnits codingjob={codingjob} units={units} />
+        <Grid.Column width={5}>
+          <PreviewUnits
+            codingjob={codingjob}
+            units={units}
+            jobItem={jobItem}
+            setJobItem={setJobItem}
+          />
+        </Grid.Column>
+        <Grid.Column width={5}>
+          <PreviewDocument codingjob={codingjob} jobItem={jobItem} codebook={{}} />
+        </Grid.Column>
       </Grid>
     </div>
   );
 };
 
-const PreviewUnits = React.memo(({ codingjob, units }) => {
-  const [jobItem, setJobItem] = useState(null);
-  const [standardizedItem, setStandardizedItem] = useState(null);
+const PreviewUnits = React.memo(({ codingjob, units, jobItem, setJobItem }) => {
+  const [columns, setColumns] = useState([]);
+
+  useEffect(() => {
+    setColumns(getTableColumns(codingjob?.unitSettings));
+  }, [codingjob?.unitSettings]);
+
+  return (
+    <>
+      <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+        Selected units
+      </Header>
+      <Dimmer inverted active={codingjob?.unitSettings?.textUnit && units === null}>
+        <Loader />
+      </Dimmer>
+      <SelectionTable
+        columns={columns}
+        selectedRow={jobItem}
+        setSelectedRow={setJobItem}
+        data={units || []}
+        defaultSize={10}
+      />
+      {/* <ItemDetails items={units || []} /> */}
+    </>
+  );
+});
+
+const PreviewDocument = ({ codingjob, jobItem, codebook }) => {
+  const [standardizedUnit, setStandardizedUnit] = useState(null);
 
   useEffect(() => {
     if (!jobItem) return null;
     standardizeUnits(codingjob, [jobItem]).then((singleItemArray) => {
       const previewItem = singleItemArray[0];
       previewItem.post = (annotations) => console.log(annotations); // don't store annotations
-      setStandardizedItem(previewItem);
+      setStandardizedUnit(previewItem);
     });
-  }, [jobItem, setStandardizedItem, codingjob]);
+  }, [jobItem, setStandardizedUnit, codingjob]);
 
-  useEffect(() => {
-    if (units && units.length > 0) {
-      setJobItem({ ...units[0], ROW_ID: "0" });
-    } else setJobItem(null);
-  }, [units, setJobItem]);
-
-  return (
-    <>
-      <Grid.Column width={5}>
-        <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
-          Selected units
-        </Header>
-        <Dimmer inverted active={codingjob?.unitSettings?.textUnit && units === null}>
-          <Loader />
-        </Dimmer>
-        <SelectionTable
-          columns={getTableColumns(codingjob?.unitSettings)}
-          selectedRow={jobItem}
-          setSelectedRow={setJobItem}
-          data={units || []}
-          defaultSize={10}
-        />
-        {/* <ItemDetails items={units || []} /> */}
-      </Grid.Column>
-      <Grid.Column width={5}>
-        <PreviewDocument item={standardizedItem} codebook={{}} />
-      </Grid.Column>
-    </>
-  );
-});
-
-const PreviewDocument = ({ item, codebook }) => {
   const renderDocument = () => {
-    if (!item) return null;
+    if (!standardizedUnit) return null;
     return (
       <>
         <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
           Unit preview
         </Header>
 
-        <Dimmer inverted active={item === null}>
+        <Dimmer inverted active={standardizedUnit === null}>
           <Loader />
         </Dimmer>
-        <Document unit={item} codes={codebook?.codes} settings={{}} />
+        <Document unit={standardizedUnit} codes={codebook?.codes} settings={{}} />
       </>
     );
   };

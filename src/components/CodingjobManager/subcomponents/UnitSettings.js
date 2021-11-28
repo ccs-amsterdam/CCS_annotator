@@ -30,7 +30,7 @@ const defaultUnitSettings = {
   highlightAnnotation: false,
 };
 
-const UnitSettings = ({ codingjob }) => {
+const UnitSettings = ({ codingjob, units }) => {
   const unitSettings = codingjob?.unitSettings || defaultUnitSettings;
   const setUnitSettings = (us) => {
     db.setCodingjobProp(codingjob, "unitSettings", us);
@@ -54,9 +54,8 @@ const UnitSettings = ({ codingjob }) => {
       <br />
       <br />
       <SampleForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
-      <br />
-      <br />
-      <SelectValidCodes codingjob={codingjob} />
+
+      <SelectValidCodes codingjob={codingjob} units={units} />
     </div>
   );
 };
@@ -324,8 +323,8 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
             header={"Balanced sampling"}
             texts={[
               "Balance sampled Units evenly over groups. Uses a simple approach where unique groups are created (documents, codes, or documentsXcodes), and samples are drawn from these groups one by one",
-              "For documents: get an equal number of paragraphs, sentences or annotations per document",
-              "For codes: if units are annotations, get an equal number annotations for each unique code. (You can toggle which codes to include in the codebook, see top-right corner)",
+              "For documents: get an equal number of paragraphs, sentences or annotations per document.",
+              "For codes: if units are annotations, get an equal number annotations for each unique code.",
             ]}
           />
         </Form.Field>
@@ -452,12 +451,18 @@ const validCodesColumns = [
     accessor: "code",
     headerClass: "thirteen wide",
   },
+  {
+    Header: "N",
+    accessor: "N",
+    headerClass: "thirteen wide",
+  },
 ];
 
-const SelectValidCodes = ({ codingjob }) => {
+const SelectValidCodes = ({ codingjob, units }) => {
   const annotation = codingjob?.unitSettings?.annotation;
   const validCodes = codingjob?.unitSettings?.validCodes;
-  const isSpan = codingjob?.unitSettings?.textUnit === "span";
+  const isAnnotation = codingjob?.unitSettings?.unitSelection === "annotations";
+  const [data, setData] = useState([]);
 
   const setValidCodes = React.useCallback(
     (newValidCodes) => {
@@ -471,14 +476,27 @@ const SelectValidCodes = ({ codingjob }) => {
   );
 
   useEffect(() => {
-    if (!validCodes || !annotation || !isSpan) return null;
+    if (!units || !validCodes || !annotation || !isAnnotation) return;
+    console.log(units);
+    console.log(validCodes);
+    const valueMap = units.reduce((obj, unit) => {
+      const value = Object.values(unit.variables)[0];
+      if (!obj[value]) obj[value] = 0;
+      obj[value]++;
+      return obj;
+    }, {});
+    setData(validCodes[annotation].map((row) => ({ ...row, N: valueMap[row.code] })));
+  }, [validCodes, units, setData, annotation, isAnnotation]);
+
+  useEffect(() => {
+    if (!validCodes || !annotation || !isAnnotation) return null;
     if (validCodes[annotation]) return;
     const importedCodes = codingjob.importedCodes?.[annotation];
     if (!importedCodes) return;
     setValidCodes(importedCodes.map((code) => ({ code: code.code, valid: true })));
-  }, [codingjob, annotation, isSpan, setValidCodes, validCodes]);
+  }, [codingjob, annotation, isAnnotation, setValidCodes, validCodes]);
 
-  if (!validCodes || !annotation || !isSpan) return null;
+  if (!validCodes || !annotation || !isAnnotation) return null;
   if (!validCodes[annotation]) return null;
 
   return (
@@ -489,17 +507,8 @@ const SelectValidCodes = ({ codingjob }) => {
           <label>Select annotation codes</label>
         </div>
       </Form.Group>
-      {/* <CodesEditor
-        codes={codingjob.importedCodes[codingjob.unitSettings.annotation]}
-        setCodes={setCodes}
-        canAdd={false}
-      /> */}
 
-      <CheckboxTable
-        columns={validCodesColumns}
-        data={validCodes[annotation]}
-        setData={setValidCodes}
-      />
+      <CheckboxTable columns={validCodesColumns} data={data} setData={setValidCodes} />
     </Form>
   );
 };

@@ -7,7 +7,7 @@ const useUnit = (unit, safetyCheck, returnTokens) => {
   const [annotations, setAnnotations] = useState();
 
   useEffect(() => {
-    if (!unit?.text && !unit.text_fields) return null;
+    if (!unit?.text && !unit.text_fields && !unit.tokens) return null;
     const document = prepareDocument(unit);
 
     safetyCheck.current = {

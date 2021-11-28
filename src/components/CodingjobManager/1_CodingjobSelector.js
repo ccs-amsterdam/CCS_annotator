@@ -25,6 +25,7 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob }) => {
     if (!codingjob?.job_id && codingjobs) {
       setSelectedCodingjob(codingjobs.length > 0 ? { ...codingjobs[0], ROW_ID: "0" } : null);
     }
+    console.log(codingjobs);
   }, [codingjob, codingjobs, setSelectedCodingjob]);
 
   useEffect(() => {

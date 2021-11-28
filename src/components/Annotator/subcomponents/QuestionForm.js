@@ -20,6 +20,7 @@ const QuestionForm = ({
   const [annotations, setAnnotations] = useState(null);
 
   useEffect(() => {
+    if (!questions) return;
     prepareAnnotations(unit, tokens, questions, setAnnotations, setQuestionIndex);
     answered.current = false;
   }, [unit, tokens, setAnnotations, questions, setQuestionIndex]);
@@ -174,6 +175,7 @@ const QuestionIndexStep = ({ questions, questionIndex, annotations, setQuestionI
   }, [questionIndex, setCanSelect]);
 
   const setColor = (i) => {
+    if (!annotations[i]) return ["black", IRRELEVANT_COLOR];
     if (annotations[i].value === "IRRELEVANT") return ["black", IRRELEVANT_COLOR];
     if (canSelect && i > questionIndex && !canSelect[i]) return ["white", "grey"];
     if (annotations[i].value) return ["black", DONE_COLOR];
@@ -395,12 +397,13 @@ const showCurrent = (currentAnswer) => {
 
 const prepareQuestion = (unit, question) => {
   let preparedQuestion = question.question;
+  if (!unit.variables) return;
 
-  if (preparedQuestion.search("\\[code\\]") >= 0) {
-    if (unit.annotation) {
-      let code = unit.annotation.value;
+  for (let variable of Object.keys(unit.variables)) {
+    if (preparedQuestion.search(`\\[${variable}\\]`) >= 0) {
+      let code = unit.variables[variable];
       const codeTag = `{{lightyellow###${code}}}`; // add optional color from itemquestions
-      preparedQuestion = preparedQuestion.replace("[code]", codeTag);
+      preparedQuestion = preparedQuestion.replace(`[${variable}]`, codeTag);
     }
   }
 

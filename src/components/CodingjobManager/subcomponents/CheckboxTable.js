@@ -44,6 +44,7 @@ const CheckboxTable = ({ columns, data, setData, width = null, defaultSize = 10 
         pageSize: defaultSize,
         globalFilter: "",
       },
+      autoResetPage: false,
     },
 
     useGlobalFilter,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DeploySettings from "./subcomponents/DeploySettings";
-import useUnits from "hooks/useUnits";
+import useUnits from "components/CodingjobManager/subcomponents/useUnits";
 import { Grid, Header, Button, Form } from "semantic-ui-react";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";

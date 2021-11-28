@@ -126,6 +126,16 @@ const Instructions = () => {
                 <i>tab</i> an annotation 3 times
               </Table.Cell>
             </Table.Row>
+            <Table.Row>
+              <Table.Cell>
+                <strong>Select variable</strong>
+              </Table.Cell>
+              <Table.Cell>
+                Next with <i>tab</i>, previous with <i>shift+tab</i>
+              </Table.Cell>
+              <Table.Cell>Use buttons</Table.Cell>
+              <Table.Cell>Use buttons</Table.Cell>
+            </Table.Row>
           </Table.Body>
           <Table.Footer>
             <Table.Row>

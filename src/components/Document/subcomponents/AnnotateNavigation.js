@@ -54,7 +54,6 @@ const AnnotateNavigation = ({
 };
 
 const showAnnotations = (tokens, annotations, variableMap) => {
-  console.log(variableMap);
   for (let token of tokens) {
     if (!token.ref?.current) continue;
 

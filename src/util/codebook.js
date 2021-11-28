@@ -2,6 +2,7 @@ import randomColor from "randomcolor";
 
 /**
  * Transform the taskSettings into the codebook. The difference is that taskSettings also contains information that's only relevant in the manager. The codebook contains only the information relevant for the annotator
+ *  Also removes other information that's only relevant for the manager
  * @param {*} taskSettings
  */
 export const getCodebook = (taskSettings) => {
@@ -9,6 +10,8 @@ export const getCodebook = (taskSettings) => {
     type: taskSettings.type,
     ...taskSettings[taskSettings.type],
   };
+  if (taskSettings.type === "annotate")
+    codebook.variables = codebook.variables.filter((v) => v.enabled == null || v.enabled === true);
 
   return codebook;
 };

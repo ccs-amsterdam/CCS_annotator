@@ -81,6 +81,7 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, questions, unitSe
   }, [delayed, questionForm, setQuestionForm]);
 
   useEffect(() => {
+    if (!questionForm) return;
     let newWarn = [];
 
     const hasCodeRef = questionForm.question.search("\\[code\\]") >= 0;

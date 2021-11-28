@@ -32,6 +32,7 @@ export const importSpanAnnotations = (annotationsArray, tokens, currentAnnotatio
   for (let token of tokens) {
     findMatches(token, importedAnnotations, trackAnnotations, matchedAnnotations);
   }
+
   const codeCounter = {};
   const annArray = [];
   for (let matchedAnnotation of matchedAnnotations) {
@@ -118,23 +119,21 @@ const prepareSpanAnnotations = (annotations) => {
   return annotations.reduce((obj, ann) => {
     if (!obj[ann.section]) obj[ann.section] = {};
     if (!obj[ann.section][ann.offset]) obj[ann.section][ann.offset] = { start: [], end: [] };
-    if (!obj[ann.section][ann.offset + ann.length])
-      obj[ann.section][ann.offset + ann.length] = { start: [], end: [] };
+    if (!obj[ann.section][ann.offset + ann.length - 1])
+      obj[ann.section][ann.offset + ann.length - 1] = { start: [], end: [] };
     obj[ann.section][ann.offset].start.push(ann); // for the starting point the full annotation is given, so that we have all the information
-    obj[ann.section][ann.offset + ann.length].end.push(ann.variable); // for the ending point we just need to know the variable
+    obj[ann.section][ann.offset + ann.length - 1].end.push(ann.variable); // for the ending point we just need to know the variable
     return obj;
   }, {});
 };
 
 const findMatches = (token, importedAnnotations, trackAnnotations, matchedAnnotations) => {
   const start = token.offset;
-  const end = token.offset + token.length;
+  const end = token.offset + token.length - 1;
   if (!importedAnnotations[token.section]) return;
   const sectionAnnotations = importedAnnotations[token.section];
 
   for (let i = start; i <= end; i++) {
-    //const key = `${token.section}-${i}`;
-
     if (sectionAnnotations[i]) {
       for (let annotation of sectionAnnotations[i].start) {
         trackAnnotations[annotation.variable] = { ...token };

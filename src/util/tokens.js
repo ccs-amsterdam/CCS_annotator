@@ -180,19 +180,14 @@ export const importTokenAnnotations = (tokens, codes) => {
     }
 
     let annotationDict = {};
+
     for (let annotation of tokens[i].annotations) {
-      if (annotation.value === "NA" || annotation.value === "NaN") continue; // Should be a checkbox when importing
+      if (annotation.value === "") continue; // Should be a checkbox when importing
 
       if (!codes[annotation.name]) {
         codes[annotation.name] = new Set();
       }
       codes[annotation.name].add(annotation.value);
-      // if (!codes[annotation.value]) {
-      //   codes[annotation.value] = [annotation.name];
-      // } else {
-      //   if (!codes[annotation.value].includes(annotation.name))
-      //     codes[annotation.value].push(annotation.name);
-      // }
 
       annotationDict[annotation.name] = annotation.value;
 
@@ -241,6 +236,7 @@ export const importTokenAnnotations = (tokens, codes) => {
       continue;
     }
   }
+
   for (let annotation of Object.values(codeTracker)) annotations.push(annotation);
 
   return annotations;

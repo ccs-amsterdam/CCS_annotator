@@ -166,6 +166,7 @@ class AnnotationDB {
     await this.idb.delete();
     this.idb = new Dexie(dbName);
     this.idb.version(2).stores(idbStores);
+    window.location.reload(false);
   }
 }
 

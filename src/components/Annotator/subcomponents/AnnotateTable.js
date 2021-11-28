@@ -7,7 +7,9 @@ import "components/Document/subcomponents/spanAnnotationsStyle.css";
 const COLWIDTHS = [4, 4, 2, 2]; // for offset and text
 
 const AnnotateTable = ({ tokens, variableMap, annotations }) => {
-  if (!tokens || tokens.length === 0) return null;
+  if (!tokens || tokens.length === 0 || !variableMap || Object.keys(variableMap).length === 0)
+    return null;
+  console.log(variableMap);
   return (
     <Table
       style={{ fontSize: "10px" }}

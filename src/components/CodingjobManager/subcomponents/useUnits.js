@@ -16,7 +16,7 @@ const useUnits = (codingjob) => {
 
   useEffect(() => {
     if (!codingjob?.unitSettings) return null;
-    setUnits(null);
+    //setUnits(null);
     getUnits(codingjob, setUnits);
   }, [codingjob, setUnits]);
 
@@ -28,6 +28,7 @@ const useUnits = (codingjob) => {
 const getUnits = async (codingjob, setUnits) => {
   let [totalUnits, units] = await getUnitsFromDB(codingjob);
   setUnits(units);
+
   if (
     codingjob.unitSettings.n === null ||
     codingjob.unitSettings.n == null ||
@@ -49,13 +50,14 @@ const getUnitsFromDB = async (codingjob) => {
   let totalUnits = 0;
 
   const getGroup = (cjIndices) => {
-    if (!unitSettings.balanceDocuments && !unitSettings.statifyAnnotations) return null; // if not balanced
+    if (!unitSettings.balanceDocuments && !unitSettings.balanceAnnotations) return null; // if not balanced
 
     return cjIndices.map((item) => {
       let group = "";
       if (unitSettings.balanceDocuments) group += item.docIndex;
-      if (item.annotation && unitSettings.balanceAnnotations)
-        group += "_" + item.annotation.variable;
+      if (item.variables && unitSettings.balanceAnnotations) {
+        group += "_" + Object.values(item.variables)[0];
+      }
       return group;
     });
   };

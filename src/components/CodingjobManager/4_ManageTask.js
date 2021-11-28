@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import TaskSettings from "./subcomponents/TaskSettings";
 import { Grid, Header } from "semantic-ui-react";
-import useUnits from "hooks/useUnits";
+import useUnits from "components/CodingjobManager/subcomponents/useUnits";
 import { standardizeUnits } from "util/standardizeUnits";
 import { getCodebook } from "util/codebook";
 import { useSelector } from "react-redux";
@@ -51,6 +51,7 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
     setCodebook(getCodebook(codingjob.taskSettings));
   }, [codingjob.taskSettings]);
 
+  console.log(codebook);
   useEffect(() => {
     if (!units || index === null) {
       setStandardizedUnit(null);
@@ -140,6 +141,7 @@ const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit, 
 });
 
 const PreviewAnnotateTask = ({ children, codebook, standardizedUnit, setUnitIndex }) => {
+  console.log(standardizedUnit);
   const blockEvents = useSelector((state) => state.eventsBlocked);
   if (!codebook) return null;
   if (codebook.type !== "annotate") return null;

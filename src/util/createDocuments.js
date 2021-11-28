@@ -49,11 +49,14 @@ export const prepareDocument = (document, codes = {}) => {
   const doc = { ...document };
 
   if (doc.tokens) {
+    doc.importedTokens = true;
     doc.tokens = importTokens(document.tokens);
   } else {
+    doc.importedTokens = false;
     if (!doc.text_fields && doc.text) doc.text_fields = [{ name: "text", value: doc.text }];
     doc.tokens = parseTokens([...doc.text_fields]);
   }
+
   if (doc.tokens.length > 0) {
     doc.n_paragraphs = doc.tokens[doc.tokens.length - 1].paragraph;
     doc.n_sentences = doc.tokens[doc.tokens.length - 1].sentence;

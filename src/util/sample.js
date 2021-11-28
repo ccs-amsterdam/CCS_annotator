@@ -33,6 +33,7 @@ export const drawRandom = (array, n, replace, seed, group) => {
     }
   }
 
+  out = getRandomSubarray(out, out.length, random);
   return out.map((i) => array[i]);
 };
 

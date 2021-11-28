@@ -1,6 +1,7 @@
 import { selectTokens } from "./selectTokens";
 import hash from "object-hash";
 import db from "apis/dexie";
+import { exportSpanAnnotations } from "./annotations";
 
 // Transform an item as its created in codingjob manager into a simpler
 // standardized item format. This is used when codingjobs are deployed,
@@ -24,13 +25,31 @@ export const standardizeUnits = async (codingjob, units) => {
     const doc_uid = units[i].doc_uid;
     if (!docs[doc_uid]) docs[doc_uid] = await db.getDocument(doc_uid);
 
-    
+    // get the unit tokens (filter the document tokens, and add bool for whether token is codingunit (i.e. not context))
     const tokens = selectTokens(docs[doc_uid].tokens, units[i], contextUnit, contextWindow);
+
+    // get annotations and filter for selected tokens
+    const docAnnotations = exportSpanAnnotations(docs[doc_uid].annotations, docs[doc_uid].tokens);
+    const codingUnit = tokens.map((token) => token.codingUnit);
+    const firstUnitIndex = codingUnit.indexOf(true);
+    const lastUnitIndex = codingUnit.lastIndexOf(true);
+    const fromChar = tokens[firstUnitIndex].offset;
+    const toChar = tokens[lastUnitIndex].offset + tokens[lastUnitIndex].length;
+    const annotations = docAnnotations.filter((a) => a.offset >= fromChar && a.offset < toChar);
+
     const item = {
-      text_fields: unparseTokens(tokens),
       document_id: units[i].document_id,
       meta: { unit: units[i].textUnit, unit_index: units[i].unitIndex },
+      annotations,
+      variables: units[i].variables,
     };
+
+    if (docs[doc_uid].importedTokens) {
+      item.tokens = tokens;
+    } else {
+      item.text_fields = unparseTokens(tokens);
+    }
+
     item.unit_id = hash({ jobhash, item, date: Date() });
     items.push(item);
   }

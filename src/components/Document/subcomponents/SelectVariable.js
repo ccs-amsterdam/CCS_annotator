@@ -3,7 +3,7 @@ import { Button } from "semantic-ui-react";
 
 const SelectVariable = ({ variables, variable, setVariable, height }) => {
   let variableNames = [];
-  if (variables != null) {
+  if (variables != null && variables?.length > 0) {
     variableNames = variables.map((v) => v.name);
     variableNames.push("ALL");
   }
@@ -37,7 +37,7 @@ const SelectVariable = ({ variables, variable, setVariable, height }) => {
     };
   });
 
-  if (!variables || variables.length === 1) return null;
+  if (!variables || variables.length <= 1) return null;
   const mapVariables = () => {
     return variableNames.map((name) => {
       return (

@@ -11,10 +11,8 @@ import SelectVariable from "./subcomponents/SelectVariable";
 /**
  * This is hopefully the only Component in this folder that you'll ever see. It should be fairly isolated
  * and easy to use, but behind the scenes it gets dark real fast.
- * @param {*} tokens An array with token objects, as created with importTokens or parseTokens
- * @param {*} codes    An array of codes, or an array of objects in which codes can have
- *                     more cool stuff (color, parent, tree). If not given, texts will be
- *                     shown, but users cannot make annotations.
+ * @param {*} unit     A unit object, as created in JobServerClass (or standardizeUnit)
+ * @param {*} variables An object with variables, where each variable is an array of codes
  * @param {*} settings An object with settings. Currently supports:
  *                     - centerVertical: true/false      whether text is centered verticall
  *                     - buttonMode: "all"/"recent"      show all or only recent selected options as button
@@ -53,7 +51,7 @@ const Document = ({
   );
 
   useEffect(() => {
-    if (!annotations) return;
+    if (!annotations || !onChangeAnnotations) return;
 
     // check if same unit, to prevent annotations from spilling over due to race conditions
     if (safetyCheck.current.tokens !== tokens) return;
@@ -72,7 +70,6 @@ const Document = ({
   }, [tokensReady, setAnnotations, setReady]);
 
   if (!tokens) return null;
-
   return (
     <>
       <SelectVariable

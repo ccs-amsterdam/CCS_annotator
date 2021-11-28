@@ -2,7 +2,7 @@ import { blockEvents } from "actions";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
-import { Menu, Segment, Button, Popup, Form, Input } from "semantic-ui-react";
+import { Menu, Segment, Button, Popup, Form, Input, Checkbox } from "semantic-ui-react";
 
 const VariableMenu = ({
   children,
@@ -24,43 +24,66 @@ const VariableMenu = ({
 
   return (
     <div>
-      <Menu attached="top">
+      <Menu attached="top" style={{ width: "100%", overflowX: "auto" }}>
         {Array(variables.length)
           .fill(0)
           .map((v, i) => {
             return (
-              <Menu.Item active={index === i} style={{ padding: "0em", position: "relative" }}>
+              <Menu.Item
+                onClick={(e, d) => setIndex(i)}
+                active={index === i}
+                style={{ padding: "0 0", position: "relative" }}
+              >
                 <div>
                   <div
-                    onClick={(e, d) => setIndex(i)}
-                    style={{ padding: "0.5em", cursor: "pointer" }}
+                    style={{
+                      padding: "0 0.5em",
+                      height: "100%",
+                      cursor: "pointer",
+                    }}
                   >
-                    {variables[i].name}
-                  </div>
-
-                  <div style={{ position: "absolute", zIndex: 10, bottom: "-1.5em" }}>
-                    <MoveButtons
-                      i={i}
-                      variables={variables}
-                      setVariables={setVariables}
-                      index={index}
-                      setIndex={setIndex}
-                    />
+                    {variables[i].enabled != null ? (
+                      <Checkbox
+                        checked={variables[i].enabled}
+                        onChange={() => {
+                          variables[i].enabled = !variables[i].enabled;
+                          setVariables(variables);
+                        }}
+                        label={variables[i].name}
+                        style={{ margin: "5px 5px 20px -5px" }}
+                      />
+                    ) : (
+                      <div style={{ margin: "5px 5px 20px 0px" }}>{variables[i].name}</div>
+                    )}
+                    <div style={{ position: "absolute", bottom: "0" }}>
+                      <MoveButtons
+                        i={i}
+                        variables={variables}
+                        setVariables={setVariables}
+                        index={index}
+                        setIndex={setIndex}
+                      />
+                    </div>
                   </div>
                 </div>
               </Menu.Item>
             );
           })}
-        <Menu.Item icon="plus" style={{ background: "lightblue" }} onClick={onAdd} />
+        <Menu.Item
+          icon="plus"
+          attached="right"
+          position="right"
+          style={{ background: "lightblue" }}
+          onClick={onAdd}
+        />
+      </Menu>
+      <Segment attached="bottom" style={{ padding: "1em" }}>
         <DeleteButton
           variables={variables}
           setVariables={setVariables}
           index={index}
           setIndex={setIndex}
         />
-      </Menu>
-      <Segment attached="bottom" style={{ padding: "1em" }}>
-        <br />
         <ChangeName variables={variables} setVariables={setVariables} index={index} />
         {children}
       </Segment>
@@ -93,8 +116,10 @@ const ChangeName = ({ variables, setVariables, index }) => {
     setDelayedName(variables[index].name);
   }, [variables, index, setDelayedName]);
 
+  if (variables.length === 0) return null;
+
   return (
-    <Form>
+    <Form style={{ width: "50%" }}>
       <Form.Group grouped>
         <label>Name</label> <span style={{ fontSize: "10px" }}>(keep it short)</span>
         <Form.Field>
@@ -125,7 +150,8 @@ const DeleteButton = ({ variables, setVariables, index, setIndex }) => {
     setIndex(Math.max(0, index - 1));
   };
 
-  if (variables.length === 0) return null;
+  if (variables.length <= 1) return null;
+  if (variables[index].enabled != null) return null;
 
   return (
     <Popup
@@ -133,10 +159,10 @@ const DeleteButton = ({ variables, setVariables, index, setIndex }) => {
       open={deleteOpen}
       onClose={() => setDeleteOpen(false)}
       trigger={
-        <Menu.Item
-          icon="minus"
-          position="right"
-          style={{ background: "red" }}
+        <Button
+          icon="delete"
+          floated="right"
+          style={{ background: "red", zIndex: 100 }}
           onClick={() => setDeleteOpen(!deleteOpen)}
         />
       }
@@ -170,7 +196,8 @@ const MoveButtons = ({ i, variables, setVariables, index, setIndex }) => {
       {i > 0 ? (
         <Button
           icon="arrow left"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             onMove("left", i);
           }}
           style={{
@@ -183,7 +210,10 @@ const MoveButtons = ({ i, variables, setVariables, index, setIndex }) => {
       {i < variables.length - 1 ? (
         <Button
           icon="arrow right"
-          onClick={() => onMove("right", i)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onMove("right", i);
+          }}
           style={{
             borderRadius: "0",
             padding: "0em",

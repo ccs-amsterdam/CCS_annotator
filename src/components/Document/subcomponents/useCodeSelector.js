@@ -28,7 +28,11 @@ const useCodeSelector = (
 
   useEffect(() => {
     // creates fullVariableMap
-    if (!variables || variables.length === 0) return null;
+    if (!variables || variables.length === 0) {
+      setFullVariableMap(null);
+      return null;
+    }
+
     const vm = {};
     for (let variable of variables) {
       let cm = codeBookEdgesToMap(variable.codes);
@@ -46,7 +50,10 @@ const useCodeSelector = (
   useEffect(() => {
     // creates the actually used variableMap from the fullVariableMap
     // this lets us select specific variables without recreating full map
-    if (fullVariableMap === null) return;
+    if (fullVariableMap === null) {
+      setVariableMap(null);
+      return;
+    }
     if (selectedVariable === null || selectedVariable === "ALL") {
       setVariableMap(fullVariableMap);
       setVariable(null);

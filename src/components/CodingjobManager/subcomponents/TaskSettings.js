@@ -42,9 +42,28 @@ const defaultTaskSettings = {
 const TaskSettings = ({ codingjob }) => {
   const unitSettings = codingjob?.unitSettings;
   const taskSettings = codingjob?.taskSettings || defaultTaskSettings;
-  const setTaskSettings = (us) => {
-    db.setCodingjobProp(codingjob, "taskSettings", us);
+  const setTaskSettings = (ts) => {
+    db.setCodingjobProp(codingjob, "taskSettings", ts);
   };
+
+  useEffect(() => {
+    if (!codingjob?.taskSettings) return;
+    if (!codingjob.importedCodes) return;
+    for (let variable of Object.keys(codingjob.importedCodes)) {
+      const codes = codingjob.importedCodes[variable];
+      const ts = codingjob.taskSettings;
+      if (!ts.annotate.variables.some((v) => v.name === variable)) {
+        ts.annotate.variables.push({
+          name: variable,
+          buttonMode: codes.length > 10 ? "recent" : "all",
+          searchBox: codes.length > 10,
+          codes,
+          enabled: false,
+        });
+        db.setCodingjobProp(codingjob, "taskSettings", ts);
+      }
+    }
+  }, [codingjob]);
 
   if (!taskSettings || !unitSettings) return null;
 
