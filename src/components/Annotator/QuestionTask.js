@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import QuestionForm from "./subcomponents/QuestionForm";
 import Document from "components/Document/Document";
 import { useSwipeable } from "react-swipeable";
-import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
+import { codeBookEdgesToMap, getCodeTreeArray } from "library/codebook";
 import { Form, Icon, Input, Popup } from "semantic-ui-react";
 import { useCookies } from "react-cookie";
 import { useSelector } from "react-redux";

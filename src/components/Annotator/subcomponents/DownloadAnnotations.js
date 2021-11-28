@@ -66,12 +66,19 @@ const formatQuestionsTaskResults = async (localJobServer, setData) => {
     const result = {
       document_id: unit.document_id,
       unit_id: unit.unit_id,
-      ...unit.meta,
+      ...unit.provenance,
       offset: annotations[0].offset,
       length: annotations[0].length,
       section: annotations[0].section,
       ...annotations[0].meta,
     };
+
+    if (unit.meta) {
+      for (let key of Object.keys(unit.meta)) {
+        result["meta_" + key] = unit.meta[key];
+      }
+    }
+
     for (let variable of variables) {
       const a = annotations.find((annotation) => annotation.variable === variable);
       result[variable] = a == null ? null : a.value;

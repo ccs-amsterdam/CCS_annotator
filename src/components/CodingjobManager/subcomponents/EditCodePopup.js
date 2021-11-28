@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { blockEvents } from "actions";
-import { textToCodes } from "util/codebook";
+import { textToCodes } from "library/codebook";
 import { Button, ButtonGroup, Dropdown, Form, Input, Popup, TextArea } from "semantic-ui-react";
 
 const EditCodePopup = ({

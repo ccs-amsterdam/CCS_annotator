@@ -3,7 +3,7 @@ import AnnotateNavigation from "./subcomponents/AnnotateNavigation";
 import Tokens from "./subcomponents/Tokens";
 import useCodeSelector from "./subcomponents/useCodeSelector";
 import { useSelector } from "react-redux";
-import { exportSpanAnnotations } from "util/annotations";
+import { exportSpanAnnotations } from "library/annotations";
 import useUnit from "./subcomponents/useUnit";
 import hash from "object-hash";
 import SelectVariable from "./subcomponents/SelectVariable";
@@ -80,6 +80,7 @@ const Document = ({
       />
       <Tokens
         tokens={tokens}
+        layout={unit?.layout}
         centerVertical={settings.centerVertical}
         setReady={setTokensReady}
         height={variables && variables.length > 1 ? "calc(100% - 30px)" : "100%"}

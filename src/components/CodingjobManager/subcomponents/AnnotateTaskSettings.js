@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Form, Radio, Icon, Checkbox } from "semantic-ui-react";
 
 import CodesEditor from "./CodesEditor";
-import { standardizeCodes } from "util/codebook";
+import { standardizeCodes } from "library/codebook";
 import VariableMenu from "./VariableMenu";
 
 import Help from "components/CodingjobManager/subcomponents/Help";

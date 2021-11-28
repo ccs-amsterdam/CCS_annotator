@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import { keepInView } from "util/scroll";
-import { moveUp, moveDown } from "util/refNavigation";
+import { keepInView } from "library/scroll";
+import { moveUp, moveDown } from "library/refNavigation";
 
 // This component generates no content, but manages navigation for span level annotations
 

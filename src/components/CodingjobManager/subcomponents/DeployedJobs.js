@@ -146,7 +146,6 @@ const ResultsTable = ({ jobKey }) => {
 const getResultUrl = async (jobKey, amcat, setAnnotations) => {
   let job = await db.idb.deployedJobs.get({ url: jobKey.url });
 
-  console.log(job);
   if (!job) return;
 
   if (!amcat) return;
@@ -156,13 +155,21 @@ const getResultUrl = async (jobKey, amcat, setAnnotations) => {
       if (unit.annotations) {
         for (let coder of Object.keys(unit.annotations)) {
           for (let ann of unit.annotations[coder]) {
-            arr.push({
+            const a = {
               document_id: unit.document_id,
               unit_id: i,
               coder,
-              ...unit.meta,
+              ...unit.provenance,
               ...ann,
-            });
+            };
+
+            if (unit.meta) {
+              for (let key of Object.keys(unit.meta)) {
+                a["meta_" + key] = unit.meta[key];
+              }
+            }
+
+            arr.push(a);
           }
         }
       }

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, Dropdown, Grid, Popup, Ref } from "semantic-ui-react";
-import { toggleSpanAnnotation } from "util/annotations";
-import { codeBookEdgesToMap } from "util/codebook";
-import { getColor } from "util/tokenDesign";
-import { moveDown, moveUp } from "util/refNavigation";
+import { toggleSpanAnnotation } from "library/annotations";
+import { codeBookEdgesToMap } from "library/codebook";
+import { getColor } from "library/tokenDesign";
+import { moveDown, moveUp } from "library/refNavigation";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 

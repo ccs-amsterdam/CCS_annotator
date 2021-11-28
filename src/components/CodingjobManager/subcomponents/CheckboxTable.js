@@ -103,6 +103,7 @@ const CheckboxTable = ({ columns, data, setData, width = null, defaultSize = 10 
         setGlobalFilter={setGlobalFilter}
       />
       <Table
+        definition
         compact
         unstackable
         fixed

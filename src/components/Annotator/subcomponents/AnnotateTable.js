@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { Ref, Table } from "semantic-ui-react";
-import { getColor } from "util/tokenDesign";
-import { importSpanAnnotations } from "util/annotations";
+import { getColor } from "library/tokenDesign";
+import { importSpanAnnotations } from "library/annotations";
 import "components/Document/subcomponents/spanAnnotationsStyle.css";
 
 const COLWIDTHS = [4, 4, 2, 2]; // for offset and text

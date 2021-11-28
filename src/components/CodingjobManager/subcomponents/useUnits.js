@@ -1,6 +1,6 @@
 import db from "apis/dexie";
 import { useEffect, useState } from "react";
-import { drawRandom } from "util/sample";
+import { drawRandom } from "library/sample";
 
 /**
  * Hook for getting the Units (using the current codingjob settings)
@@ -149,6 +149,8 @@ const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
         unitIndex: 0, // this is for consistency with paragraph and sentence
         doc_uid: e.doc_uid,
         document_id: e.document_id,
+        textFields: getTextFields(e),
+        metaFields: getMetaFields(e),
         docIndex,
       });
     }
@@ -162,6 +164,8 @@ const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
           unitIndex: parIndex,
           doc_uid: e.doc_uid,
           document_id: e.document_id,
+          textFields: getTextFields(e),
+          metaFields: getMetaFields(e),
           docIndex,
           //parIndex,
         });
@@ -177,6 +181,8 @@ const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
           unitIndex: sentIndex,
           doc_uid: e.doc_uid,
           document_id: e.document_id,
+          textFields: getTextFields(e),
+          metaFields: getMetaFields(e),
           docIndex,
           //sentIndex,
         });
@@ -225,6 +231,8 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
             doc_uid: e.doc_uid,
             document_id: e.document_id,
             docIndex,
+            textFields: getTextFields(e),
+            metaFields: getMetaFields(e),
             span: e.annotations[i][variable].span,
           };
 
@@ -245,6 +253,21 @@ const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
     }
   });
   return [cjIndices, done];
+};
+
+const getTextFields = (e) => {
+  if (e.text_fields) return e.text_fields.map((tf) => tf.name);
+  if (e.tokens) {
+    const fields = new Set();
+    for (let token of e.tokens) fields.add(token.section);
+    return [...fields];
+  }
+  return [];
+};
+
+const getMetaFields = (e) => {
+  if (e.meta_fields) return e.meta_fields.map((tf) => tf.name);
+  return [];
 };
 
 const orderUnits = (cjIndices, unitSettings) => {

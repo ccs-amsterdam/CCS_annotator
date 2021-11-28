@@ -14,8 +14,13 @@ export const UploadTextsCsv = ({ codingjob }) => {
       multiple: true,
       defaults: ["title", "headline", "body", "message", "text"],
     },
+    meta_fields: {
+      required: false,
+      multiple: true,
+      defaults: ["title", "date"],
+    },
   };
-  return <UploadCsv codingjob={codingjob} type="texts" columns={columns} />;
+  return <UploadCsv codingjob={codingjob} type="texts" columns={columns} keepOriginal={false} />;
 };
 
 const renderTextForms = (columns, options, fields, setFields) => {
@@ -23,8 +28,8 @@ const renderTextForms = (columns, options, fields, setFields) => {
     <>
       <Form.Group widths="equal">
         {renderForm("document id", "document_id", columns, options, fields, setFields)}
-
-        {renderForm("text fields", "text_fields", columns, options, fields, setFields)}
+        {renderForm("text columns", "text_fields", columns, options, fields, setFields)}
+        {renderForm("meta columns", "meta_fields", columns, options, fields, setFields)}
       </Form.Group>
     </>
   );
@@ -42,7 +47,7 @@ export const UploadTokensCsv = ({ codingjob }) => {
     section: { required: false, multiple: false, defaults: ["section"] },
     annotations: { required: false, multiple: true, defaults: [] },
   };
-  return <UploadCsv codingjob={codingjob} type="tokens" columns={columns} />;
+  return <UploadCsv codingjob={codingjob} type="tokens" columns={columns} keepOriginal={false} />;
 };
 
 const renderTokenForms = (columns, options, fields, setFields) => {
@@ -63,13 +68,13 @@ const renderTokenForms = (columns, options, fields, setFields) => {
         {renderForm("space / post", "post", columns, options, fields, setFields)}
       </Form.Group>
       <Form.Group widths="equal">
-        {renderForm("annotation columns", "annotations", columns, options, fields, setFields, true)}
+        {renderForm("annotations", "annotations", columns, options, fields, setFields, true)}
       </Form.Group>
     </>
   );
 };
 
-const UploadCsv = ({ codingjob, type = "text", columns }) => {
+const UploadCsv = ({ codingjob, type = "text", columns, keepOriginal }) => {
   const [data, setData] = useState([]);
   const fileRef = useRef();
 
@@ -94,6 +99,7 @@ const UploadCsv = ({ codingjob, type = "text", columns }) => {
             codingjob={codingjob}
             fileRef={fileRef}
             columns={columns}
+            keepOriginal={keepOriginal}
           />
         </Grid.Column>
       </Grid>
@@ -102,7 +108,7 @@ const UploadCsv = ({ codingjob, type = "text", columns }) => {
   );
 };
 
-const SubmitForm = ({ type, data, codingjob, fileRef, columns }) => {
+const SubmitForm = ({ type, data, codingjob, fileRef, columns, keepOriginal }) => {
   const [options, setOptions] = useState([]);
   const [fields, setFields] = useState({});
   const [loading, setLoading] = useState(false);
@@ -152,10 +158,14 @@ const SubmitForm = ({ type, data, codingjob, fileRef, columns }) => {
     }
 
     return data.slice(1).map((row) => {
-      const original = keys.map((key, i) => {
-        return { name: key, value: row.data[i] };
-      });
-      const datarow = { original };
+      const datarow = {};
+
+      if (keepOriginal) {
+        const original = keys.map((key, i) => {
+          return { name: key, value: row.data[i] };
+        });
+        datarow.original = original;
+      }
 
       for (let field of Object.keys(fields)) {
         if (columns[field].multiple) {

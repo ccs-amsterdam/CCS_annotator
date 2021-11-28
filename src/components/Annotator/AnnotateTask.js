@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Grid, Header, List, ListItem, Table, Popup, Button } from "semantic-ui-react";
 import AnnotateTable from "./subcomponents/AnnotateTable";
 import Document from "components/Document/Document";
-import { codeBookEdgesToMap } from "util/codebook";
+import { codeBookEdgesToMap } from "library/codebook";
 
 const AnnotateTask = ({ unit, codebook, blockEvents }) => {
   const [annotations, setAnnotations] = useState([]);

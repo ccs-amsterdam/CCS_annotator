@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Button, Icon, Table, Popup, Modal, TextArea, Dropdown } from "semantic-ui-react";
-import { codeBookEdgesToMap, getCodeTreeArray } from "util/codebook";
+import { codeBookEdgesToMap, getCodeTreeArray } from "library/codebook";
 import EditCodePopup from "./EditCodePopup";
-import { textToCodes, ctaToText } from "util/codebook";
+import { textToCodes, ctaToText } from "library/codebook";
 import Help from "./Help";
 import { blockEvents } from "actions";
 import { useDispatch } from "react-redux";

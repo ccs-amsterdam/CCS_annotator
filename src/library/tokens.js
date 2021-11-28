@@ -72,6 +72,8 @@ export const parseTokens = (text_fields) => {
 };
 
 export const importTokens = (tokens) => {
+  tokens = tokensColumnToRow(tokens);
+
   let paragraph = 0;
   let last_paragraph = tokens[0].paragraph;
 
@@ -240,4 +242,53 @@ export const importTokenAnnotations = (tokens, codes) => {
   for (let annotation of Object.values(codeTracker)) annotations.push(annotation);
 
   return annotations;
+};
+
+/**
+ * Check if tokens are in column format
+ *  [{doc_id: [1,1,1,1,...]},{token_id: [1,2,3,4,etc.]}]
+ * and if so, change to row format
+ *  {doc_id: 1, token_id: 1}, {doc_id: 2, token_id: 2}
+ *
+ * row format is easier to work with, but column format is more efficient
+ * @param {} tokens
+ */
+export const tokensColumnToRow = (tokens) => {
+  if (Array.isArray(tokens)) return tokens;
+  const columns = Object.keys(tokens);
+  const n = tokens[columns[0]].length;
+
+  const tokensArray = [];
+  for (let i = 0; i < n; i++) {
+    const token = columns.reduce((obj, column) => {
+      obj[column] = tokens[column][i];
+      return obj;
+    }, {});
+    tokensArray.push(token);
+  }
+
+  return tokensArray;
+};
+
+/**
+ * Check if tokens are in row format
+ *  {doc_id: 1, token_id: 1}, {doc_id: 2, token_id: 2}
+ * and if so, change to column format
+ *  [{doc_id: [1,1,1,1,...]},{token_id: [1,2,3,4,etc.]}]
+ *
+ * row format is easier to work with, but column format is more efficient
+ * @param {} tokens
+ */
+export const tokensRowToColumn = (tokens) => {
+  if (!Array.isArray(tokens)) return tokens;
+
+  const tokensObj = {};
+  for (let token of tokens) {
+    for (let column of Object.keys(token)) {
+      if (!tokensObj[column]) tokensObj[column] = [];
+      tokensObj[column].push(token[column]);
+    }
+  }
+
+  return tokensObj;
 };

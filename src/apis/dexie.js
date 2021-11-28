@@ -1,8 +1,8 @@
 import Dexie from "dexie";
 import hash from "object-hash";
 
-import { prepareDocumentBatch } from "util/createDocuments";
-import { standardizeCodes } from "util/codebook";
+import { prepareDocumentBatch } from "library/createDocuments";
+import { standardizeCodes } from "library/codebook";
 
 const dbName = "CSSannotator_V1";
 const idbStores = {
@@ -78,7 +78,6 @@ class AnnotationDB {
     let importedCodes = await this.getCodingjobProp(codingjob, "importedCodes");
     importedCodes = updateImportedCodes(codingjob, importedCodes, codes);
 
-    console.log(importedCodes);
     this.idb.codingjobs.where("job_id").equals(codingjob.job_id).modify({ importedCodes });
     return this.idb.documents.bulkAdd(preparedDocuments);
   }

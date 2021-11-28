@@ -1,6 +1,6 @@
 import hash from "object-hash";
-import { importTokens, importTokenAnnotations, parseTokens } from "util/tokens";
-import { importSpanAnnotations } from "util/annotations";
+import { importTokens, importTokenAnnotations, parseTokens } from "library/tokens";
+import { importSpanAnnotations } from "library/annotations";
 
 /**
  * Prepares a batch of documents. Returns [documents, codes], where codes contains the annotation codes used in the documents
@@ -18,9 +18,13 @@ export const prepareDocumentBatch = (
 ) => {
   let ids = new Set(existingUids);
 
+  let n = 0;
   let duplicates = 0;
   let codes = {};
+
   const preparedDocuments = documentList.reduce((result, document) => {
+    if (document.document_id == null) return result;
+    n++;
     const doc_uid = hash([document, job_id]); // codingjob included for doc_uid (unique id) hash
     if (!ids.has(doc_uid)) {
       ids.add(doc_uid);
@@ -28,7 +32,7 @@ export const prepareDocumentBatch = (
       result.push({
         doc_uid: doc_uid,
         job_id: job_id,
-        ...prepareDocument(document, codes),
+        ...prepareDocument(document, codes), // the codes  are filled within
       });
     } else {
       duplicates++;
@@ -37,7 +41,7 @@ export const prepareDocumentBatch = (
   }, []);
 
   if (!silent) {
-    let message = `Created ${documentList.length - duplicates} new documents.`;
+    let message = `Created ${n - duplicates} new documents.`;
     if (duplicates > 0) message = message + ` Ignored ${duplicates} duplicates`;
     alert(message);
   }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, Dropdown, Ref, Icon } from "semantic-ui-react";
-import { moveUp, moveDown } from "util/refNavigation";
+import { moveUp, moveDown } from "library/refNavigation";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 

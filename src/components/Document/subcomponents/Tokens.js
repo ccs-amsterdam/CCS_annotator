@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Ref } from "semantic-ui-react";
-import { scrollToMiddle } from "util/scroll";
+import { scrollToMiddle } from "library/scroll";
 
 import "components/Document/subcomponents/spanAnnotationsStyle.css";
 
-const Tokens = ({ tokens, centerVertical, setReady, height }) => {
+const Tokens = ({ tokens, layout, centerVertical, setReady, height }) => {
   const [text, setText] = useState({});
   const containerRef = useRef(null);
 
@@ -18,9 +18,9 @@ const Tokens = ({ tokens, centerVertical, setReady, height }) => {
 
   useEffect(() => {
     if (!tokens) return null;
-    setText(renderText(tokens));
+    setText(renderText(tokens, layout));
     if (setReady) setReady((current) => current + 1); // setReady is an optional property used to let parents know the text is ready.
-  }, [tokens, setReady]);
+  }, [tokens, layout, setReady]);
 
   if (tokens === null) return null;
 
@@ -53,7 +53,7 @@ const Tokens = ({ tokens, centerVertical, setReady, height }) => {
   );
 };
 
-const renderText = (tokens) => {
+const renderText = (tokens, layout) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
   if (tokens.length === 0) return text;
 
@@ -83,7 +83,7 @@ const renderText = (tokens) => {
 
     if (tokens[i].section !== section_name) {
       if (section.length > 0)
-        text["text"].push(renderSection(i + "_" + section_name, section, section_name));
+        text["text"].push(renderSection(layout, i + "_" + section_name, section, section_name));
       section = [];
     }
 
@@ -99,18 +99,32 @@ const renderText = (tokens) => {
   if (sentence.length > 0) paragraph.push(renderSentence("last", sentence_nr, sentence));
   if (paragraph.length > 0) section.push(renderParagraph("last", paragraph_nr, paragraph, false));
   if (section.length > 0)
-    text["text"].push(renderSection("last_" + section_name, section, section_name));
+    text["text"].push(renderSection(layout, "last_" + section_name, section, section_name));
   return text;
 };
 
-const renderSection = (paragraph_nr, paragraphs, section) => {
+const renderSection = (layout, paragraph_nr, paragraphs, section) => {
   const fontstyle = (paragraphs) => {
-    if (section === "title")
+    if (layout?.text?.[section]) {
+      const label = layout.text[section].label;
       return (
-        <p style={{ fontSize: "1.2em", fontWeight: "bold" }} key={section + paragraph_nr}>
-          {paragraphs}
-        </p>
+        <>
+          {label !== "" ? (
+            <span style={{ marginLeft: "-10px", color: "grey", fontWeight: "bold" }}>{label}</span>
+          ) : null}
+          <p
+            style={{
+              fontSize: `${layout.text[section].size}px`,
+              fontWeight: layout.text[section].bold ? "bold" : "normal",
+              fontStyle: layout.text[section].italic ? "italic" : "normal",
+            }}
+            key={section + paragraph_nr}
+          >
+            {paragraphs}
+          </p>
+        </>
       );
+    }
     return paragraphs;
   };
 

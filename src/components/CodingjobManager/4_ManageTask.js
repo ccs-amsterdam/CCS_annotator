@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import TaskSettings from "./subcomponents/TaskSettings";
 import { Grid, Header } from "semantic-ui-react";
 import useUnits from "components/CodingjobManager/subcomponents/useUnits";
-import { standardizeUnits } from "util/standardizeUnits";
-import { getCodebook } from "util/codebook";
+import { standardizeUnits } from "library/standardizeUnits";
+import { getCodebook } from "library/codebook";
 import { useSelector } from "react-redux";
 
 // imported from annotator

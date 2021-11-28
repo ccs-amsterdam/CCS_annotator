@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AnnotationEvents from "./AnnotationEvents";
 import { Popup, List } from "semantic-ui-react";
-import { getColor, getColorGradient } from "util/tokenDesign";
+import { getColor, getColorGradient } from "library/tokenDesign";
 
 /**
  * The NavigationEvents component handles all eventlisteners

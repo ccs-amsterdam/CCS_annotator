@@ -6,9 +6,9 @@ import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
 import db from "apis/dexie";
-import { drawRandom } from "util/sample";
-import { standardizeUnits } from "util/standardizeUnits";
-import { getCodebook } from "util/codebook";
+import { drawRandom } from "library/sample";
+import { standardizeUnits } from "library/standardizeUnits";
+import { getCodebook } from "library/codebook";
 import DeployedJobs from "./subcomponents/DeployedJobs";
 import { useCookies } from "react-cookie";
 import newAmcatSession from "apis/amcat";

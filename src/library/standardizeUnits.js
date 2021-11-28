@@ -2,6 +2,7 @@ import { selectTokens } from "./selectTokens";
 import hash from "object-hash";
 import db from "apis/dexie";
 import { exportSpanAnnotations } from "./annotations";
+import { tokensRowToColumn } from "./tokens";
 
 // Transform an item as its created in codingjob manager into a simpler
 // standardized item format. This is used when codingjobs are deployed,
@@ -14,10 +15,10 @@ import { exportSpanAnnotations } from "./annotations";
 //   - These units are transformed to simplified items
 
 export const standardizeUnits = async (codingjob, units) => {
-  const { contextUnit, contextWindow } = codingjob.unitSettings;
+  const { contextUnit, contextWindow, layout } = codingjob.unitSettings;
 
   const docs = {};
-  const items = [];
+  const standardizedUnits = [];
 
   const jobhash = hash(codingjob);
 
@@ -37,23 +38,26 @@ export const standardizeUnits = async (codingjob, units) => {
     const toChar = tokens[lastUnitIndex].offset + tokens[lastUnitIndex].length;
     const annotations = docAnnotations.filter((a) => a.offset >= fromChar && a.offset < toChar);
 
-    const item = {
+    const unit = {
       document_id: units[i].document_id,
-      meta: { unit: units[i].textUnit, unit_index: units[i].unitIndex },
+      provenance: { unit: units[i].textUnit, unit_index: units[i].unitIndex },
+      meta: docs[doc_uid].meta_fields,
       annotations,
+      layout,
       variables: units[i].variables,
     };
 
     if (docs[doc_uid].importedTokens) {
-      item.tokens = tokens;
+      // if tokens were imported, don't collapse to texts, but keep the original tokens.
+      unit.tokens = tokensRowToColumn(tokens);
     } else {
-      item.text_fields = unparseTokens(tokens);
+      unit.text_fields = unparseTokens(tokens);
     }
 
-    item.unit_id = hash({ jobhash, item, date: Date() });
-    items.push(item);
+    unit.unit_id = hash({ jobhash, unit, date: Date() });
+    standardizedUnits.push(unit);
   }
-  return items;
+  return standardizedUnits;
 };
 
 const unparseTokens = (tokens) => {
