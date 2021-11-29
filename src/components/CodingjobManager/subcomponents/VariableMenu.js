@@ -17,7 +17,6 @@ const VariableMenu = ({
       ...newVariableDefaults,
       name: uniqueName(newVariableDefaults.name, variables, null),
     };
-
     variables.push(newVariables);
     setVariables(variables);
   };
@@ -93,7 +92,9 @@ const VariableMenu = ({
 
 const setNewName = (name, variables, index, setVariables) => {
   if (variables[index].name === name) return;
+  const oldname = variables[index].name;
   variables[index].name = uniqueName(name, variables, index);
+  processNameChange(variables, oldname, variables[index].name);
   setVariables(variables);
 };
 
@@ -229,7 +230,7 @@ const uniqueName = (newName, variables, index) => {
   let uniqueNewName = newName;
   let i = 2;
 
-  const existingNames = [];
+  const existingNames = ["REMAINING"];
   for (let i = 0; i < variables.length; i++) {
     if (index !== null && i === index) continue;
     existingNames.push(variables[i].name);
@@ -240,6 +241,18 @@ const uniqueName = (newName, variables, index) => {
     i++;
   }
   return uniqueNewName;
+};
+
+const processNameChange = (variables, oldname, newname) => {
+  for (let v of variables) {
+    v.codes = v.codes.map((c) => {
+      if (c.makes_irrelevant)
+        c.makes_irrelevant = c.makes_irrelevant.map((mi) => (mi === oldname ? newname : mi));
+      if (c.required_for)
+        c.required_for = c.required_for.map((rf) => (rf === oldname ? newname : rf));
+      return c;
+    });
+  }
 };
 
 export default VariableMenu;

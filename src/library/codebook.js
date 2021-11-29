@@ -24,6 +24,10 @@ export const standardizeCodes = (codes) => {
     if (code.parent == null) code.parent = "";
     if (code.makes_irrelevant == null) code.makes_irrelevant = [];
     if (typeof code.makes_irrelevant !== "object") code.makes_irrelevant = [code.makes_irrelevant];
+
+    if (code.required_for == null) code.required_for = [];
+    if (typeof code.required_for !== "object") code.required_for = [code.required_for];
+
     if (code.color == null) code.color = randomColor({ seed: code.code, luminosity: "light" });
     return code;
   });

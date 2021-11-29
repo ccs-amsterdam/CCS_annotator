@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Button, Icon, Table, Popup, Modal, TextArea, Dropdown } from "semantic-ui-react";
+import { Button, Icon, Table, Popup, Modal, TextArea, Dropdown, Label } from "semantic-ui-react";
 import { codeBookEdgesToMap, getCodeTreeArray } from "library/codebook";
 import EditCodePopup from "./EditCodePopup";
 import { textToCodes, ctaToText } from "library/codebook";
-import Help from "./Help";
 import { blockEvents } from "actions";
+import Help from "./Help";
 import { useDispatch } from "react-redux";
 
 // NOTE TO SELF: make toggle on/off and edit optional. Toggle on/off makes sense for
@@ -17,7 +17,7 @@ import { useDispatch } from "react-redux";
  * @param {Function} setCodes the callback for setting codes state
  * @param {Array} questions Optional, an array with questions. This enables the 'makes irrelevant' column
  */
-const CodesEditor = ({ codes, setCodes, questions, canAdd = true, height = "100%" }) => {
+const CodesEditor = ({ codes, setCodes, questions, question, canAdd = true, height = "100%" }) => {
   const [codeMap, setCodeMap] = useState({});
   const [codeTreeArray, setCodeTreeArray] = useState([]);
   const [changeColor, setChangeColor] = useState(null);
@@ -52,16 +52,26 @@ const CodesEditor = ({ codes, setCodes, questions, canAdd = true, height = "100%
     return { fontSize: "10px", color };
   };
 
-  const onChangeMakesIrrelevant = (code, value) => {
+  const onChangeBranching = (code, values) => {
     const newCodes = [...codes];
-    newCodes.find((nc) => nc.code === code).makes_irrelevant = value;
+    const makes_irrelevant = [];
+    const required_for = [];
+
+    for (let v of values) {
+      const [type, value] = v.split(/_(.+)/);
+      if (type === "Skip") makes_irrelevant.push(value);
+      if (type === "Required for") required_for.push(value);
+    }
+
+    const updateCode = newCodes.find((nc) => nc.code === code);
+    updateCode.makes_irrelevant = makes_irrelevant;
+    updateCode.required_for = required_for.filter((rf) => !makes_irrelevant.includes(rf));
     setCodes(newCodes);
   };
 
   return (
     <div>
       <Table
-        singleLine
         columns={3}
         unstackable
         textAlign="left"
@@ -80,7 +90,23 @@ const CodesEditor = ({ codes, setCodes, questions, canAdd = true, height = "100%
               Codebook
             </Table.HeaderCell>
             <Table.HeaderCell style={{ textAlign: "right" }}>
-              {makesIrrelevantHeader(questions)}
+              {/* {makesIrrelevantHeader(questions)} */}
+              <div style={{ marginRight: "18px" }}>
+                Branching
+                <Help
+                  header="Make other questions conditional on this answer"
+                  texts={[
+                    `Certain answers can make other questions irrelevant.
+           For example, you might first ask if a text is relevant (for your study).
+           If it isn't, you don't need your coder to waste time answering the remaining questions.
+           In this case, you can set branching to "Skip all".`,
+                    `You can also let an answer "Skip a specific questions", so that certain follow-up questions
+           are only asked if certain conditions are met.`,
+                    `Alternatively, you can specify that an answer is "Required for a specific question" (which is just shorthand for Skip for all other answers)`,
+                    `It is recommended to implement branching as a final step, and to use the preview to test whether it works as intended`,
+                  ]}
+                />
+              </div>
             </Table.HeaderCell>
           </Table.Row>
           {[...codeTreeArray].map((code, i) => {
@@ -154,11 +180,12 @@ const CodesEditor = ({ codes, setCodes, questions, canAdd = true, height = "100%
                   style={{
                     textAlign: "right",
                     paddingLeft: "0.5em",
+
                     borderTop: code.level === 0 ? "1px solid black" : null,
                     //borderBottom: code.level === 0 ? "1px solid black" : null,
                   }}
                 >
-                  {makesIrrelevantDropdown(questions, code, onChangeMakesIrrelevant)}
+                  {branchingDropdown(question, questions, code, onChangeBranching)}
                 </Table.Cell>
               </Table.Row>
             );
@@ -180,79 +207,138 @@ const CodesEditor = ({ codes, setCodes, questions, canAdd = true, height = "100%
   );
 };
 
-const makesIrrelevantHeader = (questions) => {
+// const makesIrrelevantHeader = (questions) => {
+//   if (!questions) return null;
+
+//   return (
+//     <>
+//       Makes irrelevant
+//       <Help
+//         header="Make other questions conditional on this answer"
+//         texts={[
+//           `Certain answers can make other questions irrelevant.
+//            For example, you might first ask if a text is relevant (for your study).
+//            If it isn't, you don't need your coder to waste time answering the remaining questions.
+//            In this case, you can set "makes irrelevant" to "remaining". All remaning questions in the current
+//            unit will then be annotated with the value IRRELEVANT`,
+//           `You can also let an answer make specific other questions irrelevant.
+//            This way you can implement simple branching patterns, where certain follow-up questions
+//            are only asked if certain conditions are met.`,
+//           `It is recommended to setup branching after the name and order of questions is finalized.
+//            Branching does changes automatically when name/order changes, but always double check.`,
+//         ]}
+//       />
+//     </>
+//   );
+// };
+
+const branchingDropdown = (question, questions, code, onChangeBranching) => {
   if (!questions) return null;
 
-  return (
-    <>
-      Makes irrelevant
-      <Help
-        header="Make other questions conditional on this answer"
-        texts={[
-          `Certain answers can make other questions irrelevant. 
-           For example, you might first ask if a text is relevant (for your study). 
-           If it isn't, you don't need your coder to waste time answering the remaining questions.
-           In this case, you can set "makes irrelevant" to "remaining". All remaning questions in the current
-           unit will then be annotated with the value IRRELEVANT`,
-          `You can also let an answer make specific other questions irrelevant. 
-           This way you can implement simple branching patterns, where certain follow-up questions
-           are only asked if certain conditions are met.`,
-          `NOTE that specific other questions are referenced by the question number,
-            so be careful if you change the order of questions.`,
-        ]}
-      />
-    </>
-  );
-};
+  const options = makesIrrelevantOptions(question, questions, code);
+  const makes_irrelevant_values = code.makes_irrelevant.map((mi) => "Skip_" + mi);
+  const required_for_values = code.required_for.map((rf) => "Required for_" + rf);
+  const values = [...makes_irrelevant_values, ...required_for_values];
 
-const makesIrrelevantDropdown = (questions, code, onChange) => {
-  if (!questions) return null;
+  const validValues = values.filter((v) => options.some((o) => o.value === v));
+  if (validValues.length < values.length) onChangeBranching(code.code, validValues);
 
   return (
     <Dropdown
       multiple
-      header="Make which questions irrelevant?"
-      direction="right"
-      options={makesIrrelevantOptions(questions, code)}
-      value={code.makes_irrelevant}
+      header="Determine how this answer affects remaining questions"
+      direction="left"
+      options={options}
+      value={validValues}
       renderLabel={renderMakesIrrelevantLabel}
       onChange={(e, d) => {
         let values = d.value;
-        //if (values.includes("remaining")) values = ["remaining"];
-        onChange(code.code, values);
+        onChangeBranching(code.code, values);
       }}
-      style={{ paddingRight: "0" }}
+      style={{ paddingRight: "0", textAlign: "right" }}
     />
   );
 };
 
-const makesIrrelevantOptions = (questions, code) => {
-  const options = [
-    {
-      key: "remaining",
-      text: "remaining",
-      value: "remaining",
-      description: "All questions after the current",
-    },
-  ];
+const makesIrrelevantOptions = (question, questions, code) => {
+  const options = [];
+
+  if (!code.required_for.includes("REMAINING"))
+    options.push({
+      key: "skipremaining",
+      content: (
+        <>
+          <Label color="red">Skips</Label>
+          All remaining questions
+        </>
+      ),
+      value: "Skip_REMAINING",
+      color: "red",
+    });
 
   // if 'all' is selected, don't show the other options
   //if (code.makes_irrelevant.includes("remaining")) return options;
-  const n = questions.length || 5;
-  for (let i = 0; i < n; i++)
+  const n = questions.length || 0;
+  for (let i = 0; i < n; i++) {
+    if (questions[i].name === question.name) continue;
+    if (!code.required_for.includes(questions[i].name)) {
+      options.push({
+        key: "skip" + i,
+        content: (
+          <>
+            <Label color="red">Skips</Label>
+            {questions[i].name}
+          </>
+        ),
+        color: "red",
+        value: "Skip_" + questions[i].name,
+      });
+    }
+  }
+
+  if (!code.makes_irrelevant.includes("REMAINING"))
     options.push({
-      key: i + 1,
-      text: i + 1,
-      value: `${i}`, // question index starts at 0, only present i+1 to outside
-      description: `Q${i + 1} (${questions[i].name})`,
+      key: "requiredremaining",
+      content: (
+        <>
+          <Label color="green">Required for</Label>
+          All remaining questions
+        </>
+      ),
+      value: "Required for_REMAINING",
+      color: "green",
     });
+
+  for (let i = 0; i < n; i++) {
+    if (questions[i].name === question.name) continue;
+    if (!code.makes_irrelevant.includes(questions[i].name)) {
+      options.push({
+        key: "required" + i,
+        content: (
+          <>
+            <Label color="green">Required for</Label>
+            {questions[i].name}
+          </>
+        ),
+        color: "green",
+        value: "Required for_" + questions[i].name,
+      });
+    }
+  }
 
   return options;
 };
 
 const renderMakesIrrelevantLabel = (label) => ({
-  content: label.text,
-  style: { fontSize: "12px", padding: "0", background: "white", border: "0", boxShadow: "none" },
+  content: label.value.replace("Skip_", "").replace("Required for_", ""),
+  style: {
+    fontSize: "12px",
+    padding: "0",
+    color: label.color,
+    background: "white",
+    border: "0",
+    boxShadow: "none",
+  },
 });
 
 const PlainTextEditor = ({ codes, codeTreeArray, setCodes }) => {

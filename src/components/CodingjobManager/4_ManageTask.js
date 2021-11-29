@@ -51,7 +51,6 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
     setCodebook(getCodebook(codingjob.taskSettings));
   }, [codingjob.taskSettings]);
 
-  console.log(codebook);
   useEffect(() => {
     if (!units || index === null) {
       setStandardizedUnit(null);
@@ -141,7 +140,6 @@ const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit, 
 });
 
 const PreviewAnnotateTask = ({ children, codebook, standardizedUnit, setUnitIndex }) => {
-  console.log(standardizedUnit);
   const blockEvents = useSelector((state) => state.eventsBlocked);
   if (!codebook) return null;
   if (codebook.type !== "annotate") return null;

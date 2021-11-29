@@ -41,7 +41,7 @@ const QuestionForm = ({
     annotations[questionIndex].value = answer.code;
     annotations[questionIndex].makes_irrelevant = answer.makes_irrelevant;
     unit.annotations = updateAnnotations(annotations[questionIndex], unit.annotations);
-    processIrrelevantBranching(unit, annotations, answer.makes_irrelevant, questionIndex);
+    processIrrelevantBranching(unit, questions, annotations, questionIndex);
     unit.jobServer.postAnnotations(unit.unitId, unit.annotations);
 
     setAnswerTransition(answer); // show given answer
@@ -110,18 +110,18 @@ const QuestionForm = ({
   );
 };
 
-const processIrrelevantBranching = (unit, annotations, makesIrrelevant, questionIndex) => {
-  // checks all the makesIrrelevant branching in the given answers
+const processIrrelevantBranching = (unit, questions, annotations, questionIndex) => {
+  // checks all the branching in the given answers
   const which = new Set();
   for (let a in Object.keys(unit.annotations)) {
     const makesIrrelevant = unit.annotations[a].makes_irrelevant;
     if (makesIrrelevant == null || makesIrrelevant === null) continue;
     for (let value of makesIrrelevant) {
-      if (value === "remaining") {
+      if (value === "REMAINING") {
         for (let i = questionIndex + 1; i < annotations.length; i++) which.add(i);
       }
-      if (isNaN(value)) continue;
-      which.add(Number(value));
+      const i = questions.findIndex((q) => q.name === value);
+      if (i >= 0) which.add(i);
     }
   }
 

@@ -61,6 +61,8 @@ export const prepareDocument = (document, codes = {}) => {
     doc.tokens = parseTokens([...doc.text_fields]);
   }
 
+  doc.meta_fields = document.meta_fields || [];
+
   if (doc.tokens.length > 0) {
     doc.n_paragraphs = doc.tokens[doc.tokens.length - 1].paragraph;
     doc.n_sentences = doc.tokens[doc.tokens.length - 1].sentence;

@@ -102,6 +102,7 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, questions, unitSe
         codes={standardizeCodes(questionForm.codes)}
         setCodes={(newCodes) => setQuestionForm({ ...questionForm, codes: newCodes })}
         questions={questions}
+        question={questionForm}
       />
     );
   };
