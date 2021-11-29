@@ -27,7 +27,7 @@ export const standardizeUnits = async (codingjob, units) => {
     if (!docs[doc_uid]) docs[doc_uid] = await db.getDocument(doc_uid);
 
     // get the unit tokens (filter the document tokens, and add bool for whether token is codingunit (i.e. not context))
-    const tokens = selectTokens(docs[doc_uid].tokens, units[i], contextUnit, contextWindow);
+    let tokens = selectTokens(docs[doc_uid].tokens, units[i], contextUnit, contextWindow);
 
     // get annotations and filter for selected tokens
     const docAnnotations = exportSpanAnnotations(docs[doc_uid].annotations, docs[doc_uid].tokens);
@@ -41,19 +41,25 @@ export const standardizeUnits = async (codingjob, units) => {
     const unit = {
       document_id: units[i].document_id,
       provenance: { unit: units[i].textUnit, unit_index: units[i].unitIndex },
-      meta: docs[doc_uid].meta_fields,
+      meta_fields: docs[doc_uid].meta_fields,
       annotations,
-      layout,
       variables: units[i].variables,
     };
 
     if (docs[doc_uid].importedTokens) {
       // if tokens were imported, don't collapse to texts, but keep the original tokens.
       unit.tokens = tokensRowToColumn(tokens);
+      unit.text_fields = Object.keys(layout.text).reduce((tf, name) => {
+        // if texts are not collapsed, text_fields is still used for section layout settings
+        tf.push({ name, ...layout.text[name] });
+        return tf;
+      }, []);
     } else {
       unit.text_fields = unparseTokens(tokens);
+      unit.text_fields = unit.text_fields.map((tf) => ({ ...tf, ...layout.text[tf.name] }));
     }
 
+    unit.meta_fields = unit.meta_fields.map((mf) => ({ ...mf, ...layout.meta[mf.name] }));
     unit.unit_id = hash({ jobhash, unit, date: Date() });
     standardizedUnits.push(unit);
   }

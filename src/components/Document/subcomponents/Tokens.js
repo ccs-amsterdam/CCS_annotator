@@ -3,8 +3,9 @@ import { Ref } from "semantic-ui-react";
 import { scrollToMiddle } from "library/scroll";
 
 import "components/Document/subcomponents/spanAnnotationsStyle.css";
+import Meta from "./Meta";
 
-const Tokens = ({ tokens, layout, centerVertical, setReady, height }) => {
+const Tokens = ({ tokens, text_fields, meta_fields, centerVertical, setReady, height }) => {
   const [text, setText] = useState({});
   const containerRef = useRef(null);
 
@@ -18,9 +19,9 @@ const Tokens = ({ tokens, layout, centerVertical, setReady, height }) => {
 
   useEffect(() => {
     if (!tokens) return null;
-    setText(renderText(tokens, layout));
+    setText(renderText(tokens, text_fields));
     if (setReady) setReady((current) => current + 1); // setReady is an optional property used to let parents know the text is ready.
-  }, [tokens, layout, setReady]);
+  }, [tokens, text_fields, setReady]);
 
   if (tokens === null) return null;
 
@@ -45,6 +46,16 @@ const Tokens = ({ tokens, layout, centerVertical, setReady, height }) => {
           }}
         >
           {/* <div style={{ height: "10em" }} /> */}
+          <div
+            style={{
+              paddingTop: "20px",
+              marginLeft: "10%",
+              width: "80%",
+              textAlign: "right",
+            }}
+          >
+            <Meta meta_fields={meta_fields} />
+          </div>
           <div style={{ padding: "20px" }}>{text["text"]}</div>
           <div style={{ height: "25px" }} />
         </div>
@@ -53,7 +64,7 @@ const Tokens = ({ tokens, layout, centerVertical, setReady, height }) => {
   );
 };
 
-const renderText = (tokens, layout) => {
+const renderText = (tokens, text_fields) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
   if (tokens.length === 0) return text;
 
@@ -83,7 +94,9 @@ const renderText = (tokens, layout) => {
 
     if (tokens[i].section !== section_name) {
       if (section.length > 0)
-        text["text"].push(renderSection(layout, i + "_" + section_name, section, section_name));
+        text["text"].push(
+          renderSection(text_fields, i + "_" + section_name, section, section_name)
+        );
       section = [];
     }
 
@@ -99,24 +112,32 @@ const renderText = (tokens, layout) => {
   if (sentence.length > 0) paragraph.push(renderSentence("last", sentence_nr, sentence));
   if (paragraph.length > 0) section.push(renderParagraph("last", paragraph_nr, paragraph, false));
   if (section.length > 0)
-    text["text"].push(renderSection(layout, "last_" + section_name, section, section_name));
+    text["text"].push(renderSection(text_fields, "last_" + section_name, section, section_name));
   return text;
 };
 
-const renderSection = (layout, paragraph_nr, paragraphs, section) => {
+const renderSection = (text_fields, paragraph_nr, paragraphs, section) => {
   const fontstyle = (paragraphs) => {
-    if (layout?.text?.[section]) {
-      const label = layout.text[section].label;
+    const layout = text_fields.find((tf) => tf.name === section);
+    if (layout) {
       return (
         <>
-          {label !== "" ? (
-            <span style={{ marginLeft: "-10px", color: "grey", fontWeight: "bold" }}>{label}</span>
+          {layout.label ? (
+            <span
+              style={{
+                color: "grey",
+                fontWeight: "bold",
+                textAlign: "center",
+              }}
+            >
+              {layout.label}
+            </span>
           ) : null}
           <p
             style={{
-              fontSize: `${layout.text[section].size}px`,
-              fontWeight: layout.text[section].bold ? "bold" : "normal",
-              fontStyle: layout.text[section].italic ? "italic" : "normal",
+              fontSize: `${layout.size != null ? layout.size : 1}em`,
+              fontWeight: layout.bold ? "bold" : "normal",
+              fontStyle: layout.italic ? "italic" : "normal",
             }}
             key={section + paragraph_nr}
           >

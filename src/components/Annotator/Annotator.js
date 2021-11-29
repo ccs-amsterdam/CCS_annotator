@@ -4,6 +4,7 @@ import { useLocation } from "react-router";
 import AnnotatorScreen from "components/Annotator/AnnotatorScreen";
 import { JobServerRemote, JobServerLocal } from "components/Annotator/JobServerClass";
 import { useCookies } from "react-cookie";
+import UserName from "components/HeaderMenu/UserName";
 
 const Annotator = () => {
   const location = useLocation();
@@ -11,6 +12,8 @@ const Annotator = () => {
   const [cookies] = useCookies(["name"]);
 
   useEffect(() => {
+    console.log(cookies.name);
+    if (!cookies.name) return;
     if (location.search) {
       const queries = parseQueryString(location);
       if (queries?.url) {
@@ -26,6 +29,7 @@ const Annotator = () => {
   }, [location, cookies, setJobServer]);
 
   //if (!JobServer) return <TaskSelector />;
+  if (!cookies.name) return <UserName force={true} />;
   if (!jobServer) return null;
   return <AnnotatorScreen jobServer={jobServer} />;
 };

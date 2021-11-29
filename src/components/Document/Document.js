@@ -40,9 +40,9 @@ const Document = ({
   const [variable, setVariable] = useState(null);
 
   const [tokensReady, setTokensReady] = useState(0);
-  const [tokens, annotations, setAnnotations] = useUnit(unit, safetyCheck, returnTokens);
+  const [preparedUnit, annotations, setAnnotations] = useUnit(unit, safetyCheck, returnTokens);
   const [popup, triggerCodePopup, variableMap, codeSelectorOpen] = useCodeSelector(
-    tokens,
+    preparedUnit.tokens,
     variables,
     variable,
     annotations,
@@ -54,22 +54,22 @@ const Document = ({
     if (!annotations || !onChangeAnnotations) return;
 
     // check if same unit, to prevent annotations from spilling over due to race conditions
-    if (safetyCheck.current.tokens !== tokens) return;
+    if (safetyCheck.current.tokens !== preparedUnit.tokens) return;
     // check if annotations changed since start.
     if (!safetyCheck.current.annotationsChanged) {
       if (safetyCheck.current.annotations === hash(annotations)) return;
       safetyCheck.current.annotationsChanged = true;
     }
 
-    onChangeAnnotations(exportSpanAnnotations(annotations, tokens));
-  }, [tokens, annotations, onChangeAnnotations]);
+    onChangeAnnotations(exportSpanAnnotations(annotations, preparedUnit.tokens, true));
+  }, [preparedUnit.tokens, annotations, onChangeAnnotations]);
 
   useEffect(() => {
     if (setReady) setReady((current) => current + 1);
     setAnnotations((state) => ({ ...state })); //trigger DOM update after token refs have been prepared
   }, [tokensReady, setAnnotations, setReady]);
 
-  if (!tokens) return null;
+  if (!preparedUnit.tokens) return null;
   return (
     <>
       <SelectVariable
@@ -78,15 +78,17 @@ const Document = ({
         setVariable={setVariable}
         height={"30px"}
       />
+
       <Tokens
-        tokens={tokens}
-        layout={unit?.layout}
+        tokens={preparedUnit.tokens}
+        text_fields={preparedUnit.text_fields}
+        meta_fields={preparedUnit.meta_fields}
         centerVertical={settings.centerVertical}
         setReady={setTokensReady}
         height={variables && variables.length > 1 ? "calc(100% - 30px)" : "100%"}
       />
       <AnnotateNavigation
-        tokens={tokens}
+        tokens={preparedUnit.tokens}
         variableMap={variableMap}
         annotations={annotations}
         triggerCodePopup={triggerCodePopup}

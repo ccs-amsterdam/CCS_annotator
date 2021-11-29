@@ -4,10 +4,9 @@ import AnnotateTable from "./subcomponents/AnnotateTable";
 import Document from "components/Document/Document";
 import { codeBookEdgesToMap } from "library/codebook";
 
-const AnnotateTask = ({ unit, codebook, blockEvents }) => {
+const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
   const [annotations, setAnnotations] = useState([]);
   const [variableMap, setVariableMap] = useState(null);
-  const [tokens, setTokens] = useState();
 
   useEffect(() => {
     // settings is an array with the settings for each question
@@ -36,7 +35,6 @@ const AnnotateTask = ({ unit, codebook, blockEvents }) => {
           variables={codebook?.variables}
           settings={codebook?.settings}
           onChangeAnnotations={setAnnotations}
-          returnTokens={setTokens}
           blockEvents={blockEvents}
         />
       </Grid.Column>
@@ -48,11 +46,48 @@ const AnnotateTask = ({ unit, codebook, blockEvents }) => {
           overflow: "auto",
         }}
       >
-        <Instructions codebook={codebook} />
-
-        <AnnotateTable tokens={tokens} variableMap={variableMap} annotations={annotations} />
+        <Button.Group fluid style={{ padding: "0" }}>
+          <NextUnitButton setUnitIndex={setUnitIndex} />
+          <Instructions codebook={codebook} />
+        </Button.Group>
+        <AnnotateTable variableMap={variableMap} annotations={annotations} />
       </Grid.Column>
     </Grid>
+  );
+};
+
+const NextUnitButton = ({ setUnitIndex }) => {
+  const [tempDisable, setTempDisable] = useState(false);
+
+  const onNext = () => {
+    if (tempDisable) return;
+    setTempDisable(true);
+    setUnitIndex((state) => state + 1);
+    setTimeout(() => {
+      setTempDisable(false);
+    }, 1000);
+  };
+
+  const onKeyDown = (e) => {
+    if (e.ctrlKey && e.keyCode === 13) {
+      e.preventDefault();
+      onNext();
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  });
+
+  return (
+    <Button disabled={tempDisable} loading={tempDisable} primary size="tiny" onClick={onNext}>
+      Next Unit
+      <br />
+      (ctrl + Enter)
+    </Button>
   );
 };
 
@@ -64,12 +99,12 @@ const Instructions = () => {
       open={open}
       position="bottom right"
       trigger={
-        <Button fluid primary size="tiny" onClick={() => setOpen(!open)} style={{}}>
+        <Button secondary size="tiny" onClick={() => setOpen(!open)}>
           Instructions
         </Button>
       }
     >
-      <Container style={{ paddingTop: "2em", width: "500px" }}>
+      <Container style={{ paddingTop: "2em", width: "700px" }}>
         <Header as="h4" align="center">
           Edit span annotations
         </Header>
@@ -77,7 +112,7 @@ const Instructions = () => {
         <Table unstackable>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell></Table.HeaderCell>
+              <Table.HeaderCell width={3}></Table.HeaderCell>
               <Table.HeaderCell>Keyboard</Table.HeaderCell>
               <Table.HeaderCell>Mouse</Table.HeaderCell>
               <Table.HeaderCell>Touchpad</Table.HeaderCell>
@@ -128,7 +163,11 @@ const Instructions = () => {
             </Table.Row>
             <Table.Row>
               <Table.Cell>
-                <strong>Select variable</strong>
+                <strong>
+                  Select variable
+                  <br />
+                  (if multiple)
+                </strong>
               </Table.Cell>
               <Table.Cell>
                 Next with <i>tab</i>, previous with <i>shift+tab</i>
@@ -136,6 +175,30 @@ const Instructions = () => {
               <Table.Cell>Use buttons</Table.Cell>
               <Table.Cell>Use buttons</Table.Cell>
             </Table.Row>
+            <Table.Row>
+              <Table.Cell>
+                <strong>Next unit</strong>
+              </Table.Cell>
+              <Table.Cell>
+                <i>ctrl+Enter</i>
+              </Table.Cell>
+              <Table.Cell>Next Unit button</Table.Cell>
+              <Table.Cell>Next Unit button</Table.Cell>
+            </Table.Row>
+            {/* <Table.Row>
+              <Table.Cell>
+                <strong>
+                  Browse units
+                  <br />
+                  (if allowed)
+                </strong>
+              </Table.Cell>
+              <Table.Cell>
+                Press or hold <i>ctrl+Enter</i> (forward) or <i>ctrl+backspace</i> (backward)
+              </Table.Cell>
+              <Table.Cell>back and next buttons (top-left)</Table.Cell>
+              <Table.Cell>back and next buttons (top-left)</Table.Cell>
+            </Table.Row> */}
           </Table.Body>
           <Table.Footer>
             <Table.Row>

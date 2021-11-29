@@ -164,7 +164,7 @@ const SettingsPopup = ({ settings, setSettings }) => {
               size="mini"
               step={0.025}
               min={0.4}
-              max={1.2}
+              max={1.6}
               type="range"
               value={settings.textSize}
               onChange={(e, d) => setSettings((state) => ({ ...state, textSize: d.value }))}
@@ -180,10 +180,38 @@ const prepareQuestions = (codebook) => {
   const questions = codebook.questions;
   return questions.map((question) => {
     const codeMap = codeBookEdgesToMap(question.codes);
-    const cta = getCodeTreeArray(codeMap);
+    let cta = getCodeTreeArray(codeMap);
+    cta = addRequiredFor([...cta]);
     const [options, swipeOptions] = getOptions(cta);
     return { ...question, options, swipeOptions }; // note that it's important that this deep copies question
   });
+};
+
+const addRequiredFor = (cta) => {
+  // if codebook has a required_for question, check if this code has it. If not, it's the same as this code having
+  // a makes_irrelevant for this question. This way we only need to process the makes_irrelevant logic (which is easier)
+  const haveRequired = cta.reduce((s, code) => {
+    if (!code.required_for) return s;
+    if (typeof code.required_for !== "object") {
+      s.add(code.required_for);
+    } else {
+      for (let rf of code.required_for) s.add(rf);
+    }
+    return s;
+  }, new Set());
+
+  for (let code of cta) {
+    for (let hasReq of haveRequired) {
+      if (
+        !code.required_for ||
+        (code.required_for !== hasReq && !code.required_for.includes(hasReq))
+      ) {
+        if (!code.makes_irrelevant.includes(hasReq))
+          code.makes_irrelevant = [...code.makes_irrelevant, hasReq];
+      }
+    }
+  }
+  return cta;
 };
 
 const getOptions = (cta) => {

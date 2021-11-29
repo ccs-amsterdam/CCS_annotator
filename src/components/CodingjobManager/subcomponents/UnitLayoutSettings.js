@@ -16,24 +16,12 @@ const UnitLayoutSettings = ({ codingjob, units }) => {
     for (let unit of units) {
       if (unit.textFields) {
         for (let textField of unit.textFields) {
-          if (!f.text[textField])
-            f.text[textField] = {
-              label: "",
-              bold: false,
-              italic: false,
-              size: 10,
-            };
+          if (!f.text[textField]) f.text[textField] = defaultLayout(textField);
         }
       }
       if (unit.metaFields) {
         for (let metaField of unit.metaFields) {
-          if (!f.meta[metaField])
-            f.meta[metaField] = {
-              label: metaField,
-              bold: false,
-              italic: false,
-              size: 10,
-            };
+          if (!f.meta[metaField]) f.meta[metaField] = defaultLayout(metaField);
         }
       }
     }
@@ -49,6 +37,20 @@ const UnitLayoutSettings = ({ codingjob, units }) => {
       fields={fields}
     />
   );
+};
+
+const defaultLayout = (field) => {
+  const l = {
+    label: field.toUpperCase().replaceAll("_", " "),
+    bold: false,
+    italic: false,
+    size: 1,
+  };
+  if (["title", "headline"].includes(field)) {
+    l.size = 1.4;
+    l.bold = true;
+  }
+  return l;
 };
 
 const LayoutFields = ({ codingjob, unitSettings, setUnitSettings, fields }) => {
@@ -99,7 +101,8 @@ const FieldSettings = ({ fields, unitSettings, setUnitSettings }) => {
         value={fields[field].size}
         type="number"
         min={0}
-        max={50}
+        max={5}
+        step={0.1}
         style={{ width: "100%", padding: "0", border: "none" }}
         onChange={(e, d) => {
           const nr = Number(d.value);

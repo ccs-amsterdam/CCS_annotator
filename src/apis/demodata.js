@@ -13,6 +13,10 @@ export const demo_codebook = {
 export const demo_articles = [
   {
     document_id: "Some document ID",
+    meta_fields: [
+      { name: "date", value: "2010-01-01T00:00:01Z" },
+      { name: "source", value: "Krantje" },
+    ],
     text_fields: [
       {
         name: "title",
@@ -58,6 +62,10 @@ Tjeenk Willink heeft namelijk ook de opdracht om te onderzoeken "of en zo ja ond
   },
   {
     document_id: "Another document ID",
+    meta_fields: [
+      { name: "date", value: "2010-01-01T00:00:01Z" },
+      { name: "source", value: "Krantje" },
+    ],
     text_fields: [
       {
         name: "title",

@@ -1,4 +1,4 @@
-export const exportSpanAnnotations = (annotations, tokens) => {
+export const exportSpanAnnotations = (annotations, tokens, includeText = false) => {
   // export annotations from the object format (for fast use in the annotator) to array format
   if (Object.keys(annotations).length === 0) return [];
   const uniqueAnnotations = Object.keys(annotations).reduce((un_ann, index) => {
@@ -15,6 +15,16 @@ export const exportSpanAnnotations = (annotations, tokens) => {
         offset: ann[key].offset,
         length: ann[key].length,
       };
+
+      if (includeText) {
+        const span = ann[key].span;
+        const text = tokens
+          .slice(span[0], span[1] + 1)
+          .map((t) => t.pre + t.text + t.post)
+          .join("");
+        ann_obj["text"] = text;
+      }
+
       un_ann.push(ann_obj);
     }
     return un_ann;

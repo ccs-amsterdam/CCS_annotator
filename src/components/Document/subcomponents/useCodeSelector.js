@@ -21,10 +21,20 @@ const useCodeSelector = (
   const [variable, setVariable] = useState(null);
   const [tokenRef, setTokenRef] = useState(null);
   const [tokenAnnotations, setTokenAnnotations] = useState({});
-  const [codeHistory, setCodeHistory] = useState([]);
 
   const [fullVariableMap, setFullVariableMap] = useState(null);
   const [variableMap, setVariableMap] = useState(null);
+
+  const [codeHistory, setCodeHistory] = useState({});
+  const setSelectedCodeHistory = React.useCallback(
+    (value) => {
+      setCodeHistory((state) => {
+        state[selectedVariable] = value;
+        return state;
+      });
+    },
+    [selectedVariable, setCodeHistory]
+  );
 
   useEffect(() => {
     // creates fullVariableMap
@@ -44,7 +54,7 @@ const useCodeSelector = (
       vm[variable.name] = { ...variable, codeMap: cm };
     }
     setFullVariableMap(vm);
-    setCodeHistory([]);
+    setCodeHistory({});
   }, [variables, setFullVariableMap, setCodeHistory]);
 
   useEffect(() => {
@@ -106,12 +116,12 @@ const useCodeSelector = (
         overwrites={overwrites}
         codeMap={variableMap?.[variable]?.codeMap}
         settings={variableMap?.[variable]}
-        codeHistory={codeHistory}
+        codeHistory={codeHistory[selectedVariable] || []}
         annotations={tokenAnnotations}
         setAnnotations={setAnnotations}
         selection={selection}
         setOpen={setOpen}
-        setCodeHistory={setCodeHistory}
+        setCodeHistory={setSelectedCodeHistory}
       />
     </CodeSelectorPopup>
   );
@@ -153,7 +163,7 @@ const CodeSelectorPopup = ({
           setOpen(false);
         }
       }}
-      style={{ padding: "0px" }}
+      style={{ padding: "0px", minWidth: "15em" }}
     >
       <div
         style={{
@@ -291,6 +301,7 @@ const NewCodePage = ({
         selection,
         setAnnotations,
         setOpen,
+        codeHistory,
         setCodeHistory
       );
     } else {
@@ -302,6 +313,7 @@ const NewCodePage = ({
         selection,
         setAnnotations,
         setOpen,
+        codeHistory,
         setCodeHistory
       );
     }
@@ -366,7 +378,8 @@ const NewCodePage = ({
     if (!codeMap) return null;
 
     // use searchBox if specified OR if settings are missing
-    if (settings && !settings.searchBox) return null;
+    // also, if buttonmode is 'recent', always show search box
+    if (settings && !settings.searchBox && settings.buttonMode !== "recent") return null;
     return (
       <>
         <Grid>
@@ -416,6 +429,7 @@ const NewCodePage = ({
                       selection,
                       setAnnotations,
                       setOpen,
+                      codeHistory,
                       setCodeHistory
                     );
                 }}
@@ -552,6 +566,7 @@ const updateAnnotations = (
   selection,
   setAnnotations,
   setOpen,
+  codeHistory,
   setCodeHistory
 ) => {
   if (!annotations) {
@@ -571,7 +586,7 @@ const updateAnnotations = (
     const newstate = toggleSpanAnnotation({ ...state }, rmAnnotation, true);
     return toggleSpanAnnotation(newstate, newAnnotation, false);
   });
-  setCodeHistory((state) => [value, ...state.filter((v) => v !== value)].slice(0, 5));
+  setCodeHistory([value, ...codeHistory.filter((v) => v !== value)].slice(0, 5));
   setOpen(false);
 };
 
