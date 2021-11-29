@@ -19,4 +19,6 @@ Depending on your env, you might have to run `npm install --only=dev` to install
 
 ## CCS Annotator Modules
 
-![CCS Modules](media/Architecture.png)
+The
+
+![CCS Modules](media/Architecture.pdf)
