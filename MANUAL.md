@@ -91,3 +91,9 @@ Note that in this case, you need to have a running AmCAT server. Visit [a link](
 ![Annotate Mode](media/amcatDeploy.png)
 
 ### CCS Annotator
+
+The CCS Annotator functions as a webpage where the coding itself takes place. Coders can either follow alink to a coding job, or upload a coding job from a file. After entering the URL on your (coder's) browser, the page prompts you to input a user name. This user name is stored with the coders annotations in order to track the job by each coder. After this step, the coder can choose either the _fullscreen_ or the _windowed_ mode, the latter of which is useful for coders who use their smart phone for coding.
+
+### Advanced Usage
+
+## Access Control
