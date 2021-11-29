@@ -61,7 +61,7 @@ const Document = ({
       safetyCheck.current.annotationsChanged = true;
     }
 
-    onChangeAnnotations(exportSpanAnnotations(annotations, preparedUnit.tokens));
+    onChangeAnnotations(exportSpanAnnotations(annotations, preparedUnit.tokens, true));
   }, [preparedUnit.tokens, annotations, onChangeAnnotations]);
 
   useEffect(() => {

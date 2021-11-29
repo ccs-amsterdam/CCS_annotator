@@ -77,6 +77,7 @@ const AnnotatorScreen = ({ jobServer }) => {
               setIndex={setUnitIndex}
               canGoBack={jobServer?.rules.canGoBack}
               canGoForward={jobServer?.rules.canGoForward}
+              quickKeyNext={jobServer?.codebook?.type === "annotate"}
             />
           </div>
           <div>

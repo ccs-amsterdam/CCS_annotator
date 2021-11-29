@@ -86,7 +86,14 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
             standardizedUnit={standardizedUnit}
             setUnitIndex={setIndex}
           >
-            <IndexController n={units?.length} index={index} setIndex={setIndex} />
+            <IndexController
+              n={units?.length}
+              index={index}
+              setIndex={setIndex}
+              canGoBack={false}
+              canGoForward={false}
+              quickKeyNext={true}
+            />
           </PreviewAnnotateTask>
         );
       default:

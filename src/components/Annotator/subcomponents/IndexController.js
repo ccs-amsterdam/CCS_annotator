@@ -1,7 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Input, Loader, Pagination, Segment } from "semantic-ui-react";
 
-const IndexController = ({ n, index, setIndex, canGoForward = true, canGoBack = true }) => {
+const IndexController = ({
+  n,
+  index,
+  setIndex,
+  canGoForward = true,
+  canGoBack = true,
+  quickKeyNext = false,
+}) => {
   const reached = useRef(0); // if canGoBack but not canGoForward, can still go forward after going back
   const canMove = useRef(false);
 
@@ -10,27 +17,30 @@ const IndexController = ({ n, index, setIndex, canGoForward = true, canGoBack = 
   const [delayedActivePage, setDelayedActivePage] = useState(1);
 
   // const onKeyDown = (e) => {
-  //   if (e.keyCode === 9) {
+  //   if (e.ctrlKey && e.keyCode === 13) {
   //     e.preventDefault();
-  //     if (e.shiftKey) {
-  //       if (!canGoBack) return;
-  //       if (e.repeat) {
-  //         setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
-  //       } else {
-  //         setActivePage((current) => (current > 1 ? current - 1 : current));
-  //       }
+  //     if (!canGoForward && !quickKeyNext) return;
+  //     if (e.repeat) {
+  //       setDelayedActivePage((current) => {
+  //         if (canGoForward || current < reached.current)
+  //           return current < n + 1 ? current + 1 : current;
+  //         return current;
+  //       });
   //     } else {
-  //       if (e.repeat) {
-  //         setDelayedActivePage((current) => {
-  //           if (canGoForward || current < reached.current)
-  //             return current < n + 1 ? current + 1 : current;
-  //         });
-  //       } else {
-  //         setActivePage((current) => {
-  //           if (canGoForward || current < reached.current)
-  //             return current < n + 1 ? current + 1 : current;
-  //         });
-  //       }
+  //       setActivePage((current) => {
+  //         if (quickKeyNext || canGoForward || current < reached.current)
+  //           return current < n + 1 ? current + 1 : current;
+  //         return current;
+  //       });
+  //     }
+  //   }
+  //   if (e.ctrlKey && e.keyCode === 8) {
+  //     e.preventDefault();
+  //     if (!canGoBack) return;
+  //     if (e.repeat) {
+  //       setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
+  //     } else {
+  //       setActivePage((current) => (current > 1 ? current - 1 : current));
   //     }
   //   }
   // };
@@ -41,7 +51,7 @@ const IndexController = ({ n, index, setIndex, canGoForward = true, canGoBack = 
   }, [index, n, setActivePage]);
 
   // useEffect(() => {
-  //   if (canGoForward || canGoBack) window.addEventListener("keydown", onKeyDown);
+  //   if (quickKeyNext || canGoForward || canGoBack) window.addEventListener("keydown", onKeyDown);
   //   return () => {
   //     window.removeEventListener("keydown", onKeyDown);
   //   };
@@ -122,8 +132,8 @@ const IndexController = ({ n, index, setIndex, canGoForward = true, canGoBack = 
             size={"mini"}
             firstItem={null}
             lastItem={null}
-            prevItem={canGoBack ? "back" : null}
-            nextItem={canGoForward || activePage < reached.current ? "next" : ""}
+            prevItem={canGoBack ? "back" : "   "}
+            nextItem={canGoForward || activePage < reached.current ? "next" : "   "}
             siblingRange={0}
             boundaryRange={0}
             ellipsisItem={null}

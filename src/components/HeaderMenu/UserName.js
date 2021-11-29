@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Menu, Header, Modal, Form, Button } from "semantic-ui-react";
 import { useCookies } from "react-cookie";
 
-const UserName = () => {
+const UserName = ({ force = false }) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [cookies, setCookies] = useCookies(["name"]);
@@ -19,8 +19,8 @@ const UserName = () => {
 
   return (
     <Modal
-      closeIcon
-      open={open}
+      closeIcon={!force}
+      open={open || force}
       trigger={
         <Menu.Item
           icon={cookies.name == null ? "toggle off" : "toggle on"}

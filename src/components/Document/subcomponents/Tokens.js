@@ -46,7 +46,14 @@ const Tokens = ({ tokens, text_fields, meta_fields, centerVertical, setReady, he
           }}
         >
           {/* <div style={{ height: "10em" }} /> */}
-          <div style={{ padding: "20px", marginLeft: "10%", textAlign: "right" }}>
+          <div
+            style={{
+              paddingTop: "20px",
+              marginLeft: "10%",
+              width: "80%",
+              textAlign: "right",
+            }}
+          >
             <Meta meta_fields={meta_fields} />
           </div>
           <div style={{ padding: "20px" }}>{text["text"]}</div>
