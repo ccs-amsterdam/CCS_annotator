@@ -15,7 +15,9 @@ export class JobServerRemote {
     // needs to be called in order to fetch codebook/rules
     let response;
     try {
-      console.log(this.url);
+      const url = new URL("http://example.com/path/index.html?param=value");
+      console.log(url.pathname.split("/")[1]);
+
       response = await axios.get(`${this.url}/codebook`);
     } catch (e) {
       this.success = false;
