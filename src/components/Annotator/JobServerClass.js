@@ -9,6 +9,7 @@ export class JobServerRemote {
     this.url = url;
     this.coderName = coderName;
     this.where = "remote";
+    this.codingjobID = "";
   }
 
   async init() {
@@ -16,11 +17,13 @@ export class JobServerRemote {
     let response;
     try {
       const url = new URL(this.url);
-      const codingjobID = url.pathname.split("/")[2];
+      this.codingjobID = url.pathname.split("/")[2];
 
       console.log(this.coderName);
 
-      response = await axios.get(`${this.url}/codebook?id=${codingjobID}&user=${this.coderName}`);
+      response = await axios.get(
+        `${this.url}/codebook?id=${this.codingjobID}&user=${this.coderName}`
+      );
     } catch (e) {
       this.success = false;
       return;
@@ -37,14 +40,19 @@ export class JobServerRemote {
 
   async getUnit(i) {
     //
-    const response = await axios.get(`${this.url}/unit?user=${this.coderName}`);
+    const response = await axios.get(
+      `${this.url}/unit??id=${this.codingjobID}&user=${this.coderName}`
+    );
     return response.data;
     // data should be an object with url, id and unit, where unit is an object with at least text_fields,
     // and if available annotations
   }
 
   postAnnotations(unit_id, data) {
-    axios.post(`${this.url}/unit/${unit_id}/annotation?user=${this.coderName}`, data);
+    axios.post(
+      `${this.url}/unit/${unit_id}/annotation??id=${this.codingjobID}&user=${this.coderName}`,
+      data
+    );
   }
 }
 
