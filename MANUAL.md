@@ -4,7 +4,7 @@
 
 CCS Annotator is a tool for manual content analysis that is targeted specifically at the Computational Communication Science (CCS) community. CCS Annotatoris is designed to make the annotation tasks that our field (CCS) requires easier and more efficient to set-up and deploy, and to facilitate the development of reusable and shareable codebooks. It can be used by itself using only a standard web-browser, requiring no installation for either the researcher or coders. An additional CCS Annotator server backend can be installed for fast and efficient distribution of jobs and collection of results. CCS Annotator supports various annotations modes, ranging from expert tasks such as labeling specific words and phrases, to simple crowd coding tasks like Tinder style swiping on mobile phone.
 
-## CCS Annotator Modules
+### CCS Annotator Modules
 
 Depending on the applicaiton and its requirements, CCS Annotator can have various setups. The most complete (and powerful) version is depicted below:
 
@@ -14,7 +14,7 @@ In this setup, there are 5 modules composing the CCS Annotator: CCS Annotator Ma
 
 ![CCS Backend Setups](media/backends.png)
 
-For more information about CCS Annotator modules, check here: [a link](extended-abstract-papaer)
+For more information about CCS Annotator modules, check here: [Extended Abstract ICA](extended-abstract-papaer)
 
 ## Installation and Run
 
@@ -29,13 +29,13 @@ npm start
 
 Depending on your env, you might have to run `npm install --only=dev` to install dev dependencies.
 
-- Currently there is a new error for npm installs for Mac users. If after installation you still cannot reach the webclient, run `unset HOST` in your terminal before `npm start`. Here is the link to the open issue: [a link](https://github.com/facebook/create-react-app/issues/9619).
+- Currently there is a new error for npm installs for Mac users. If after installation you still cannot reach the webclient, run `unset HOST` in your terminal before `npm start`. Here is the link to the open issue: [Github Issue](https://github.com/facebook/create-react-app/issues/9619).
 
 ## Usage Manual
 
 The rest of this document provides a usage manual for CCS Annotator. Note that this manual concerns the base version (pulled from the GitHub repo) without any additional changes and modifications.
 
-### CCS Annotator Manager
+## CCS Annotator Manager
 
 The CCS Annotator Manageris an mandatory component in which researchers can create coding jobs. Note that, coding jobs can also be created in software such as R or Python, for which we are working on a separate package and module, respectively.
 
@@ -86,14 +86,14 @@ In this mode, you cann add questions for each unit, and see how it is displayed 
 
 ![Annotate Mode](media/deployPage.png)
 
-Note that in this case, you need to have a running AmCAT server. Visit [a link](https://github.com/ccs-amsterdam/amcat4) for more details. To login to AmCAT, use the AmCAT tab on the top of the page. After a successfull login, you are returned to the deploy page, where you can give a name to your coding job, and upload it to AmCAT. After this, you can see the link of the coding job, as well as a QR-code which can be distributed to the coders.
+Note that in this case, you need to have a running AmCAT server. Visit [AmCAT 4.0 GitHub Repo](https://github.com/ccs-amsterdam/amcat4) for more details. To login to AmCAT, use the AmCAT tab on the top of the page. After a successfull login, you are returned to the deploy page, where you can give a name to your coding job, and upload it to AmCAT. After this, you can see the link of the coding job, as well as a QR-code which can be distributed to the coders.
 
 ![Annotate Mode](media/amcatDeploy.png)
 
-### CCS Annotator
+## CCS Annotator
 
 The CCS Annotator functions as a webpage where the coding itself takes place. Coders can either follow alink to a coding job, or upload a coding job from a file. After entering the URL on your (coder's) browser, the page prompts you to input a user name. This user name is stored with the coders annotations in order to track the job by each coder. After this step, the coder can choose either the _fullscreen_ or the _windowed_ mode, the latter of which is useful for coders who use their smart phone for coding.
 
-### Advanced Usage
+## Advanced Usage
 
-## Access Control
+### Access Control
