@@ -210,7 +210,7 @@ const createCodingjobPackage = async (
     codebook: getCodebook(codingjob.taskSettings),
     units: await standardizeUnits(codingjob, units),
     rules: { authentication: "user" },
-    annotations: {},
+    annotations: { test_coder: "dummy user" },
   };
   if (includeDocuments)
     cjpackage.provenance.documents = await db.idb.documents
