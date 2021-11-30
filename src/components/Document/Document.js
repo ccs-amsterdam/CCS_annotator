@@ -83,7 +83,6 @@ const Document = ({
         tokens={preparedUnit.tokens}
         text_fields={preparedUnit.text_fields}
         meta_fields={preparedUnit.meta_fields}
-        centerVertical={settings.centerVertical}
         setReady={setTokensReady}
         height={variables && variables.length > 1 ? "calc(100% - 30px)" : "100%"}
       />

@@ -3,21 +3,22 @@ import { Table } from "semantic-ui-react";
 
 const Meta = ({ meta_fields }) => {
   const cellStyle = (row) => {
-    const style = {};
+    const style = { borderTop: "none" };
     if (row.bold) style.fontWeight = "bold";
     if (row.italic) style.fontStyle = "italic";
     return style;
   };
 
   const rows = () => {
-    return meta_fields.map((row) => {
+    const visibleMetaFields = meta_fields.filter((mf) => mf.visible);
+    return visibleMetaFields.map((row) => {
       return (
         <Table.Row
           style={{
             fontSize: `${row.size != null ? row.size : 1}em`,
           }}
         >
-          <Table.Cell width={1}>
+          <Table.Cell width={1} style={{ borderTop: "none" }}>
             <b>{row.label || row.name}</b>
           </Table.Cell>
           <Table.Cell style={cellStyle(row)}>{formatValue(row.value)}</Table.Cell>
@@ -27,7 +28,17 @@ const Meta = ({ meta_fields }) => {
   };
 
   return (
-    <Table basic="very" compact style={{ lineHeight: "0.8" }}>
+    <Table
+      basic="very"
+      compact
+      style={{
+        lineHeight: "0.8",
+        padding: "10px",
+        border: "1px solid grey",
+        background: "#1b1c1d",
+        color: "#FFF",
+      }}
+    >
       {rows()}
     </Table>
   );

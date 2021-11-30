@@ -5,15 +5,21 @@ import { scrollToMiddle } from "library/scroll";
 import "components/Document/subcomponents/spanAnnotationsStyle.css";
 import Meta from "./Meta";
 
-const Tokens = ({ tokens, text_fields, meta_fields, centerVertical, setReady, height }) => {
+const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
   const [text, setText] = useState({});
   const containerRef = useRef(null);
 
   useEffect(() => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
     const firstTextUnitToken = tokens.find((token) => token.codingUnit);
+    const hasContext = tokens.some((token) => !token.codingUnit);
+
+    if (!hasContext) {
+      containerRef.current.scrollTop = 0;
+      return;
+    }
     if (firstTextUnitToken?.ref?.current && containerRef.current) {
-      scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, 1 / 4);
+      scrollToMiddle(containerRef.current, firstTextUnitToken.ref.current, 1 / 3);
     }
   });
 
@@ -30,7 +36,7 @@ const Tokens = ({ tokens, text_fields, meta_fields, centerVertical, setReady, he
       key="tokens"
       style={{
         display: "flex",
-        alignItems: centerVertical ? "center" : null,
+        alignItems: null,
         height: height,
       }}
     >
@@ -48,9 +54,9 @@ const Tokens = ({ tokens, text_fields, meta_fields, centerVertical, setReady, he
           {/* <div style={{ height: "10em" }} /> */}
           <div
             style={{
-              paddingTop: "20px",
-              marginLeft: "10%",
-              width: "80%",
+              paddingLeft: "20px",
+              paddingRight: "20px",
+              width: "100%",
               textAlign: "right",
             }}
           >

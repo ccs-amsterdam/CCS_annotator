@@ -98,9 +98,23 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
         {/* <Help header={"test"} texts={["test", "this"]} /> */}
       </Form.Group>
 
-      <Form.Group>
+      {/* <Form.Group>
         <Form.Field
           width={8}
+          min={0}
+          step={5}
+          max={1000}
+          label="Add random annotations (%)"
+          size="mini"
+          control={Input}
+          type="number"
+          value={unitSettings.annotationMix}
+          onChange={onChangeMix}
+        />
+      </Form.Group> */}
+      <Form.Group widths="equal">
+        <Form.Field
+          fluid
           min={1}
           max={totalUnits}
           label="N"
@@ -111,7 +125,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
           onChange={onChangeN}
         />
         <Form.Field
-          width={8}
+          fluid
           min={0}
           step={5}
           max={100}

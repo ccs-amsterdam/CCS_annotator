@@ -30,12 +30,13 @@ const UnitLayoutSettings = ({ codingjob, units }) => {
   if (!unitSettings) return null;
 
   return (
-    <LayoutFields
-      codingjob={codingjob}
-      unitSettings={unitSettings}
-      setUnitSettings={setUnitSettings}
-      fields={fields}
-    />
+    <div style={{ overflowX: "auto" }}>
+      <FieldSettingsTable
+        fields={fields}
+        unitSettings={unitSettings}
+        setUnitSettings={setUnitSettings}
+      />
+    </div>
   );
 };
 
@@ -45,6 +46,7 @@ const defaultLayout = (field) => {
     bold: false,
     italic: false,
     size: 1,
+    visible: true,
   };
   if (["title", "headline"].includes(field)) {
     l.size = 1;
@@ -53,25 +55,28 @@ const defaultLayout = (field) => {
   return l;
 };
 
-const LayoutFields = ({ codingjob, unitSettings, setUnitSettings, fields }) => {
-  return (
-    <FieldSettings fields={fields} unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
-  );
-};
-
-const FieldSettings = ({ fields, unitSettings, setUnitSettings }) => {
+const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
   const update = (which, field, key, value) => {
     const newLayout = { ...unitSettings.layout };
-    // console.log(which, field, key, value);
+
     newLayout[which][field][key] = value;
     setUnitSettings({ ...unitSettings, layout: newLayout });
+  };
+
+  const visibleField = (which, fields, field) => {
+    return (
+      <Checkbox
+        checked={fields[field].visible}
+        onChange={() => update(which, field, "visible", !fields[field].visible)}
+      />
+    );
   };
 
   const labelField = (which, fields, field) => {
     return (
       <Input
         value={fields[field].label}
-        style={{ width: "100%", padding: "0" }}
+        style={{ padding: "0" }}
         onChange={(e, d) => update(which, field, "label", d.value)}
       />
     );
@@ -98,16 +103,17 @@ const FieldSettings = ({ fields, unitSettings, setUnitSettings }) => {
   const sizeField = (which, fields, field) => {
     return (
       <Input
-        value={fields[field].size}
+        value={Math.round(fields[field].size * 100)}
         type="number"
+        label="%"
         min={0}
-        max={5}
-        step={0.1}
+        max={500}
+        step={10}
         style={{ width: "100%", padding: "0", border: "none" }}
         onChange={(e, d) => {
           const nr = Number(d.value);
           if (isNaN(nr)) return;
-          update(which, field, "size", nr);
+          update(which, field, "size", Math.round(nr) / 100);
         }}
       />
     );
@@ -124,23 +130,27 @@ const FieldSettings = ({ fields, unitSettings, setUnitSettings }) => {
             </Table.Cell>
           ) : null}
           <Table.Cell>{field}</Table.Cell>
+          <Table.Cell style={{ textAlign: "left" }}>
+            {visibleField(which, fields, field)}
+          </Table.Cell>
           <Table.Cell style={{ padding: "2px" }}>{labelField(which, fields, field)}</Table.Cell>
           <Table.Cell style={{ padding: "2px" }}>{sizeField(which, fields, field)}</Table.Cell>
-          <Table.Cell style={{ textAlign: "center" }}>{boldField(which, fields, field)}</Table.Cell>
-          <Table.Cell style={{ textAlign: "center" }}>
-            {italicField(which, fields, field)}
-          </Table.Cell>
+          <Table.Cell style={{ textAlign: "left" }}>{boldField(which, fields, field)}</Table.Cell>
+          <Table.Cell style={{ textAlign: "left" }}>{italicField(which, fields, field)}</Table.Cell>
         </Table.Row>
       );
     });
   };
 
   return (
-    <Table celled structured compact unstackable singleLine>
+    <Table structured compact unstackable singleLine>
       <Table.Header>
         <Table.Row>
           <Table.HeaderCell width={2}></Table.HeaderCell>
-          <Table.HeaderCell width={4}>field</Table.HeaderCell>
+          <Table.HeaderCell width={3}>field</Table.HeaderCell>
+          <Table.HeaderCell width={1}>
+            <Icon name="eye slash" />
+          </Table.HeaderCell>
           <Table.HeaderCell width={3}>label</Table.HeaderCell>
           <Table.HeaderCell width={3}>text size</Table.HeaderCell>
           <Table.HeaderCell width={1}>

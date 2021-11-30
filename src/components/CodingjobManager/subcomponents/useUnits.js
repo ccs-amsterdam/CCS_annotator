@@ -95,6 +95,7 @@ const getUnitsFromDB = async (codingjob) => {
 
       const all = await allUnits(codingjob, textUnit, done, noDuplicates);
       let sampleN = Math.ceil(cjIndices.length * (unitSettings.annotationMix / 100));
+      console.log(all);
       let addSample = drawRandom(
         all,
         sampleN,

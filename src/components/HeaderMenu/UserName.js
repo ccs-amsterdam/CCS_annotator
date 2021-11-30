@@ -24,7 +24,7 @@ const UserName = ({ force = false }) => {
       trigger={
         <Menu.Item
           icon={cookies.name == null ? "toggle off" : "toggle on"}
-          name={"Name"}
+          name={"Email"}
           style={{ color: cookies.name == null ? "red" : "green" }}
         />
       }
@@ -37,6 +37,7 @@ const UserName = ({ force = false }) => {
         <Form onSubmit={storeName}>
           <Form.Input
             placeholder="username"
+            name="email"
             value={name}
             onChange={(e, d) => {
               if (d.value.length < 50) setName(d.value);
