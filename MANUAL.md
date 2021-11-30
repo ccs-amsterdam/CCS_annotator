@@ -10,7 +10,7 @@ Depending on the applicaiton and its requirements, CCS Annotator can have variou
 
 ![CCS Modules (full)](media/Architecture.png)
 
-In this setup, there are 5 modules composing the CCS Annotator: CCS Annotator Manager (mandatory), CCS Annotator (mandatory), Text Analysis Infrastructure (optional), CCS Annotator Backend (optional), and the Databset (optional). The mandatory modules are always required for any setup, while the optional ones can be substituted and modified depending on the application. Few alternative setups are depicted in the figure below:
+In this setup, there are 5 modules composing the CCS Annotator: CCS Annotator Manager (mandatory), CCS Annotator (Optional), Text Analysis Infrastructure (optional), CCS Annotator Backend (optional), and the Databset (optional). The mandatory modules are always required for any setup, while the optional ones can be substituted and modified depending on the application. Note that currenlty the CCS Annotator module is hosted on Github by us, thus no installation is required from you. If you wish to set up your own CCS Annotator module, you can do so on another server and change the host in the CCS Annotator Manager. Few alternative setups are depicted in the figure below:
 
 ![CCS Backend Setups](media/backends.png)
 

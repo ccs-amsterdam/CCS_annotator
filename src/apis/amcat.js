@@ -1,7 +1,7 @@
 import Axios from "axios";
 
 export async function getToken(host, email, password) {
-  const response = await Axios.get(`${host}/auth/token/`, {
+  const response = await Axios.get(`${host}/anno/auth/token/`, {
     auth: { username: email, password: password },
   });
   return response.data.token;
@@ -29,7 +29,7 @@ class Amcat {
       units: codingjobPackage.units,
       codebook: codingjobPackage.codebook,
       provenance: codingjobPackage.provenance,
-      rules: {},
+      rules: codingjobPackage.rules,
     });
   }
 }

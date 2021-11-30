@@ -209,7 +209,7 @@ const createCodingjobPackage = async (
     provenance: { unitSettings: codingjob.unitSettings, deploySettings: codingjob.deploySettings },
     codebook: getCodebook(codingjob.taskSettings),
     units: await standardizeUnits(codingjob, units),
-    rules: {},
+    rules: { authentication: "user" },
     annotations: [],
   };
   if (includeDocuments)

@@ -47,7 +47,7 @@ const defaultLayout = (field) => {
     size: 1,
   };
   if (["title", "headline"].includes(field)) {
-    l.size = 1.4;
+    l.size = 1;
     l.bold = true;
   }
   return l;
@@ -62,7 +62,7 @@ const LayoutFields = ({ codingjob, unitSettings, setUnitSettings, fields }) => {
 const FieldSettings = ({ fields, unitSettings, setUnitSettings }) => {
   const update = (which, field, key, value) => {
     const newLayout = { ...unitSettings.layout };
-    console.log(which, field, key, value);
+    // console.log(which, field, key, value);
     newLayout[which][field][key] = value;
     setUnitSettings({ ...unitSettings, layout: newLayout });
   };
