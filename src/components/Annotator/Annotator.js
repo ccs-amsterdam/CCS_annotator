@@ -12,7 +12,6 @@ const Annotator = () => {
   const [cookies] = useCookies(["name"]);
 
   useEffect(() => {
-    console.log(cookies.name);
     if (!cookies.name) return;
     if (location.search) {
       const queries = parseQueryString(location);
