@@ -41,7 +41,7 @@ export class JobServerRemote {
   async getUnit(i) {
     //
     const response = await axios.get(
-      `${this.url}/unit?id=${this.codingjobID}&user=${this.coderName}&`
+      `${this.url}/unit?user=${this.coderName}&id=${this.codingjobID}`
     );
     return response.data;
     // data should be an object with url, id and unit, where unit is an object with at least text_fields,
@@ -49,10 +49,7 @@ export class JobServerRemote {
   }
 
   postAnnotations(unit_id, data) {
-    axios.post(
-      `${this.url}/unit/${unit_id}/annotation?id=${this.codingjobID}&user=${this.coderName}`,
-      data
-    );
+    axios.post(`${this.url}/unit/${unit_id}/annotation?user=${this.coderName}`, data);
   }
 }
 
