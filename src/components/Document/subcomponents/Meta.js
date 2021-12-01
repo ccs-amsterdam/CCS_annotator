@@ -37,8 +37,9 @@ const Meta = ({ meta_fields }) => {
       style={{
         lineHeight: "0.8",
         padding: "10px",
+        paddingLeft: "40px",
         border: "1px solid grey",
-        background: "#1b1c1d",
+        background: "#2185d0",
         color: "#FFF",
       }}
     >

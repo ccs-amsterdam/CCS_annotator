@@ -12,6 +12,7 @@ const variableDefaultSettings = {
   name: "Variable name",
   buttonMode: "all",
   searchBox: false,
+  singleCode: false,
   codes: ["No", "Skip", "Yes"],
 };
 
@@ -74,14 +75,15 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
       <Form.Group>
         <Form.Field>
           <Checkbox
-            label="Search box"
+            label="Single code (only select)"
             disabled={annotateForm.buttonMode === "recent"}
-            checked={annotateForm.searchBox || annotateForm.buttonMode === "recent"}
-            onChange={(e, d) => setAnnotateForm({ ...annotateForm, searchBox: d.checked })}
+            checked={annotateForm.singleCode}
+            onChange={(e, d) => setAnnotateForm({ ...annotateForm, singleCode: d.checked })}
           />
         </Form.Field>
       </Form.Group>
-      <Form.Group grouped>
+
+      <Form.Group grouped style={{ display: annotateForm.singleCode ? "none" : "block" }}>
         <label>Code buttons</label>
 
         <Form.Field>
@@ -98,6 +100,14 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
               "You can toggle which codes are active in the codebook (top-right in menu bar)",
             ]}
           />
+          <Form.Field style={{ marginLeft: "25px" }}>
+            <Checkbox
+              label="Include search field"
+              disabled={annotateForm.buttonMode === "recent"}
+              checked={annotateForm.searchBox}
+              onChange={(e, d) => setAnnotateForm({ ...annotateForm, searchBox: d.checked })}
+            />
+          </Form.Field>
         </Form.Field>
         <Form.Field>
           <Radio
@@ -117,7 +127,15 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
       </Form.Group>
 
       <br />
-      <div style={{ overflow: "auto", margin: "-1em" }}>{codesEditor()}</div>
+      <div
+        style={{
+          overflow: "auto",
+          margin: "-1em",
+          display: annotateForm.singleCode ? "none" : "block",
+        }}
+      >
+        {codesEditor()}
+      </div>
     </Form>
   );
 };

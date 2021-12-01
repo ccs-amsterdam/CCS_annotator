@@ -127,14 +127,16 @@ const SettingsPopup = ({ settings, setSettings }) => {
       mountNode={fullScreenNode || undefined}
       trigger={
         <Icon
+          size="large"
           name="setting"
           style={{
             position: "absolute",
+
             cursor: "pointer",
-            top: "0px",
-            left: "0px",
-            color: "grey",
-            padding: "5px 3px",
+            top: "1px",
+            left: "-1px",
+            color: "#1b1c1d",
+            padding: "5px 0px",
             height: "30px",
           }}
         />

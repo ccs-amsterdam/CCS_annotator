@@ -42,8 +42,9 @@ const SelectVariable = ({ variables, variable, setVariable, height }) => {
     return variableNames.map((name) => {
       return (
         <Button
+          size="big"
           active={name === variable}
-          style={{ padding: "0" }}
+          style={{ padding: "0", border: "1px solid" }}
           onClick={() => setVariable(name)}
         >
           {name}

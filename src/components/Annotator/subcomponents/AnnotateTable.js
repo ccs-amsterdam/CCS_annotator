@@ -7,7 +7,6 @@ const COLWIDTHS = [4, 4, 2, 2]; // for offset and text
 
 const AnnotateTable = ({ variableMap, annotations }) => {
   if (!variableMap || Object.keys(variableMap).length === 0) return null;
-
   return (
     <Table
       style={{ fontSize: "10px" }}
@@ -57,8 +56,8 @@ const annotationRows = (variableMap, annotations) => {
 };
 
 const AnnotationRow = ({ variable, variableMap, annotation, text }) => {
-  console.log(variable);
   if (!variableMap) return null;
+
   const codeMap = variableMap[variable].codeMap;
   const color = getColor(annotation.value, codeMap);
   const label = codeMap[annotation.value]?.foldToParent
