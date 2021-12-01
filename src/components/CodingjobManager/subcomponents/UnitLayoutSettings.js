@@ -64,6 +64,7 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
   };
 
   const visibleField = (which, fields, field) => {
+    if (which === "text") return null;
     return (
       <Checkbox
         checked={fields[field].visible}

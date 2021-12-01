@@ -44,92 +44,39 @@ const getUnits = async (codingjob, setUnits) => {
 
 const getUnitsFromDB = async (codingjob) => {
   if (!codingjob?.unitSettings) return null;
-  const textUnit = codingjob.unitSettings.textUnit;
   const unitSettings = codingjob.unitSettings;
 
-  let totalUnits = 0;
-
-  const getGroup = (cjIndices) => {
-    if (!unitSettings.balanceDocuments && !unitSettings.balanceAnnotations) return null; // if not balanced
-
-    return cjIndices.map((item) => {
-      let group = "";
-      if (unitSettings.balanceDocuments) group += item.docIndex;
-      if (item.variables && unitSettings.balanceAnnotations) {
-        group += "_" + Object.values(item.variables)[0];
-      }
-      return group;
-    });
-  };
-
   let cjIndices;
-  let done;
+  const [all, annotations] = await getAllUnits(codingjob, unitSettings);
+  if (unitSettings.unitSelection === "allTextUnits") cjIndices = all;
+  if (unitSettings.unitSelection === "annotations") cjIndices = annotations;
+  const totalUnits = cjIndices.length;
 
-  if (unitSettings.unitSelection === "allTextUnits") {
-    cjIndices = await allUnits(codingjob, textUnit, new Set([]), true);
-    totalUnits = cjIndices.length;
-    cjIndices = drawRandom(
-      cjIndices,
-      unitSettings.n,
-      false,
-      unitSettings.seed,
-      getGroup(cjIndices)
-    );
-  }
+  cjIndices = drawRandom(
+    cjIndices,
+    unitSettings.n,
+    false,
+    unitSettings.seed,
+    cjIndices.map((i) => i.stratum)
+  );
 
-  if (unitSettings.unitSelection === "annotations") {
-    [cjIndices, done] = await annotationUnits(codingjob, textUnit, false, unitSettings.validCodes);
-
-    totalUnits = cjIndices.length;
-    cjIndices = drawRandom(
-      cjIndices,
-      unitSettings.n,
-      false,
-      unitSettings.seed,
-      getGroup(cjIndices)
-    );
-
-    if (unitSettings.annotationMix && unitSettings.annotationMix > 0) {
-      // Annotationmix is now disabled, but leaving it here because it might make a comeback someday
-      const noDuplicates = false;
-
-      const all = await allUnits(codingjob, textUnit, done, noDuplicates);
-      let sampleN = Math.ceil(cjIndices.length * (unitSettings.annotationMix / 100));
-      console.log(all);
-      let addSample = drawRandom(
-        all,
-        sampleN,
-        !noDuplicates,
-        unitSettings.seed,
-        getGroup(cjIndices)
-      );
-
-      let nCodes = unitSettings.validCodes.length;
-      addSample = addSample.map((item, i) => {
-        // add random annotation to mix by drawing from the annotations in the cjIndices sample.
-        // this is random, and automatically gives approximately the same distribution of codes
-        let value;
-        if (unitSettings.balanceAnnotations) {
-          value = unitSettings.validCodes[i % nCodes];
-        } else {
-          const annSample = cjIndices[i % cjIndices.length];
-          value = annSample.value;
-          //if (annSample?.variable) item.variable = annSample.variable;
-          //if (annSample?.value) item.value = annSample.value;
-        }
-        item.variables = { [unitSettings.annotation]: value };
-        return { ...item };
-      });
-      cjIndices = cjIndices.concat(addSample);
-    }
+  if (
+    unitSettings.unitSelection === "annotations" &&
+    unitSettings.textUnit !== "span" &&
+    unitSettings.annotationMix
+  ) {
+    let sampleN = Math.ceil(cjIndices.length * (unitSettings.annotationMix / 100));
+    let fakeUnits = getFakeUnits(all, codingjob, unitSettings, sampleN);
+    if (fakeUnits.length > 0) cjIndices = cjIndices.concat(fakeUnits);
   }
 
   cjIndices = orderUnits(cjIndices, unitSettings);
-
   return [totalUnits, cjIndices];
 };
 
-const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
+const getAllUnits = async (codingjob, unitSettings) => {
+  const { textUnit, unitSelection, balanceDocuments, balanceAnnotations } = unitSettings;
+
   let documents = await db.getDocuments(codingjob);
 
   let minIndex = 0;
@@ -139,121 +86,142 @@ const allUnits = async (codingjob, textUnit, done, noDuplicates) => {
     maxIndex = codingjob.unitSettings.indexWindow[1];
   }
 
-  const cjIndices = [];
+  const annotatedUnits = [];
+  const allUnits = [];
+
   let docIndex = -1;
   await documents.each((e) => {
     docIndex++;
-    if (textUnit === "document" && !done.has(e.doc_uid)) {
-      if (noDuplicates && done.has(e.doc_uid)) return;
-      cjIndices.push({
-        textUnit,
-        unitIndex: 0, // this is for consistency with paragraph and sentence
-        doc_uid: e.doc_uid,
-        document_id: e.document_id,
-        textFields: getTextFields(e),
-        metaFields: getMetaFields(e),
-        docIndex,
-      });
+    const unitIndices = [];
+    const annotationValues =
+      unitSelection === "annotations"
+        ? getAnnotations(e.annotations, e.tokens, textUnit, codingjob.unitSettings.annotation)
+        : [];
+
+    if (textUnit === "document" || textUnit === "span") {
+      unitIndices.push(0);
     }
 
     if (textUnit === "paragraph") {
       const paragraphs = e.tokens[e.tokens.length - 1].paragraph;
       for (let parIndex = minIndex; parIndex <= Math.min(maxIndex, paragraphs); parIndex++) {
-        if (noDuplicates && done.has(e.doc_uid + "_" + parIndex)) return;
-        cjIndices.push({
-          textUnit,
-          unitIndex: parIndex,
-          doc_uid: e.doc_uid,
-          document_id: e.document_id,
-          textFields: getTextFields(e),
-          metaFields: getMetaFields(e),
-          docIndex,
-          //parIndex,
-        });
+        unitIndices.push(parIndex);
       }
     }
 
     if (textUnit === "sentence") {
       const sentences = e.tokens[e.tokens.length - 1].sentence;
       for (let sentIndex = minIndex; sentIndex <= Math.min(maxIndex, sentences); sentIndex++) {
-        if (noDuplicates && done.has(e.doc_uid + "_" + sentIndex)) return;
-        cjIndices.push({
-          textUnit,
-          unitIndex: sentIndex,
-          doc_uid: e.doc_uid,
-          document_id: e.document_id,
-          textFields: getTextFields(e),
-          metaFields: getMetaFields(e),
-          docIndex,
-          //sentIndex,
+        unitIndices.push(sentIndex);
+      }
+    }
+
+    for (let unitIndex of unitIndices) {
+      const item = {
+        textUnit,
+        unitIndex: unitIndex,
+        doc_uid: e.doc_uid,
+        document_id: e.document_id,
+        textFields: getTextFields(e),
+        metaFields: getMetaFields(e),
+        stratum: balanceDocuments ? e.doc_uid : "",
+        docIndex,
+        annotationIds: {},
+      };
+
+      if (annotationValues[unitIndex]) {
+        for (let ann of annotationValues[unitIndex]) {
+          const annItem = { ...item };
+          annItem.variables = ann.variables;
+          annItem.span = ann.span;
+          //if (textUnit === 'span') item.unitIndex = ann.span[0]
+          if (balanceAnnotations) annItem.stratum += `_${ann.id}`;
+          annotatedUnits.push(annItem);
+          item.annotationIds[ann.id] = true;
+        }
+      }
+
+      if (textUnit !== "span") allUnits.push(item);
+    }
+  });
+
+  return [allUnits, annotatedUnits];
+};
+
+const getFakeUnits = (all, codingjob, unitSettings, sampleN) => {
+  const variable = unitSettings.annotation;
+  const codes = codingjob.importedCodes[variable];
+
+  let indices = [];
+  for (let i = 0; i < all.length; i++) {
+    const unit = all[i];
+    for (let code of codes) {
+      const id = code.code; // if at some point we decide to allow multiple values, id will be more complicated
+
+      if (!unit.annotationIds[id]) {
+        indices.push({
+          i,
+          variables: { [variable]: code.code },
+          stratum: unit.stratum + `_${id}`,
         });
       }
     }
-  });
-  return cjIndices;
+  }
+
+  if (indices.length === 0) return [];
+  indices = drawRandom(
+    indices,
+    sampleN,
+    false,
+    unitSettings.seed,
+    indices.map((i) => i.stratum)
+  );
+
+  const fakeUnits = [];
+  for (let fakeUnitIndex of indices) {
+    fakeUnits.push({
+      ...all[fakeUnitIndex.i],
+      fake: true,
+      variables: fakeUnitIndex.variables,
+    });
+  }
+  return fakeUnits;
 };
 
-const annotationUnits = async (codingjob, textUnit, unique, validCodes) => {
-  let documents = await db.getDocuments(codingjob);
-  const annotation = codingjob.unitSettings.annotation;
+const getAnnotations = (annotations, tokens, textUnit, annotation) => {
+  // complicated story... but.
+  // creates an object to add all used values for the selected annotation to the units
+  // this is used for adding fake annotations without accidentally random sampling a
+  // correct annotation (which in some cases is quite common)
+  if (!annotations) return [];
+  const ann = {};
+  for (let i of Object.keys(annotations)) {
+    for (let variable of Object.keys(annotations[i])) {
+      if (variable !== annotation) continue;
+      const id = annotations[i][variable].value;
 
-  let useCode = null;
-  if (validCodes?.[annotation])
-    useCode = validCodes[annotation].reduce((obj, code) => {
-      if (!code.valid) return obj;
-      obj[code.code] = true;
-      return obj;
-    }, {});
+      const a = {
+        id,
+        //unitIndex: Number(i),
+        span: annotations[i][variable].span,
+        variables: { [variable]: annotations[i][variable].value },
+      };
 
-  const cjIndices = [];
-  const done = new Set([]);
-  let docIndex = -1;
-  await documents.each((e) => {
-    docIndex++;
-    if (e.annotations) {
-      for (let i of Object.keys(e.annotations)) {
-        for (let variable of Object.keys(e.annotations[i])) {
-          if (variable !== annotation) continue;
-          const span = e.annotations[i][variable];
-          if (i > span[0]) {
-            if (textUnit === "document") continue;
-            if (textUnit === "span") continue;
-            // an annotation can cover multiple units, and each unit should only be included once
-            if (textUnit === "paragraph" && e.tokens[i].paragraph === e.tokens[i - 1].paragraph)
-              continue;
-            if (textUnit === "sentence" && e.tokens[i].sentence === e.tokens[i - 1].sentence)
-              continue;
-          }
-
-          if (useCode && useCode[e.annotations[i][variable].value] == null) continue;
-
-          const item = {
-            textUnit,
-            doc_uid: e.doc_uid,
-            document_id: e.document_id,
-            docIndex,
-            textFields: getTextFields(e),
-            metaFields: getMetaFields(e),
-            span: e.annotations[i][variable].span,
-          };
-
-          if (textUnit === "document" || textUnit === "span") item.unitIndex = Number(i);
-          if (textUnit === "paragraph") item.unitIndex = e.tokens[Number(i)].paragraph;
-          if (textUnit === "sentence") item.unitIndex = e.tokens[Number(i)].sentence;
-
-          if (unique) {
-            let itemId = item.doc_uid + "_" + item.textUnit + "_" + item.unitIndex;
-            if (done.has(itemId)) continue;
-            done.add(itemId);
-          } else {
-            item.variables = { [variable]: e.annotations[i][variable].value };
-          }
-          cjIndices.push(item);
-        }
+      if (textUnit === "document" || textUnit === "span") {
+        if (!ann[0]) ann[0] = [];
+        ann[0].push(a);
+      }
+      if (textUnit === "paragraph") {
+        if (!ann[tokens[i].paragraph]) ann[tokens[i].paragraph] = [];
+        ann[tokens[i].paragraph].push(a);
+      }
+      if (textUnit === "sentence") {
+        if (!ann[tokens[i].sentence]) ann[tokens[i].sentence] = [];
+        ann[tokens[i].sentence].push(a);
       }
     }
-  });
-  return [cjIndices, done];
+  }
+  return ann;
 };
 
 const getTextFields = (e) => {

@@ -18,21 +18,22 @@ export const prepareDocumentBatch = (
 ) => {
   let ids = new Set(existingUids);
 
-  let n = 0;
   let duplicates = 0;
   let codes = {};
 
   const preparedDocuments = documentList.reduce((result, document) => {
     if (document.document_id == null) return result;
-    n++;
     const doc_uid = hash([document, job_id]); // codingjob included for doc_uid (unique id) hash
     if (!ids.has(doc_uid)) {
       ids.add(doc_uid);
 
+      const preparedDoc = prepareDocument(document, codes); // the codes  are filled within
+      if (preparedDoc.tokens.length === 0) return result;
+
       result.push({
         doc_uid: doc_uid,
         job_id: job_id,
-        ...prepareDocument(document, codes), // the codes  are filled within
+        ...preparedDoc,
       });
     } else {
       duplicates++;
@@ -41,7 +42,7 @@ export const prepareDocumentBatch = (
   }, []);
 
   if (!silent) {
-    let message = `Created ${n - duplicates} new documents.`;
+    let message = `Created ${preparedDocuments.length} new documents.`;
     if (duplicates > 0) message = message + ` Ignored ${duplicates} duplicates`;
     alert(message);
   }
@@ -71,6 +72,8 @@ export const prepareDocument = (document, codes = {}) => {
     doc.n_sentences = 0;
   }
 
+  // ImportSpanAnnotations transforms the array format annotations to an object format.
+  // More importantly, it matches the annotations to token indices (based on the char offset)
   if (doc.annotations) {
     doc.annotations = importSpanAnnotations([...doc.annotations], doc.tokens);
   } else doc.annotations = {};

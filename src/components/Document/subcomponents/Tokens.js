@@ -54,8 +54,7 @@ const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
           {/* <div style={{ height: "10em" }} /> */}
           <div
             style={{
-              paddingLeft: "20px",
-              paddingRight: "20px",
+              padding: "20px",
               width: "100%",
               textAlign: "right",
             }}
@@ -195,8 +194,14 @@ const renderSentence = (position, sentence_nr, tokens) => {
 
 const renderToken = (token, codingUnit) => {
   const style = codingUnit
-    ? { lineHeight: "1.4em", fontSize: "1.5em", position: "relative" }
-    : { color: "#746363", position: "relative" };
+    ? {
+        lineHeight: "1.3em",
+        fontSize: "1.5em",
+        fontWeight: "bold",
+
+        position: "relative",
+      }
+    : { lineHeight: "1.3em", color: "#746363", position: "relative" };
 
   return (
     <span
