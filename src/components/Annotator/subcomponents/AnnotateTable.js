@@ -57,7 +57,6 @@ const annotationRows = (variableMap, annotations) => {
 };
 
 const AnnotationRow = ({ variable, variableMap, annotation, text }) => {
-  console.log(variable);
   if (!variableMap) return null;
   const codeMap = variableMap[variable].codeMap;
   const color = getColor(annotation.value, codeMap);

@@ -30,7 +30,6 @@ class Amcat {
       codebook: codingjobPackage.codebook,
       provenance: codingjobPackage.provenance,
       rules: codingjobPackage.rules,
-      annotations: { test_coder: "dummy user" },
     });
   }
 }

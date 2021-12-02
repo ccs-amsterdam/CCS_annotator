@@ -18,9 +18,6 @@ export class JobServerRemote {
     try {
       const url = new URL(this.url);
       this.codingjobID = url.pathname.split("/")[2];
-
-      console.log(this.coderName);
-
       response = await axios.get(
         `${this.url}/codebook?id=${this.codingjobID}&user=${this.coderName}`
       );
@@ -49,6 +46,7 @@ export class JobServerRemote {
   }
 
   postAnnotations(unit_id, data) {
+    console.log("posting annotations");
     axios.post(`${this.url}/unit/${unit_id}/annotation?user=${this.coderName}`, data);
   }
 }

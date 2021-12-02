@@ -20,7 +20,6 @@ const DownloadAnnotations = ({ localJobServer }) => {
     }
   }, [localJobServer]);
 
-  console.log(localJobServer);
   return (
     <CSVDownloader
       filename={`CSSannotator_${localJobServer.title}_${localJobServer.set}_${localJobServer.coderName}.json`}
@@ -61,7 +60,6 @@ const formatQuestionsTaskResults = async (localJobServer, setData) => {
   const annotationsPerUnit = await db.getAllAnnotations(localJobServer.id);
   for (let unitAnnotations of annotationsPerUnit) {
     const annotations = unitAnnotations.annotations;
-    console.log(annotations);
     const unit = unitMap[unitAnnotations.unit_id];
     const result = {
       document_id: unit.document_id,

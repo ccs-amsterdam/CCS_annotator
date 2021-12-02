@@ -167,7 +167,6 @@ export const Annotinder = React.memo(({ swipeOptions, callback, swipe, blockEven
 
   useEffect(() => {
     if (swipe) {
-      console.log(swipe);
       if (swipe === "right") callback(swipeOptions.right);
       if (swipe === "up") callback(swipeOptions.up);
       if (swipe === "left") callback(swipeOptions.left);
