@@ -543,7 +543,6 @@ const ButtonSelection = ({ active, options, canDelete, settings, setOpen, callba
             //active={i === selected}
             onMouseOver={() => setSelected(i)}
             onClick={(e, d) => {
-              console.log(d.value);
               if (d.value === "CANCEL") {
                 setOpen(false);
               } else callback(d.value);
