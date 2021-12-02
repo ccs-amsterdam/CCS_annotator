@@ -12,7 +12,7 @@ const defaultUnitSettings = {
   n: null,
   seed: 42,
   ordered: false,
-  balanceDocuments: true,
+  balanceDocuments: false,
   balanceAnnotations: true,
   validCodes: {},
   highlightAnnotation: false,

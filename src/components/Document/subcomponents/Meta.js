@@ -2,6 +2,8 @@ import React from "react";
 import { Table } from "semantic-ui-react";
 
 const Meta = ({ meta_fields }) => {
+  const visibleMetaFields = meta_fields.filter((mf) => mf.visible);
+
   const cellStyle = (row) => {
     const style = { borderTop: "none" };
     if (row.bold) style.fontWeight = "bold";
@@ -10,7 +12,6 @@ const Meta = ({ meta_fields }) => {
   };
 
   const rows = () => {
-    const visibleMetaFields = meta_fields.filter((mf) => mf.visible);
     return visibleMetaFields.map((row) => {
       return (
         <Table.Row
@@ -27,6 +28,8 @@ const Meta = ({ meta_fields }) => {
     });
   };
 
+  if (visibleMetaFields.length === 0) return null;
+
   return (
     <Table
       basic="very"
@@ -34,8 +37,9 @@ const Meta = ({ meta_fields }) => {
       style={{
         lineHeight: "0.8",
         padding: "10px",
+        paddingLeft: "40px",
         border: "1px solid grey",
-        background: "#1b1c1d",
+        background: "#2185d0",
         color: "#FFF",
       }}
     >

@@ -13,7 +13,6 @@ const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
     // immitates componentdidupdate to scroll to the textUnit after rendering tokens
     const firstTextUnitToken = tokens.find((token) => token.codingUnit);
     const hasContext = tokens.some((token) => !token.codingUnit);
-
     if (!hasContext) {
       containerRef.current.scrollTop = 0;
       return;
@@ -54,10 +53,9 @@ const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
           {/* <div style={{ height: "10em" }} /> */}
           <div
             style={{
-              paddingLeft: "20px",
-              paddingRight: "20px",
               width: "100%",
               textAlign: "right",
+              padding: "10px 30px",
             }}
           >
             <Meta meta_fields={meta_fields} />
@@ -195,8 +193,12 @@ const renderSentence = (position, sentence_nr, tokens) => {
 
 const renderToken = (token, codingUnit) => {
   const style = codingUnit
-    ? { lineHeight: "1.4em", fontSize: "1.5em", position: "relative" }
-    : { color: "#746363", position: "relative" };
+    ? {
+        lineHeight: "1.3em",
+        fontSize: "1.5em",
+        position: "relative",
+      }
+    : { lineHeight: "1.3em", color: "#746363", position: "relative" };
 
   return (
     <span

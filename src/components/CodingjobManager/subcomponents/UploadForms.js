@@ -17,7 +17,7 @@ export const UploadTextsCsv = ({ codingjob }) => {
     meta_fields: {
       required: false,
       multiple: true,
-      defaults: ["title", "date"],
+      defaults: ["medium", "publisher", "date"],
     },
   };
   return <UploadCsv codingjob={codingjob} type="texts" columns={columns} keepOriginal={false} />;

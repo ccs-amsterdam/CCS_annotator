@@ -25,7 +25,8 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
   const totalUnits = unitSettings.totalUnits || 0;
 
   useEffect(() => {
-    setPct(Math.round((100 * unitSettings.n) / totalUnits));
+    const pct = 0.1 * Math.round(1000 * (unitSettings.n / totalUnits));
+    setPct(pct !== Math.round(pct) ? pct.toFixed(2) : pct);
     setDelayed(unitSettings);
   }, [totalUnits, unitSettings, setDelayed]);
 
@@ -41,9 +42,12 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
     setUnitSettings({ ...unitSettings, [field]: value });
   };
 
-  // const onChangeMix = (e, d) => {
-  //   setDelayed((current) => ({ ...current, annotationMix: Number(d.value) }));
-  // };
+  const onChangeMix = (e, d) => {
+    setDelayed((current) => ({ ...current, annotationMix: Number(d.value) }));
+  };
+  const onChangeOnlyUnused = (e, d) => {
+    setWithoutDelay("onlyUnused", d.checked);
+  };
 
   const onChangeSeed = (e, d) => {
     setDelayed((current) => ({ ...current, seed: Number(d.value) }));
@@ -98,26 +102,12 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
         {/* <Help header={"test"} texts={["test", "this"]} /> */}
       </Form.Group>
 
-      {/* <Form.Group>
-        <Form.Field
-          width={8}
-          min={0}
-          step={5}
-          max={1000}
-          label="Add random annotations (%)"
-          size="mini"
-          control={Input}
-          type="number"
-          value={unitSettings.annotationMix}
-          onChange={onChangeMix}
-        />
-      </Form.Group> */}
       <Form.Group widths="equal">
         <Form.Field
           fluid
           min={1}
           max={totalUnits}
-          label="N"
+          label={<b>N</b>}
           size="mini"
           control={Input}
           type="number"
@@ -129,7 +119,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
           min={0}
           step={5}
           max={100}
-          label="%"
+          label={<b>%</b>}
           size="mini"
           control={Input}
           type="number"
@@ -177,6 +167,52 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
             label="codes"
             checked={unitSettings.balanceAnnotations}
             onChange={onChangeBalanceAnn}
+          />
+        </Form.Field>
+      </Form.Group>
+      <Form.Group>
+        <Form.Field
+          width={8}
+          disabled={
+            unitSettings.textUnit === "span" || unitSettings.unitSelection === "allTextUnits"
+          }
+          min={0}
+          step={10}
+          max={1000}
+          label={
+            <b>
+              Add fake (%)
+              <Help
+                header="Create units with fake annotations"
+                texts={[
+                  `Given units based on imported annotations, this feature adds units to the sample in which this annotation does NOT occur.
+                   (This is only possible if units are sentences, paragraphs or documents, because randomly adding spans is a lost cause)`,
+                  `In other words, if imported annotations are 'positives', then this adds 'negatives' to the sample. 
+                   This is particularly relevant for validation tasks, and when it cannot be taken for granted that all negatives are true negatives.`,
+                  `The maximum number of fake annotations is the number of unique text units times the number of unique codes. Note that this would also
+                    include real annotations. If "only unused" is enabled, these real annotations are never added to the sample`,
+                ]}
+              />
+            </b>
+          }
+          size="mini"
+          control={Input}
+          type="number"
+          value={delayed.annotationMix}
+          onChange={onChangeMix}
+        />
+        <Form.Field>
+          <label>Only unused </label>
+
+          <Checkbox
+            toggle
+            disabled={
+              unitSettings.textUnit === "span" || unitSettings.unitSelection === "allTextUnits"
+            }
+            size="mini"
+            checked={unitSettings.onlyUnused}
+            onChange={onChangeOnlyUnused}
+            style={{ paddingTop: "3px" }}
           />
         </Form.Field>
       </Form.Group>

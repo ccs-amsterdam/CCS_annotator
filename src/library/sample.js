@@ -1,7 +1,8 @@
 import seedrandom from "seedrandom";
+import objectHash from "object-hash";
 
 export const drawRandom = (array, n, replace, seed, group) => {
-  const random = seedrandom(seed);
+  const random = seedrandom(seed + objectHash(array));
 
   if (n == null || n === null) n = array.length;
   if (!replace && n > array.length) n = array.length;
@@ -13,11 +14,11 @@ export const drawRandom = (array, n, replace, seed, group) => {
     ns = [n];
   } else {
     indices = splitIndex(index, group);
-    ns = distributeN(indices, n);
+    indices = getRandomSubarray(indices, indices.length, random);
+    ns = distributeN(indices, n, random);
   }
 
   let out = [];
-
   for (let j = 0; j < indices.length; j++) {
     if (replace) {
       for (let i = 0; i < n; i++) {
@@ -69,7 +70,7 @@ const splitIndex = (index, group) => {
   return indices;
 };
 
-const distributeN = (indices, n) => {
+const distributeN = (indices, n, random) => {
   const ns = new Array(indices.length).fill(0);
   let full = new Array(indices.length).fill(0);
   let remain = n;
@@ -89,5 +90,6 @@ const distributeN = (indices, n) => {
     }
     if (remainIndices === 0) break;
   }
+
   return ns;
 };

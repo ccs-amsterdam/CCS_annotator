@@ -47,8 +47,8 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
         }}
       >
         <Button.Group fluid style={{ padding: "0" }}>
-          <NextUnitButton setUnitIndex={setUnitIndex} />
           <Instructions codebook={codebook} />
+          <NextUnitButton setUnitIndex={setUnitIndex} />
         </Button.Group>
         <AnnotateTable variableMap={variableMap} annotations={annotations} />
       </Grid.Column>

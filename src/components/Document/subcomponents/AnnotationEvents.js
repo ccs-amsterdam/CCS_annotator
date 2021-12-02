@@ -433,7 +433,8 @@ const getTokenAttributes = (tokens, tokenNode) => {
 const scrollTokenToMiddle = (token) => {
   // token->sentence->paragraph->paragraphFlexBox->section->textpart->box
   // this should be stable, but it still looks terrible
-  const parentDiv = token.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+  const parentDiv =
+    token.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
   keepInView(parentDiv, token);
 };
 

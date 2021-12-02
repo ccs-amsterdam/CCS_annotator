@@ -29,13 +29,14 @@ export const standardizeUnits = async (codingjob, units) => {
     // get the unit tokens (filter the document tokens, and add bool for whether token is codingunit (i.e. not context))
     let tokens = selectTokens(docs[doc_uid].tokens, units[i], contextUnit, contextWindow);
 
-    // get annotations and filter for selected tokens
-    const docAnnotations = exportSpanAnnotations(docs[doc_uid].annotations, docs[doc_uid].tokens);
     const codingUnit = tokens.map((token) => token.codingUnit);
     const firstUnitIndex = codingUnit.indexOf(true);
     const lastUnitIndex = codingUnit.lastIndexOf(true);
     const fromChar = tokens[firstUnitIndex].offset;
     const toChar = tokens[lastUnitIndex].offset + tokens[lastUnitIndex].length;
+
+    // get annotations, transform back to array format, and filter for selected tokens
+    const docAnnotations = exportSpanAnnotations(docs[doc_uid].annotations, docs[doc_uid].tokens);
     const annotations = docAnnotations.filter((a) => a.offset >= fromChar && a.offset < toChar);
 
     const unit = {

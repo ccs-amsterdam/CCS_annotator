@@ -145,9 +145,7 @@ const CodeSelectorPopup = ({
     if (!variable || overwrites.length === 0) return;
     let message =
       overwrites.length === 1 ? `existing annotation` : `${overwrites.length} existing annotations`;
-    return (
-      <div style={{ margin: "1em", color: "red" }}>Warning: overwrites or deletes {message}</div>
-    );
+    return <div style={{ margin: "1em" }}>Overwrites {message}</div>;
   };
 
   return (
@@ -358,12 +356,15 @@ const NewCodePage = ({
   };
 
   const buttonSelection = (options) => {
+    const canDelete = overwrites.length > 0;
     if (options.length === 0) return null;
+    if (options.length === 1 && !canDelete) onButtonSelect(options[0].value);
+
     return (
       <ButtonSelection
         key={"newCodePageButtons"}
         active={focusOnButtons}
-        canDelete={overwrites.length > 0}
+        canDelete={canDelete}
         settings={settings}
         options={options}
         setOpen={setOpen}
