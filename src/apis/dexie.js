@@ -43,42 +43,39 @@ class AnnotationDB {
     return { job_id, name };
   }
   async deleteCodingjob(codingjob) {
-    const docs = await this.idb.documents.where("job_id").equals(codingjob.job_id);
+    const id = typeof codingjob === "object" ? codingjob.job_id : codingjob;
+    const docs = await this.idb.documents.where("job_id").equals(id);
     const ndocs = await docs.count();
     if (ndocs > 0) docs.delete();
-    return this.idb.codingjobs.delete(codingjob.job_id);
+    return this.idb.codingjobs.delete(id);
   }
 
   async getCodingjobProp(codingjob, prop) {
-    let cj = await this.idb.codingjobs.get(codingjob.job_id);
+    const id = typeof codingjob === "object" ? codingjob.job_id : codingjob;
+    let cj = await this.idb.codingjobs.get(id);
     return cj[prop];
   }
   async setCodingjobProp(codingjob, prop, value) {
-    let cj = await this.idb.codingjobs.get(codingjob.job_id);
+    const id = typeof codingjob === "object" ? codingjob.job_id : codingjob;
+    let cj = await this.idb.codingjobs.get(id);
     if (cj.settings == null) cj.settings = {};
     return this.idb.codingjobs
       .where("job_id")
-      .equals(codingjob.job_id)
+      .equals(id)
       .modify({ [prop]: value });
   }
 
   // DOCUMENTS
   async createDocuments(codingjob, documentList, silent = false) {
-    let ids = new Set(
-      await this.idb.documents.where("job_id").equals(codingjob.job_id).primaryKeys()
-    );
+    const id = typeof codingjob === "object" ? codingjob.job_id : codingjob;
+    let ids = new Set(await this.idb.documents.where("job_id").equals(id).primaryKeys());
 
-    const [preparedDocuments, codes] = prepareDocumentBatch(
-      documentList,
-      ids,
-      codingjob.job_id,
-      silent
-    );
+    const [preparedDocuments, codes] = prepareDocumentBatch(documentList, ids, id, silent);
 
     let importedCodes = await this.getCodingjobProp(codingjob, "importedCodes");
     importedCodes = updateImportedCodes(codingjob, importedCodes, codes);
 
-    this.idb.codingjobs.where("job_id").equals(codingjob.job_id).modify({ importedCodes });
+    this.idb.codingjobs.where("job_id").equals(id).modify({ importedCodes });
     return this.idb.documents.bulkAdd(preparedDocuments);
   }
 
@@ -88,8 +85,10 @@ class AnnotationDB {
   }
 
   async getJobDocuments(codingjob, offset, limit) {
+    const id = typeof codingjob === "object" ? codingjob.job_id : codingjob;
+
     if (offset !== null && offset < 0) return null;
-    let documents = await this.idb.documents.where("job_id").equals(codingjob.job_id);
+    let documents = await this.idb.documents.where("job_id").equals(id);
     const ndocs = await documents.count();
     if (offset !== null && offset > ndocs - 1) return null;
     if (limit !== null) documents = documents.offset(offset).limit(limit);
@@ -97,11 +96,13 @@ class AnnotationDB {
   }
 
   async getJobDocumentCount(codingjob) {
-    return this.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    const id = typeof codingjob === "object" ? codingjob.job_id : codingjob;
+    return this.idb.documents.where("job_id").equals(id).count();
   }
 
   async getDocuments(codingjob) {
-    return this.idb.documents.where("job_id").equals(codingjob.job_id);
+    const id = typeof codingjob === "object" ? codingjob.job_id : codingjob;
+    return this.idb.documents.where("job_id").equals(id);
   }
 
   async getDocument(doc_uid) {

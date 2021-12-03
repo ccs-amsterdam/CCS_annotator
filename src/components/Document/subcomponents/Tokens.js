@@ -45,7 +45,7 @@ const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
           style={{
             flex: "1 97%",
             width: "100%",
-            maxHeight: height,
+
             overflowY: "auto",
             textAlign: "justify",
           }}
@@ -138,6 +138,7 @@ const renderSection = (text_fields, paragraph_nr, paragraphs, section) => {
             </span>
           ) : null}
           <p
+            className="noselect"
             style={{
               fontSize: `${layout.size != null ? layout.size : 1}em`,
               fontWeight: layout.bold ? "bold" : "normal",
@@ -192,30 +193,23 @@ const renderSentence = (position, sentence_nr, tokens) => {
 };
 
 const renderToken = (token, codingUnit) => {
-  const style = codingUnit
-    ? {
-        lineHeight: "1.3em",
-        fontSize: "1.5em",
-        position: "relative",
-      }
-    : { lineHeight: "1.3em", color: "#746363", position: "relative" };
-
   return (
-    <span
-      key={token.index}
-      ref={token.ref}
-      className={"token"}
-      tokenindex={token.arrayIndex}
-      style={style}
-    >
-      <span className="pre">{token.pre}</span>
-      <span className="text">{token.text}</span>
-      <span className="post">{token.post}</span>
-      <div
-        className="variable"
-        style={{ position: "absolute", top: "-0.4em", left: "0", fontSize: "0.4em" }}
-      ></div>
-    </span>
+    <>
+      <span
+        key={token.index}
+        ref={token.ref}
+        className={codingUnit ? "token codingUnit" : "token"}
+        tokenindex={token.arrayIndex}
+      >
+        <span className="pre">{token.pre}</span>
+        <span className="text">{token.text}</span>
+        <span className="post">{token.post}</span>
+        <div
+          className="variable"
+          style={{ position: "absolute", top: "-0.4em", left: "0", fontSize: "0.4em" }}
+        ></div>
+      </span>
+    </>
   );
 };
 

@@ -39,6 +39,7 @@ const Meta = ({ meta_fields }) => {
         padding: "10px",
         paddingLeft: "40px",
         border: "1px solid grey",
+        boxShadow: "5px 3px 3px lightblue",
         background: "#2185d0",
         color: "#FFF",
       }}

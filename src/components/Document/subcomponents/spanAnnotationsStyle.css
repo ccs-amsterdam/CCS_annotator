@@ -32,6 +32,14 @@
 span.token {
   /* vertical-align: bottom; */
   padding-bottom: 0px;
+  color: grey;
+}
+
+span.token.codingUnit {
+  line-height: 1.4em;
+  font-size: 1.5em;
+  background-color: white;
+  color: black;
 }
 
 span.token.selected > span {
@@ -52,7 +60,7 @@ button.active {
 
 span.token.annotated > span {
   /* line-height: 1.5em; */
-  
+
   border: 1px solid;
   border-left: none;
   border-right: none;
@@ -94,4 +102,14 @@ span.token.annotated.allRight > span.text {
   border-right-width: 1px;
   /* border-bottom-right-radius: 7px;
   border-top-right-radius: 7px; */
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
 }

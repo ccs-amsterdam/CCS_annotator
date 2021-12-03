@@ -76,7 +76,6 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
         <Form.Field>
           <Checkbox
             label="Single code (only select)"
-            disabled={annotateForm.buttonMode === "recent"}
             checked={annotateForm.singleCode}
             onChange={(e, d) => setAnnotateForm({ ...annotateForm, singleCode: d.checked })}
           />

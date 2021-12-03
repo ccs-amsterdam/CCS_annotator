@@ -10,7 +10,7 @@ import IndexController from "components/Annotator/subcomponents/IndexController"
 import UnitLayoutSettings from "./subcomponents/UnitLayoutSettings";
 
 const ManageCodingUnits = ({ codingjob }) => {
-  const units = useUnits(codingjob);
+  const [units, loadingUnits] = useUnits(codingjob);
 
   if (!codingjob) return null;
 
@@ -33,12 +33,16 @@ const ManageCodingUnits = ({ codingjob }) => {
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Select Units
           </Header>
+
           <SampleSettings codingjob={codingjob} units={units} />
         </Grid.Column>
-        <Grid.Column width={6}>
+        <Grid.Column width={6} style={{ height: "80vh", overflow: "auto" }}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Unit preview
           </Header>
+          <Dimmer inverted active={loadingUnits}>
+            <Loader size="huge">Updating units</Loader>
+          </Dimmer>
           <PreviewDocument units={units} codingjob={codingjob} codebook={{}} />
         </Grid.Column>
       </Grid>
