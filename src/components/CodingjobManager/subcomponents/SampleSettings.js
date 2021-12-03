@@ -190,16 +190,16 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
           max={1000}
           label={
             <b>
-              Add fake (%)
+              Random annotations (%)
               <Help
-                header="Create units with fake annotations"
+                header="Create units with random annotations"
                 texts={[
                   `Given units based on imported annotations, this feature adds units to the sample in which this annotation does NOT occur.
                    (This is only possible if units are sentences, paragraphs or documents, because randomly adding spans is a lost cause)`,
                   `In other words, if imported annotations are 'positives', then this adds 'negatives' to the sample. 
                    This is particularly relevant for validation tasks, and when it cannot be taken for granted that all negatives are true negatives.`,
-                  `The maximum number of fake annotations is the number of unique text units times the number of unique codes. Note that this would also
-                    include real annotations. If "only unused" is enabled, these real annotations are never added to the sample`,
+                  `The maximum number of random annotations is the number of unique text units times the number of unique codes.`,
+                  `Randomly added annotations can concidentally coincide with actual annotations. This can be prevented with the "only unused" setting.`,
                 ]}
               />
             </b>
@@ -242,9 +242,9 @@ const validCodesColumns = [
     headerClass: "two wide",
   },
   {
-    Header: "Fake",
-    accessor: "fake",
-    headerClass: "two wide",
+    Header: "Random",
+    accessor: "random",
+    headerClass: "three wide",
   },
 ];
 
@@ -266,15 +266,19 @@ const SelectValidCodes = ({ codingjob, units }) => {
   );
 
   useEffect(() => {
-    if (!units || units.length === 0 || !validCodes || !annotation || !isAnnotation) return;
+    if (!validCodes || !annotation || !isAnnotation) return;
     if (!validCodes[annotation]) return;
+    if (!units || units.length === 0) {
+      setData(validCodes[annotation].map((row) => ({ code: row.code, N: 0, random: 0 })));
+      return;
+    }
     if (!units[0].variables) return;
 
     const valueMap = units.reduce((obj, unit) => {
       const value = Object.values(unit.variables)[0];
-      if (!obj[value]) obj[value] = { real: 0, fake: 0 };
-      if (unit.fake) {
-        obj[value].fake++;
+      if (!obj[value]) obj[value] = { real: 0, random: 0 };
+      if (unit.random) {
+        obj[value].random++;
       } else obj[value].real++;
       return obj;
     }, {});
@@ -282,7 +286,7 @@ const SelectValidCodes = ({ codingjob, units }) => {
       validCodes[annotation].map((row) => ({
         ...row,
         N: valueMap[row.code]?.real,
-        fake: valueMap[row.code]?.fake,
+        random: valueMap[row.code]?.random,
       }))
     );
   }, [validCodes, units, setData, annotation, isAnnotation]);

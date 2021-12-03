@@ -50,6 +50,23 @@ export const standardizeUnits = async (codingjob, units) => {
     if (docs[doc_uid].importedTokens) {
       // if tokens were imported, don't collapse to texts, but keep the original tokens.
       unit.tokens = tokensRowToColumn(tokens);
+
+      const keepColumns = [
+        "document_id",
+        "codingUnit",
+        "offset",
+        "length",
+        "pre",
+        "post",
+        "paragraph",
+        "sentence",
+        "section",
+        "text",
+      ];
+      unit.tokens = Object.keys(unit.tokens).reduce((data, column) => {
+        if (keepColumns.includes(column)) data[column] = unit.tokens[column];
+        return data;
+      }, {});
       unit.text_fields = Object.keys(layout.text).reduce((tf, name) => {
         // if texts are not collapsed, text_fields is still used for section layout settings
         tf.push({ name, ...layout.text[name] });

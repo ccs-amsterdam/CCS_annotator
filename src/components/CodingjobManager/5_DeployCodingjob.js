@@ -138,14 +138,12 @@ const AmcatDeploy = ({ codingjobPackage }) => {
     if (codingjobPackage?.title) setTitle(codingjobPackage.title);
   }, [codingjobPackage]);
 
+  console.log(codingjobPackage);
+
   const deploy = async () => {
     const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.email, cookies.amcat.token);
     try {
-      console.log(amcat);
-      console.log(codingjobPackage);
-      
       const id = await amcat.postCodingjob(codingjobPackage, title);
-      console.log(id);
       const url = `${amcat.host}/codingjob/${id.data.id}`;
       db.createDeployedJob(title, url);
     } catch (e) {
@@ -216,6 +214,7 @@ const createCodingjobPackage = async (
     units: await standardizeUnits(codingjob, units),
     rules: { authentication: "user" },
   };
+
   if (includeDocuments)
     cjpackage.provenance.documents = await db.idb.documents
       .where("job_id")

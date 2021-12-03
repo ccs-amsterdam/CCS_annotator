@@ -47,6 +47,8 @@ const defaultLayout = (field) => {
     italic: false,
     size: 1,
     visible: true,
+    justify: true,
+    paragraphs: false,
   };
   if (["title", "headline"].includes(field)) {
     l.size = 1;
@@ -102,6 +104,24 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
     );
   };
 
+  const justifyField = (which, fields, field) => {
+    return (
+      <Checkbox
+        checked={fields[field].justify}
+        onChange={() => update(which, field, "justify", !fields[field].justify)}
+      />
+    );
+  };
+
+  const paragraphsField = (which, fields, field) => {
+    return (
+      <Checkbox
+        checked={fields[field].paragraphs}
+        onChange={() => update(which, field, "paragraphs", !fields[field].paragraphs)}
+      />
+    );
+  };
+
   const sizeField = (which, fields, field) => {
     return (
       <Input
@@ -140,6 +160,12 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
           <Table.Cell style={{ padding: "2px" }}>{sizeField(which, fields, field)}</Table.Cell>
           <Table.Cell style={{ textAlign: "left" }}>{boldField(which, fields, field)}</Table.Cell>
           <Table.Cell style={{ textAlign: "left" }}>{italicField(which, fields, field)}</Table.Cell>
+          <Table.Cell style={{ textAlign: "left" }}>
+            {justifyField(which, fields, field)}
+          </Table.Cell>
+          <Table.Cell style={{ textAlign: "left" }}>
+            {paragraphsField(which, fields, field)}
+          </Table.Cell>
         </Table.Row>
       );
     });
@@ -161,6 +187,12 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
           </Table.HeaderCell>
           <Table.HeaderCell width={1}>
             <Icon name="italic" />
+          </Table.HeaderCell>
+          <Table.HeaderCell width={1}>
+            <Icon name="align justify" />
+          </Table.HeaderCell>
+          <Table.HeaderCell width={1}>
+            <Icon name="paragraph" />
           </Table.HeaderCell>
         </Table.Row>
       </Table.Header>

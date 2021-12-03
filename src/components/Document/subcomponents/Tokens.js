@@ -45,9 +45,7 @@ const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
           style={{
             flex: "1 97%",
             width: "100%",
-
             overflowY: "auto",
-            textAlign: "justify",
           }}
         >
           {/* <div style={{ height: "10em" }} /> */}
@@ -79,18 +77,22 @@ const renderText = (tokens, text_fields) => {
   let section_name = tokens[0].section;
   let paragraph_nr = tokens[0].paragraph;
   let sentence_nr = tokens[0].sentence;
+  let layout = text_fields.find((tf) => tf.name === section_name);
 
   for (let i = 0; i < tokens.length; i++) {
     tokens[i].arrayIndex = i;
+    if (tokens[i].section !== section_name)
+      layout = text_fields.find((tf) => tf.name === tokens[i].section);
+    const keepParagraphs = layout?.paragraphs;
 
     if (tokens[i].sentence !== sentence_nr) {
       if (sentence.length > 0) paragraph.push(renderSentence(i, sentence_nr, sentence));
       sentence = [];
     }
-    if (tokens[i].paragraph !== paragraph_nr) {
+    if (keepParagraphs && tokens[i].paragraph !== paragraph_nr) {
       if (paragraph.length > 0) {
         section.push(
-          renderParagraph(i, paragraph_nr, paragraph, tokens[i].paragraph !== paragraph_nr)
+          renderParagraph(paragraph_nr, paragraph, tokens[i].paragraph !== paragraph_nr)
         );
       }
       paragraph = [];
@@ -98,9 +100,7 @@ const renderText = (tokens, text_fields) => {
 
     if (tokens[i].section !== section_name) {
       if (section.length > 0)
-        text["text"].push(
-          renderSection(text_fields, i + "_" + section_name, section, section_name)
-        );
+        text["text"].push(renderSection(layout, i + "_" + section_name, section, section_name));
       section = [];
     }
 
@@ -114,15 +114,14 @@ const renderText = (tokens, text_fields) => {
   }
 
   if (sentence.length > 0) paragraph.push(renderSentence("last", sentence_nr, sentence));
-  if (paragraph.length > 0) section.push(renderParagraph("last", paragraph_nr, paragraph, false));
+  if (paragraph.length > 0) section.push(renderParagraph(paragraph_nr, paragraph, false));
   if (section.length > 0)
-    text["text"].push(renderSection(text_fields, "last_" + section_name, section, section_name));
+    text["text"].push(renderSection(layout, "last_" + section_name, section, section_name));
   return text;
 };
 
-const renderSection = (text_fields, paragraph_nr, paragraphs, section) => {
+const renderSection = (layout, paragraph_nr, paragraphs, section) => {
   const fontstyle = (paragraphs) => {
-    const layout = text_fields.find((tf) => tf.name === section);
     if (layout) {
       return (
         <>
@@ -143,6 +142,7 @@ const renderSection = (text_fields, paragraph_nr, paragraphs, section) => {
               fontSize: `${layout.size != null ? layout.size : 1}em`,
               fontWeight: layout.bold ? "bold" : "normal",
               fontStyle: layout.italic ? "italic" : "normal",
+              textAlign: layout.justify ? "justify" : "left",
             }}
             key={section + paragraph_nr}
           >
@@ -162,7 +162,7 @@ const renderSection = (text_fields, paragraph_nr, paragraphs, section) => {
   );
 };
 
-const renderParagraph = (position, paragraph_nr, sentences, end) => {
+const renderParagraph = (paragraph_nr, sentences, end) => {
   return (
     // uses span behaving like p, because p is not allowed due to nested div (for Label)
     <div style={{ display: "flex" }}>

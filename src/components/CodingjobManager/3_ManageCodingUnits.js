@@ -11,7 +11,6 @@ import UnitLayoutSettings from "./subcomponents/UnitLayoutSettings";
 
 const ManageCodingUnits = ({ codingjob }) => {
   const [units, loadingUnits] = useUnits(codingjob);
-
   if (!codingjob) return null;
 
   return (
@@ -40,8 +39,11 @@ const ManageCodingUnits = ({ codingjob }) => {
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Unit preview
           </Header>
-          <Dimmer inverted active={loadingUnits}>
-            <Loader size="huge">Updating units</Loader>
+          <Dimmer inverted active={loadingUnits === "awaiting_input" || loadingUnits === "loading"}>
+            Awaiting input
+            <Loader size="huge">
+              {loadingUnits === "awaiting_input" ? "Awaiting input" : "updating"}
+            </Loader>
           </Dimmer>
           <PreviewDocument units={units} codingjob={codingjob} codebook={{}} />
         </Grid.Column>

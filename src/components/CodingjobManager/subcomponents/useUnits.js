@@ -10,24 +10,14 @@ import { drawRandom } from "library/sample";
 const useUnits = (codingjob) => {
   const [unitData, setUnitData] = useState(null);
   const [sample, setSample] = useState(null);
-  const [delayedCodingjob, setDelayedCodingjob] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-    setDelayedCodingjob(null);
-    const timer = setTimeout(() => {
-      setDelayedCodingjob(codingjob);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [codingjob, setDelayedCodingjob, setLoading]);
+  const [loading, setLoading] = useState("ready");
 
   useEffect(() => {
     // if settings for preparing units change
-    setLoading(true);
+    setLoading("loading");
     if (!codingjob?.unitSettings?.textUnit) return;
     getUnitData(codingjob.job_id, setUnitData);
-    setLoading(false);
+    //setLoading(false);
   }, [
     codingjob?.unitSettings?.textUnit,
     codingjob?.unitSettings?.unitSelection,
@@ -38,13 +28,18 @@ const useUnits = (codingjob) => {
 
   useEffect(() => {
     // if settings for drawing sample change
-    if (!delayedCodingjob) return;
-    if (!unitData || !delayedCodingjob?.unitSettings?.n || !delayedCodingjob?.importedCodes) return;
-    getSample(delayedCodingjob, unitData, setSample);
-    setLoading(false);
-  }, [unitData, delayedCodingjob, setSample, setLoading]);
+    if (!unitData || !codingjob?.importedCodes) return;
+    setLoading((state) => (state === "loading" ? "loading" : "awaiting_input"));
+
+    const timer = setTimeout(() => {
+      setLoading((state) => (state === "loading" ? null : "loading"));
+      getSample(codingjob, unitData, setSample, setLoading);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [unitData, codingjob, setSample, setLoading]);
 
   if (!codingjob) return null;
+  console.log(loading);
 
   return [sample, loading];
 };
@@ -61,7 +56,7 @@ const getUnitData = async (job_id, setUnitData) => {
   });
 };
 
-const getSample = async (codingjob, unitData, setSample) => {
+const getSample = async (codingjob, unitData, setSample, setLoading) => {
   const validCodes = codingjob.unitSettings.validCodes[codingjob.unitSettings.annotation];
 
   let units = unitData.units;
@@ -85,6 +80,10 @@ const getSample = async (codingjob, unitData, setSample) => {
       n: Math.max(0, Math.min(units.length, codingjob.unitSettings.n + nDiff)),
       totalUnits: units.length,
     });
+    if (units.length === 0) {
+      setSample([]);
+      setTimeout(() => setLoading("ready"), 50);
+    }
     return;
   }
 
@@ -108,19 +107,21 @@ const getSample = async (codingjob, unitData, setSample) => {
     unitData.textUnit !== "span" &&
     codingjob.unitSettings.annotationMix
   ) {
-    let sampleN = Math.ceil(unitData.units.length * (codingjob.unitSettings.annotationMix / 100));
-    let fakeUnits = getFakeUnits(
+    let sampleN = Math.ceil(units.length * (codingjob.unitSettings.annotationMix / 100));
+    let randomUnits = getRandomUnits(
       unitData.all,
       codingjob,
       codingjob.unitSettings,
       sampleN,
       invalidCodesLookup
     );
-    if (fakeUnits.length > 0) sample = sample.concat(fakeUnits);
+    if (randomUnits.length > 0) sample = sample.concat(randomUnits);
   }
 
   sample = orderUnits(sample, codingjob.unitSettings);
   setSample(sample);
+  console.log("2");
+  setTimeout(() => setLoading("ready"), 50);
 };
 
 const getUnitDataFromDB = async (job_id, unitSettings) => {
@@ -131,7 +132,7 @@ const getUnitDataFromDB = async (job_id, unitSettings) => {
   if (unitSettings.unitSelection === "annotations") units = annotations;
 
   // returns both 'all' and 'annotations'. If selection is "allTextUnits", we use all,
-  // and if it's "annotations" we use annotations. But if it's annotations + fake we need both
+  // and if it's "annotations" we use annotations. But if it's annotations + random we need both
   return {
     all,
     annotations,
@@ -212,7 +213,7 @@ const getAllUnits = async (job_id, unitSettings) => {
   return [allUnits, annotatedUnits];
 };
 
-const getFakeUnits = (all, codingjob, unitSettings, sampleN, invalidCodesLookup) => {
+const getRandomUnits = (all, codingjob, unitSettings, sampleN, invalidCodesLookup) => {
   const variable = unitSettings.annotation;
   const codes = codingjob.importedCodes[variable];
 
@@ -241,21 +242,21 @@ const getFakeUnits = (all, codingjob, unitSettings, sampleN, invalidCodesLookup)
     indices.map((i) => i.stratum)
   );
 
-  const fakeUnits = [];
-  for (let fakeUnitIndex of indices) {
-    fakeUnits.push({
-      ...all[fakeUnitIndex.i],
-      fake: true,
-      variables: fakeUnitIndex.variables,
+  const randomUnits = [];
+  for (let randomUnitIndex of indices) {
+    randomUnits.push({
+      ...all[randomUnitIndex.i],
+      random: true,
+      variables: randomUnitIndex.variables,
     });
   }
-  return fakeUnits;
+  return randomUnits;
 };
 
 const getAnnotations = (annotations, tokens, textUnit, annotation) => {
   // complicated story... but.
   // creates an object to add all used values for the selected annotation to the units
-  // this is used for adding fake annotations without accidentally random sampling a
+  // this is used for adding random annotations without accidentally random sampling a
   // correct annotation (which in some cases is quite common)
   if (!annotations) return [];
   const ann = {};
