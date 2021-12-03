@@ -17,7 +17,7 @@ export class JobServerRemote {
     let response;
     try {
       const url = new URL(this.url);
-      this.codingjobID = url.pathname.split("/")[2];
+      this.codingjobID = url.pathname.split("/")[url.length - 1];
       response = await axios.get(
         `${this.url}/codebook?id=${this.codingjobID}&user=${this.coderName}`
       );
