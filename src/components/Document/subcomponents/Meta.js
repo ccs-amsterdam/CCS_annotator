@@ -37,11 +37,11 @@ const Meta = ({ meta_fields }) => {
       style={{
         lineHeight: "0.8",
         padding: "10px",
-        paddingLeft: "40px",
+        paddingLeft: "10px",
         border: "1px solid grey",
-        boxShadow: "5px 3px 3px lightblue",
-        background: "#2185d0",
-        color: "#FFF",
+        boxShadow: "5px 3px 3px #e0f2ff",
+        background: "#e1f2ff",
+        color: "black",
       }}
     >
       {rows()}
