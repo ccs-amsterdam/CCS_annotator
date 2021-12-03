@@ -33,13 +33,12 @@ const AnnotatorScreen = ({ jobServer }) => {
         });
       })
       .catch((e) => {
-        if (e.response?.status === 404) {
-          alert("Could not get unit from server");
-          setPreparedUnit(null);
-          // if (unitIndex !== null && unitIndex < jobServer.rules.n)
-          //   setUnitIndex((state) => state + 1);
-          console.log(e);
-        }
+        if (e.response?.status === 404) setUnitIndex(null);
+        //alert("Could not get unit from server");
+        setPreparedUnit(null);
+        // if (unitIndex !== null && unitIndex < jobServer.rules.n)
+        //   setUnitIndex((state) => state + 1);
+        console.log(e);
       });
   }, [unitIndex, jobServer, setUnitIndex, setPreparedUnit]);
 
