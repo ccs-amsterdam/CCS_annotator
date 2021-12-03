@@ -31,7 +31,7 @@ const UserName = ({ force = false }) => {
       trigger={
         <Menu.Item
           icon={cookies.name == null ? "toggle off" : "toggle on"}
-          name={"Email"}
+          name={"User"}
           style={{ color: cookies.name == null ? "red" : "green" }}
         />
       }
@@ -39,12 +39,12 @@ const UserName = ({ force = false }) => {
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
     >
-      <Header icon="user" content="Email adress" />
+      <Header icon="user" content="User name" />
       <Modal.Content>
         <Form onSubmit={storeName}>
           <Form.Input
             placeholder="username"
-            name="email"
+            //name="email"
             value={name}
             onChange={(e, d) => {
               if (d.value.length < 100) setName(d.value);
@@ -56,7 +56,7 @@ const UserName = ({ force = false }) => {
       </Modal.Content>
       <Modal.Actions>
         <Button primary disabled={invalidEmail(name)} onClick={storeName}>
-          {invalidEmail(name) ? "please enter a valid email adress" : "Set email adress"}
+          {invalidEmail(name) ? "please enter a valid email adress" : "Set username"}
         </Button>
       </Modal.Actions>
     </Modal>
