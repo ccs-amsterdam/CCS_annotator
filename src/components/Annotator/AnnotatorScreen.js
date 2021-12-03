@@ -55,6 +55,7 @@ const AnnotatorScreen = ({ jobServer }) => {
     return <Task codebook={jobServer?.codebook} unit={preparedUnit} setUnitIndex={setUnitIndex} />;
   };
 
+  console.log(jobServer);
   return (
     <FullScreenFix handle={fsHandle}>
       <div
@@ -123,10 +124,13 @@ const Finished = ({ jobServer }) => {
 };
 
 const AskFullScreenModal = ({ location, handle }) => {
-  const [askFullscreen, setAskFullscreen] = useState(true);
+  let [askFullscreen, setAskFullscreen] = useState(true);
   useEffect(() => {
     setAskFullscreen(true);
   }, [location, setAskFullscreen]);
+
+  // Disable for now. Seems to not work in Apple devices
+  askFullscreen = false;
 
   return (
     <Modal open={askFullscreen}>

@@ -10,14 +10,24 @@ export const getCodebook = (taskSettings) => {
     type: taskSettings.type,
     ...taskSettings[taskSettings.type],
   };
+
   if (taskSettings.type === "annotate") {
     codebook.variables = [
       ...codebook.variables.filter((v) => v.enabled == null || v.enabled === true),
     ];
     codebook.variables = codebook.variables.map((v) => {
       const variable = { ...v };
-      if (variable.singleCode) variable.codes = standardizeCodes(["true"]);
+      if (variable.singleCode) variable.codes = ["true"];
+      variable.codes = standardizeCodes(variable.codes);
       return variable;
+    });
+  }
+
+  if (taskSettings.type === "questions") {
+    codebook.questions = codebook.questions.map((q) => {
+      const question = { ...q };
+      question.codes = standardizeCodes(question.codes);
+      return question;
     });
   }
 

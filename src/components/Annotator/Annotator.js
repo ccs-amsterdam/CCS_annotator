@@ -42,6 +42,7 @@ const createLocalJobServer = async (id, cookies, setJobServer) => {
 const createRemoteJobServer = async (url, cookies, setJobServer) => {
   const us = new JobServerRemote(url, cookies.name);
   await us.init();
+  console.log(us);
   setJobServer(us);
 };
 

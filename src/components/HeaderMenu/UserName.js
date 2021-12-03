@@ -13,6 +13,13 @@ const UserName = ({ force = false }) => {
     setOpen(false);
   };
 
+  const invalidEmail = (email) => {
+    return false;
+    //return !email.match(
+    //  /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    //);
+  };
+
   useEffect(() => {
     if (cookies.name) setName(cookies.name);
   }, [cookies.name]);
@@ -32,7 +39,7 @@ const UserName = ({ force = false }) => {
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
     >
-      <Header icon="user" content="Set user name" />
+      <Header icon="user" content="Email adress" />
       <Modal.Content>
         <Form onSubmit={storeName}>
           <Form.Input
@@ -40,7 +47,7 @@ const UserName = ({ force = false }) => {
             name="email"
             value={name}
             onChange={(e, d) => {
-              if (d.value.length < 50) setName(d.value);
+              if (d.value.length < 100) setName(d.value);
             }}
             autoFocus
             style={{ width: "18em" }}
@@ -48,8 +55,8 @@ const UserName = ({ force = false }) => {
         </Form>
       </Modal.Content>
       <Modal.Actions>
-        <Button primary disabled={name.length < 5} onClick={storeName}>
-          {name.length < 5 ? "please use 5 characters or more" : "Set user name"}
+        <Button primary disabled={invalidEmail(name)} onClick={storeName}>
+          {invalidEmail(name) ? "please enter a valid email adress" : "Set email adress"}
         </Button>
       </Modal.Actions>
     </Modal>

@@ -23,17 +23,15 @@ const Amcat = () => {
     >
       <Header icon="database" content="Connect to AmCAT server" />
       <Modal.Content>
-        <AmcatLogin setOpen={setOpen} setCookie={setCookie} />
+        <AmcatLogin setOpen={setOpen} cookies={cookies} setCookie={setCookie} />
       </Modal.Content>
     </Modal>
   );
 };
 
-const color = "blue";
-
-const AmcatLogin = ({ setOpen, setCookie }) => {
-  const [host, setHost] = useState("https://amcat4.labs.vu.nl/api");
-  const [email, setEmail] = useState("admin");
+export const AmcatLogin = ({ setOpen, cookies, setCookie }) => {
+  const [host, setHost] = useState(cookies?.amcat?.host || "https://amcat4.labs.vu.nl/api");
+  const [email, setEmail] = useState(cookies?.amcat?.email || "admin");
   const [password, setPassword] = useState("admin");
   const [status, setStatus] = useState("idle");
 
@@ -42,9 +40,9 @@ const AmcatLogin = ({ setOpen, setCookie }) => {
     try {
       const token = await getToken(host, email, password);
       if (token) {
-        setCookie("amcat", JSON.stringify({ host, email, token }), { path: "/" });
         setStatus("success");
-        setOpen(false);
+        setCookie("amcat", JSON.stringify({ host, email, token }), { path: "/" });
+        if (setOpen) setOpen(false);
       } else setStatus("error");
     } catch (e) {
       console.log(e);
@@ -55,7 +53,7 @@ const AmcatLogin = ({ setOpen, setCookie }) => {
   return (
     <Grid inverted textAlign="center" style={{ height: "50%" }} verticalAlign="middle">
       <Grid.Column style={{ maxWidth: 450 }}>
-        <Header as="h2" color={color} textAlign="center">
+        <Header as="h2" color={"blue"} textAlign="center">
           Connect to AmCAT server
         </Header>
         <Form size="large">
@@ -98,7 +96,7 @@ const AmcatLogin = ({ setOpen, setCookie }) => {
               type="password"
             />
 
-            <Button onClick={submitForm} color={color} fluid size="large">
+            <Button onClick={submitForm} color={"blue"} fluid size="large">
               Login
             </Button>
           </Segment>

@@ -31,7 +31,7 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
       verticalAlign={"top"}
       columns={2}
     >
-      <Grid.Column width={10} style={{ paddingRight: "0em", height: "100%" }}>
+      <Grid.Column width={10} style={{ paddingRight: "0em", paddingTop: "0", height: "100%" }}>
         <Button.Group fluid style={{ padding: "0", height: "40px" }}>
           <Instructions codebook={codebook} />
           <NextUnitButton setUnitIndex={setUnitIndex} />
@@ -49,6 +49,7 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
         width={6}
         style={{
           paddingRight: "0em",
+          paddingTop: "0",
           height: "100%",
         }}
       >

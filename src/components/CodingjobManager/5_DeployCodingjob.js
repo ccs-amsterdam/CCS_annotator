@@ -12,6 +12,7 @@ import { getCodebook } from "library/codebook";
 import DeployedJobs from "./subcomponents/DeployedJobs";
 import { useCookies } from "react-cookie";
 import newAmcatSession from "apis/amcat";
+import { AmcatLogin } from "components/HeaderMenu/Amcat";
 
 const DeployCodingjob = ({ codingjob }) => {
   const [codingjobPackage, setCodingjobPackage] = useState(null);
@@ -43,7 +44,7 @@ const DeployCodingjob = ({ codingjob }) => {
     return (
       <Grid.Column width={11}>
         <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
-          Previously deployed jobs
+          Jobs deployed on AmCAT
         </Header>
         <DeployedJobs />
       </Grid.Column>
@@ -131,7 +132,7 @@ const DownloadButton = ({ codingjobPackage }) => {
 
 const AmcatDeploy = ({ codingjobPackage }) => {
   const [title, setTitle] = useState("");
-  const [cookies, , removeCookie] = useCookies(["amcat"]);
+  const [cookies, setCookie, removeCookie] = useCookies(["amcat"]);
 
   useEffect(() => {
     if (codingjobPackage?.title) setTitle(codingjobPackage.title);
@@ -140,7 +141,11 @@ const AmcatDeploy = ({ codingjobPackage }) => {
   const deploy = async () => {
     const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.email, cookies.amcat.token);
     try {
+      console.log(amcat);
+      console.log(codingjobPackage);
+      
       const id = await amcat.postCodingjob(codingjobPackage, title);
+      console.log(id);
       const url = `${amcat.host}/codingjob/${id.data.id}`;
       db.createDeployedJob(title, url);
     } catch (e) {
@@ -149,7 +154,7 @@ const AmcatDeploy = ({ codingjobPackage }) => {
     }
   };
 
-  if (!cookies.amcat) return <p>You need to log in to AmCAT first. (see top-right in the menu)</p>;
+  if (!cookies.amcat) return <AmcatLogin cookies={cookies} setCookie={setCookie} />;
 
   return (
     <div>

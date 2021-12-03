@@ -16,12 +16,13 @@ export class JobServerRemote {
     // needs to be called in order to fetch codebook/rules
     let response;
     try {
-      const url = new URL(this.url);
+      let url = new URL(this.url);
       this.codingjobID = url.pathname.split("/")[3];
-      response = await axios.get(
-        `${this.url}/codebook?id=${this.codingjobID}&user=${this.coderName}`
-      );
+      url = encodeURI(`${this.url}/codebook?id=${this.codingjobID}&user=${this.coderName}`);
+      console.log(url);
+      response = await axios.get(url);
     } catch (e) {
+      alert("wtf");
       this.success = false;
       return;
     }
@@ -29,10 +30,11 @@ export class JobServerRemote {
     this.codebook = response.data;
 
     // this should come from rules
-    this.rules = { n: 20, canGoBack: false, canGoForward: false };
+    this.rules = { n: null, canGoBack: false, canGoForward: false };
 
     // this should somehow be provided by amcat
     this.progressIndex = 0;
+    console.log("whhhhad");
   }
 
   async getUnit(i) {
@@ -40,6 +42,7 @@ export class JobServerRemote {
     const response = await axios.get(
       `${this.url}/unit?user=${this.coderName}&id=${this.codingjobID}`
     );
+    console.log(response);
     return response.data;
     // data should be an object with url, id and unit, where unit is an object with at least text_fields,
     // and if available annotations

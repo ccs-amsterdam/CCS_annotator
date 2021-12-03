@@ -79,7 +79,6 @@ const DeployedTable = ({ jobKey, setJobKey }) => {
       return b.created - a.created;
     });
 
-    console.log(arr);
     return arr.map((row) => ({ ...row, created: row.created.toDateString() }));
   });
 
@@ -175,7 +174,6 @@ const getResultUrl = async (jobKey, amcat, setAnnotations) => {
       }
       return arr;
     }, []);
-    console.log(annotations);
     setAnnotations(annotations);
   } catch (e) {
     console.log(e);
