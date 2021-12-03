@@ -8,83 +8,148 @@ import { drawRandom } from "library/sample";
  * @returns
  */
 const useUnits = (codingjob) => {
-  const [units, setUnits] = useState(null);
-
-  // When a new codingjob is loaded, set codingjobLoaded ref to false
-  // this prevents actually loading the data until unitSettings has loaded
-  // the unitSettings stored in the codingjob
+  const [unitData, setUnitData] = useState(null);
+  const [sample, setSample] = useState(null);
+  const [delayedCodingjob, setDelayedCodingjob] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!codingjob?.unitSettings) return null;
-    //setUnits(null);
-    getUnits(codingjob, setUnits);
-  }, [codingjob, setUnits]);
+    setLoading(true);
+    setDelayedCodingjob(null);
+    const timer = setTimeout(() => {
+      setDelayedCodingjob(codingjob);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [codingjob, setDelayedCodingjob, setLoading]);
+
+  useEffect(() => {
+    // if settings for preparing units change
+    setLoading(true);
+    if (!codingjob?.unitSettings?.textUnit) return;
+    getUnitData(codingjob.job_id, setUnitData);
+    setLoading(false);
+  }, [
+    codingjob?.unitSettings?.textUnit,
+    codingjob?.unitSettings?.unitSelection,
+    codingjob?.unitSettings?.annotation,
+    codingjob.job_id,
+    setUnitData,
+  ]);
+
+  useEffect(() => {
+    // if settings for drawing sample change
+    if (!delayedCodingjob) return;
+    if (!unitData || !delayedCodingjob?.unitSettings?.n || !delayedCodingjob?.importedCodes) return;
+    getSample(delayedCodingjob, unitData, setSample);
+    setLoading(false);
+  }, [unitData, delayedCodingjob, setSample, setLoading]);
 
   if (!codingjob) return null;
 
-  return units;
+  return [sample, loading];
 };
 
-const getUnits = async (codingjob, setUnits) => {
-  let [totalUnits, units] = await getUnitsFromDB(codingjob);
-  setUnits(units);
+const getUnitData = async (job_id, setUnitData) => {
+  const unitSettings = await db.getCodingjobProp(job_id, "unitSettings");
+  let unitData = await getUnitDataFromDB(job_id, unitSettings);
+  setUnitData(unitData);
 
+  await db.setCodingjobProp(job_id, "unitSettings", {
+    ...unitSettings,
+    n: unitData.units.length,
+    totalUnits: unitData.units.length,
+  });
+};
+
+const getSample = async (codingjob, unitData, setSample) => {
+  const validCodes = codingjob.unitSettings.validCodes[codingjob.unitSettings.annotation];
+
+  let units = unitData.units;
+  let invalidCodesLookup = {};
   if (
-    codingjob.unitSettings.n === null ||
-    codingjob.unitSettings.n == null ||
-    codingjob.unitSettings.totalUnits !== totalUnits
+    validCodes &&
+    codingjob.unitSettings.unitSelection === "annotations" &&
+    validCodes.some((vc) => !vc.valid)
   ) {
+    invalidCodesLookup = validCodes.reduce((obj, code) => {
+      if (!code.valid) obj[code.code] = true;
+      return obj;
+    }, {});
+    units = units.filter((u) => !invalidCodesLookup[u.annotationValue]);
+  }
+
+  const nDiff = units.length - codingjob.unitSettings.totalUnits;
+  if (nDiff !== 0) {
     await db.setCodingjobProp(codingjob, "unitSettings", {
       ...codingjob.unitSettings,
-      n: totalUnits,
-      totalUnits,
+      n: Math.max(0, Math.min(units.length, codingjob.unitSettings.n + nDiff)),
+      totalUnits: units.length,
     });
+    return;
   }
-};
 
-const getUnitsFromDB = async (codingjob) => {
-  if (!codingjob?.unitSettings) return null;
-  const unitSettings = codingjob.unitSettings;
+  let stratum = units.map((u) => {
+    let s = codingjob.unitSettings.balanceDocuments ? u.doc_uid : "";
+    if (unitData.unitSelection === "annotations" && codingjob.unitSettings.balanceAnnotations)
+      s += `_${u.annotationValue}`;
+    return s;
+  });
 
-  let cjIndices;
-  const [all, annotations] = await getAllUnits(codingjob, unitSettings);
-  if (unitSettings.unitSelection === "allTextUnits") cjIndices = all;
-  if (unitSettings.unitSelection === "annotations") cjIndices = annotations;
-  const totalUnits = cjIndices.length;
-
-  cjIndices = drawRandom(
-    cjIndices,
-    unitSettings.n,
+  let sample = drawRandom(
+    units,
+    codingjob.unitSettings.n,
     false,
-    unitSettings.seed,
-    cjIndices.map((i) => i.stratum)
+    codingjob.unitSettings.seed,
+    stratum
   );
 
   if (
-    unitSettings.unitSelection === "annotations" &&
-    unitSettings.textUnit !== "span" &&
-    unitSettings.annotationMix
+    unitData.unitSelection === "annotations" &&
+    unitData.textUnit !== "span" &&
+    codingjob.unitSettings.annotationMix
   ) {
-    let sampleN = Math.ceil(cjIndices.length * (unitSettings.annotationMix / 100));
-    let fakeUnits = getFakeUnits(all, codingjob, unitSettings, sampleN);
-    if (fakeUnits.length > 0) cjIndices = cjIndices.concat(fakeUnits);
+    let sampleN = Math.ceil(unitData.units.length * (codingjob.unitSettings.annotationMix / 100));
+    let fakeUnits = getFakeUnits(
+      unitData.all,
+      codingjob,
+      codingjob.unitSettings,
+      sampleN,
+      invalidCodesLookup
+    );
+    if (fakeUnits.length > 0) sample = sample.concat(fakeUnits);
   }
 
-  cjIndices = orderUnits(cjIndices, unitSettings);
-  return [totalUnits, cjIndices];
+  sample = orderUnits(sample, codingjob.unitSettings);
+  setSample(sample);
 };
 
-const getAllUnits = async (codingjob, unitSettings) => {
-  const { textUnit, unitSelection, balanceDocuments, balanceAnnotations } = unitSettings;
+const getUnitDataFromDB = async (job_id, unitSettings) => {
+  const [all, annotations] = await getAllUnits(job_id, unitSettings);
 
-  let documents = await db.getDocuments(codingjob);
+  let units;
+  if (unitSettings.unitSelection === "allTextUnits") units = all;
+  if (unitSettings.unitSelection === "annotations") units = annotations;
 
+  // returns both 'all' and 'annotations'. If selection is "allTextUnits", we use all,
+  // and if it's "annotations" we use annotations. But if it's annotations + fake we need both
+  return {
+    all,
+    annotations,
+    units,
+    unitSelection: unitSettings.unitSelection,
+    textUnit: unitSettings.textUnit,
+    annotation: unitSettings.annotation,
+  };
+};
+
+const getAllUnits = async (job_id, unitSettings) => {
+  const { textUnit, unitSelection } = unitSettings;
+
+  let documents = await db.getDocuments(job_id);
+
+  // doesn't do anything right now, but maybe make settings at some point
   let minIndex = 0;
   let maxIndex = Infinity;
-  if (codingjob.unitSettings.useIndexWindow) {
-    minIndex = codingjob.unitSettings.indexWindow[0];
-    maxIndex = codingjob.unitSettings.indexWindow[1];
-  }
 
   const annotatedUnits = [];
   const allUnits = [];
@@ -95,7 +160,7 @@ const getAllUnits = async (codingjob, unitSettings) => {
     const unitIndices = [];
     const annotationValues =
       unitSelection === "annotations"
-        ? getAnnotations(e.annotations, e.tokens, textUnit, codingjob.unitSettings.annotation)
+        ? getAnnotations(e.annotations, e.tokens, textUnit, unitSettings.annotation)
         : [];
 
     if (textUnit === "document" || textUnit === "span") {
@@ -124,9 +189,8 @@ const getAllUnits = async (codingjob, unitSettings) => {
         document_id: e.document_id,
         textFields: getTextFields(e),
         metaFields: getMetaFields(e),
-        stratum: balanceDocuments ? e.doc_uid : "",
         docIndex,
-        annotationIds: {},
+        annotationValues: {},
       };
 
       if (annotationValues[unitIndex]) {
@@ -134,10 +198,10 @@ const getAllUnits = async (codingjob, unitSettings) => {
           const annItem = { ...item };
           annItem.variables = ann.variables;
           annItem.span = ann.span;
-          //if (textUnit === 'span') item.unitIndex = ann.span[0]
-          if (balanceAnnotations) annItem.stratum += `_${ann.id}`;
+          annItem.annotationValue = ann.annotationValue;
+          if (textUnit === "span") item.unitIndex = ann.span[0];
           annotatedUnits.push(annItem);
-          item.annotationIds[ann.id] = true;
+          item.annotationValues[ann.annotationValue] = true;
         }
       }
 
@@ -148,7 +212,7 @@ const getAllUnits = async (codingjob, unitSettings) => {
   return [allUnits, annotatedUnits];
 };
 
-const getFakeUnits = (all, codingjob, unitSettings, sampleN) => {
+const getFakeUnits = (all, codingjob, unitSettings, sampleN, invalidCodesLookup) => {
   const variable = unitSettings.annotation;
   const codes = codingjob.importedCodes[variable];
 
@@ -156,15 +220,15 @@ const getFakeUnits = (all, codingjob, unitSettings, sampleN) => {
   for (let i = 0; i < all.length; i++) {
     const unit = all[i];
     for (let code of codes) {
-      const id = code.code; // if at some point we decide to allow multiple values, id will be more complicated
+      if (invalidCodesLookup[code.code]) continue;
+      const value = code.code; // if at some point we decide to allow multiple values, id will be more complicated
 
-      if (!unit.annotationIds[id]) {
-        indices.push({
-          i,
-          variables: { [variable]: code.code },
-          stratum: unit.stratum + `_${id}`,
-        });
-      }
+      if (unitSettings.onlyUnused && unit.annotationValues[value]) continue;
+      indices.push({
+        i,
+        variables: { [variable]: code.code },
+        stratum: unit.stratum + `_${value}`,
+      });
     }
   }
 
@@ -173,7 +237,7 @@ const getFakeUnits = (all, codingjob, unitSettings, sampleN) => {
     indices,
     sampleN,
     false,
-    unitSettings.seed,
+    unitSettings.seed + 1,
     indices.map((i) => i.stratum)
   );
 
@@ -198,10 +262,10 @@ const getAnnotations = (annotations, tokens, textUnit, annotation) => {
   for (let i of Object.keys(annotations)) {
     for (let variable of Object.keys(annotations[i])) {
       if (variable !== annotation) continue;
-      const id = annotations[i][variable].value;
+      const annotationValue = annotations[i][variable].value;
 
       const a = {
-        id,
+        annotationValue,
         //unitIndex: Number(i),
         span: annotations[i][variable].span,
         variables: { [variable]: annotations[i][variable].value },

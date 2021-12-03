@@ -76,6 +76,7 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
   const labelField = (which, fields, field) => {
     return (
       <Input
+        size="mini"
         value={fields[field].label}
         style={{ padding: "0" }}
         onChange={(e, d) => update(which, field, "label", d.value)}
@@ -104,6 +105,7 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
   const sizeField = (which, fields, field) => {
     return (
       <Input
+        size="mini"
         value={Math.round(fields[field].size * 100)}
         type="number"
         label="%"

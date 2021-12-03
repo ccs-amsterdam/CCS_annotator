@@ -9,7 +9,7 @@ const AnnotateTable = ({ variableMap, annotations }) => {
   if (!variableMap || Object.keys(variableMap).length === 0) return null;
   return (
     <Table
-      style={{ fontSize: "10px" }}
+      style={{ fontSize: "10px", maxHeight: "100%" }}
       fixed
       role="grid"
       arioa-labelledby="header"
@@ -18,7 +18,7 @@ const AnnotateTable = ({ variableMap, annotations }) => {
       compact="very"
       size="small"
     >
-      <Table.Header className="annotations-thead">
+      <Table.Header className="annotations-thead" style={{ height: "40px" }}>
         <Table.Row>
           <Table.HeaderCell width={COLWIDTHS[0]}>Variable</Table.HeaderCell>
           <Table.HeaderCell width={COLWIDTHS[1]}>Value</Table.HeaderCell>
@@ -27,7 +27,10 @@ const AnnotateTable = ({ variableMap, annotations }) => {
           <Table.HeaderCell>Text</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
-      <Table.Body className="annotations-tbody">
+      <Table.Body
+        className="annotations-tbody"
+        style={{ overflow: "auto", height: "calc(100% - 40px)" }}
+      >
         {annotationRows(variableMap, annotations)}
       </Table.Body>
     </Table>

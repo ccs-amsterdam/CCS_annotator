@@ -40,6 +40,29 @@ const DownloadAnnotations = ({ localJobServer }) => {
 
 const formatAnnotateTaskResults = async (localJobServer, setData) => {
   // annotate results are returned in long format
+  const unitMap = localJobServer.units.reduce((obj, unit) => {
+    obj[unit.unit_id] = unit;
+    return obj;
+  }, {});
+  console.log(unitMap);
+
+  const annotationsPerUnit = await db.getAllAnnotations(localJobServer.id);
+
+  const results = [];
+  for (let unitAnnotations of annotationsPerUnit) {
+    const annotations = unitAnnotations.annotations;
+    const unit = unitMap[unitAnnotations.unit_id];
+    for (let annotation of annotations) {
+      const result = {
+        document_id: unit.document_id,
+        unit_id: unit.unit_id,
+        ...unit.provenance,
+        ...annotation,
+      };
+      results.push(result);
+    }
+  }
+  setData(results);
 };
 
 const formatQuestionsTaskResults = async (localJobServer, setData) => {

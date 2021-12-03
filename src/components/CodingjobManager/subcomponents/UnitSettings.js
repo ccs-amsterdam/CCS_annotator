@@ -17,6 +17,7 @@ const defaultUnitSettings = {
   validCodes: {},
   highlightAnnotation: false,
   annotationMix: 0,
+  onlyUnused: true,
   layout: {
     text: {},
     meta: {},

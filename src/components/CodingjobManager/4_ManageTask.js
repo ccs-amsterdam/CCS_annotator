@@ -15,7 +15,7 @@ const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false
   // this prevents actually loading the data until unitSettings has loaded
   // the unitSettings stored in the codingjob
-  const units = useUnits(codingjob);
+  const [units] = useUnits(codingjob);
 
   if (!codingjob) return null;
   let cwidths = [8, 8];
@@ -59,7 +59,7 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
     if (index >= units.length) return null;
     standardizeUnits(codingjob, [units[index]]).then((singleUnitArray) => {
       const previewUnit = singleUnitArray[0];
-      previewUnit.jobServer = { postAnnotations: (annotations) => console.log(annotations) }; // don't store annotations
+      previewUnit.jobServer = { postAnnotations: (unit_id, data) => console.log(unit_id, data) }; // don't store annotations
       previewUnit.rules = { canGoBack: true, canGoForward: true };
       setStandardizedUnit(previewUnit);
     });

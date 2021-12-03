@@ -15,7 +15,7 @@ import newAmcatSession from "apis/amcat";
 
 const DeployCodingjob = ({ codingjob }) => {
   const [codingjobPackage, setCodingjobPackage] = useState(null);
-  const units = useUnits(codingjob);
+  const [units] = useUnits(codingjob);
 
   useEffect(() => {
     if (!units || units.length === 0) return;

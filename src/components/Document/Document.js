@@ -29,7 +29,6 @@ import SelectVariable from "./subcomponents/SelectVariable";
 const Document = ({
   unit,
   variables, //codes,
-  settings,
   onChangeAnnotations,
   returnTokens,
   setReady,
@@ -72,19 +71,18 @@ const Document = ({
   if (!preparedUnit.tokens) return null;
   return (
     <>
-      <SelectVariable
-        variables={variables}
-        variable={variable}
-        setVariable={setVariable}
-        height={"30px"}
-      />
-
       <Tokens
         tokens={preparedUnit.tokens}
         text_fields={preparedUnit.text_fields}
         meta_fields={preparedUnit.meta_fields}
         setReady={setTokensReady}
         height={variables && variables.length > 1 ? "calc(100% - 30px)" : "100%"}
+      />
+      <SelectVariable
+        variables={variables}
+        variable={variable}
+        setVariable={setVariable}
+        height={"30px"}
       />
       <AnnotateNavigation
         tokens={preparedUnit.tokens}

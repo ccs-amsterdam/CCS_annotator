@@ -213,6 +213,7 @@ const MouseEvents = ({
         annotationFromSelection(tokens, [tokenSelection[0], currentNode], triggerCodePopup);
       }
       tapped.current = null;
+      setCurrentToken(null);
       return;
     }
 

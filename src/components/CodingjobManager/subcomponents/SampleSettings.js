@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Icon, Form, Checkbox, Input } from "semantic-ui-react";
+import { Icon, Form, Checkbox, Input, Header } from "semantic-ui-react";
 import Help from "./Help";
 import db from "apis/dexie";
 import CheckboxTable from "./CheckboxTable";
@@ -10,10 +10,18 @@ const SampleSettings = ({ codingjob, units }) => {
     db.setCodingjobProp(codingjob, "unitSettings", us);
   };
 
+  const totalN = () => {
+    if (!units) return null;
+    if (units.length === unitSettings.n) return null;
+    return <Header>Total units = {units.length}</Header>;
+  };
+
   if (!unitSettings) return null;
   return (
     <div style={{ verticalAlign: "top", float: "top", paddingLeft: "1em" }}>
       <SampleForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
+      {totalN()}
+      <br />
       <SelectValidCodes codingjob={codingjob} units={units} />
     </div>
   );
@@ -114,6 +122,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
           value={delayed.n}
           onChange={onChangeN}
         />
+
         <Form.Field
           fluid
           min={0}
@@ -201,6 +210,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
           value={delayed.annotationMix}
           onChange={onChangeMix}
         />
+
         <Form.Field>
           <label>Only unused </label>
 
@@ -216,7 +226,6 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
           />
         </Form.Field>
       </Form.Group>
-      <br />
     </Form>
   );
 });
@@ -230,6 +239,11 @@ const validCodesColumns = [
   {
     Header: "N",
     accessor: "N",
+    headerClass: "two wide",
+  },
+  {
+    Header: "Fake",
+    accessor: "fake",
     headerClass: "two wide",
   },
 ];
@@ -258,11 +272,19 @@ const SelectValidCodes = ({ codingjob, units }) => {
 
     const valueMap = units.reduce((obj, unit) => {
       const value = Object.values(unit.variables)[0];
-      if (!obj[value]) obj[value] = 0;
-      obj[value]++;
+      if (!obj[value]) obj[value] = { real: 0, fake: 0 };
+      if (unit.fake) {
+        obj[value].fake++;
+      } else obj[value].real++;
       return obj;
     }, {});
-    setData(validCodes[annotation].map((row) => ({ ...row, N: valueMap[row.code] })));
+    setData(
+      validCodes[annotation].map((row) => ({
+        ...row,
+        N: valueMap[row.code]?.real,
+        fake: valueMap[row.code]?.fake,
+      }))
+    );
   }, [validCodes, units, setData, annotation, isAnnotation]);
 
   useEffect(() => {
