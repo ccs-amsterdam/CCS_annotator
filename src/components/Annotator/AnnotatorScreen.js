@@ -129,7 +129,7 @@ const AskFullScreenModal = ({ location, handle }) => {
   }, [location, setAskFullscreen]);
 
   // Disable for now. Seems to not work in Apple devices
-  askFullscreen = false;
+  //askFullscreen = false;
 
   return (
     <Modal open={askFullscreen}>
@@ -137,7 +137,7 @@ const AskFullScreenModal = ({ location, handle }) => {
       <Modal.Content>
         <p>
           We recommend working in fullscreen, especially on mobile devices. You can always change
-          this with the button in the top-left corner
+          this with the button in the top-left corner. For some devices fullscreen might not work.
         </p>
         <div style={{ display: "flex", height: "30vh" }}>
           <Button

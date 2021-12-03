@@ -125,6 +125,21 @@ const resultsTableColumns = [
     accessor: "value",
     headerClass: "three wide",
   },
+  {
+    Header: "Offset",
+    accessor: "offset",
+    headerClass: "three wide",
+  },
+  {
+    Header: "Length",
+    accessor: "length",
+    headerClass: "three wide",
+  },
+  {
+    Header: "Text",
+    accessor: "text",
+    headerClass: "three wide",
+  },
 ];
 
 const ResultsTable = ({ jobKey }) => {
@@ -150,10 +165,14 @@ const getResultUrl = async (jobKey, amcat, setAnnotations) => {
   if (!amcat) return;
   try {
     const res = await amcat.api.get(jobKey.url);
+    console.log(res);
     const annotations = res.data.units.reduce((arr, unit, i) => {
       if (unit.annotations) {
-        for (let coder of Object.keys(unit.annotations)) {
-          for (let ann of unit.annotations[coder]) {
+        for (let userAnnotations of unit.annotations) {
+          const coder = userAnnotations.user;
+          const annotations = userAnnotations.annotation;
+
+          for (let ann of annotations) {
             const a = {
               document_id: unit.document_id,
               unit_id: i,
