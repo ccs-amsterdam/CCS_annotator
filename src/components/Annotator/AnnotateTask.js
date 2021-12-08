@@ -64,8 +64,13 @@ const useAnnotations = (unit) => {
   const [annotations, setAnnotations] = useState([]);
 
   useEffect(() => {
-    if (!unit) return;
+    if (!unit) {
+      setAnnotations([]);
+      return;
+    }
     setAnnotations(unit.annotations || []);
+    if (!unit.annotations || unit.annotations.length === 0)
+      unit.jobServer.postAnnotations(unit.unitId, []);
   }, [unit, setAnnotations]);
 
   const onChangeAnnotations = React.useCallback(

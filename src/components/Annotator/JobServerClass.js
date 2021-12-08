@@ -82,6 +82,7 @@ export class JobServerLocal {
 
   async getUnit(i) {
     if (i !== null) {
+      this.progressIndex = Math.max(i, this.progressIndex);
       // on get unit, also update progress.
       // progressindex is the index of the currently fetched unit.
       await db.idb.localJobs

@@ -383,10 +383,10 @@ const moveSentence = (tokens, mover, direction = "up") => {
   }
 
   if (direction === "up") {
-    return moveUp(tokens, mover.position);
+    return moveUp(tokens, mover.position, mover.startposition);
   }
   if (direction === "down") {
-    return moveDown(tokens, mover.position);
+    return moveDown(tokens, mover.position, mover.startposition);
   }
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useHistory } from "react-router";
+import { useLocation } from "react-router";
 import { Icon, Grid, Modal, Button, Header } from "semantic-ui-react";
 import { useFullScreenHandle } from "react-full-screen";
 
@@ -82,7 +82,7 @@ const AnnotatorScreen = ({ jobServer }) => {
           </div>
           <div>
             <FullScreenButton handle={fsHandle} />
-            <ExitButton />
+            {/* <BackButton /> */}
           </div>
         </div>
         <div style={{ height: "calc(100% - 50px)", padding: "0" }}>{renderTask()}</div>
@@ -137,7 +137,7 @@ const AskFullScreenModal = ({ location, handle }) => {
       <Modal.Content>
         <p>
           We recommend working in fullscreen, especially on mobile devices. You can always change
-          this with the button in the top-left corner. For some devices fullscreen might not work.
+          this with the button in the top-right corner. For some devices fullscreen might not work.
         </p>
         <div style={{ display: "flex", height: "30vh" }}>
           <Button
@@ -170,13 +170,10 @@ const AskFullScreenModal = ({ location, handle }) => {
 
 const FullScreenButton = ({ handle }) => {
   return (
-    <Icon.Group
-      size="big"
-      style={{ padding: "3px", position: "absolute", top: "0px", left: "2px" }}
-    >
+    <Icon.Group size="big" style={{ padding: "3px", position: "absolute", top: "0px", right: 0 }}>
       <Icon
         link
-        name={handle.active ? "compress" : "expand"}
+        name={handle.active ? "window close" : "expand"}
         onClick={() => {
           handle.active ? handle.exit() : handle.enter();
         }}
@@ -185,15 +182,16 @@ const FullScreenButton = ({ handle }) => {
   );
 };
 
-const ExitButton = () => {
-  const history = useHistory();
-  return (
-    <Icon.Group size="big" style={{ padding: "3px", position: "absolute", top: "0px", right: 0 }}>
-      <Icon link name="window close" onClick={() => history.goBack()} />
-      <Icon corner="top right" />
-    </Icon.Group>
-  );
-};
+// const BackButton = () => {
+//   // pretty useless, given that every browser has one
+//   const history = useHistory();
+//   return (
+//     <Icon.Group size="big" style={{ padding: "3px", position: "absolute", top: "0px", right: 0 }}>
+//       <Icon link name="window close" onClick={() => history.goBack()} />
+//       <Icon corner="top right" />
+//     </Icon.Group>
+//   );
+// };
 
 const Task = ({ codebook, unit, setUnitIndex }) => {
   if (!codebook || !unit) return null;

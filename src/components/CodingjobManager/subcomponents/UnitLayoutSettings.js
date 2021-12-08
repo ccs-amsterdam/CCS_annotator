@@ -48,7 +48,7 @@ const defaultLayout = (field) => {
     size: 1,
     visible: true,
     justify: true,
-    paragraphs: false,
+    paragraphs: true,
   };
   if (["title", "headline"].includes(field)) {
     l.size = 1;
@@ -105,6 +105,7 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
   };
 
   const justifyField = (which, fields, field) => {
+    if (which !== "text") return null;
     return (
       <Checkbox
         checked={fields[field].justify}
@@ -114,6 +115,7 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
   };
 
   const paragraphsField = (which, fields, field) => {
+    if (which !== "text") return null;
     return (
       <Checkbox
         checked={fields[field].paragraphs}
