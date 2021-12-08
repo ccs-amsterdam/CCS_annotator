@@ -37,17 +37,21 @@ export const standardizeUnits = async (codingjob, units) => {
 
     // get annotations, transform back to array format, and filter for selected tokens
     const docAnnotations = exportSpanAnnotations(docs[doc_uid].annotations, docs[doc_uid].tokens);
-    const annotations = docAnnotations.filter((a) => a.offset >= fromChar && a.offset < toChar);
+    const importedAnnotations = docAnnotations.filter(
+      (a) => a.offset >= fromChar && a.offset < toChar
+    );
 
     const unit = {
       document_id: units[i].document_id,
       provenance: { unit: units[i].textUnit, unit_index: units[i].unitIndex },
       meta_fields: docs[doc_uid].meta_fields,
-      annotations,
+      importedAnnotations,
       variables: units[i].variables,
     };
 
-    if (docs[doc_uid].importedTokens) {
+    // disabled for now, because AmCAT only allows small file uploads
+    const useOwnTokens = false; // docs[doc_uid].importedTokens
+    if (useOwnTokens) {
       // if tokens were imported, don't collapse to texts, but keep the original tokens.
       unit.tokens = tokensRowToColumn(tokens);
 

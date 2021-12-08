@@ -261,6 +261,7 @@ const ContextWindow = ({ contextUnit, contextWindow, setContextWindow }) => {
             <Input
               size="mini"
               value={contextWindow[0]}
+              min={0}
               type="number"
               style={{ width: "6em" }}
               label={"before"}
@@ -271,6 +272,7 @@ const ContextWindow = ({ contextUnit, contextWindow, setContextWindow }) => {
             <Input
               size="mini"
               value={contextWindow[1]}
+              min={0}
               type="number"
               labelPosition="right"
               style={{ width: "6em" }}

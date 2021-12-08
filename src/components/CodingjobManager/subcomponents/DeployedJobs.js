@@ -26,7 +26,7 @@ const DeployedJobs = () => {
     return (
       <div style={{ height: "6em" }}>
         <TextArea value={url} style={{ width: "100%", height: "4em", fontSize: "10px" }} />
-        <Popup hoverable trigger={<Button>Show QR code</Button>}>
+        <Popup on="click" hoverable trigger={<Button>Show QR code</Button>}>
           <QRCode value={encodeURI(qrUrl)} size={256} />
         </Popup>
       </div>
@@ -165,7 +165,6 @@ const getResultUrl = async (jobKey, amcat, setAnnotations) => {
   if (!amcat) return;
   try {
     const res = await amcat.api.get(jobKey.url);
-    console.log(res);
     const annotations = res.data.units.reduce((arr, unit, i) => {
       if (unit.annotations) {
         for (let userAnnotations of unit.annotations) {

@@ -161,7 +161,7 @@ const QuestionIndexStep = ({ questions, questionIndex, annotations, setQuestionI
   const [canSelect, setCanSelect] = useState();
 
   useEffect(() => {
-    const cs = Array(annotations.length).fill(false);
+    const cs = annotations.map((a) => a.value !== null);
     cs[0] = true;
     setCanSelect(cs);
   }, [annotations, setCanSelect]);

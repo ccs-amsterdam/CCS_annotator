@@ -39,7 +39,6 @@ const useUnits = (codingjob) => {
   }, [unitData, codingjob, setSample, setLoading]);
 
   if (!codingjob) return null;
-  console.log(loading);
 
   return [sample, loading];
 };
@@ -115,12 +114,14 @@ const getSample = async (codingjob, unitData, setSample, setLoading) => {
       sampleN,
       invalidCodesLookup
     );
-    if (randomUnits.length > 0) sample = sample.concat(randomUnits);
+    if (randomUnits.length > 0) {
+      sample = sample.concat(randomUnits);
+      sample = drawRandom(sample, sample.length, false, codingjob.unitSettings.seed, null);
+    }
   }
 
   sample = orderUnits(sample, codingjob.unitSettings);
   setSample(sample);
-  console.log("2");
   setTimeout(() => setLoading("ready"), 50);
 };
 
@@ -305,6 +306,8 @@ const getMetaFields = (e) => {
 };
 
 const orderUnits = (cjIndices, unitSettings) => {
+  if (unitSettings.unitSelection === "annotations" && unitSettings.annotationMix > 0)
+    return cjIndices;
   if (!unitSettings.ordered) return cjIndices;
   return cjIndices.sort(function (a, b) {
     if (a.docIndex !== b.docIndex) return a.docIndex - b.docIndex;

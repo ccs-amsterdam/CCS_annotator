@@ -143,6 +143,7 @@ const AmcatDeploy = ({ codingjobPackage }) => {
   const deploy = async () => {
     const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.email, cookies.amcat.token);
     try {
+      console.log(codingjobPackage);
       const id = await amcat.postCodingjob(codingjobPackage, title);
       const url = `${amcat.host}/codingjob/${id.data.id}`;
       db.createDeployedJob(title, url);

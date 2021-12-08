@@ -101,7 +101,7 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
             header={"Sampling and shuffling"}
             texts={[
               "If % < 100, a random sample will be drawn.",
-              "If shuffle is enabled, the order of the units will be randomized.",
+              "If shuffle is enabled, the order of the units will be randomized. Shuffle cannot be disabled if random annotations are added",
               "Seed initializes the random number generator. Simply put, using the same seed gives the same 'random' results if the data is the same.",
             ]}
           />
@@ -140,7 +140,15 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
       <Form.Group>
         <Form.Field width={8}>
           <label>Shuffle</label>
-          <Checkbox toggle size="mini" checked={!unitSettings.ordered} onChange={onChangeShuffle} />
+          <Checkbox
+            toggle
+            size="mini"
+            checked={
+              !unitSettings.ordered ||
+              (unitSettings.unitSelection === "annotations" && unitSettings.annotationMix > 0)
+            }
+            onChange={onChangeShuffle}
+          />
         </Form.Field>
 
         <Form.Field width={8}>

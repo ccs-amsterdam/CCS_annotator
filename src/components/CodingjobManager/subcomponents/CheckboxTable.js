@@ -52,6 +52,13 @@ const CheckboxTable = ({ columns, data, setData, width = null, defaultSize = 10 
     usePagination
   );
 
+  const checkAll = () => {
+    setData(data.map((d) => ({ ...d, valid: true })));
+  };
+
+  const uncheckAll = () => {
+    setData(data.map((d) => ({ ...d, valid: false })));
+  };
   const createHeader = (headerGroup) => {
     const checkboxHeader = <TableHeaderCell width={3}>Include</TableHeaderCell>;
     const headers = headerGroup.headers.map((column) => {
@@ -120,7 +127,16 @@ const CheckboxTable = ({ columns, data, setData, width = null, defaultSize = 10 
         <TableBody {...getTableBodyProps()}>{createBody(page)}</TableBody>
         <Table.Footer>
           <Table.Row>
-            <Table.HeaderCell colSpan={columns.length + 1}>
+            <Table.HeaderCell>
+              <span style={{ color: "darkgrey", cursor: "pointer" }} onClick={uncheckAll}>
+                disable all
+              </span>{" "}
+              <br />
+              <span style={{ color: "#2185d0", cursor: "pointer" }} onClick={checkAll}>
+                enable all
+              </span>
+            </Table.HeaderCell>
+            <Table.HeaderCell colSpan={columns.length}>
               {data.length > defaultSize ? (
                 <Pagination
                   floated="right"

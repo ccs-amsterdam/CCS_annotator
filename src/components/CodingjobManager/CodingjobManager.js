@@ -74,7 +74,13 @@ const CodingjobManager = () => {
         />
         <Step
           title="Units"
-          description={codingjob?.unitSettings?.n ? `${codingjob?.unitSettings?.n} units` : null}
+          description={
+            codingjob?.unitSettings?.n
+              ? `${codingjob?.unitSettings?.n} units ${
+                  codingjob?.unitSettings.annotationMix ? `(+random)` : ""
+                }`
+              : null
+          }
           active={menuItem === "units"}
           completed={codingjob?.unitSettings?.n}
           disabled={nDocuments === 0}
