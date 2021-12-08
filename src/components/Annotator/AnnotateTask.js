@@ -1,13 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { Container, Grid, List, ListItem, Table, Button, Modal } from "semantic-ui-react";
+import {
+  Container,
+  Grid,
+  List,
+  ListItem,
+  Table,
+  Button,
+  Modal,
+  Popup,
+  Form,
+  Input,
+} from "semantic-ui-react";
 import AnnotateTable from "./subcomponents/AnnotateTable";
 import Document from "components/Document/Document";
 import { codeBookEdgesToMap } from "library/codebook";
 import { useSelector } from "react-redux";
+import { useCookies } from "react-cookie";
 
 const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
   const [annotations, setAnnotations] = useAnnotations(unit);
   const [variableMap, setVariableMap] = useState(null);
+  const [cookies, setCookie] = useCookies(["annotateTaskSettings"]);
+  const [settings, setSettings] = useState(cookies.annotateTaskSettings || { textSize: 1 });
+
+  useEffect(() => {
+    setCookie("annotateTaskSettings", JSON.stringify(settings), { path: "/" });
+  }, [settings, setCookie]);
 
   useEffect(() => {
     // settings is an array with the settings for each question
@@ -33,10 +51,11 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
     >
       <Grid.Column width={10} style={{ paddingRight: "0em", paddingTop: "0", height: "100%" }}>
         <Button.Group fluid style={{ padding: "0", height: "40px" }}>
+          <SettingsPopup settings={settings} setSettings={setSettings} />
           <Instructions codebook={codebook} />
           <NextUnitButton setUnitIndex={setUnitIndex} />
         </Button.Group>
-        <div style={{ height: "calc(100% - 40px" }}>
+        <div style={{ height: "calc(100% - 40px", fontSize: `${settings.textSize}em` }}>
           <Document
             unit={unit}
             variables={codebook?.variables}
@@ -255,6 +274,48 @@ const Instructions = () => {
         <Button content="Close" onClick={() => setOpen(false)} positive />
       </Modal.Actions>
     </Modal>
+  );
+};
+
+const SettingsPopup = ({ settings, setSettings }) => {
+  const fullScreenNode = useSelector((state) => state.fullScreenNode);
+
+  return (
+    <Popup
+      on="click"
+      mountNode={fullScreenNode || undefined}
+      trigger={
+        <Button
+          secondary
+          width={1}
+          size="large"
+          icon="setting"
+          style={{
+            color: "white",
+            maxWidth: "50px",
+          }}
+        />
+      }
+    >
+      <Form>
+        <Form.Group grouped>
+          <Form.Field>
+            <label>
+              text size scaling <font style={{ color: "blue" }}>{`${settings.textSize}`}</font>
+            </label>
+            <Input
+              size="mini"
+              step={0.025}
+              min={0.4}
+              max={1.6}
+              type="range"
+              value={settings.textSize}
+              onChange={(e, d) => setSettings((state) => ({ ...state, textSize: d.value }))}
+            />
+          </Form.Field>
+        </Form.Group>
+      </Form>
+    </Popup>
   );
 };
 

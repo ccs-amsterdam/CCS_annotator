@@ -3,7 +3,7 @@ import { Icon, Form, Radio, Input, Dropdown, Popup, Button, Grid } from "semanti
 import db from "apis/dexie";
 
 const defaultUnitSettings = {
-  textUnit: null, // document, paragraph, sentence or span (span only if codingUnit is annotations)
+  textUnit: "document", // document, paragraph, sentence or span (span only if codingUnit is annotations)
   unitSelection: "allTextUnits", // or: annotations
   annotation: null,
   contextUnit: "document", // or: paragraph, sentence, no context

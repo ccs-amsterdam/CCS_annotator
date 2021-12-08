@@ -17,6 +17,14 @@ import db from "apis/dexie";
 import { demo_articles, demo_codebook } from "apis/demodata";
 import { useLiveQuery } from "dexie-react-hooks";
 
+const tableColumns = [
+  {
+    Header: "Coding job",
+    accessor: "name",
+    headerClass: "thirteen wide",
+  },
+];
+
 const CodingjobSelector = ({ codingjob, setSelectedCodingjob }) => {
   const codingjobs = useLiveQuery(() => db.idb.codingjobs.toArray());
 
@@ -40,15 +48,7 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob }) => {
     }
   }, [codingjob, codingjobs, setSelectedCodingjob]);
 
-  const tableColumns = [
-    {
-      Header: "Coding job",
-      accessor: "name",
-      headerClass: "thirteen wide",
-    },
-  ];
-
-  const table = () => {
+  const table = (data) => {
     if (!codingjobs) return null;
     if (codingjobs.length === 0)
       return (
@@ -61,7 +61,7 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob }) => {
     return (
       <SelectionTable
         columns={tableColumns}
-        data={codingjobs ? codingjobs : []}
+        data={data}
         selectedRow={codingjob}
         setSelectedRow={setSelectedCodingjob}
         defaultSize={15}
@@ -77,12 +77,12 @@ const CodingjobSelector = ({ codingjob, setSelectedCodingjob }) => {
         </Header>
         <Segment style={{ border: "0" }}>
           <Button.Group widths="2" size="mini">
-            <CreateCodingjob setSelectedCodingjob={setSelectedCodingjob} />
+            <CreateCodingjob setSelectedCodingjob={setSelectedCodingjob} codingjobs={codingjobs} />
             <DeleteCodingjob codingjob={codingjob} setCodingjob={setSelectedCodingjob} />
           </Button.Group>
 
           <Container style={{ marginTop: "30px", overflow: "auto", width: "800px" }}>
-            {table()}
+            {table(codingjobs ? codingjobs : [])}
           </Container>
         </Segment>
       </Grid.Column>
@@ -103,7 +103,7 @@ const createDemoJob = async () => {
   }
 };
 
-const CreateCodingjob = ({ setSelectedCodingjob }) => {
+const CreateCodingjob = ({ setSelectedCodingjob, codingjobs }) => {
   const [status, setStatus] = useState("inactive");
   const [codingjobName, setCodingjobName] = useState("");
 
@@ -115,7 +115,8 @@ const CreateCodingjob = ({ setSelectedCodingjob }) => {
 
     try {
       const cj = await db.createCodingjob(codingjobName);
-      setSelectedCodingjob(cj);
+      if (codingjobs.length > 0) setSelectedCodingjob(cj);
+      //setMenuItem("documents");
       setStatus("inactive");
     } catch (e) {
       console.log(e);

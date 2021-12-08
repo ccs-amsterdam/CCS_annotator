@@ -60,7 +60,7 @@ const SelectionTable = ({
   );
 
   useEffect(() => {
-    if (selectedRow) {
+    if (selectedRow && selectedRow.ROW_ID != null) {
       setActiveRow(selectedRow.ROW_ID);
     } else {
       setActiveRow(null);

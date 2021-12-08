@@ -170,7 +170,7 @@ const renderSection = (layout, paragraph_nr, paragraphs, section) => {
 };
 
 const renderParagraph = (layout, paragraph_nr, sentences, end) => {
-  if (!layout.paragraphs)
+  if (!layout?.paragraphs)
     return (
       <span>
         <span>{sentences}</span>
