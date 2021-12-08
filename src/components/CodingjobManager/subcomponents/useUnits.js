@@ -48,11 +48,13 @@ const getUnitData = async (job_id, setUnitData) => {
   let unitData = await getUnitDataFromDB(job_id, unitSettings);
   setUnitData(unitData);
 
-  await db.setCodingjobProp(job_id, "unitSettings", {
-    ...unitSettings,
-    n: unitData.units.length,
-    totalUnits: unitData.units.length,
-  });
+  if (unitSettings.totalUnits === null || unitSettings.n === null || Number.isNaN(unitSettings.n)) {
+    await db.setCodingjobProp(job_id, "unitSettings", {
+      ...unitSettings,
+      n: unitData.units.length,
+      totalUnits: unitData.units.length,
+    });
+  }
 };
 
 const getSample = async (codingjob, unitData, setSample, setLoading) => {

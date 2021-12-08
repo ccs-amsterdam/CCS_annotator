@@ -10,6 +10,7 @@ const defaultUnitSettings = {
   contextWindow: [1, 1],
 
   n: null,
+  totalUnits: null,
   seed: 42,
   ordered: false,
   balanceDocuments: false,
