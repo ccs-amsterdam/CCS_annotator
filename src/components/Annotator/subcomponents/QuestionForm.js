@@ -21,9 +21,9 @@ const QuestionForm = ({
 
   useEffect(() => {
     if (!questions) return;
-    prepareAnnotations(unit, tokens, questions, setAnnotations, setQuestionIndex);
+    prepareAnnotations(unit, tokens, questions, setAnnotations);
     answered.current = false;
-  }, [unit, tokens, setAnnotations, questions, setQuestionIndex]);
+  }, [unit, tokens, setAnnotations, questions]);
 
   if (!questions || !unit || !annotations) return null;
   if (!questions?.[questionIndex]) {
@@ -140,20 +140,17 @@ const processIrrelevantBranching = (unit, questions, annotations, questionIndex)
   }
 };
 
-const prepareAnnotations = (unit, tokens, questions, setAnnotations, setQuestionIndex) => {
+const prepareAnnotations = (unit, tokens, questions, setAnnotations) => {
   // create a list with annotations for each question, and see if they have been answered yet
   if (tokens.length === 0) return null;
   const annotations = [];
   if (!unit.annotations) unit.annotations = [];
-  let questionIndex = 0;
   for (let i = 0; i < questions.length; i++) {
     const annotation = createAnnotationObject(tokens, questions[i], i);
     annotation.value = getCurrentAnswer(unit.annotations, annotation);
-    if (annotation.value !== null) questionIndex = i;
     annotations.push(annotation);
   }
   setAnnotations(annotations);
-  setQuestionIndex(questionIndex);
 };
 
 const QuestionIndexStep = ({ questions, questionIndex, annotations, setQuestionIndex }) => {

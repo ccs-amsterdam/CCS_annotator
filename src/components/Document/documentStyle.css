@@ -54,13 +54,18 @@ span.token.selected.end > span.post {
   background-color: lightblue !important;
 }
 
+span.token.tapped > span {
+  transition: color 0.3s ease;
+  color: blue !important;
+}
+
 button.active {
   border: solid !important;
 }
 
 span.token.annotated > span {
   /* line-height: 1.5em; */
-
+  transition: background-color 0.6s ease;
   border: 1px solid;
   border-left: none;
   border-right: none;

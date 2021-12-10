@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Input, Loader, Pagination, Segment } from "semantic-ui-react";
+import { Loader, Pagination, Segment } from "semantic-ui-react";
 
 const IndexController = ({
   n,
@@ -94,13 +94,16 @@ const IndexController = ({
   }, [activePage, delayedActivePage, n, setLoading]);
 
   if (!n) return null;
+  const progress = (100 * Math.max(0, reached.current - 1)) / n;
 
   return (
     <Segment
       style={{
+        display: "flex",
         border: "none",
         boxShadow: "none",
         padding: "0",
+        marginTop: "5px",
         leftMargin: "0px",
         width: "100%",
         maxHeight: "35px",
@@ -108,49 +111,46 @@ const IndexController = ({
       }}
     >
       <Loader active={loading} content="" />
-
-      <Input
-        style={{ padding: "0 !important", margin: "0", width: "100%" }}
+      <Pagination
+        secondary
+        activePage={delayedActivePage}
+        pageItem={delayedActivePage <= n ? `${delayedActivePage} / ${n}` : `done / ${n}`}
+        size={"mini"}
+        firstItem={null}
+        lastItem={null}
+        prevItem={canGoBack ? "back" : "   "}
+        nextItem={canGoForward || activePage < reached.current ? "next" : "   "}
+        siblingRange={0}
+        boundaryRange={0}
+        ellipsisItem={null}
+        totalPages={n + 1}
+        onClick={(e, d) => e.stopPropagation()}
+        onPageChange={(e, d) => {
+          if ((canGoForward || activePage < reached.current) && Number(d.activePage) > activePage)
+            setActivePage(Number(d.activePage));
+          if (canGoBack && Number(d.activePage) < activePage) setActivePage(Number(d.activePage));
+        }}
+        style={{ fontSize: "9px", border: "none", boxShadow: "none", padding: 0, margin: 0 }}
+      />
+      <input
+        style={{
+          flex: "1 1 auto",
+          background: `linear-gradient(to right, #7dd48d ${progress}%, #fff ${progress}% 100%, #fff 100%)`,
+        }}
         min={1}
         max={n + 1}
-        onChange={(e, d) => {
-          if (
-            (canGoForward || Number(d.value) < reached.current) &&
-            Number(d.value) > delayedActivePage
-          )
-            setDelayedActivePage(Number(d.value));
-          if (canGoBack && Number(d.value) < delayedActivePage)
-            setDelayedActivePage(Number(d.value));
+        onChange={(e) => {
+          if (Number(e.target.value) > delayedActivePage) {
+            if (canGoForward) {
+              setDelayedActivePage(Number(e.target.value));
+            } else {
+              setDelayedActivePage(Math.min(reached.current, Number(e.target.value)));
+            }
+          }
+          if (canGoBack && Number(e.target.value) < delayedActivePage)
+            setDelayedActivePage(Number(e.target.value));
         }}
         type="range"
-        labelPosition="left"
-        label={
-          <Pagination
-            secondary
-            activePage={delayedActivePage}
-            pageItem={delayedActivePage <= n ? `${delayedActivePage} / ${n}` : `done / ${n}`}
-            size={"mini"}
-            firstItem={null}
-            lastItem={null}
-            prevItem={canGoBack ? "back" : "   "}
-            nextItem={canGoForward || activePage < reached.current ? "next" : "   "}
-            siblingRange={0}
-            boundaryRange={0}
-            ellipsisItem={null}
-            totalPages={n + 1}
-            onClick={(e, d) => e.stopPropagation()}
-            onPageChange={(e, d) => {
-              if (
-                (canGoForward || activePage < reached.current) &&
-                Number(d.activePage) > activePage
-              )
-                setActivePage(Number(d.activePage));
-              if (canGoBack && Number(d.activePage) < activePage)
-                setActivePage(Number(d.activePage));
-            }}
-            style={{ fontSize: "9px", border: "none", boxShadow: "none", padding: 0, margin: 0 }}
-          ></Pagination>
-        }
         value={delayedActivePage}
       />
     </Segment>

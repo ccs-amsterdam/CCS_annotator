@@ -17,7 +17,7 @@ const AnnotateNavigation = ({
   fullScreenNode,
   disableAnnotations,
 }) => {
-  const [currentToken, setCurrentToken] = useState(0);
+  const [currentToken, setCurrentToken] = useState({ i: null });
   const [tokenSelection, setTokenSelection] = useState([]);
 
   useEffect(() => {
@@ -147,6 +147,7 @@ const setTokenColor = (token, pre, text, post) => {
 const showSelection = (tokens, selection) => {
   for (let token of tokens) {
     if (!token.ref?.current) continue;
+    token.ref.current.classList.remove("tapped");
     if (selection.length === 0 || selection[0] === null || selection[1] === null) {
       token.ref.current.classList.remove("selected");
       continue;
@@ -168,18 +169,18 @@ const showSelection = (tokens, selection) => {
 };
 
 const AnnotationPopup = ({ tokens, currentToken, annotations, variableMap, fullScreenNode }) => {
-  if (!tokens?.[currentToken]?.ref) return null;
-  if (!annotations?.[tokens[currentToken].index]) return null;
+  if (!tokens?.[currentToken.i]?.ref) return null;
+  if (!annotations?.[tokens[currentToken.i].index]) return null;
   if (!variableMap) return null;
 
-  const tokenAnnotations = annotations[tokens[currentToken].index];
+  const tokenAnnotations = annotations[tokens[currentToken.i].index];
   const variables = Object.keys(tokenAnnotations);
   const codes = variables.map((variable) => tokenAnnotations[variable].value);
 
   return (
     <Popup
       mountNode={fullScreenNode || undefined}
-      context={tokens?.[currentToken]?.ref}
+      context={tokens?.[currentToken.i]?.ref}
       basic
       hoverable={false}
       position="top left"

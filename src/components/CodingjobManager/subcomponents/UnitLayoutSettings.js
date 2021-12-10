@@ -148,24 +148,32 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
     const n = Object.keys(fields).length;
     return Object.keys(fields).map((field, i) => {
       return (
-        <Table.Row>
+        <Table.Row key={`header${i}`}>
           {i === 0 ? (
-            <Table.Cell rowSpan={n}>
+            <Table.Cell key={`which${i}`} rowSpan={n}>
               <b>{which}</b>
             </Table.Cell>
           ) : null}
-          <Table.Cell>{field}</Table.Cell>
-          <Table.Cell style={{ textAlign: "left" }}>
+          <Table.Cell key={`field${i}`}>{field}</Table.Cell>
+          <Table.Cell key={`visible${i}`} style={{ textAlign: "left" }}>
             {visibleField(which, fields, field)}
           </Table.Cell>
-          <Table.Cell style={{ padding: "2px" }}>{labelField(which, fields, field)}</Table.Cell>
-          <Table.Cell style={{ padding: "2px" }}>{sizeField(which, fields, field)}</Table.Cell>
-          <Table.Cell style={{ textAlign: "left" }}>{boldField(which, fields, field)}</Table.Cell>
-          <Table.Cell style={{ textAlign: "left" }}>{italicField(which, fields, field)}</Table.Cell>
-          <Table.Cell style={{ textAlign: "left" }}>
+          <Table.Cell key={`label${i}`} style={{ padding: "2px" }}>
+            {labelField(which, fields, field)}
+          </Table.Cell>
+          <Table.Cell key={`size${i}`} style={{ padding: "2px" }}>
+            {sizeField(which, fields, field)}
+          </Table.Cell>
+          <Table.Cell key={`bold${i}`} style={{ textAlign: "left" }}>
+            {boldField(which, fields, field)}
+          </Table.Cell>
+          <Table.Cell key={`italic${i}`} style={{ textAlign: "left" }}>
+            {italicField(which, fields, field)}
+          </Table.Cell>
+          <Table.Cell key={`justify${i}`} style={{ textAlign: "left" }}>
             {justifyField(which, fields, field)}
           </Table.Cell>
-          <Table.Cell style={{ textAlign: "left" }}>
+          <Table.Cell key={`paragraphs${i}`} style={{ textAlign: "left" }}>
             {paragraphsField(which, fields, field)}
           </Table.Cell>
         </Table.Row>
@@ -176,24 +184,30 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
   return (
     <Table structured compact unstackable singleLine>
       <Table.Header>
-        <Table.Row>
-          <Table.HeaderCell width={2}></Table.HeaderCell>
-          <Table.HeaderCell width={3}>field</Table.HeaderCell>
-          <Table.HeaderCell width={1}>
+        <Table.Row key="header">
+          <Table.HeaderCell key="which" width={2}></Table.HeaderCell>
+          <Table.HeaderCell key="field" width={3}>
+            field
+          </Table.HeaderCell>
+          <Table.HeaderCell key="visible" width={1}>
             <Icon name="eye slash" />
           </Table.HeaderCell>
-          <Table.HeaderCell width={3}>label</Table.HeaderCell>
-          <Table.HeaderCell width={3}>text size</Table.HeaderCell>
-          <Table.HeaderCell width={1}>
+          <Table.HeaderCell key="label" width={3}>
+            label
+          </Table.HeaderCell>
+          <Table.HeaderCell key="size" width={3}>
+            text size
+          </Table.HeaderCell>
+          <Table.HeaderCell key="bold" width={1}>
             <Icon name="bold" />
           </Table.HeaderCell>
-          <Table.HeaderCell width={1}>
+          <Table.HeaderCell key="italic" width={1}>
             <Icon name="italic" />
           </Table.HeaderCell>
-          <Table.HeaderCell width={1}>
+          <Table.HeaderCell key="justify" width={1}>
             <Icon name="align justify" />
           </Table.HeaderCell>
-          <Table.HeaderCell width={1}>
+          <Table.HeaderCell key="paragraph" width={1}>
             <Icon name="paragraph" />
           </Table.HeaderCell>
         </Table.Row>

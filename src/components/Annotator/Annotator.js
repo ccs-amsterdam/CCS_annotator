@@ -6,6 +6,8 @@ import { JobServerRemote, JobServerLocal } from "components/Annotator/JobServerC
 import { useCookies } from "react-cookie";
 import UserName from "components/HeaderMenu/UserName";
 
+import "components/Annotator/annotatorStyle.css";
+
 const Annotator = () => {
   const location = useLocation();
   const [jobServer, setJobServer] = useState(null);

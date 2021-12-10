@@ -34,10 +34,7 @@ const AnnotatorScreen = ({ jobServer }) => {
       })
       .catch((e) => {
         if (e.response?.status === 404) setUnitIndex(null);
-        //alert("Could not get unit from server");
         setPreparedUnit(null);
-        // if (unitIndex !== null && unitIndex < jobServer.rules.n)
-        //   setUnitIndex((state) => state + 1);
         console.log(e);
       });
   }, [unitIndex, jobServer, setUnitIndex, setPreparedUnit]);
@@ -69,7 +66,7 @@ const AnnotatorScreen = ({ jobServer }) => {
         }}
       >
         <AskFullScreenModal location={location} handle={fsHandle} />
-        <div style={{ height: "50px", padding: "0", position: "relative" }}>
+        <div style={{ height: "45px", padding: "0", position: "relative" }}>
           <div style={{ width: "85%", paddingLeft: "7.5%" }}>
             <IndexController
               n={jobServer?.rules.n}
@@ -85,7 +82,7 @@ const AnnotatorScreen = ({ jobServer }) => {
             {/* <BackButton /> */}
           </div>
         </div>
-        <div style={{ height: "calc(100% - 50px)", padding: "0" }}>{renderTask()}</div>
+        <div style={{ height: "calc(100% - 45px)", padding: "0" }}>{renderTask()}</div>
       </div>
     </FullScreenFix>
   );
@@ -170,7 +167,10 @@ const AskFullScreenModal = ({ location, handle }) => {
 
 const FullScreenButton = ({ handle }) => {
   return (
-    <Icon.Group size="big" style={{ padding: "3px", position: "absolute", top: "0px", right: 0 }}>
+    <Icon.Group
+      size="big"
+      style={{ paddingRight: "3px", position: "absolute", top: "0px", right: 0 }}
+    >
       <Icon
         link
         name={handle.active ? "window close" : "expand"}

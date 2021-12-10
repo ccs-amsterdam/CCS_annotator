@@ -8,6 +8,8 @@ import useUnit from "./subcomponents/useUnit";
 import hash from "object-hash";
 import SelectVariable from "./subcomponents/SelectVariable";
 
+import "components/Document/documentStyle.css";
+
 /**
  * This is hopefully the only Component in this folder that you'll ever see. It should be fairly isolated
  * and easy to use, but behind the scenes it gets dark real fast.

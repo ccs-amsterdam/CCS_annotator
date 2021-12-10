@@ -207,7 +207,7 @@ const SelectVariablePage = ({
   setOpen,
   variableMap,
 }) => {
-  const setValue = (value) => {
+  const setValue = async (value) => {
     const current = new Set();
     for (let i = selection.span[0]; i <= selection.span[1]; i++) {
       if (annotations?.[i]?.[value]) {
@@ -240,10 +240,9 @@ const SelectVariablePage = ({
   return (
     <div>
       <ButtonSelection
-        key={"currentCodePageButtons"}
+        id={"currentCodePageButtons"}
         active={true}
         canDelete={false}
-        settings={{ rowSize: 5 }}
         options={options}
         setOpen={setOpen}
         callback={setValue}
@@ -362,10 +361,9 @@ const NewCodePage = ({
 
     return (
       <ButtonSelection
-        key={"newCodePageButtons"}
+        id={"newCodePageButtons"}
         active={focusOnButtons}
         canDelete={canDelete}
-        settings={settings}
         options={options}
         setOpen={setOpen}
         callback={onButtonSelect}
@@ -455,7 +453,7 @@ const NewCodePage = ({
   );
 };
 
-const ButtonSelection = ({ active, options, canDelete, settings, setOpen, callback }) => {
+const ButtonSelection = ({ id, active, options, canDelete, setOpen, callback }) => {
   const [selected, setSelected] = useState(0);
   const [allOptions, setAllOptions] = useState([]);
 
@@ -555,7 +553,11 @@ const ButtonSelection = ({ active, options, canDelete, settings, setOpen, callba
     });
   };
 
-  return <div style={{ display: "flex", flexWrap: "wrap" }}>{mapButtons()}</div>;
+  return (
+    <div key={id} style={{ display: "flex", flexWrap: "wrap" }}>
+      {mapButtons()}
+    </div>
+  );
 };
 
 const updateAnnotations = (

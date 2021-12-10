@@ -144,8 +144,8 @@ const KeyEvents = ({
       event.preventDefault();
       if (event.repeat) return;
       setMover({
-        position: currentToken,
-        startposition: currentToken,
+        position: currentToken.i,
+        startposition: currentToken.i,
         ntokens: tokens.length,
         counter: 1,
       });
@@ -174,6 +174,7 @@ const MouseEvents = ({
 }) => {
   const selectionStarted = useRef(false);
   const tapped = useRef(null);
+  const touch = useRef(null);
   const istouch = useRef(
     "ontouchstart" in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0
   ); // hack to notice if device uses touch (because single touch somehow triggers mouseup)
@@ -183,19 +184,33 @@ const MouseEvents = ({
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("touchstart", onTouchDown);
+    window.addEventListener("touchend", onTouchUp);
     window.addEventListener("contextmenu", onContextMenu);
     return () => {
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("touchstart", onTouchDown);
+      window.removeEventListener("touchend", onTouchUp);
       window.removeEventListener("contextmenu", onContextMenu);
     };
   });
 
   const onTouchDown = (event) => {
-    const token = getToken(tokens, event);
+    // store token from touch down, but process on touch up, so that we cna set a max
+    // time passed (to ignore holding touch when scrolling)
+    touch.current = { time: new Date(), token: getToken(tokens, event) };
+  };
+
+  const onTouchUp = (e) => {
+    if (!touch.current?.time) return;
+    const now = new Date();
+    const timepassed = now - touch.current.time;
+    if (timepassed > 150) return;
+    const token = touch.current.token;
+
     if (token?.index === null) {
+      rmTapped(tokens, tapped.current);
       tapped.current = null;
       setTokenSelection((state) => (state.length === 0 ? state : []));
       return;
@@ -204,7 +219,7 @@ const MouseEvents = ({
     // first check if there is a tokenselection (after double tab). If so, this completes the selection
     if (tokenSelection.length > 0 && tokenSelection[0] === tapped.current) {
       // if a single token, and an annotation already exists, open create/edit mode
-      const currentNode = storeMouseSelection(event);
+      const currentNode = storeMouseSelection(token);
       setTokenSelection((state) => updateSelection(state, tokens, currentNode, true));
 
       if (token?.annotated && currentNode === tokenSelection[0]) {
@@ -212,16 +227,22 @@ const MouseEvents = ({
       } else {
         annotationFromSelection(tokens, [tokenSelection[0], currentNode], triggerCodePopup);
       }
+      rmTapped(tokens, tapped.current);
       tapped.current = null;
-      setCurrentToken(null);
+      setCurrentToken({ i: null });
       return;
     }
 
     // otherwise, handle the double tab (on the same token) for starting the selection
     if (tapped.current !== token.index) {
+      rmTapped(tokens, tapped.current);
+      addTapped(tokens, token.index);
       tapped.current = token.index;
+
+      setCurrentToken({ i: token.index });
       setTokenSelection((state) => (state.length === 0 ? state : []));
     } else {
+      rmTapped(tapped.current);
       setTokenSelection((state) => updateSelection(state, tokens, token.index, true));
     }
   };
@@ -243,13 +264,18 @@ const MouseEvents = ({
       if (event.which !== 1 && event.which !== 0) return null;
 
       window.getSelection().empty();
-      storeMouseSelection(event);
+      storeMouseSelection(getToken(tokens, event));
     } else {
       let currentNode = getToken(tokens, event);
       if (currentNode.index !== null) {
-        setCurrentToken((state) => (state === currentNode.index ? state : currentNode.index));
+        setCurrentToken((state) => ({
+          i: state === currentNode.index ? state : currentNode.index,
+        }));
         setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, false));
-      } else setCurrentToken((state) => (state === currentNode.index ? state : currentNode.index));
+      } else
+        setCurrentToken((state) => ({
+          i: state === currentNode.index ? state : currentNode.index,
+        }));
     }
   };
 
@@ -259,7 +285,7 @@ const MouseEvents = ({
     // note that in case of a single click, the token has not been selected (this happens on move)
     // so this way a click can still be used to open
     if (event.which !== 1 && event.which !== 0) return null;
-    const currentNode = storeMouseSelection(event);
+    const currentNode = storeMouseSelection(getToken(tokens, event));
     window.getSelection().empty();
     //setHoldMouseLeft(false);
     selectionStarted.current = false;
@@ -290,12 +316,9 @@ const MouseEvents = ({
     event.stopPropagation();
   };
 
-  const storeMouseSelection = (event) => {
+  const storeMouseSelection = (currentNode) => {
     // select tokens that the mouse/touch is currently pointing at
-    let currentNode = getToken(tokens, event);
-    //if (currentNode == null || currentNode === null) return null;
-
-    setCurrentToken((state) => (state === currentNode.index ? state : currentNode.index));
+    setCurrentToken((state) => ({ i: state === currentNode.index ? state : currentNode.index }));
     setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, true));
     return currentNode.index;
   };
@@ -361,7 +384,7 @@ const movePosition = (tokens, key, mover, space, setCurrentToken, setTokenSelect
   }
 
   if (mover.position !== newPosition) {
-    setCurrentToken((state) => (state === newPosition ? state : newPosition));
+    setCurrentToken((state) => ({ i: state === newPosition ? state : newPosition }));
     setTokenSelection((state) => updateSelection(state, tokens, newPosition, space));
     scrollTokenToMiddle(tokens[newPosition].ref.current);
 
@@ -394,6 +417,16 @@ const getToken = (tokens, e) => {
   const [n, annotated] = getNode(tokens, e);
   if (n === null) return { index: null, annotated: false };
   return { index: getTokenAttributes(tokens, n), annotated };
+};
+
+const addTapped = (tokens, i) => {
+  const ref = tokens?.[i]?.ref;
+  if (ref?.current) ref.current.classList.add("tapped");
+};
+
+const rmTapped = (tokens, i) => {
+  const ref = tokens?.[i]?.ref;
+  if (ref?.current) ref.current.classList.remove("tapped");
 };
 
 const getNode = (tokens, e) => {

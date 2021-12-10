@@ -138,8 +138,6 @@ const AmcatDeploy = ({ codingjobPackage }) => {
     if (codingjobPackage?.title) setTitle(codingjobPackage.title);
   }, [codingjobPackage]);
 
-  console.log(codingjobPackage);
-
   const deploy = async () => {
     const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.email, cookies.amcat.token);
     try {

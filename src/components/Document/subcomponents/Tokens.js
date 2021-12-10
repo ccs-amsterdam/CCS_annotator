@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Ref } from "semantic-ui-react";
 import { scrollToMiddle } from "library/scroll";
-
-import "components/Document/subcomponents/spanAnnotationsStyle.css";
 import Meta from "./Meta";
 
 const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
@@ -218,10 +216,6 @@ const renderToken = (token, codingUnit) => {
         <span className="pre">{token.pre}</span>
         <span className="text">{token.text}</span>
         <span className="post">{token.post}</span>
-        <div
-          className="variable"
-          style={{ position: "absolute", top: "-0.4em", left: "0", fontSize: "0.4em" }}
-        ></div>
       </span>
     </>
   );

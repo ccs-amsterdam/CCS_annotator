@@ -104,7 +104,7 @@ const PreviewQuestionTask = React.memo(({ children, codebook, standardizedUnit, 
 
   return (
     <>
-      <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+      <Header textAlign="center" style={{ background: "#1B1C1D", color: "white", height: "40px" }}>
         Preview
         {children}
       </Header>
