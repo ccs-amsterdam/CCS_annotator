@@ -13,6 +13,7 @@ export const moveUp = (arr, selected, xposition = null) => {
   for (let i = selected - 1; i >= 0; i--) {
     if (arr[i].ref == null || arr[i].ref.current === null) return i + 1;
     const nextPos = getPosition(arr[i].ref);
+    if (nextPos === null) return;
 
     if (correctRow === null) {
       if (sameRow(currentPos, nextPos)) continue;
@@ -44,8 +45,8 @@ export const moveDown = (arr, selected, xposition = null) => {
   let prevColOverlap = 0;
   for (let i = selected + 1; i < arr.length; i++) {
     if (arr[i].ref == null || arr[i].ref.current === null) return i - 1;
-
     const nextPos = getPosition(arr[i].ref);
+    if (nextPos === null) return;
 
     if (correctRow === null) {
       if (sameRow(currentPos, nextPos)) continue;
@@ -87,7 +88,7 @@ const calcColOverlap = (a, b) => {
 };
 
 const getPosition = (ref, horizontalRef) => {
-  if (!ref) return null;
+  if (!ref?.current) return null;
   const pos = ref.current.getBoundingClientRect();
 
   if (horizontalRef != null) {

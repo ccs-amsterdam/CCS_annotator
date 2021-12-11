@@ -39,6 +39,7 @@ const Document = ({
   const fullScreenNode = useSelector((state) => state.fullScreenNode);
   const safetyCheck = useRef(null); // ensures only new annotations for the current unit are passed to onChangeAnnotations
   const [variable, setVariable] = useState(null);
+  const editMode = false;
 
   const [tokensReady, setTokensReady] = useState(0);
   const [preparedUnit, annotations, setAnnotations] = useUnit(unit, safetyCheck, returnTokens);
@@ -94,7 +95,8 @@ const Document = ({
         triggerCodePopup={triggerCodePopup}
         eventsBlocked={codeSelectorOpen || blockEvents}
         fullScreenNode={fullScreenNode}
-        disableAnnotations={!onChangeAnnotations || !variableMap}
+        disableAnnotations={editMode || !onChangeAnnotations || !variableMap}
+        editMode={editMode}
       />
 
       {popup || null}

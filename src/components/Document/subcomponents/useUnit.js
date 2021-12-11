@@ -8,6 +8,15 @@ const useUnit = (unit, safetyCheck, returnTokens) => {
 
   useEffect(() => {
     if (!unit?.text && !unit.text_fields && !unit.tokens) return null;
+
+    // unit.annotations add from imported (if setting)
+    console.log(unit.importedAnnotations);
+    if (unit.importedAnnotations) {
+      if (!unit.annotations) unit.annotations = [];
+      unit.annotations = unit.annotations.concat(unit.importedAnnotations);
+    }
+    console.log(unit.annotations);
+
     const document = prepareDocument(unit);
     safetyCheck.current = {
       tokens: document.tokens,
@@ -19,6 +28,7 @@ const useUnit = (unit, safetyCheck, returnTokens) => {
       text_fields: document.text_fields,
       meta_fields: document.meta_fields,
     });
+
     setAnnotations(document.annotations);
     if (returnTokens) returnTokens(document.tokens);
   }, [unit, returnTokens, safetyCheck]);

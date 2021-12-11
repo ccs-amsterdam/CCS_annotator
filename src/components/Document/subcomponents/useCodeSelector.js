@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Dropdown, Grid, Popup, Ref } from "semantic-ui-react";
+import { Button, Dropdown, Grid, Icon, Popup, Ref } from "semantic-ui-react";
 import { toggleSpanAnnotation } from "library/annotations";
 import { codeBookEdgesToMap } from "library/codebook";
-import { getColor } from "library/tokenDesign";
+import { getColor, getColorGradient } from "library/tokenDesign";
 import { moveDown, moveUp } from "library/refNavigation";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
@@ -26,15 +26,6 @@ const useCodeSelector = (
   const [variableMap, setVariableMap] = useState(null);
 
   const [codeHistory, setCodeHistory] = useState({});
-  const setSelectedCodeHistory = React.useCallback(
-    (value) => {
-      setCodeHistory((state) => {
-        state[selectedVariable] = value;
-        return state;
-      });
-    },
-    [selectedVariable, setCodeHistory]
-  );
 
   useEffect(() => {
     // creates fullVariableMap
@@ -84,9 +75,10 @@ const useCodeSelector = (
   if (!variables) return [null, null, null, true];
 
   const triggerFunction = (index, selection) => {
+    if (!tokens[index].ref) return;
     setTokenRef(tokens[index].ref);
     setTokenAnnotations(annotations[index] || {});
-    setSelection(selection);
+    setSelection(selection || { index }); // if selection is empty, pass index, and get selection in selectVariablePage
     setOpen(true);
   };
 
@@ -106,22 +98,23 @@ const useCodeSelector = (
         variableMap={variableMap}
         annotations={annotations}
         selection={selection}
+        setSelection={setSelection}
         setOpen={setOpen}
-        canBeNew={selection !== null} // if no selection is provided, can only edit existing codes
       />
 
       <NewCodePage // if current is known, select what the new code should be (or delete, or ignore)
+        tokens={tokens}
         variable={variable}
         variableMap={variableMap}
         overwrites={overwrites}
         codeMap={variableMap?.[variable]?.codeMap}
         settings={variableMap?.[variable]}
-        codeHistory={codeHistory[selectedVariable] || []}
+        codeHistory={codeHistory[variable] || []}
         annotations={tokenAnnotations}
         setAnnotations={setAnnotations}
         selection={selection}
         setOpen={setOpen}
-        setCodeHistory={setSelectedCodeHistory}
+        setCodeHistory={setCodeHistory}
       />
     </CodeSelectorPopup>
   );
@@ -203,38 +196,79 @@ const SelectVariablePage = ({
   setOverwrites,
   annotations,
   selection,
-  canBeNew,
+  setSelection,
   setOpen,
   variableMap,
 }) => {
-  const setValue = async (value) => {
-    const current = new Set();
-    for (let i = selection.span[0]; i <= selection.span[1]; i++) {
-      if (annotations?.[i]?.[value]) {
-        const annId = annotations?.[i]?.[value].span[0] + "_" + annotations?.[i]?.[value].value;
-        current.add(annId);
+  const setVariableCallback = async (variable) => {
+    if (selection.span) {
+      const annMap = {};
+
+      for (let i = selection.span[0]; i <= selection.span[1]; i++) {
+        if (annotations?.[i]?.[variable]) {
+          const annId = annotations[i][variable].span[0] + "_" + annotations[i][variable].variable;
+          annMap[annId] = { variable, ...annotations[i][variable] };
+        }
       }
+
+      if (Object.keys(annMap).length > 0) {
+        setOverwrites(Object.values(annMap));
+      } else {
+        setOverwrites([]);
+      }
+    } else {
+      // selection can not have a span in editMode. In this case, there can be only one annotation for
+      // a given variable, and we want to take the position of this annotation as the selection
+      // also, note that there HAS to be an annotation on the current index for this to happen
+      const annotation = annotations[selection.index][variable];
+      setSelection({
+        index: selection.index,
+        span: annotation.span,
+        length: annotation.length,
+        section: annotation.section,
+        offset: annotation.offset,
+      });
+      setOverwrites([{ variable, ...annotation }]);
     }
 
-    if (current.size > 0) {
-      setOverwrites(Array.from(current));
-    } else {
-      setOverwrites([]);
-    }
-    setVariable(value);
+    setVariable(variable);
   };
 
   const getOptions = () => {
     let variables = Object.keys(variableMap);
-    if (!canBeNew) variables = variables.filter((variable) => annotations[variable] != null);
-    return variables.map((variable) => ({ color: "white", label: variable, value: variable }));
+
+    const variableColors = {};
+    if (!selection.span) {
+      variables = variables.filter((variable) => annotations[selection.index][variable] != null);
+      for (let v of variables) {
+        variableColors[v] = getColor(
+          annotations[selection.index][v].value,
+          variableMap?.[v]?.codeMap
+        );
+      }
+    } else {
+      for (let v of variables) {
+        const colors = [];
+        for (let i = selection.span[0]; i <= selection.span[1]; i++) {
+          if (annotations?.[i]?.[v])
+            colors.push(getColor(annotations?.[i]?.[v].value, variableMap?.[v]?.codeMap));
+        }
+        variableColors[v] = getColorGradient(colors);
+      }
+    }
+
+    return variables.map((variable) => ({
+      color: variableColors[variable],
+      label: variable,
+      value: variable,
+    }));
   };
 
   if (variable) return null;
 
   const options = getOptions();
   if (options.length === 1) {
-    setValue(options[0].value);
+    setVariableCallback(options[0].value);
   }
 
   return (
@@ -242,16 +276,16 @@ const SelectVariablePage = ({
       <ButtonSelection
         id={"currentCodePageButtons"}
         active={true}
-        canDelete={false}
         options={options}
         setOpen={setOpen}
-        callback={setValue}
+        callback={setVariableCallback}
       />
     </div>
   );
 };
 
 const NewCodePage = ({
+  tokens,
   variable,
   variableMap,
   codeHistory,
@@ -351,19 +385,38 @@ const NewCodePage = ({
         buttonOptions.push({ key: code, label: code, value: code, color: getColor(code, codeMap) });
       }
     }
+
+    if (overwrites && overwrites.length > 0) {
+      for (let o of overwrites) {
+        let text = tokens.slice(o.span[0], o.span[1] + 1).map((t) => t.pre + t.text + t.post);
+        if (text.length > 6) text = [text.slice(0, 3).join(""), " ... ", text.slice(-3).join("")];
+        text = text.join("");
+        buttonOptions.push({
+          box2: true,
+          icon: "trash alternate",
+          label: `${text}`,
+          color: getColor(o.value, codeMap),
+          value: o,
+          textColor: "darkred",
+        });
+      }
+    }
+
     return [buttonOptions, dropdownOptions];
   };
 
   const buttonSelection = (options) => {
-    const canDelete = overwrites.length > 0;
-    if (options.length === 0) return null;
-    if (options.length === 1 && !canDelete) onButtonSelect(options[0].value);
+    // act automatically if button selection is the only mode, and there are no options or only 1
+    if (settings.buttonMode === "all" && !settings.searchBox) {
+      if (options.length === 0) return null;
+      if (options.length === 1 && overwrites.length === 0) onButtonSelect(options[0].value);
+    }
 
     return (
       <ButtonSelection
         id={"newCodePageButtons"}
         active={focusOnButtons}
-        canDelete={canDelete}
+        setAnnotations={setAnnotations}
         options={options}
         setOpen={setOpen}
         callback={onButtonSelect}
@@ -453,18 +506,50 @@ const NewCodePage = ({
   );
 };
 
-const ButtonSelection = ({ id, active, options, canDelete, setOpen, callback }) => {
+const ButtonSelection = ({
+  id,
+  active,
+  options,
+  setOpen,
+  callback,
+  setAnnotations, // deletable is an array of annotatins that can be deleted
+}) => {
   const [selected, setSelected] = useState(0);
   const [allOptions, setAllOptions] = useState([]);
+  const deleted = useRef({});
 
   useEffect(() => {
     let allOptions = [...options];
-    if (canDelete)
-      allOptions.push({ label: "DELETE", color: "red", value: null, textColor: "white" });
-    allOptions.push({ label: "CANCEL", color: "grey", value: "CANCEL", textColor: "white" });
+    allOptions.push({
+      box2: true,
+      label: "CANCEL",
+      color: "grey",
+      value: "CANCEL",
+      textColor: "white",
+    });
+
     for (let option of allOptions) option.ref = React.createRef();
     setAllOptions(allOptions);
-  }, [options, canDelete, setAllOptions]);
+  }, [options, setAllOptions]);
+
+  const onClickDelete = React.useCallback(
+    (value) => {
+      if (value === "CANCEL") setOpen(false);
+      if (typeof value === "object") {
+        setAnnotations((state) => toggleSpanAnnotation({ ...state }, value, true));
+        setOpen(false);
+        return;
+      }
+    },
+    [setAnnotations, setOpen]
+  );
+
+  const onClickSelect = React.useCallback(
+    (value) => {
+      callback(value);
+    },
+    [callback]
+  );
 
   const onKeydown = React.useCallback(
     (event) => {
@@ -502,12 +587,14 @@ const ButtonSelection = ({ id, active, options, canDelete, setOpen, callback }) 
         event.stopPropagation();
 
         let value = allOptions[selected].value;
-        if (value === "CANCEL") {
-          setOpen(false);
-        } else callback(value);
+        if (allOptions[selected].box2) {
+          onClickDelete(value);
+        } else {
+          onClickSelect(value);
+        }
       }
     },
-    [selected, callback, allOptions, setOpen]
+    [selected, callback, allOptions, onClickDelete, onClickSelect]
   );
 
   useEffect(() => {
@@ -521,43 +608,61 @@ const ButtonSelection = ({ id, active, options, canDelete, setOpen, callback }) 
     };
   }, [active, onKeydown]);
 
-  const mapButtons = () => {
-    return allOptions.map((option, i) => {
-      return (
-        <Ref innerRef={option.ref}>
-          <Button
-            style={{
-              flex: `1 1 auto`,
-              backgroundColor: option.color,
-              color: option.textColor || "black",
-              border: "3px solid",
-              borderColor: i === selected ? "black" : "lightgrey",
-              margin: "0",
-            }}
-            key={option.label}
-            value={option.value}
-            compact
-            size="mini"
-            //active={i === selected}
-            onMouseOver={() => setSelected(i)}
-            onClick={(e, d) => {
-              if (d.value === "CANCEL") {
-                setOpen(false);
-              } else callback(d.value);
-            }}
-          >
-            {" " + option.label}
-          </Button>
-        </Ref>
-      );
-    });
+  const button = (option, i, onClick) => {
+    const bcolorSelected = option.icon === "trash alternate" ? "darkred" : "black";
+
+    return (
+      <Ref innerRef={option.ref}>
+        <Button
+          style={{
+            flex: `1 1 auto`,
+            background: option.color,
+            color: option.textColor || "black",
+            border: "3px solid",
+            borderColor: i === selected ? bcolorSelected : "lightgrey",
+            margin: "0",
+          }}
+          key={option.label}
+          value={option.value}
+          compact
+          size="mini"
+          onMouseOver={() => setSelected(i)}
+          onClick={(e, d) => onClick(d.value)}
+        >
+          <Icon name={option.icon} />
+          {" " + option.label}
+        </Button>
+      </Ref>
+    );
   };
 
-  return (
-    <div key={id} style={{ display: "flex", flexWrap: "wrap" }}>
-      {mapButtons()}
-    </div>
-  );
+  const mapButtons = () => {
+    let i = 0;
+    const selectButtons = [];
+    const deleteButtons = [];
+    for (let option of allOptions) {
+      if (deleted.current[option.value]) continue;
+      if (option.box2) {
+        deleteButtons.push(button(option, i, onClickDelete));
+      } else {
+        selectButtons.push(button(option, i, onClickSelect));
+      }
+      i++;
+    }
+
+    return (
+      <>
+        <div key={id + "1"} style={{ display: "flex", flexWrap: "wrap" }}>
+          {selectButtons}
+        </div>
+        <div key={id + "2"} style={{ display: "flex", flexWrap: "wrap", marginTop: "20px" }}>
+          {deleteButtons}
+        </div>
+      </>
+    );
+  };
+
+  return <div key={id}>{mapButtons()}</div>;
 };
 
 const updateAnnotations = (
@@ -588,7 +693,9 @@ const updateAnnotations = (
     const newstate = toggleSpanAnnotation({ ...state }, rmAnnotation, true);
     return toggleSpanAnnotation(newstate, newAnnotation, false);
   });
-  setCodeHistory([value, ...codeHistory.filter((v) => v !== value)].slice(0, 5));
+  setCodeHistory((state) => {
+    return { ...state, [variable]: [value, ...codeHistory.filter((v) => v !== value)].slice(0, 5) };
+  });
   setOpen(false);
 };
 

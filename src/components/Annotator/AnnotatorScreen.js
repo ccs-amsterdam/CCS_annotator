@@ -41,10 +41,10 @@ const AnnotatorScreen = ({ jobServer }) => {
 
   let maxWidth = "100%";
   let maxHeight = "100%";
-  // if (jobServer?.codebook?.type) {
-  //   if (jobServer?.codebook.type === "questions") [maxWidth, maxHeight] = ["800px", "1000px"];
-  //   if (jobServer?.codebook.type === "annotate") [maxWidth, maxHeight] = ["2000px", "2000px"];
-  // }
+  if (jobServer?.codebook?.type) {
+    if (jobServer?.codebook.type === "questions") [maxWidth, maxHeight] = ["800px", "1000px"];
+    if (jobServer?.codebook.type === "annotate") [maxWidth, maxHeight] = ["2000px", "2000px"];
+  }
 
   const renderTask = () => {
     if (unitIndex === null) return <Finished jobServer={jobServer} />;

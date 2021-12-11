@@ -12,7 +12,7 @@ const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
  * You probably never want to read this. And if you do, don't expect my sympathies. Rather, just blame me
  * if anything in here breaks, or ask nicely if we need more features
  */
-const AnnotationEvents = ({
+export const AnnotationEvents = ({
   tokens,
   currentToken,
   setCurrentToken,
@@ -504,5 +504,3 @@ const updateSelection = (selection, tokens, index, add) => {
   }
   return newSelection;
 };
-
-export default AnnotationEvents;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import AnnotationEvents from "./AnnotationEvents";
+import { AnnotationEvents } from "./AnnotationEvents";
 import { Popup, List } from "semantic-ui-react";
 import { getColor, getColorGradient } from "library/tokenDesign";
 
@@ -16,14 +16,15 @@ const AnnotateNavigation = ({
   eventsBlocked,
   fullScreenNode,
   disableAnnotations,
+  editMode,
 }) => {
   const [currentToken, setCurrentToken] = useState({ i: null });
   const [tokenSelection, setTokenSelection] = useState([]);
 
   useEffect(() => {
     if (!variableMap) return null;
-    showAnnotations(tokens, annotations, variableMap);
-  }, [tokens, annotations, variableMap]);
+    showAnnotations(tokens, annotations, variableMap, editMode ? triggerCodePopup : null);
+  }, [tokens, annotations, variableMap, editMode, triggerCodePopup]);
 
   useEffect(() => {
     showSelection(tokens, tokenSelection);
@@ -53,22 +54,41 @@ const AnnotateNavigation = ({
   );
 };
 
-const showAnnotations = (tokens, annotations, variableMap) => {
-  for (let token of tokens) {
+const showAnnotations = (tokens, annotations, variableMap, triggerCodePopup) => {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
     if (!token.ref?.current) continue;
 
     let tokenAnnotations = allowedAnnotations(annotations?.[token.index], variableMap);
-
     if (!tokenAnnotations || Object.keys(tokenAnnotations).length === 0) {
       if (token.ref.current.classList.contains("annotated")) {
         token.ref.current.classList.remove("annotated");
         setTokenColor(token, null, null, null);
+        token.ref.current.style.cursor = "default";
+        token.ref.current.onclick = undefined;
       }
       continue;
     }
-    annotateToken(token, tokenAnnotations, variableMap);
+
+    annotateToken(token, tokenAnnotations, variableMap, triggerCodePopup);
   }
 };
+
+// in the current design imported span annotations are always expanded
+// because this is also more efficient in toggling on/off
+//
+// const expandAnnotations = (annotations) => {
+//   for (let index of Object.keys(annotations)) {
+//     for (let variable of Object.keys(annotations[index])) {
+//       const span = annotations[index][variable].span;
+//       for (let spanI = span[0]; spanI <= span[1]; spanI++) {
+//         if (!annotations[spanI]) annotations[spanI] = {};
+//         annotations[spanI][variable] = { ...annotations[index][variable], index: spanI };
+//       }
+//     }
+//   }
+//   return annotations;
+// };
 
 const allowedAnnotations = (annotations, variableMap) => {
   if (!annotations) return null;
@@ -89,7 +109,7 @@ const allowedAnnotations = (annotations, variableMap) => {
   return annotations;
 };
 
-const annotateToken = (token, annotations, variableMap) => {
+const annotateToken = (token, annotations, variableMap, triggerCodePopup) => {
   // Set specific classes for nice css to show the start/end of codes
   let nLeft = 0;
   let nRight = 0;
@@ -104,6 +124,7 @@ const annotateToken = (token, annotations, variableMap) => {
     const codeMap = variableMap[variable].codeMap;
     const code = annotations[variable];
     const color = getColor(code.value, codeMap);
+
     colors.text.push(color);
     if (code.span[0] === code.index) {
       nLeft++;
@@ -130,6 +151,12 @@ const annotateToken = (token, annotations, variableMap) => {
   const postColor = allRight ? "white" : getColorGradient(colors.post);
   setTokenColor(token, preColor, textColor, postColor);
   //setTokenLabels(token, ["test", "this"]);
+
+  if (triggerCodePopup) {
+    // is only !null in editMode
+    token.ref.current.style.cursor = "pointer";
+    token.ref.current.onclick = () => triggerCodePopup(token.index, null);
+  }
 };
 
 // const setTokenLabels = (token, labels) => {

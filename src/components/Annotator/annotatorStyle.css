@@ -2,10 +2,9 @@ input[type="range"] {
   border: solid 1px black;
   border-radius: 8px;
   height: 10px;
-  background-color: red !important;
+  background-color: #2185d0 !important;
   margin-top: 8px;
   outline: none;
-  transition: background 450ms ease-in;
   -webkit-appearance: none;
   -moz-appearance: none;
 }
