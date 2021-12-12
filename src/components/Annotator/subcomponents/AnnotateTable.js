@@ -20,11 +20,19 @@ const AnnotateTable = ({ variableMap, annotations }) => {
     >
       <Table.Header className="annotations-thead" style={{ height: "40px" }}>
         <Table.Row>
-          <Table.HeaderCell width={COLWIDTHS[0]}>Variable</Table.HeaderCell>
-          <Table.HeaderCell width={COLWIDTHS[1]}>Value</Table.HeaderCell>
-          <Table.HeaderCell width={COLWIDTHS[2]}>Section</Table.HeaderCell>
-          <Table.HeaderCell width={COLWIDTHS[3]}>Tokens</Table.HeaderCell>
-          <Table.HeaderCell>Text</Table.HeaderCell>
+          <Table.HeaderCell title="Variable" width={COLWIDTHS[0]}>
+            Variable
+          </Table.HeaderCell>
+          <Table.HeaderCell title="Vale" width={COLWIDTHS[1]}>
+            Value
+          </Table.HeaderCell>
+          <Table.HeaderCell title="Section" width={COLWIDTHS[2]}>
+            Section
+          </Table.HeaderCell>
+          <Table.HeaderCell title="Position" width={COLWIDTHS[3]}>
+            Position
+          </Table.HeaderCell>
+          <Table.HeaderCell title="Text">Text</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body
@@ -67,19 +75,23 @@ const AnnotationRow = ({ variable, variableMap, annotation, text }) => {
     ? `${codeMap[annotation.value].foldToParent} - ${annotation.value}`
     : annotation.value;
 
+  const position = `${annotation.offset}-${annotation.offset + annotation.length}`;
+
   return (
     <Table.Row className="annotations-tr">
       <Table.Cell width={COLWIDTHS[0]}>
         <span title={variable}>{variable}</span>
       </Table.Cell>
 
-      <Table.Cell width={COLWIDTHS[1]} style={color ? { background: color } : null}>
+      <Table.Cell title={label} width={COLWIDTHS[1]} style={color ? { background: color } : null}>
         <span title={label}>{label}</span>
       </Table.Cell>
-      <Table.Cell width={COLWIDTHS[2]}>{annotation.section}</Table.Cell>
-      <Table.Cell width={COLWIDTHS[3]}>{`${annotation.offset}-${
-        annotation.offset + annotation.length
-      }`}</Table.Cell>
+      <Table.Cell title={annotation.section} width={COLWIDTHS[2]}>
+        {annotation.section}
+      </Table.Cell>
+      <Table.Cell title={position} width={COLWIDTHS[3]}>
+        {position}
+      </Table.Cell>
       <Table.Cell>
         <span title={text}>{text}</span>
       </Table.Cell>

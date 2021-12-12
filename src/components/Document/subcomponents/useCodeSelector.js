@@ -17,7 +17,7 @@ const useCodeSelector = (
 ) => {
   const [open, setOpen] = useState(false);
   const [selection, setSelection] = useState(null);
-  const [overwrites, setOverwrites] = useState([]);
+  const [existing, setExisting] = useState([]);
   const [variable, setVariable] = useState(null);
   const [tokenRef, setTokenRef] = useState(null);
   const [tokenAnnotations, setTokenAnnotations] = useState({});
@@ -89,12 +89,12 @@ const useCodeSelector = (
       open={open}
       setOpen={setOpen}
       tokenRef={tokenRef}
-      overwrites={overwrites}
+      existing={existing}
     >
       <SelectVariablePage // when editing existing annotation, choose which is the 'current' code to edit
         variable={variable}
         setVariable={setVariable}
-        setOverwrites={setOverwrites}
+        setExisting={setExisting}
         variableMap={variableMap}
         annotations={annotations}
         selection={selection}
@@ -106,7 +106,7 @@ const useCodeSelector = (
         tokens={tokens}
         variable={variable}
         variableMap={variableMap}
-        overwrites={overwrites}
+        existing={existing}
         codeMap={variableMap?.[variable]?.codeMap}
         settings={variableMap?.[variable]}
         codeHistory={codeHistory[variable] || []}
@@ -130,21 +130,15 @@ const CodeSelectorPopup = ({
   open,
   setOpen,
   tokenRef,
-  overwrites,
+  existing,
 }) => {
   const [hasOpened, setHasOpened] = useState(false);
-
-  const overwriteWarning = () => {
-    if (!variable || overwrites.length === 0) return;
-    let message =
-      overwrites.length === 1 ? `existing annotation` : `${overwrites.length} existing annotations`;
-    return <div style={{ margin: "1em" }}>Overwrites {message}</div>;
-  };
 
   return (
     <Popup
       mountNode={fullScreenNode || undefined}
       context={tokenRef}
+      wide
       hoverable
       open={open}
       mouseLeaveDelay={10000000} // just don't use mouse leave
@@ -160,7 +154,7 @@ const CodeSelectorPopup = ({
         style={{
           minWidth: "12em",
           textAlign: "center",
-
+          overflow: "auto",
           background: "#1B1C1D",
           color: "white",
           border: "1px solid",
@@ -184,7 +178,6 @@ const CodeSelectorPopup = ({
           }}
         />
       </div>
-      {overwriteWarning()}
       <div style={{ margin: "1em", border: "0px" }}>{children}</div>
     </Popup>
   );
@@ -193,7 +186,7 @@ const CodeSelectorPopup = ({
 const SelectVariablePage = ({
   variable,
   setVariable,
-  setOverwrites,
+  setExisting,
   annotations,
   selection,
   setSelection,
@@ -205,31 +198,40 @@ const SelectVariablePage = ({
       const annMap = {};
 
       for (let i = selection.span[0]; i <= selection.span[1]; i++) {
-        if (annotations?.[i]?.[variable]) {
-          const annId = annotations[i][variable].span[0] + "_" + annotations[i][variable].variable;
-          annMap[annId] = { variable, ...annotations[i][variable] };
+        if (annotations?.[i]) {
+          for (let id of Object.keys(annotations[i])) {
+            const a = annotations[i][id];
+            if (a.variable !== variable) continue;
+            const annId = a.span[0] + "_" + id;
+            annMap[annId] = { id, ...annotations[i][id] };
+          }
         }
       }
 
       if (Object.keys(annMap).length > 0) {
-        setOverwrites(Object.values(annMap));
+        setExisting(Object.values(annMap));
       } else {
-        setOverwrites([]);
+        setExisting([]);
       }
-    } else {
-      // selection can not have a span in editMode. In this case, there can be only one annotation for
-      // a given variable, and we want to take the position of this annotation as the selection
-      // also, note that there HAS to be an annotation on the current index for this to happen
-      const annotation = annotations[selection.index][variable];
-      setSelection({
-        index: selection.index,
-        span: annotation.span,
-        length: annotation.length,
-        section: annotation.section,
-        offset: annotation.offset,
-      });
-      setOverwrites([{ variable, ...annotation }]);
     }
+    // remove edit mode.
+    // instead, make mode where annotations are disabled, but there are popups with buttons for imported annotations
+
+    // } else {
+
+    //   // selection can not have a span in editMode. In this case, there can be only one annotation for
+    //   // a given variable, and we want to take the position of this annotation as the selection
+    //   // also, note that there HAS to be an annotation on the current index for this to happen
+    //   const annotation = annotations[selection.index][variable];
+    //   setSelection({
+    //     index: selection.index,
+    //     span: annotation.span,
+    //     length: annotation.length,
+    //     section: annotation.section,
+    //     offset: annotation.offset,
+    //   });
+    //   setExisting([{ variable, ...annotation }]);
+    // }
 
     setVariable(variable);
   };
@@ -238,23 +240,17 @@ const SelectVariablePage = ({
     let variables = Object.keys(variableMap);
 
     const variableColors = {};
-    if (!selection.span) {
-      variables = variables.filter((variable) => annotations[selection.index][variable] != null);
-      for (let v of variables) {
-        variableColors[v] = getColor(
-          annotations[selection.index][v].value,
-          variableMap?.[v]?.codeMap
-        );
-      }
-    } else {
-      for (let v of variables) {
-        const colors = [];
-        for (let i = selection.span[0]; i <= selection.span[1]; i++) {
-          if (annotations?.[i]?.[v])
-            colors.push(getColor(annotations?.[i]?.[v].value, variableMap?.[v]?.codeMap));
+    for (let v of variables) {
+      const colors = {};
+      for (let i = selection.span[0]; i <= selection.span[1]; i++) {
+        if (!annotations[i]) continue;
+        for (let id of Object.keys(annotations[i])) {
+          const a = annotations[i][id];
+          if (a.variable !== v) continue;
+          colors[a.value] = getColor(a.value, variableMap?.[v]?.codeMap);
         }
-        variableColors[v] = getColorGradient(colors);
       }
+      variableColors[v] = getColorGradient(Object.values(colors));
     }
 
     return variables.map((variable) => ({
@@ -293,7 +289,7 @@ const NewCodePage = ({
   annotations,
   setAnnotations,
   selection,
-  overwrites,
+  existing,
   setOpen,
   setCodeHistory,
 }) => {
@@ -356,6 +352,12 @@ const NewCodePage = ({
     const historyN = 5; // maybe make this a setting
     const codeMap = variableMap?.[variable]?.codeMap;
 
+    // const existingValueCount = Object.values(existing).reduce((em, e) => {
+    //   if (!em[e.value]) em[e.value] = 0;
+    //   em[e.value]++;
+    //   return em;
+    // }, {});
+
     for (let code of Object.keys(codeMap)) {
       const singleSelection = selection === null || selection?.span[0] === selection?.span[1];
       if (singleSelection && annotations[code]) continue;
@@ -364,10 +366,18 @@ const NewCodePage = ({
         buttonOptions.push({ key: code, label: code, value: code, color: getColor(code, codeMap) });
 
       let tree = codeMap[code].tree.join(" - ");
+
+      // let existingmessage = null;
+      // if (existingValueCount[code]) {
+      //   existingmessage = (
+      //     <span style={{ color: "darkred" }}>{`overwrites ${existingValueCount[code]}`}</span>
+      //   );
+      // }
+
       dropdownOptions.push({
         key: code,
         value: code,
-        text: code + " " + tree,
+        text: code + " test" + tree,
         content: (
           <>
             {code}
@@ -386,8 +396,9 @@ const NewCodePage = ({
       }
     }
 
-    if (overwrites && overwrites.length > 0) {
-      for (let o of overwrites) {
+    if (existing && existing.length > 0) {
+      for (let o of existing) {
+        console.log(o);
         let text = tokens.slice(o.span[0], o.span[1] + 1).map((t) => t.pre + t.text + t.post);
         if (text.length > 6) text = [text.slice(0, 3).join(""), " ... ", text.slice(-3).join("")];
         text = text.join("");
@@ -409,7 +420,7 @@ const NewCodePage = ({
     // act automatically if button selection is the only mode, and there are no options or only 1
     if (settings.buttonMode === "all" && !settings.searchBox) {
       if (options.length === 0) return null;
-      if (options.length === 1 && overwrites.length === 0) onButtonSelect(options[0].value);
+      if (options.length === 1 && existing.length === 0) onButtonSelect(options[0].value);
     }
 
     return (
@@ -441,24 +452,7 @@ const NewCodePage = ({
                 fluid
                 placeholder={"<type to search>"}
                 style={{ minWidth: "12em" }}
-                options={Object.keys(codeMap).reduce((options, code) => {
-                  let tree = codeMap[code].tree.join(" - ");
-                  //if (tree === "") tree = "Root";
-                  options.push({
-                    key: code,
-                    value: code,
-                    text: code + " " + tree,
-                    content: (
-                      <>
-                        {code}
-                        <br />
-                        <span style={{ color: "grey" }}>{tree}</span>
-                      </>
-                    ),
-                  });
-
-                  return options;
-                }, [])}
+                options={options}
                 open={!focusOnButtons}
                 search
                 selection
@@ -519,6 +513,7 @@ const ButtonSelection = ({
   const deleted = useRef({});
 
   useEffect(() => {
+    // add cancel button and (most importantly) add refs used for navigation
     let allOptions = [...options];
     allOptions.push({
       box2: true,

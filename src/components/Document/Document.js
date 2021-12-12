@@ -39,6 +39,10 @@ const Document = ({
   const fullScreenNode = useSelector((state) => state.fullScreenNode);
   const safetyCheck = useRef(null); // ensures only new annotations for the current unit are passed to onChangeAnnotations
   const [variable, setVariable] = useState(null);
+
+  // needs to be an option in annotate task. Disables annotations, and only allows editing existing annotations
+  // needs to be combined with feature to disable delete and allows multiple choice selection
+  // only issue is what to do if no items are selected in multiple choice. Maybe force there to be a "none" code?
   const editMode = false;
 
   const [tokensReady, setTokensReady] = useState(0);

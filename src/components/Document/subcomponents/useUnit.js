@@ -10,12 +10,10 @@ const useUnit = (unit, safetyCheck, returnTokens) => {
     if (!unit?.text && !unit.text_fields && !unit.tokens) return null;
 
     // unit.annotations add from imported (if setting)
-    console.log(unit.importedAnnotations);
     if (unit.importedAnnotations) {
       if (!unit.annotations) unit.annotations = [];
       unit.annotations = unit.annotations.concat(unit.importedAnnotations);
     }
-    console.log(unit.annotations);
 
     const document = prepareDocument(unit);
     safetyCheck.current = {

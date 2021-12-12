@@ -264,15 +264,16 @@ const getAnnotations = (annotations, tokens, textUnit, annotation) => {
   if (!annotations) return [];
   const ann = {};
   for (let i of Object.keys(annotations)) {
-    for (let variable of Object.keys(annotations[i])) {
+    for (let id of Object.keys(annotations[i])) {
+      const variable = annotations[i][id].variable;
       if (variable !== annotation) continue;
-      const annotationValue = annotations[i][variable].value;
+      const annotationValue = annotations[i][id].value;
 
       const a = {
         annotationValue,
         //unitIndex: Number(i),
-        span: annotations[i][variable].span,
-        variables: { [variable]: annotations[i][variable].value },
+        span: annotations[i][id].span,
+        variables: { [variable]: annotations[i][id].value },
       };
 
       if (textUnit === "document" || textUnit === "span") {

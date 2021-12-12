@@ -90,8 +90,7 @@ const CodesEditor = ({ codes, setCodes, questions, question, canAdd = true, heig
               Codebook
             </Table.HeaderCell>
             <Table.HeaderCell style={{ textAlign: "right" }}>
-              {/* {makesIrrelevantHeader(questions)} */}
-              <div style={{ marginRight: "18px" }}>
+              <div hidden={question == null} style={{ marginRight: "18px" }}>
                 Branching
                 <Help
                   header="Make other questions conditional on this answer"

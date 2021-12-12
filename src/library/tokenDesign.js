@@ -31,3 +31,42 @@ export const getColorGradient = (colors) => {
 
   return color;
 };
+
+export const getColorGradient2 = (colors) => {
+  //console.log(colors);
+  // colors is an array of colors, but can also have nested arrays
+  // colorgradient will show a rainbow of all colors in order, with a sub-rainbow for nested arrays
+
+  if (colors.length === 1) {
+    if (typeof colors[0] === "object") {
+      if (colors[0].length === 1) return colors[0][0];
+    } else return colors[0];
+  }
+
+  const pct = Math.floor(100 / colors.length);
+  const gradient = [];
+  for (let i = 0; i < colors.length; i++) {
+    let subcolors = colors[i];
+    if (typeof subcolors !== "object") subcolors = [subcolors];
+
+    for (let j = 0; j < subcolors.length; j++) {
+      let subcolor = subcolors[j];
+      const subpct = Math.floor(pct / subcolors.length);
+
+      // first color
+      if (i === 0 && j === 0) gradient.push(subcolor + ` ${subpct}%`);
+
+      // middle color
+      if (i > 0 && i < colors.length - 1 && j < subcolors.length - 1) {
+        gradient.push(subcolor + ` ${i * pct + j * subpct}%`);
+        gradient.push(subcolor + ` ${i * pct + (j + 1) * subpct}%`);
+      }
+
+      // last color
+      if (i === colors.length - 1 && j === subcolors.length - 1)
+        gradient.push(subcolor + ` ${100 - subpct}%`);
+    }
+  }
+
+  return `linear-gradient(to bottom, ${gradient.join(", ")})`;
+};
