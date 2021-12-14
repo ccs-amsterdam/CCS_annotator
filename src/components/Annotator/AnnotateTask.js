@@ -53,7 +53,7 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
       <Grid.Column width={10} style={{ paddingRight: "0em", paddingTop: "0", height: "100%" }}>
         <Button.Group fluid style={{ padding: "0", height: "40px" }}>
           <SettingsPopup settings={settings} setSettings={setSettings} />
-          <Instructions codebook={codebook} />
+          <UserManual codebook={codebook} />
           <NextUnitButton setUnitIndex={setUnitIndex} />
         </Button.Group>
         <div style={{ height: "calc(100% - 40px", fontSize: `${settings.textSize}em` }}>
@@ -139,7 +139,7 @@ const NextUnitButton = ({ setUnitIndex }) => {
   );
 };
 
-const Instructions = () => {
+const UserManual = () => {
   const fullScreenNode = useSelector((state) => state.fullScreenNode);
 
   const [open, setOpen] = useState(false);
@@ -152,11 +152,11 @@ const Instructions = () => {
       position="bottom left"
       trigger={
         <Button secondary size="tiny" onClick={() => setOpen(!open)}>
-          Instructions
+          Controls
         </Button>
       }
     >
-      <Modal.Header>Instructions</Modal.Header>
+      <Modal.Header>Controls</Modal.Header>
       <Modal.Content>
         <Container
           style={{

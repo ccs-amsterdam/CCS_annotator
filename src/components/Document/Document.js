@@ -106,7 +106,7 @@ const Document = ({
         variableMap={variableMap}
         annotations={annotations}
         disableAnnotations={!onChangeAnnotations || !variableMap}
-        editMode={settings?.editMode}
+        editMode={settings?.editMode || variable === "ALL"}
         triggerCodeSelector={triggerCodeSelector}
         triggerCodeEditor={triggerCodeEditor}
         eventsBlocked={codeSelectorOpen || codeEditorOpen || blockEvents}
