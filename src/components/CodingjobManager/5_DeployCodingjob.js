@@ -143,6 +143,7 @@ const AmcatDeploy = ({ codingjobPackage }) => {
     try {
       console.log(codingjobPackage);
       const id = await amcat.postCodingjob(codingjobPackage, title);
+      console.log(id);
       const url = `${amcat.host}/codingjob/${id.data.id}`;
       db.createDeployedJob(title, url);
     } catch (e) {

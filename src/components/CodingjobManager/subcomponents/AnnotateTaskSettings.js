@@ -1,15 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-import { Form, Radio, Icon, Checkbox } from "semantic-ui-react";
+import { Form, Radio, Icon, Checkbox, TextArea } from "semantic-ui-react";
 
 import CodesEditor from "./CodesEditor";
 import { standardizeCodes } from "library/codebook";
 import VariableMenu from "./VariableMenu";
 
 import Help from "components/CodingjobManager/subcomponents/Help";
+import { useDispatch } from "react-redux";
+import { blockEvents } from "actions";
 
 const variableDefaultSettings = {
   name: "Variable name",
+  instruction: "This is what you need to do",
   buttonMode: "all",
   searchBox: false,
   singleCode: false,
@@ -27,25 +30,58 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
   };
 
   return (
-    <VariableMenu
-      variables={taskSettings.annotate.variables}
-      setVariables={setVariables}
-      index={variableIndex}
-      setIndex={setVariableIndex}
-      newVariableDefaults={variableDefaultSettings}
-    >
-      <br />
-      <AnnotateForm
-        taskSettings={taskSettings}
-        setTaskSettings={setTaskSettings}
-        variableIndex={variableIndex}
-      />{" "}
-    </VariableMenu>
+    <>
+      <h3>Global settings</h3>
+      <GlobalAnnotateSettings taskSettings={taskSettings} setTaskSettings={setTaskSettings} />
+      <h3>Variables</h3>
+      <VariableMenu
+        variables={taskSettings.annotate.variables}
+        setVariables={setVariables}
+        index={variableIndex}
+        setIndex={setVariableIndex}
+        newVariableDefaults={variableDefaultSettings}
+      >
+        <br />
+        <AnnotateForm
+          taskSettings={taskSettings}
+          setTaskSettings={setTaskSettings}
+          variableIndex={variableIndex}
+        />{" "}
+      </VariableMenu>
+    </>
+  );
+};
+
+const GlobalAnnotateSettings = ({ taskSettings, setTaskSettings }) => {
+  console.log(taskSettings);
+  const globalSettings = taskSettings?.annotate?.settings;
+  const setGlobalSettings = (settings) => {
+    setTaskSettings({
+      ...taskSettings,
+      annotate: { settings, variables: taskSettings.annotate.variables },
+    });
+  };
+
+  if (!globalSettings) return null;
+
+  return (
+    <Form>
+      <Form.Group>
+        <Form.Field>
+          <Checkbox
+            label="Only edit existing annotations"
+            checked={globalSettings.editMode}
+            onChange={(e, d) => setGlobalSettings({ ...globalSettings, editMode: d.checked })}
+          />
+        </Form.Field>
+      </Form.Group>
+    </Form>
   );
 };
 
 const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
   const annotateForm = taskSettings.annotate.variables[variableIndex];
+
   const setAnnotateForm = (value) => {
     const newTaskSettings = { ...taskSettings };
     const newValue = { ...value };
@@ -63,16 +99,10 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
     );
   };
 
-  if (!taskSettings?.annotate?.variables?.[variableIndex]) return null;
-
-  return (
-    <Form>
-      <Form.Group>
-        <Icon name="setting" />
-        <label>Code Selector settings</label>
-      </Form.Group>
-
-      <Form.Group>
+  const codeSelectorConditionalFields = () => {
+    if (annotateForm.enabled == null) {
+      // if not imported (only imported have enabled key)
+      return (
         <Form.Field>
           <Checkbox
             label="Single code (only select)"
@@ -80,7 +110,33 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
             onChange={(e, d) => setAnnotateForm({ ...annotateForm, singleCode: d.checked })}
           />
         </Form.Field>
+      );
+    } else {
+      return null;
+      // return (
+      //   <Form.Field>
+      //     <Checkbox
+      //       label="Only edit existing spans"
+      //       checked={annotateForm.editMode}
+      //       onChange={(e, d) => setAnnotateForm({ ...annotateForm, editMode: d.checked })}
+      //     />
+      //   </Form.Field>
+      // );
+    }
+  };
+
+  if (!taskSettings?.annotate?.variables?.[variableIndex]) return null;
+
+  return (
+    <Form>
+      <InstructionInputField annotateForm={annotateForm} setAnnotateForm={setAnnotateForm} />
+
+      <Form.Group>
+        <Icon name="setting" />
+        <label>Code Selector settings</label>
       </Form.Group>
+
+      <Form.Group>{codeSelectorConditionalFields()}</Form.Group>
 
       <Form.Group grouped style={{ display: annotateForm.singleCode ? "none" : "block" }}>
         <label>Code buttons</label>
@@ -136,6 +192,38 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
         {codesEditor()}
       </div>
     </Form>
+  );
+};
+
+const InstructionInputField = ({ annotateForm, setAnnotateForm }) => {
+  const [instruction, setInstruction] = useState(annotateForm.instruction || "");
+  const dispatch = useDispatch(); // needed to block key events from preview window
+
+  useEffect(() => {
+    if (!instruction) return;
+    if (annotateForm.instruction === instruction) return;
+    const timer = setTimeout(() => {
+      setAnnotateForm({ ...annotateForm, instruction });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [instruction, annotateForm, setAnnotateForm]);
+
+  useEffect(() => {
+    setInstruction(annotateForm.instruction);
+  }, [annotateForm]);
+
+  return (
+    <Form.Group grouped>
+      <label>Instruction</label>
+      <Form.Field>
+        <TextArea
+          value={instruction}
+          onFocus={() => dispatch(blockEvents(true))}
+          onBlur={() => dispatch(blockEvents(false))}
+          onChange={(e, d) => setInstruction(d.value)}
+        />
+      </Form.Field>
+    </Form.Group>
   );
 };
 

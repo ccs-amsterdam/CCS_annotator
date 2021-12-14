@@ -22,6 +22,7 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
   const [variableMap, setVariableMap] = useState(null);
   const [cookies, setCookie] = useCookies(["annotateTaskSettings"]);
   const [settings, setSettings] = useState(cookies.annotateTaskSettings || { textSize: 1 });
+  const [tokens, setTokens] = useState(null);
 
   useEffect(() => {
     setCookie("annotateTaskSettings", JSON.stringify(settings), { path: "/" });
@@ -58,8 +59,10 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
         <div style={{ height: "calc(100% - 40px", fontSize: `${settings.textSize}em` }}>
           <Document
             unit={unit}
+            settings={codebook?.settings}
             variables={codebook?.variables}
             onChangeAnnotations={setAnnotations}
+            returnTokens={setTokens}
             blockEvents={blockEvents}
           />
         </div>
@@ -72,7 +75,7 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
           height: "100%",
         }}
       >
-        <AnnotateTable variableMap={variableMap} annotations={annotations} />
+        <AnnotateTable tokens={tokens} variableMap={variableMap} annotations={annotations} />
       </Grid.Column>
     </Grid>
   );

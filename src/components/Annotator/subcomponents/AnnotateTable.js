@@ -4,7 +4,7 @@ import { getColor } from "library/tokenDesign";
 
 const COLWIDTHS = [4, 4, 2, 2]; // for offset and text
 
-const AnnotateTable = ({ variableMap, annotations }) => {
+const AnnotateTable = ({ tokens, variableMap, annotations }) => {
   if (!variableMap || Object.keys(variableMap).length === 0) return null;
 
   return (
@@ -39,13 +39,13 @@ const AnnotateTable = ({ variableMap, annotations }) => {
         className="annotations-tbody"
         style={{ overflow: "auto", height: "calc(100% - 40px)" }}
       >
-        {annotationRows(variableMap, annotations)}
+        {annotationRows(tokens, variableMap, annotations)}
       </Table.Body>
     </Table>
   );
 };
 
-const annotationRows = (variableMap, annotations) => {
+const annotationRows = (tokens, variableMap, annotations) => {
   const rows = [];
   let i = 0;
   for (const annotation of annotations) {
@@ -60,16 +60,17 @@ const annotationRows = (variableMap, annotations) => {
         text={text}
       />
     );
-    rows.push(row);
+    if (row !== null) rows.push(row);
     i++;
   }
   return rows;
 };
 
 const AnnotationRow = ({ variable, variableMap, annotation, text }) => {
-  if (!variableMap?.[variable]?.codeMap) return null;
+  if (!variableMap?.[annotation.variable]?.codeMap) return null;
 
   const codeMap = variableMap[variable].codeMap;
+  if (!codeMap?.[annotation.value] || !codeMap[annotation.value].active) return null;
   const color = getColor(annotation.value, codeMap);
   const label = codeMap[annotation.value]?.foldToParent
     ? `${codeMap[annotation.value].foldToParent} - ${annotation.value}`

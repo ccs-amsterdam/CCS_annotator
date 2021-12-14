@@ -103,7 +103,10 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
         </div>
         <SettingsPopup settings={settings} setSettings={setSettings} />
       </div>
-      <div {...menuSwipe} style={{ height: `${100 - settings.splitHeight}%` }}>
+      <div
+        {...menuSwipe}
+        style={{ height: `${100 - settings.splitHeight}%` }}
+      >
         <QuestionForm
           unit={unit}
           tokens={tokens}

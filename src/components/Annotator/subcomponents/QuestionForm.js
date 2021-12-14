@@ -88,6 +88,8 @@ const QuestionForm = ({
           maxHeight: "100%",
           padding: "10px",
           color: "white",
+          borderBottomLeftRadius: "30px",
+          borderBottomRightRadius: "30px",
           backgroundColor: "#1B1C1D",
         }}
       >
@@ -244,6 +246,7 @@ const AnswerSegment = ({
           height: "100%",
           width: "100%",
           margin: "0",
+
           background: answerTransition.color,
 
           justifyContent: "center",
@@ -263,6 +266,8 @@ const AnswerSegment = ({
           overflowY: "auto",
           height: "100%",
           width: "100%",
+          borderBottomLeftRadius: "10px",
+          borderBottomRightRadius: "10px",
           margin: "0",
         }}
       >

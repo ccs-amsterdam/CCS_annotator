@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import AnnotateNavigation from "./subcomponents/AnnotateNavigation";
 import Tokens from "./subcomponents/Tokens";
 import useCodeSelector from "./subcomponents/useCodeSelector";
+import useCodeEditor from "./subcomponents/useCodeEditor";
 import { useSelector } from "react-redux";
 import { exportSpanAnnotations } from "library/annotations";
 import useUnit from "./subcomponents/useUnit";
@@ -15,10 +16,7 @@ import "components/Document/documentStyle.css";
  * and easy to use, but behind the scenes it gets dark real fast.
  * @param {*} unit     A unit object, as created in JobServerClass (or standardizeUnit)
  * @param {*} variables An object with variables, where each variable is an array of codes
- * @param {*} settings An object with settings. Currently supports:
- *                     - centerVertical: true/false      whether text is centered verticall
- *                     - buttonMode: "all"/"recent"      show all or only recent selected options as button
- *                     - rowSize: number                 number of buttons per row
+ * @param {*} settings An object with settings. Supports "editMode" (and probably more to come)
  * @param {*} onChangeAnnotations An optional function for saving annotations.
  *                              If not given, users cannot make annotations
  * @param {*} returnTokens   An optional function for getting access to the tokens array
@@ -31,6 +29,7 @@ import "components/Document/documentStyle.css";
 const Document = ({
   unit,
   variables, //codes,
+  settings,
   onChangeAnnotations,
   returnTokens,
   setReady,
@@ -39,21 +38,30 @@ const Document = ({
   const fullScreenNode = useSelector((state) => state.fullScreenNode);
   const safetyCheck = useRef(null); // ensures only new annotations for the current unit are passed to onChangeAnnotations
   const [variable, setVariable] = useState(null);
-
-  // needs to be an option in annotate task. Disables annotations, and only allows editing existing annotations
-  // needs to be combined with feature to disable delete and allows multiple choice selection
-  // only issue is what to do if no items are selected in multiple choice. Maybe force there to be a "none" code?
-  const editMode = false;
+  const [codeHistory, setCodeHistory] = useState({});
 
   const [tokensReady, setTokensReady] = useState(0);
-  const [preparedUnit, annotations, setAnnotations] = useUnit(unit, safetyCheck, returnTokens);
-  const [popup, triggerCodePopup, variableMap, codeSelectorOpen] = useCodeSelector(
+  const [preparedUnit, annotations, setAnnotations] = useUnit(
+    unit,
+    safetyCheck,
+    returnTokens,
+    setCodeHistory
+  );
+  const [codeSelector, triggerCodeSelector, variableMap, codeSelectorOpen] = useCodeSelector(
     preparedUnit.tokens,
     variables,
     variable,
     annotations,
     setAnnotations,
+    codeHistory,
+    setCodeHistory,
     fullScreenNode
+  );
+  const [codeEditor, triggerCodeEditor, codeEditorOpen] = useCodeEditor(
+    preparedUnit.tokens,
+    annotations,
+    variableMap,
+    triggerCodeSelector
   );
 
   useEffect(() => {
@@ -78,33 +86,36 @@ const Document = ({
 
   if (!preparedUnit.tokens) return null;
   return (
-    <>
+    <div style={{ display: "flex", height: "100%", maxHeight: "100%", flexDirection: "column" }}>
       <Tokens
         tokens={preparedUnit.tokens}
         text_fields={preparedUnit.text_fields}
         meta_fields={preparedUnit.meta_fields}
         setReady={setTokensReady}
-        height={variables && variables.length > 1 ? "calc(100% - 30px)" : "100%"}
+        maxHeight={variables && variables.length > 1 ? "calc(100% - 60px)" : "calc(100% - 30px)"}
+        editMode={settings.editMode}
       />
       <SelectVariable
         variables={variables}
         variable={variable}
         setVariable={setVariable}
-        height={"30px"}
+        minHeight={variables && variables.length > 1 ? 60 : 30} //'px'
       />
       <AnnotateNavigation
         tokens={preparedUnit.tokens}
         variableMap={variableMap}
         annotations={annotations}
-        triggerCodePopup={triggerCodePopup}
-        eventsBlocked={codeSelectorOpen || blockEvents}
+        disableAnnotations={!onChangeAnnotations || !variableMap}
+        editMode={settings?.editMode}
+        triggerCodeSelector={triggerCodeSelector}
+        triggerCodeEditor={triggerCodeEditor}
+        eventsBlocked={codeSelectorOpen || codeEditorOpen || blockEvents}
         fullScreenNode={fullScreenNode}
-        disableAnnotations={editMode || !onChangeAnnotations || !variableMap}
-        editMode={editMode}
       />
 
-      {popup || null}
-    </>
+      {codeSelector || null}
+      {codeEditor || null}
+    </div>
   );
 };
 

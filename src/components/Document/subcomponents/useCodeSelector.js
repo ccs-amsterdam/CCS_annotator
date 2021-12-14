@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Dropdown, Grid, Icon, Popup, Ref } from "semantic-ui-react";
+import { Button, Dropdown, Icon, Popup, Ref } from "semantic-ui-react";
 import { toggleSpanAnnotation } from "library/annotations";
 import { codeBookEdgesToMap } from "library/codebook";
 import { getColor, getColorGradient } from "library/tokenDesign";
@@ -13,6 +13,8 @@ const useCodeSelector = (
   selectedVariable,
   annotations,
   setAnnotations,
+  codeHistory,
+  setCodeHistory,
   fullScreenNode
 ) => {
   const [open, setOpen] = useState(false);
@@ -24,8 +26,6 @@ const useCodeSelector = (
 
   const [fullVariableMap, setFullVariableMap] = useState(null);
   const [variableMap, setVariableMap] = useState(null);
-
-  const [codeHistory, setCodeHistory] = useState({});
 
   useEffect(() => {
     // creates fullVariableMap
@@ -44,9 +44,9 @@ const useCodeSelector = (
       }, {});
       vm[variable.name] = { ...variable, codeMap: cm };
     }
+
     setFullVariableMap(vm);
-    setCodeHistory({});
-  }, [variables, setFullVariableMap, setCodeHistory]);
+  }, [variables, setFullVariableMap]);
 
   useEffect(() => {
     // creates the actually used variableMap from the fullVariableMap
@@ -55,14 +55,21 @@ const useCodeSelector = (
       setVariableMap(null);
       return;
     }
+    setVariable(null);
     if (selectedVariable === null || selectedVariable === "ALL") {
       setVariableMap(fullVariableMap);
-      setVariable(null);
     } else {
       setVariableMap({ [selectedVariable]: fullVariableMap[selectedVariable] });
-      setVariable(selectedVariable);
     }
   }, [fullVariableMap, selectedVariable, setVariable, setVariableMap]);
+
+  const triggerFunction = (index, selection) => {
+    if (!tokens[index].ref) return;
+    setTokenRef(tokens[index].ref);
+    setTokenAnnotations(annotations[index] || {});
+    setSelection(selection || { index }); // if selection is empty, pass index, and get selection in selectVariablePage
+    setOpen(true);
+  };
 
   useEffect(() => {
     setOpen(false);
@@ -73,14 +80,6 @@ const useCodeSelector = (
   }, [open]);
 
   if (!variables) return [null, null, null, true];
-
-  const triggerFunction = (index, selection) => {
-    if (!tokens[index].ref) return;
-    setTokenRef(tokens[index].ref);
-    setTokenAnnotations(annotations[index] || {});
-    setSelection(selection || { index }); // if selection is empty, pass index, and get selection in selectVariablePage
-    setOpen(true);
-  };
 
   let popup = (
     <CodeSelectorPopup
@@ -107,7 +106,6 @@ const useCodeSelector = (
         variable={variable}
         variableMap={variableMap}
         existing={existing}
-        codeMap={variableMap?.[variable]?.codeMap}
         settings={variableMap?.[variable]}
         codeHistory={codeHistory[variable] || []}
         annotations={tokenAnnotations}
@@ -132,29 +130,51 @@ const CodeSelectorPopup = ({
   tokenRef,
   existing,
 }) => {
-  const [hasOpened, setHasOpened] = useState(false);
+  const popupMargin = "5px";
+  let position = "top left";
+  let maxHeight = "100vh";
+  if (tokenRef?.current) {
+    // determine popup position and maxHeight/maxWidth
+    const bc = tokenRef.current.getBoundingClientRect();
+    const topSpace = bc.top / window.innerHeight;
+    const bottomSpace = (window.innerHeight - bc.bottom) / window.innerHeight;
+    if (topSpace > bottomSpace) {
+      position = "top";
+      maxHeight = `calc(${topSpace * 100}vh - ${popupMargin})`;
+    } else {
+      position = "bottom";
+      maxHeight = `calc(${bottomSpace * 100}vh - ${popupMargin})`;
+    }
+    const leftSpace = bc.left / window.innerWidth;
+    const rightSpace = (window.innerWidth - bc.right) / window.innerWidth;
+    position = rightSpace > leftSpace ? position + " left" : position + " right";
+  }
 
   return (
     <Popup
       mountNode={fullScreenNode || undefined}
       context={tokenRef}
+      basic
       wide
+      position={position}
       hoverable
       open={open}
       mouseLeaveDelay={10000000} // just don't use mouse leave
-      onOpen={() => setHasOpened(true)}
-      onClose={() => {
-        if (hasOpened) {
-          setOpen(false);
-        }
+      onClose={() => {}}
+      style={{
+        margin: popupMargin,
+        padding: "0px",
+        minWidth: "15em",
+        maxHeight,
+        overflow: "auto",
       }}
-      style={{ padding: "0px", minWidth: "15em" }}
     >
       <div
         style={{
           minWidth: "12em",
           textAlign: "center",
           overflow: "auto",
+          margin: "0",
           background: "#1B1C1D",
           color: "white",
           border: "1px solid",
@@ -178,7 +198,7 @@ const CodeSelectorPopup = ({
           }}
         />
       </div>
-      <div style={{ margin: "1em", border: "0px" }}>{children}</div>
+      <div style={{ margin: "5px", border: "0px" }}>{children}</div>
     </Popup>
   );
 };
@@ -214,24 +234,6 @@ const SelectVariablePage = ({
         setExisting([]);
       }
     }
-    // remove edit mode.
-    // instead, make mode where annotations are disabled, but there are popups with buttons for imported annotations
-
-    // } else {
-
-    //   // selection can not have a span in editMode. In this case, there can be only one annotation for
-    //   // a given variable, and we want to take the position of this annotation as the selection
-    //   // also, note that there HAS to be an annotation on the current index for this to happen
-    //   const annotation = annotations[selection.index][variable];
-    //   setSelection({
-    //     index: selection.index,
-    //     span: annotation.span,
-    //     length: annotation.length,
-    //     section: annotation.section,
-    //     offset: annotation.offset,
-    //   });
-    //   setExisting([{ variable, ...annotation }]);
-    // }
 
     setVariable(variable);
   };
@@ -252,7 +254,7 @@ const SelectVariablePage = ({
       }
       variableColors[v] = getColorGradient(Object.values(colors));
     }
-
+    console.log(variableColors);
     return variables.map((variable) => ({
       color: variableColors[variable],
       label: variable,
@@ -349,7 +351,6 @@ const NewCodePage = ({
   const getOptions = () => {
     const buttonOptions = [];
     const dropdownOptions = [];
-    const historyN = 5; // maybe make this a setting
     const codeMap = variableMap?.[variable]?.codeMap;
 
     // const existingValueCount = Object.values(existing).reduce((em, e) => {
@@ -390,15 +391,18 @@ const NewCodePage = ({
 
     // use 'recent' mode if specified, or if settings are missing
     if (!settings || settings.buttonMode === "recent") {
+      let nRecent = 9;
       for (let code of codeHistory) {
-        if (buttonOptions.length > historyN) break;
+        if (nRecent < 0) break;
+        if (!codeMap[code]) continue;
         buttonOptions.push({ key: code, label: code, value: code, color: getColor(code, codeMap) });
+        nRecent--;
       }
     }
 
     if (existing && existing.length > 0) {
       for (let o of existing) {
-        console.log(o);
+        if (!codeMap[o.value]) continue;
         let text = tokens.slice(o.span[0], o.span[1] + 1).map((t) => t.pre + t.text + t.post);
         if (text.length > 6) text = [text.slice(0, 3).join(""), " ... ", text.slice(-3).join("")];
         text = text.join("");
@@ -424,14 +428,17 @@ const NewCodePage = ({
     }
 
     return (
-      <ButtonSelection
-        id={"newCodePageButtons"}
-        active={focusOnButtons}
-        setAnnotations={setAnnotations}
-        options={options}
-        setOpen={setOpen}
-        callback={onButtonSelect}
-      />
+      <>
+        {settings.buttonMode === "recent" && codeHistory.length > 0 ? <b>Recent codes</b> : null}
+        <ButtonSelection
+          id={"newCodePageButtons"}
+          active={focusOnButtons}
+          setAnnotations={setAnnotations}
+          options={options}
+          setOpen={setOpen}
+          callback={onButtonSelect}
+        />
+      </>
     );
   };
 
@@ -444,47 +451,39 @@ const NewCodePage = ({
     // also, if buttonmode is 'recent', always show search box
     if (settings && !settings.searchBox && settings.buttonMode !== "recent") return null;
     return (
-      <>
-        <Grid>
-          <Grid.Column width={13} floated="left">
-            <Ref innerRef={textInputRef}>
-              <Dropdown
-                fluid
-                placeholder={"<type to search>"}
-                style={{ minWidth: "12em" }}
-                options={options}
-                open={!focusOnButtons}
-                search
-                selection
-                compact
-                selectOnNavigation={false}
-                minCharacters={0}
-                autoComplete={"on"}
-                onClick={() => setFocusOnButtons(false)}
-                onSearchChange={(e, d) => {
-                  if (d.searchQuery === "") setFocusOnButtons(true);
-                }}
-                onClose={() => setFocusOnButtons(true)}
-                onChange={(e, d) => {
-                  if (codeMap[d.value])
-                    updateAnnotations(
-                      annotations,
-                      variable,
-                      false,
-                      d.value,
-                      selection,
-                      setAnnotations,
-                      setOpen,
-                      codeHistory,
-                      setCodeHistory
-                    );
-                }}
-              />
-            </Ref>
-          </Grid.Column>
-        </Grid>
-        <br />
-      </>
+      <Ref innerRef={textInputRef}>
+        <Dropdown
+          fluid
+          placeholder={"<type to search>"}
+          style={{ minWidth: "12em", width: "100%", marginBottom: "10px" }}
+          options={options}
+          open={!focusOnButtons}
+          search
+          compact
+          selectOnNavigation={false}
+          minCharacters={0}
+          autoComplete={"on"}
+          onClick={() => setFocusOnButtons(false)}
+          onSearchChange={(e, d) => {
+            if (d.searchQuery === "") setFocusOnButtons(true);
+          }}
+          onClose={() => setFocusOnButtons(true)}
+          onChange={(e, d) => {
+            if (codeMap[d.value])
+              updateAnnotations(
+                annotations,
+                variable,
+                false,
+                d.value,
+                selection,
+                setAnnotations,
+                setOpen,
+                codeHistory,
+                setCodeHistory
+              );
+          }}
+        />
+      </Ref>
     );
   };
 
@@ -611,6 +610,7 @@ const ButtonSelection = ({
         <Button
           style={{
             flex: `1 1 auto`,
+            padding: "4px 2px",
             background: option.color,
             color: option.textColor || "black",
             border: "3px solid",
@@ -624,8 +624,8 @@ const ButtonSelection = ({
           onMouseOver={() => setSelected(i)}
           onClick={(e, d) => onClick(d.value)}
         >
-          <Icon name={option.icon} />
-          {" " + option.label}
+          {option.icon ? <Icon name={option.icon} /> : null}
+          {option.label}
         </Button>
       </Ref>
     );
@@ -650,7 +650,7 @@ const ButtonSelection = ({
         <div key={id + "1"} style={{ display: "flex", flexWrap: "wrap" }}>
           {selectButtons}
         </div>
-        <div key={id + "2"} style={{ display: "flex", flexWrap: "wrap", marginTop: "20px" }}>
+        <div key={id + "2"} style={{ display: "flex", flexWrap: "wrap", marginTop: "10px" }}>
           {deleteButtons}
         </div>
       </>
@@ -689,7 +689,10 @@ const updateAnnotations = (
     return toggleSpanAnnotation(newstate, newAnnotation, false);
   });
   setCodeHistory((state) => {
-    return { ...state, [variable]: [value, ...codeHistory.filter((v) => v !== value)].slice(0, 5) };
+    return {
+      ...state,
+      [variable]: [value, ...codeHistory.filter((v) => v !== value)],
+    };
   });
   setOpen(false);
 };

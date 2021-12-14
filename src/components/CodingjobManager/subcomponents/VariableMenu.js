@@ -21,6 +21,15 @@ const VariableMenu = ({
     setVariables(variables);
   };
 
+  const importedCode = () => {
+    if (variables[index].enabled == null) return null;
+    return (
+      <h4>
+        <i>Imported annotations</i>
+      </h4>
+    );
+  };
+
   return (
     <div>
       <Menu attached="top" style={{ width: "100%", overflowX: "auto" }}>
@@ -77,6 +86,7 @@ const VariableMenu = ({
         />
       </Menu>
       <Segment attached="bottom" style={{ padding: "1em" }}>
+        {importedCode()}
         <DeleteButton
           variables={variables}
           setVariables={setVariables}
@@ -125,6 +135,7 @@ const ChangeName = ({ variables, setVariables, index }) => {
         <label>Name</label> <span style={{ fontSize: "10px" }}>(keep it short)</span>
         <Form.Field>
           <Input
+            disabled={variables[index].enabled != null}
             value={delayedName}
             style={{ width: "150px" }}
             onFocus={() => dispatch(blockEvents(true))}

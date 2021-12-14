@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AnnotationEvents } from "./AnnotationEvents";
-import { Popup, List, ButtonGroup, Button } from "semantic-ui-react";
+import { Popup, List } from "semantic-ui-react";
 import { getColor, getColorGradient } from "library/tokenDesign";
 
 /**
@@ -12,20 +12,20 @@ const AnnotateNavigation = ({
   tokens,
   variableMap,
   annotations,
-  triggerCodePopup,
-  eventsBlocked,
-  fullScreenNode,
   disableAnnotations,
   editMode,
+  triggerCodeSelector,
+  triggerCodeEditor,
+  eventsBlocked,
+  fullScreenNode,
 }) => {
   const [currentToken, setCurrentToken] = useState({ i: null });
   const [tokenSelection, setTokenSelection] = useState([]);
-  const [editCodePopup, triggerEditCodePopup] = useEditCodePopup(tokens, triggerCodePopup);
 
   useEffect(() => {
     if (!variableMap) return null;
-    showAnnotations(tokens, annotations, variableMap, editMode ? triggerEditCodePopup : null);
-  }, [tokens, annotations, variableMap, editMode, triggerEditCodePopup]);
+    showAnnotations(tokens, annotations, variableMap, editMode);
+  }, [tokens, annotations, variableMap, editMode]);
 
   useEffect(() => {
     showSelection(tokens, tokenSelection);
@@ -33,7 +33,6 @@ const AnnotateNavigation = ({
 
   return (
     <>
-      {editCodePopup}
       <AnnotationPopup
         tokens={tokens}
         currentToken={currentToken}
@@ -49,7 +48,8 @@ const AnnotateNavigation = ({
           setCurrentToken={setCurrentToken}
           tokenSelection={tokenSelection}
           setTokenSelection={setTokenSelection}
-          triggerCodePopup={triggerCodePopup}
+          triggerCodePopup={editMode ? triggerCodeEditor : triggerCodeSelector}
+          editMode={editMode}
           eventsBlocked={eventsBlocked}
         />
       )}
@@ -57,7 +57,7 @@ const AnnotateNavigation = ({
   );
 };
 
-const showAnnotations = (tokens, annotations, variableMap, triggerEditCodePopup) => {
+const showAnnotations = (tokens, annotations, variableMap, editMode) => {
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
     if (!token.ref?.current) continue;
@@ -66,89 +66,19 @@ const showAnnotations = (tokens, annotations, variableMap, triggerEditCodePopup)
     if (!tokenAnnotations || Object.keys(tokenAnnotations).length === 0) {
       if (token.ref.current.classList.contains("annotated")) {
         token.ref.current.classList.remove("annotated");
-        setTokenColor(token, null, null, null);
         token.ref.current.style.cursor = "default";
-        token.ref.current.onclick = undefined;
+        setTokenColor(token, null, null, null);
       }
       continue;
     }
 
     annotateToken(token, tokenAnnotations, variableMap);
 
-    if (triggerEditCodePopup) {
-      // is only !null in editMode
+    if (editMode) {
+      // in edit mode, make annotations look clickable
       token.ref.current.style.cursor = "pointer";
-      token.ref.current.onclick = () => triggerEditCodePopup(tokenAnnotations, token);
     }
   }
-};
-
-const useEditCodePopup = (tokens, triggerCodePopup) => {
-  // Given annotations, looks up all spans used.
-  // if only one unique span exists, directly triggers code popup
-  // if not, first open selection between spans
-  const [spans, setSpans] = useState({});
-  const [token, setToken] = useState(null);
-
-  useEffect(() => {
-    if (Object.keys(spans).length !== 1) return;
-    if (!token) return;
-    triggerCodePopup(token.index, Object.values(spans)[0]);
-    setSpans({});
-  }, [spans, token, setSpans, triggerCodePopup]);
-
-  const triggerEditCodePopup = (annotations, token) => {
-    const spans = Object.keys(annotations).reduce((obj, id) => {
-      const span = annotations[id].span;
-      const text = tokens
-        .slice(span[0], span[1] + 1)
-        .map((t) => t.pre + t.text + t.post)
-        .join("");
-      if (!obj[text]) obj[text] = { ...annotations[id] };
-      return obj;
-    }, {});
-
-    console.log(spans);
-    setToken(token);
-    setSpans(spans);
-  };
-
-  const getPopup = () => {
-    if (!token) return null;
-    if (!spans) return null;
-    const nspans = Object.keys(spans).length;
-    if (nspans === 0) return null;
-    //if (nspans === 1)
-
-    //const test = { "lalala test this": true, "and thiss moweofijoef": true };
-
-    return (
-      <Popup
-        basic
-        position="top left"
-        style={{ margin: "4px", padding: "0px", border: "0px solid" }}
-        open={Object.keys(spans).length > 0}
-        onClose={() => setSpans({})}
-        context={token.ref}
-      >
-        <ButtonGroup vertical>
-          {Object.keys(spans).map((text) => {
-            return (
-              <Button
-                secondary
-                style={{ padding: "5px" }}
-                onClick={() => setSpans({ [text]: spans[text] })}
-              >
-                {text}
-              </Button>
-            );
-          })}
-        </ButtonGroup>
-      </Popup>
-    );
-  };
-
-  return [getPopup(), triggerEditCodePopup];
 };
 
 // in the current design imported span annotations are always expanded

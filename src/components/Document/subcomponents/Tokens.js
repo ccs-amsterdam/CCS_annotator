@@ -3,7 +3,7 @@ import { Ref } from "semantic-ui-react";
 import { scrollToMiddle } from "library/scroll";
 import Meta from "./Meta";
 
-const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
+const Tokens = ({ tokens, text_fields, meta_fields, setReady, maxHeight, editMode }) => {
   const [text, setText] = useState({});
   const containerRef = useRef(null);
 
@@ -22,28 +22,29 @@ const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
 
   useEffect(() => {
     if (!tokens) return null;
-    setText(renderText(tokens, text_fields));
+    setText(renderText(tokens, text_fields, containerRef));
     if (setReady) setReady((current) => current + 1); // setReady is an optional property used to let parents know the text is ready.
   }, [tokens, text_fields, setReady]);
 
   if (tokens === null) return null;
 
   return (
-    <div
-      key="tokens"
-      style={{
-        display: "flex",
-        alignItems: null,
-        height: height,
-      }}
-    >
-      <Ref innerRef={containerRef}>
+    <Ref innerRef={containerRef}>
+      <div
+        key="tokens"
+        style={{
+          flex: "1",
+          display: "flex",
+          alignItems: null,
+          overflow: "auto",
+          maxHeight: maxHeight,
+        }}
+      >
         <div
           className="TokensContainer"
           style={{
             flex: "1 97%",
             width: "100%",
-            overflowY: "auto",
           }}
         >
           {/* <div style={{ height: "10em" }} /> */}
@@ -59,12 +60,12 @@ const Tokens = ({ tokens, text_fields, meta_fields, setReady, height }) => {
           <div style={{ padding: "20px" }}>{text["text"]}</div>
           <div style={{ height: "25px" }} />
         </div>
-      </Ref>
-    </div>
+      </div>
+    </Ref>
   );
 };
 
-const renderText = (tokens, text_fields) => {
+const renderText = (tokens, text_fields, containerRef) => {
   const text = { text: [] }; // yes, it would make sense to just make text an array, but for some reason React doesn't accept it
   if (tokens.length === 0) return text;
 
@@ -113,7 +114,10 @@ const renderText = (tokens, text_fields) => {
     section_name = tokens[i].section;
     codingUnit = tokens[i].codingUnit;
 
+    // give each token the informatinon its element, container
+    tokens[i].containerRef = containerRef;
     if (codingUnit) tokens[i].ref = React.createRef();
+
     sentence.push(renderToken(tokens[i], codingUnit));
   }
 

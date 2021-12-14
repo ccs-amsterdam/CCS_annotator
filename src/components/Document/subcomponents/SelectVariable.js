@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Button } from "semantic-ui-react";
 
-const SelectVariable = ({ variables, variable, setVariable, height }) => {
+const SelectVariable = ({ variables, variable, setVariable, minHeight }) => {
   let variableNames = [];
   if (variables != null && variables?.length > 0) {
     variableNames = variables.map((v) => v.name);
@@ -37,8 +37,52 @@ const SelectVariable = ({ variables, variable, setVariable, height }) => {
     };
   });
 
-  if (!variables || variables.length <= 1) return null;
+  if (variable === null) setVariable(variableNames[0]);
+  if (!variables || variables.length === 0) {
+    setVariable(null);
+    return null;
+  }
+
+  const variableObj = variables.find((v) => v.name === variable);
+  let helpText = variableObj?.instruction;
+  if (variable === "ALL") helpText = "Show and edit all variables";
+
+  return (
+    <div
+      style={{
+        background: "#1277c469",
+        borderRadius: "10px",
+        textAlign: "center",
+      }}
+    >
+      <VariableButtons
+        variable={variable}
+        setVariable={setVariable}
+        variables={variables}
+        variableNames={variableNames}
+        minHeight={minHeight}
+      />
+      <p
+        style={{
+          margin: "0",
+          padding: "3px",
+        }}
+      >
+        {helpText}
+      </p>
+    </div>
+  );
+};
+
+const VariableButtons = ({ variable, setVariable, variables, variableNames, minHeight }) => {
+  if (!variables || variables.length === 1) {
+    setVariable(variables[0].name);
+    return null;
+  }
+
   const mapVariables = () => {
+    if (!variableNames.includes(variable)) setVariable(variableNames[0]);
+
     return variableNames.map((name) => {
       return (
         <Button
@@ -57,12 +101,12 @@ const SelectVariable = ({ variables, variable, setVariable, height }) => {
     });
   };
 
-  if (variable === null) setVariable(variableNames[0]);
-
   return (
-    <Button.Group fluid style={{ height }}>
-      {mapVariables()}
-    </Button.Group>
+    <>
+      <Button.Group attached="bottom" fluid style={{ minHeight: `${minHeight / 2}px` }}>
+        {mapVariables()}
+      </Button.Group>
+    </>
   );
 };
 

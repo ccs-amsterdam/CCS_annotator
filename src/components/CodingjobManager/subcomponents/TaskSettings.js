@@ -14,7 +14,7 @@ const defaultTaskSettings = {
 
   // annotate type settings
   annotate: {
-    settings: {},
+    settings: { editMode: false },
     variables: [
       {
         name: "Variable name",
