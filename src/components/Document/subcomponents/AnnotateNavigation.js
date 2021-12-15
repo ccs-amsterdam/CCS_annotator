@@ -15,7 +15,6 @@ const AnnotateNavigation = ({
   disableAnnotations,
   editMode,
   triggerCodeSelector,
-  triggerCodeEditor,
   eventsBlocked,
   fullScreenNode,
 }) => {
@@ -44,11 +43,12 @@ const AnnotateNavigation = ({
       {disableAnnotations ? null : (
         <AnnotationEvents
           tokens={tokens}
+          annotations={annotations}
           currentToken={currentToken}
           setCurrentToken={setCurrentToken}
           tokenSelection={tokenSelection}
           setTokenSelection={setTokenSelection}
-          triggerCodePopup={editMode ? triggerCodeEditor : triggerCodeSelector}
+          triggerCodePopup={triggerCodeSelector}
           editMode={editMode}
           eventsBlocked={eventsBlocked}
         />
@@ -195,54 +195,72 @@ const showSelection = (tokens, selection) => {
   }
 };
 
-const AnnotationPopup = ({
-  tokens,
-  currentToken,
-  annotations,
-  variableMap,
-  fullScreenNode,
-  onlyFirst,
-}) => {
-  if (!tokens?.[currentToken.i]?.ref) return null;
-  if (!annotations?.[tokens[currentToken.i].index]) return null;
-  if (!variableMap) return null;
+const AnnotationPopup = React.memo(
+  ({ tokens, currentToken, annotations, variableMap, fullScreenNode, onlyFirst }) => {
+    const [content, setContent] = useState(null);
+    const [refresh, setRefresh] = useState();
 
-  const tokenAnnotations = annotations[tokens[currentToken.i].index];
-  const ids = Object.keys(tokenAnnotations);
-  const codes = ids.map((id) => tokenAnnotations[id].value);
+    useEffect(() => {
+      if (
+        !tokens?.[currentToken.i]?.ref ||
+        !annotations?.[tokens[currentToken.i].index] ||
+        !variableMap
+      ) {
+        setContent(null);
+        return null;
+      }
 
-  return (
-    <Popup
-      mountNode={fullScreenNode || undefined}
-      context={tokens?.[currentToken.i]?.ref}
-      basic
-      hoverable={false}
-      position="top left"
-      mouseLeaveDelay={1}
-      open={true}
-      style={{ margin: "0", padding: "0", border: "1px solid" }}
-    >
-      <List>
-        {ids.map((id, i) => {
-          const variable = tokenAnnotations[id].variable;
-          if (onlyFirst && currentToken.i !== tokenAnnotations[id].span[0]) return null;
-          if (!variableMap[variable]) return null;
-          return (
-            <List.Item
-              key={i}
-              style={{
-                backgroundColor: getColor(codes[i], variableMap[variable].codeMap),
-                padding: "0.3em",
-              }}
-            >
-              <b>{variable}</b>
-              {": " + codes[i]}
-            </List.Item>
-          );
-        })}
-      </List>
-    </Popup>
-  );
-};
+      const tokenAnnotations = annotations[tokens[currentToken.i].index];
+      const ids = Object.keys(tokenAnnotations);
+      const list = ids.reduce((arr, id, i) => {
+        const variable = tokenAnnotations[id].variable;
+        const value = tokenAnnotations[id].value;
+        if (onlyFirst && currentToken.i !== tokenAnnotations[id].span[0]) return arr;
+        if (!variableMap[variable]) return arr;
+        const codeMap = variableMap[variable].codeMap;
+        if (!codeMap[value]) return arr;
+
+        arr.push(
+          <List.Item
+            key={i}
+            style={{
+              backgroundColor: getColor(value, codeMap),
+              padding: "0.3em",
+            }}
+          >
+            <b>{variable}</b>
+            {": " + value}
+          </List.Item>
+        );
+        return arr;
+      }, []);
+
+      setContent(<List>{list}</List>);
+      setRefresh(0);
+    }, [tokens, currentToken, annotations, onlyFirst, variableMap, setRefresh]);
+
+    // ugly hack, but popup won't scroll along, so refresh position at intervalls if content is not null
+    if (content) setTimeout(() => setRefresh(refresh + 1), 50);
+
+    return (
+      <Popup
+        mountNode={fullScreenNode || undefined}
+        context={tokens?.[currentToken.i]?.ref}
+        basic
+        hoverable={false}
+        position="top left"
+        mouseLeaveDelay={1}
+        open={true}
+        style={{
+          margin: "0",
+          padding: "0",
+          border: "1px solid",
+        }}
+      >
+        {content}
+      </Popup>
+    );
+  }
+);
 
 export default AnnotateNavigation;

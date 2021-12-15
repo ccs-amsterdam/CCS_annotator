@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import AnnotateNavigation from "./subcomponents/AnnotateNavigation";
 import Tokens from "./subcomponents/Tokens";
 import useCodeSelector from "./subcomponents/useCodeSelector";
-import useCodeEditor from "./subcomponents/useCodeEditor";
 import { useSelector } from "react-redux";
 import { exportSpanAnnotations } from "library/annotations";
 import useUnit from "./subcomponents/useUnit";
@@ -55,13 +54,8 @@ const Document = ({
     setAnnotations,
     codeHistory,
     setCodeHistory,
-    fullScreenNode
-  );
-  const [codeEditor, triggerCodeEditor, codeEditorOpen] = useCodeEditor(
-    preparedUnit.tokens,
-    annotations,
-    variableMap,
-    triggerCodeSelector
+    fullScreenNode,
+    settings?.editMode || variable === "EDIT ALL"
   );
 
   useEffect(() => {
@@ -95,6 +89,7 @@ const Document = ({
         maxHeight={variables && variables.length > 1 ? "calc(100% - 60px)" : "calc(100% - 30px)"}
         editMode={settings.editMode}
       />
+
       <SelectVariable
         variables={variables}
         variable={variable}
@@ -106,15 +101,12 @@ const Document = ({
         variableMap={variableMap}
         annotations={annotations}
         disableAnnotations={!onChangeAnnotations || !variableMap}
-        editMode={settings?.editMode || variable === "ALL"}
+        editMode={settings?.editMode || variable === "EDIT ALL"}
         triggerCodeSelector={triggerCodeSelector}
-        triggerCodeEditor={triggerCodeEditor}
-        eventsBlocked={codeSelectorOpen || codeEditorOpen || blockEvents}
+        eventsBlocked={codeSelectorOpen || blockEvents}
         fullScreenNode={fullScreenNode}
       />
-
       {codeSelector || null}
-      {codeEditor || null}
     </div>
   );
 };

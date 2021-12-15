@@ -3,7 +3,7 @@ import { Ref } from "semantic-ui-react";
 import { scrollToMiddle } from "library/scroll";
 import Meta from "./Meta";
 
-const Tokens = ({ tokens, text_fields, meta_fields, setReady, maxHeight, editMode }) => {
+const Tokens = ({ tokens, text_fields, meta_fields, setReady, maxHeight }) => {
   const [text, setText] = useState({});
   const containerRef = useRef(null);
 

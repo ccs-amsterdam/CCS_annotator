@@ -14,6 +14,7 @@ const arrowkeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
  */
 export const AnnotationEvents = ({
   tokens,
+  annotations,
   currentToken,
   setCurrentToken,
   tokenSelection,
@@ -35,7 +36,7 @@ export const AnnotationEvents = ({
       setHoldArrow(false);
       setHoldSpace(false);
     } else {
-      setTokenSelection([]);
+      setTokenSelection((state) => (state.length === 0 ? state : []));
     }
   }, [setHoldArrow, setHoldSpace, eventsBlocked, setTokenSelection]);
 
@@ -47,6 +48,7 @@ export const AnnotationEvents = ({
 
     let position = movePosition(
       tokens,
+      annotations,
       holdArrow,
       mover,
       HoldSpace,
@@ -71,7 +73,16 @@ export const AnnotationEvents = ({
         counter: mover.counter + 1,
       });
     }, delay);
-  }, [tokens, mover, holdArrow, HoldSpace, setCurrentToken, editMode, setTokenSelection]);
+  }, [
+    tokens,
+    mover,
+    holdArrow,
+    HoldSpace,
+    setCurrentToken,
+    editMode,
+    annotations,
+    setTokenSelection,
+  ]);
 
   if (!tokens || tokens.length === 0) return null;
 
@@ -270,24 +281,26 @@ const MouseEvents = ({
 
   const onMouseMove = (event) => {
     if (istouch.current) return;
+
     // When selection started (mousedown), select tokens hovered over
     if (!editMode && selectionStarted.current) {
       event.preventDefault();
       if (event.which !== 1 && event.which !== 0) return null;
-
       window.getSelection().empty();
       storeMouseSelection(getToken(tokens, event));
     } else {
       let currentNode = getToken(tokens, event);
       if (currentNode.index !== null) {
-        setCurrentToken((state) => ({
-          i: state === currentNode.index ? state : currentNode.index,
-        }));
+        setCurrentToken((state) => {
+          if (state.i === currentNode.index) return state;
+          return { i: currentNode.index };
+        });
         setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, false));
       } else
-        setCurrentToken((state) => ({
-          i: state === currentNode.index ? state : currentNode.index,
-        }));
+        setCurrentToken((state) => {
+          if (state.i === currentNode.index) return state;
+          return { i: currentNode.index };
+        });
     }
   };
 
@@ -297,6 +310,8 @@ const MouseEvents = ({
     // note that in case of a single click, the token has not been selected (this happens on move)
     // so this way a click can still be used to open
     if (event.which !== 1 && event.which !== 0) return null;
+    event.preventDefault();
+    event.stopPropagation();
     const currentNode = storeMouseSelection(getToken(tokens, event));
     window.getSelection().empty();
     //setHoldMouseLeft(false);
@@ -325,7 +340,10 @@ const MouseEvents = ({
 
   const storeMouseSelection = (currentNode) => {
     // select tokens that the mouse/touch is currently pointing at
-    setCurrentToken((state) => ({ i: state === currentNode.index ? state : currentNode.index }));
+    setCurrentToken((state) => {
+      if (state.i === currentNode.index) return state;
+      return { i: currentNode.index };
+    });
     setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, true));
     return currentNode.index;
   };
@@ -347,8 +365,42 @@ const annotationFromSelection = (tokens, selection, triggerCodePopup) => {
   triggerCodePopup(tokens[to].index, annotation);
 };
 
-const movePosition = (tokens, key, mover, space, editMode, setCurrentToken, setTokenSelection) => {
+const movePosition = (
+  tokens,
+  annotations,
+  key,
+  mover,
+  space,
+  editMode,
+  setCurrentToken,
+  setTokenSelection
+) => {
+  let newPosition;
+  if (!editMode) {
+    newPosition = moveToken(tokens, key, space, mover);
+  } else {
+    newPosition = moveAnnotation(tokens, annotations, key, mover);
+  }
+
+  if (mover.position !== newPosition) {
+    setCurrentToken((state) => ({ i: state === newPosition ? state : newPosition }));
+    setTokenSelection((state) => updateSelection(state, tokens, newPosition, !editMode && space));
+
+    const containerRef = tokens[newPosition].containerRef.current;
+    const tokenRef = tokens[newPosition].ref.current;
+    keepInView(containerRef, tokenRef);
+
+    // const down = key === "ArrowRight" || key === "ArrowDown";
+    // tokens[newPosition].ref.current.scrollIntoView(false, {
+    //   block: down ? "start" : "end",
+    // });
+  }
+  return newPosition;
+};
+
+const moveToken = (tokens, key, space, mover) => {
   let newPosition = mover.position;
+
   if (key === "ArrowRight") newPosition++;
   if (key === "ArrowLeft") newPosition--;
   if (key === "ArrowUp") newPosition = moveSentence(tokens, mover, "up");
@@ -371,33 +423,7 @@ const movePosition = (tokens, key, mover, space, editMode, setCurrentToken, setT
     }
   }
 
-  if (editMode && !tokens[newPosition]?.ref.current.classList.contains("annotated")) {
-    if (key === "ArrowRight" || key === "ArrowDown") {
-      const nextAnnotation = tokens.findIndex(
-        (token, i) =>
-          i > newPosition &&
-          (token?.ref?.current.classList.contains("allLeft") ||
-            token?.ref?.current.classList.contains("anyLeft"))
-      );
-      if (nextAnnotation < 0) return mover.position;
-      newPosition = nextAnnotation;
-    }
-    if (key === "ArrowLeft" || key === "ArrowUp") {
-      let prevAnnotation = -1;
-      // look for
-      for (let i = newPosition - 1; i >= 0; i--) {
-        const allLeft = tokens[i]?.ref?.current.classList.contains("allLeft");
-        const anyLeft = tokens[i]?.ref?.current.classList.contains("anyLeft");
-        if (!allLeft && !anyLeft) continue;
-        prevAnnotation = i;
-        break;
-      }
-      if (prevAnnotation < 0) return mover.position;
-      newPosition = prevAnnotation;
-    }
-  }
-
-  if (!editMode && space) {
+  if (space) {
     // limit selection to current section
     if (tokens[mover.position].section !== tokens[newPosition].section) {
       if (newPosition > mover.position) {
@@ -416,19 +442,37 @@ const movePosition = (tokens, key, mover, space, editMode, setCurrentToken, setT
       }
     }
   }
+  return newPosition;
+};
 
-  if (mover.position !== newPosition) {
-    setCurrentToken((state) => ({ i: state === newPosition ? state : newPosition }));
-    setTokenSelection((state) => updateSelection(state, tokens, newPosition, !editMode && space));
+const moveAnnotation = (tokens, annotations, key, mover) => {
+  let newPosition = mover.position;
 
-    const containerRef = tokens[newPosition].containerRef.current;
-    const tokenRef = tokens[newPosition].ref.current;
-    keepInView(containerRef, tokenRef);
-
-    // const down = key === "ArrowRight" || key === "ArrowDown";
-    // tokens[newPosition].ref.current.scrollIntoView(false, {
-    //   block: down ? "start" : "end",
-    // });
+  if (key === "ArrowRight" || key === "ArrowDown") {
+    const nextAnnotation = tokens.findIndex(
+      (token, i) =>
+        i > newPosition &&
+        token?.ref?.current.classList.contains("annotated") &&
+        (token?.ref?.current.classList.contains("allLeft") ||
+          token?.ref?.current.classList.contains("anyLeft"))
+    );
+    if (nextAnnotation < 0) return mover.position;
+    newPosition = nextAnnotation;
+  }
+  if (key === "ArrowLeft" || key === "ArrowUp") {
+    let prevAnnotation = -1;
+    // look for
+    for (let i = newPosition - 1; i >= -1; i--) {
+      const annotated = tokens[i]?.ref?.current.classList.contains("annotated");
+      if (!annotated) continue;
+      const allLeft = tokens[i]?.ref?.current.classList.contains("allLeft");
+      const anyLeft = tokens[i]?.ref?.current.classList.contains("anyLeft");
+      if (!allLeft && !anyLeft) continue;
+      prevAnnotation = i;
+      break;
+    }
+    if (prevAnnotation < 0) return mover.position;
+    newPosition = prevAnnotation;
   }
   return newPosition;
 };
@@ -501,12 +545,24 @@ const getTokenAttributes = (tokens, tokenNode) => {
   return parseInt(tokenNode.getAttribute("tokenindex"));
 };
 
+const returnSelectionIfChanged = (selection, newSelection) => {
+  // if it hasn't changed, return old to prevent updating the state
+  if (
+    newSelection.length > 0 &&
+    selection[0] === newSelection[0] &&
+    selection[1] === newSelection[1]
+  ) {
+    return selection;
+  }
+  return newSelection;
+};
+
 const updateSelection = (selection, tokens, index, add) => {
   if (index === null) return selection;
   let newSelection = [...selection];
 
-  if (!add || newSelection.length === 0) return [index, index];
-  if (index === null) return [newSelection[0], null];
+  if (!add || newSelection.length === 0) return returnSelectionIfChanged(selection, [index, index]);
+  if (index === null) return returnSelectionIfChanged(selection, [newSelection[0], null]);
 
   if (tokens[newSelection[0]].section === tokens[index].section) {
     newSelection = [newSelection[0], index];
@@ -523,13 +579,5 @@ const updateSelection = (selection, tokens, index, add) => {
       }
     }
   }
-  // if it hasn't changed, return old to prevent updating the state
-  if (
-    newSelection.length > 0 &&
-    selection[0] === newSelection[0] &&
-    selection[1] === newSelection[1]
-  ) {
-    return selection;
-  }
-  return newSelection;
+  return returnSelectionIfChanged(selection, newSelection);
 };

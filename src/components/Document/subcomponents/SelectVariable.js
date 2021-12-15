@@ -5,7 +5,7 @@ const SelectVariable = ({ variables, variable, setVariable, minHeight }) => {
   let variableNames = [];
   if (variables != null && variables?.length > 0) {
     variableNames = variables.map((v) => v.name);
-    variableNames.push("ALL");
+    variableNames.push("EDIT ALL");
   }
 
   const onKeyDown = (e) => {
@@ -45,7 +45,7 @@ const SelectVariable = ({ variables, variable, setVariable, minHeight }) => {
 
   const variableObj = variables.find((v) => v.name === variable);
   let helpText = variableObj?.instruction;
-  if (variable === "ALL") helpText = "Show and edit all variables";
+  if (variable === "EDIT ALL") helpText = "Show and edit all variables";
 
   return (
     <div
