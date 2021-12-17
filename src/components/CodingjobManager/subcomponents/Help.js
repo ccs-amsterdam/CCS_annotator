@@ -15,14 +15,15 @@ const Help = ({ children, header, texts, type }) => {
         size="mini"
         style={{
           position: "absolute",
+          transform: "scale(0.7)",
           marginTop: "-0.6em",
           marginLeft: "0.2em",
           paddingLeft: "0.1em",
           paddingRight: "0.1em",
           paddingTop: "0.2em",
           paddingBottom: "0.2em",
-          background: type === "warn" ? "orange" : "white",
-          color: "black",
+          background: type === "warn" ? "orange" : "blue",
+          color: "white",
           border: "1px solid grey",
         }}
       />

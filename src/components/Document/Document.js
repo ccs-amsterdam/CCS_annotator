@@ -2,10 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import AnnotateNavigation from "./subcomponents/AnnotateNavigation";
 import Tokens from "./subcomponents/Tokens";
 import useCodeSelector from "./subcomponents/useCodeSelector";
-import { useSelector } from "react-redux";
 import { exportSpanAnnotations } from "library/annotations";
 import useUnit from "./subcomponents/useUnit";
-import hash from "object-hash";
 import SelectVariable from "./subcomponents/SelectVariable";
 
 import "components/Document/documentStyle.css";
@@ -15,14 +13,16 @@ import "components/Document/documentStyle.css";
  * and easy to use, but behind the scenes it gets dark real fast.
  * @param {*} unit     A unit object, as created in JobServerClass (or standardizeUnit)
  * @param {*} variables An object with variables, where each variable is an array of codes
- * @param {*} settings An object with settings. Supports "editMode" (and probably more to come)
+ * @param {*} settings An object with settings. Supports "editAll" (and probably more to come)
  * @param {*} onChangeAnnotations An optional function for saving annotations.
  *                              If not given, users cannot make annotations
  * @param {*} returnTokens   An optional function for getting access to the tokens array
+ * @param {*} returnVariableMap An optional function for getting access to the variableMap
  * @param {*} setReady       A function for passing a boolean to the parent to indicate that the
  *                           text is ready (which is usefull if the parent wants to transition
  *                           to new texts nicely)
  * @param {*} blockEvents    boolean. If true, disable event listeners
+ * @param {*} fullScreenNode In fullscreenmode, popups can require a mountNode.
  * @returns
  */
 const Document = ({
@@ -31,10 +31,11 @@ const Document = ({
   settings,
   onChangeAnnotations,
   returnTokens,
+  returnVariableMap,
   setReady,
   blockEvents,
+  fullScreenNode,
 }) => {
-  const fullScreenNode = useSelector((state) => state.fullScreenNode);
   const safetyCheck = useRef(null); // ensures only new annotations for the current unit are passed to onChangeAnnotations
   const [variable, setVariable] = useState(null);
   const [codeHistory, setCodeHistory] = useState({});
@@ -46,17 +47,17 @@ const Document = ({
     returnTokens,
     setCodeHistory
   );
-  const [codeSelector, triggerCodeSelector, variableMap, codeSelectorOpen] = useCodeSelector(
-    preparedUnit.tokens,
-    variables,
-    variable,
-    annotations,
-    setAnnotations,
-    codeHistory,
-    setCodeHistory,
-    fullScreenNode,
-    settings?.editMode || variable === "EDIT ALL"
-  );
+  const [codeSelector, triggerCodeSelector, variableMap, codeSelectorOpen, editMode] =
+    useCodeSelector(
+      preparedUnit.tokens,
+      variables,
+      variable,
+      annotations,
+      setAnnotations,
+      codeHistory,
+      setCodeHistory,
+      fullScreenNode
+    );
 
   useEffect(() => {
     if (!annotations || !onChangeAnnotations) return;
@@ -64,14 +65,17 @@ const Document = ({
     // check if same unit, to prevent annotations from spilling over due to race conditions
     if (safetyCheck.current.tokens !== preparedUnit.tokens) return;
 
-    //check if annotations changed since start.
-    if (!safetyCheck.current.annotationsChanged) {
-      if (safetyCheck.current.annotations === hash(annotations)) return;
-      safetyCheck.current.annotationsChanged = true;
-    }
-
+    // check if annotations changed since start.
+    //if (!safetyCheck.current.annotationsChanged) {
+    //  if (safetyCheck.current.annotations === hash(annotations)) return;
+    //  safetyCheck.current.annotationsChanged = true;
+    //}
     onChangeAnnotations(exportSpanAnnotations(annotations, preparedUnit.tokens, true));
   }, [preparedUnit.tokens, annotations, onChangeAnnotations]);
+
+  useEffect(() => {
+    if (returnVariableMap) returnVariableMap(variableMap);
+  }, [variableMap, returnVariableMap]);
 
   useEffect(() => {
     if (setReady) setReady((current) => current + 1);
@@ -87,13 +91,14 @@ const Document = ({
         meta_fields={preparedUnit.meta_fields}
         setReady={setTokensReady}
         maxHeight={variables && variables.length > 1 ? "calc(100% - 60px)" : "calc(100% - 30px)"}
-        editMode={settings.editMode}
+        editMode={editMode}
       />
 
       <SelectVariable
         variables={variables}
         variable={variable}
         setVariable={setVariable}
+        editAll={settings?.editAll}
         minHeight={variables && variables.length > 1 ? 60 : 30} //'px'
       />
       <AnnotateNavigation
@@ -101,7 +106,7 @@ const Document = ({
         variableMap={variableMap}
         annotations={annotations}
         disableAnnotations={!onChangeAnnotations || !variableMap}
-        editMode={settings?.editMode || variable === "EDIT ALL"}
+        editMode={editMode || variable === "EDIT ALL"}
         triggerCodeSelector={triggerCodeSelector}
         eventsBlocked={codeSelectorOpen || blockEvents}
         fullScreenNode={fullScreenNode}

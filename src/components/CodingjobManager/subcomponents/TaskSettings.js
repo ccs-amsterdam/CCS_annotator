@@ -14,11 +14,13 @@ const defaultTaskSettings = {
 
   // annotate type settings
   annotate: {
-    settings: { editMode: false },
+    settings: { editAll: false },
     variables: [
       {
         name: "Variable name",
         buttonMode: "all",
+        onlyEdit: false,
+        multiple: false,
         searchBox: false,
         codes: ["Some", "example", "options"],
       },

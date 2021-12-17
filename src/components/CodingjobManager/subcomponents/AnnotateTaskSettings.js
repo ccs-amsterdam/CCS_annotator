@@ -14,6 +14,7 @@ const variableDefaultSettings = {
   name: "Variable name",
   instruction: "This is what you need to do",
   buttonMode: "all",
+  onlyEdit: false,
   searchBox: false,
   singleCode: false,
   codes: ["No", "Skip", "Yes"],
@@ -55,6 +56,7 @@ const AnnotateTaskSettings = ({ taskSettings, setTaskSettings }) => {
 const GlobalAnnotateSettings = ({ taskSettings, setTaskSettings }) => {
   console.log(taskSettings);
   const globalSettings = taskSettings?.annotate?.settings;
+  const variables = taskSettings?.annotate?.variables;
   const setGlobalSettings = (settings) => {
     setTaskSettings({
       ...taskSettings,
@@ -62,16 +64,24 @@ const GlobalAnnotateSettings = ({ taskSettings, setTaskSettings }) => {
     });
   };
 
-  if (!globalSettings) return null;
+  if (!globalSettings || !variables) return null;
 
   return (
     <Form>
       <Form.Group>
         <Form.Field>
           <Checkbox
-            label="Only edit existing annotations"
-            checked={globalSettings.editMode}
-            onChange={(e, d) => setGlobalSettings({ ...globalSettings, editMode: d.checked })}
+            disabled={variables.filter((v) => v.enabled == null || v.enabled).length <= 1}
+            toggle
+            label="Edit all option"
+            checked={globalSettings.editAll}
+            onChange={(e, d) => setGlobalSettings({ ...globalSettings, editAll: d.checked })}
+          />
+          <Help
+            header="Add edit all option"
+            texts={[
+              `If there are two or more variables, adds the option for coders to view and edit all annotations together`,
+            ]}
           />
         </Form.Field>
       </Form.Group>
@@ -112,16 +122,21 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
         </Form.Field>
       );
     } else {
-      return null;
-      // return (
-      //   <Form.Field>
-      //     <Checkbox
-      //       label="Only edit existing spans"
-      //       checked={annotateForm.editMode}
-      //       onChange={(e, d) => setAnnotateForm({ ...annotateForm, editMode: d.checked })}
-      //     />
-      //   </Form.Field>
-      // );
+      return (
+        <Form.Field>
+          <Checkbox
+            label="Edit mode"
+            checked={annotateForm.editMode}
+            onChange={(e, d) => setAnnotateForm({ ...annotateForm, editMode: d.checked })}
+          />
+          <Help
+            header="Edit mode"
+            texts={[
+              "In edit mode you can not create new annotations, but only edit existing anntations",
+            ]}
+          />
+        </Form.Field>
+      );
     }
   };
 

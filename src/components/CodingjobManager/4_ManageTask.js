@@ -59,7 +59,9 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
     if (index >= units.length) return null;
     standardizeUnits(codingjob, [units[index]]).then((singleUnitArray) => {
       const previewUnit = singleUnitArray[0];
-      previewUnit.jobServer = { postAnnotations: (unit_id, data) => console.log(unit_id, data) }; // don't store annotations
+      previewUnit.jobServer = {
+        postAnnotations: (unit_id, data) => console.log(`PREVIEW: POST ${data.length} annotations`),
+      }; // don't store annotations
       previewUnit.rules = { canGoBack: true, canGoForward: true };
       setStandardizedUnit(previewUnit);
     });

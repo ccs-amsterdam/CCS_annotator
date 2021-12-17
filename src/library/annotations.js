@@ -2,7 +2,7 @@ const createId = (annotation) => {
   return annotation.variable + "|" + annotation.value;
 };
 
-export const exportSpanAnnotations = (annotations, tokens, includeText = false) => {
+export const exportSpanAnnotations = (annotations, tokens, SpanAndText = false) => {
   // export annotations from the object format (for fast use in the annotator) to array format
   if (Object.keys(annotations).length === 0) return [];
   const uniqueAnnotations = Object.keys(annotations).reduce((un_ann, index) => {
@@ -20,13 +20,19 @@ export const exportSpanAnnotations = (annotations, tokens, includeText = false) 
         length: ann[id].length,
       };
 
-      if (includeText) {
+      if (SpanAndText) {
         const span = ann[id].span;
         const text = tokens
           .slice(span[0], span[1] + 1)
-          .map((t) => t.pre + t.text + t.post)
+          .map((t, i) => {
+            let string = t.text;
+            if (i > 0) string = t.pre + string;
+            if (i < span[1] - span[0]) string = string + t.post;
+            return string;
+          })
           .join("");
         ann_obj["text"] = text;
+        ann_obj["token_span"] = span;
       }
 
       un_ann.push(ann_obj);

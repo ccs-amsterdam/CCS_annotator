@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Container,
   Grid,
@@ -13,11 +13,12 @@ import {
 } from "semantic-ui-react";
 import AnnotateTable from "./subcomponents/AnnotateTable";
 import Document from "components/Document/Document";
-import { codeBookEdgesToMap } from "library/codebook";
 import { useSelector } from "react-redux";
 import { useCookies } from "react-cookie";
+import hash from "object-hash";
 
 const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
+  const fullScreenNode = useSelector((state) => state.fullScreenNode);
   const [annotations, setAnnotations] = useAnnotations(unit);
   const [variableMap, setVariableMap] = useState(null);
   const [cookies, setCookie] = useCookies(["annotateTaskSettings"]);
@@ -28,25 +29,13 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
     setCookie("annotateTaskSettings", JSON.stringify(settings), { path: "/" });
   }, [settings, setCookie]);
 
-  useEffect(() => {
-    // settings is an array with the settings for each question
-    // This needs a little preprocessing, so we only update it when codebook changes (not per unit)
-    const vm = {};
-    for (let variable of codebook.variables) {
-      if (!variable?.codes) return null;
-      const codeMap = codeBookEdgesToMap([...variable.codes]);
-      vm[variable.name] = { ...variable, codeMap };
-    }
-    setVariableMap(vm);
-  }, [codebook, setVariableMap]);
-
   if (!unit || codebook?.variables === null) return null;
 
   return (
     <Grid
       centered
       stackable
-      style={{ height: "100%", width: "100%", paddingTop: "0", overflow: "auto" }}
+      style={{ height: "100%", width: "100%", paddingTop: "0" }}
       verticalAlign={"top"}
       columns={2}
     >
@@ -63,7 +52,9 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
             variables={codebook?.variables}
             onChangeAnnotations={setAnnotations}
             returnTokens={setTokens}
+            returnVariableMap={setVariableMap}
             blockEvents={blockEvents}
+            fullScreenNode={fullScreenNode}
           />
         </div>
       </Grid.Column>
@@ -71,11 +62,14 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
         width={6}
         style={{
           paddingRight: "0em",
-          paddingTop: "0",
+          padding: "0",
           height: "100%",
+          paddingLeft: "10px",
         }}
       >
-        <AnnotateTable tokens={tokens} variableMap={variableMap} annotations={annotations} />
+        <div style={{ borderBottom: "1px solid", height: "calc(100% - 20px)", overflow: "auto" }}>
+          <AnnotateTable tokens={tokens} variableMap={variableMap} annotations={annotations} />
+        </div>
       </Grid.Column>
     </Grid>
   );
@@ -84,12 +78,14 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
 const useAnnotations = (unit) => {
   // simple hook for onChangeAnnotations that posts to server and returns state
   const [annotations, setAnnotations] = useState([]);
+  const hasChanged = useRef(false);
 
   useEffect(() => {
     if (!unit) {
       setAnnotations([]);
       return;
     }
+    hasChanged.current = false;
     setAnnotations(unit.annotations || []);
     if (!unit.annotations || unit.annotations.length === 0)
       unit.jobServer.postAnnotations(unit.unitId, []);
@@ -98,7 +94,22 @@ const useAnnotations = (unit) => {
   const onChangeAnnotations = React.useCallback(
     (newAnnotations) => {
       setAnnotations(newAnnotations);
-      unit.jobServer.postAnnotations(unit.unitId, newAnnotations);
+
+      const cleanAnnotations = newAnnotations.map((na) => {
+        return {
+          variable: na.variable,
+          value: na.value,
+          section: na.section,
+          offset: na.offset,
+          length: na.length,
+        };
+      });
+      if (!hasChanged.current) {
+        if (hash(cleanAnnotations) === hash(unit.annotations)) return;
+        hasChanged.current = true;
+      }
+
+      unit.jobServer.postAnnotations(unit.unitId, cleanAnnotations);
     },
     [unit]
   );

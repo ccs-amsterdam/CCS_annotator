@@ -40,6 +40,22 @@ export const AnnotationEvents = ({
     }
   }, [setHoldArrow, setHoldSpace, eventsBlocked, setTokenSelection]);
 
+  // this adds a function to each token to select and navigate to a token (or span)
+  // this can be accessed outside of Document (via returnTokens)
+  useEffect(() => {
+    if (!tokens) return;
+    for (let token of tokens)
+      token.triggerCodePopup = (span) => {
+        if (!span) span = [token.index, token.index];
+        if (token?.containerRef?.current && token?.ref?.current) {
+          token.containerRef.current.style.scrollBehavior = "smooth";
+          keepInView(token.containerRef.current, token.ref.current);
+        }
+        setCurrentToken({ i: token.index });
+        setTokenSelection(span);
+      };
+  }, [tokens, setCurrentToken, setTokenSelection]);
+
   useEffect(() => {
     // When arrow key is held, walk through tokens with increasing speed
     // this loops itself by updating mover (an object with position information)
@@ -239,6 +255,11 @@ const MouseEvents = ({
       return;
     }
 
+    if (editMode) {
+      annotationFromSelection(tokens, [token.index, token.index], triggerCodePopup);
+      return;
+    }
+
     // first check if there is a tokenselection (after double tab). If so, this completes the selection
     if (tokenSelection.length > 0 && tokenSelection[0] === tapped.current) {
       // if a single token, and an annotation already exists, open create/edit mode
@@ -354,15 +375,7 @@ const MouseEvents = ({
 const annotationFromSelection = (tokens, selection, triggerCodePopup) => {
   let [from, to] = selection;
   if (from > to) [from, to] = [to, from];
-
-  const annotation = {
-    index: tokens[from].index,
-    length: tokens[to].length + tokens[to].offset - tokens[from].offset,
-    span: [tokens[from].index, tokens[to].index],
-    section: tokens[from].section,
-    offset: tokens[from].offset,
-  };
-  triggerCodePopup(tokens[to].index, annotation);
+  triggerCodePopup(tokens[to].index, [tokens[from].index, tokens[to].index]);
 };
 
 const movePosition = (

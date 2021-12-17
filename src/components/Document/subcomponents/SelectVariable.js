@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import { Button } from "semantic-ui-react";
 
-const SelectVariable = ({ variables, variable, setVariable, minHeight }) => {
+const SelectVariable = ({ variables, variable, setVariable, minHeight, editAll }) => {
   let variableNames = [];
   if (variables != null && variables?.length > 0) {
     variableNames = variables.map((v) => v.name);
-    variableNames.push("EDIT ALL");
+    if (editAll) variableNames.push("EDIT ALL");
   }
 
   const onKeyDown = (e) => {

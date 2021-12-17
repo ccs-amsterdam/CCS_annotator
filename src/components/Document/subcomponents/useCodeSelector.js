@@ -7,6 +7,25 @@ import ButtonSelection from "./ButtonSelection";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
+/**
+ * This hook is an absolute beast, as it takes care of a lot of moving parts.
+ * Basically, everything surrounding the popups for selecting and editing codes, and updating the annotations
+ * Please don't touch it untill I get around to refactoring it, and then still don't touch it unless strictly needed
+ *
+ * The weirdest (but nice) part is that it returns a popup component, as well as a 'trigger' function.
+ * The trigger function can then be used to trigger a popup for starting a selection or edit for a given token index (position of popup)
+ * and selection (which span to create/edit)
+ *
+ * @param {*} tokens
+ * @param {*} variables
+ * @param {*} selectedVariable
+ * @param {*} annotations
+ * @param {*} setAnnotations
+ * @param {*} codeHistory
+ * @param {*} setCodeHistory
+ * @param {*} fullScreenNode
+ * @returns
+ */
 const useCodeSelector = (
   tokens,
   variables,
@@ -15,15 +34,15 @@ const useCodeSelector = (
   setAnnotations,
   codeHistory,
   setCodeHistory,
-  fullScreenNode,
-  editMode
+  fullScreenNode
 ) => {
   const [open, setOpen] = useState(false);
-  const [selection, setSelection] = useState(null);
+  const [span, setSpan] = useState(null);
   const [existing, setExisting] = useState([]);
   const [variable, setVariable] = useState(null);
   const [tokenRef, setTokenRef] = useState(null);
   const [tokenAnnotations, setTokenAnnotations] = useState({});
+  const [editMode, setEditMode] = useState(false);
 
   const [fullVariableMap, setFullVariableMap] = useState(null);
   const [variableMap, setVariableMap] = useState(null);
@@ -57,20 +76,28 @@ const useCodeSelector = (
       return;
     }
     setVariable(null);
-    if (selectedVariable === null || selectedVariable === "EDIT ALL") {
-      setVariableMap(fullVariableMap);
-    } else {
-      setVariableMap({ [selectedVariable]: fullVariableMap[selectedVariable] });
-    }
-  }, [fullVariableMap, selectedVariable, setVariable, setVariableMap]);
 
-  const triggerFunction = (index, selection) => {
-    if (!tokens[index].ref) return;
-    setTokenRef(tokens[index].ref);
-    setTokenAnnotations(annotations[index] || {});
-    setSelection(selection || { index }); // if selection is empty, pass index, and get selection in selectVariablePage
-    setOpen(true);
-  };
+    let vmap;
+    if (selectedVariable === null || selectedVariable === "EDIT ALL") {
+      vmap = fullVariableMap;
+    } else {
+      vmap = { [selectedVariable]: fullVariableMap[selectedVariable] };
+    }
+
+    setVariableMap(vmap);
+    setEditMode(vmap?.[selectedVariable]?.editMode || selectedVariable === "EDIT ALL");
+  }, [fullVariableMap, selectedVariable, setVariable, setVariableMap, setEditMode]);
+
+  const triggerFunction = React.useCallback(
+    (index, span) => {
+      if (!tokens[index].ref) return;
+      setTokenRef(tokens[index].ref);
+      setTokenAnnotations(annotations[index] || {});
+      setSpan(span || [index, index]);
+      setOpen(true);
+    },
+    [annotations, tokens]
+  );
 
   useEffect(() => {
     setOpen(false);
@@ -92,8 +119,8 @@ const useCodeSelector = (
         setExisting={setExisting}
         variableMap={variableMap}
         annotations={annotations}
-        selection={selection}
-        setSelection={setSelection}
+        span={span}
+        setSpan={setSpan}
         setOpen={setOpen}
       />
     );
@@ -105,7 +132,7 @@ const useCodeSelector = (
         setExisting={setExisting}
         variableMap={variableMap}
         annotations={annotations}
-        selection={selection}
+        span={span}
         setOpen={setOpen}
       />
     );
@@ -121,7 +148,7 @@ const useCodeSelector = (
       codeHistory={codeHistory[variable] || []}
       annotations={tokenAnnotations}
       setAnnotations={setAnnotations}
-      selection={selection}
+      span={span}
       setOpen={setOpen}
       setCodeHistory={setCodeHistory}
     />
@@ -141,7 +168,7 @@ const useCodeSelector = (
   );
   if (!variableMap || !tokens) popup = null;
 
-  return [popup, triggerFunction, variableMap, open];
+  return [popup, triggerFunction, variableMap, open, editMode];
 };
 
 const CodeSelectorPopup = React.memo(
@@ -207,14 +234,14 @@ const SelectVariablePage = ({
   setVariable,
   setExisting,
   annotations,
-  selection,
+  span,
   setOpen,
   variableMap,
 }) => {
   const setVariableCallback = async (variable) => {
     const annMap = {};
 
-    for (let i = selection.span[0]; i <= selection.span[1]; i++) {
+    for (let i = span[0]; i <= span[1]; i++) {
       if (annotations?.[i]) {
         for (let id of Object.keys(annotations[i])) {
           const a = annotations[i][id];
@@ -239,7 +266,7 @@ const SelectVariablePage = ({
     const variableColors = {};
     for (let v of variables) {
       const colors = {};
-      for (let i = selection.span[0]; i <= selection.span[1]; i++) {
+      for (let i = span[0]; i <= span[1]; i++) {
         if (!annotations[i]) continue;
         for (let id of Object.keys(annotations[i])) {
           const a = annotations[i][id];
@@ -284,13 +311,13 @@ const SelectAnnotationPage = ({
   setVariable,
   setExisting,
   annotations,
-  selection,
-  setSelection,
+  span,
+  setSpan,
   setOpen,
   variableMap,
 }) => {
   const onButtonSelection = (value) => {
-    setSelection(value.selection);
+    setSpan(value.span);
     setVariable(value.variable);
     setExisting(value.annotations);
   };
@@ -299,7 +326,7 @@ const SelectAnnotationPage = ({
     // create an array of spans, where key is the text, and
     const variableSpans = {};
 
-    for (let i = selection.span[0]; i <= selection.span[1]; i++) {
+    for (let i = span[0]; i <= span[1]; i++) {
       if (!annotations[i]) continue;
       for (let id of Object.keys(annotations[i])) {
         const annotation = annotations[i][id];
@@ -319,7 +346,7 @@ const SelectAnnotationPage = ({
             value: {
               annotations: [annotation],
               variable: annotation.variable,
-              selection: annotation,
+              span: annotation.span,
             },
           };
         } else {
@@ -365,7 +392,7 @@ const NewCodePage = ({
   settings,
   annotations,
   setAnnotations,
-  selection,
+  span,
   existing,
   setOpen,
   setCodeHistory,
@@ -396,11 +423,12 @@ const NewCodePage = ({
 
   const onSelect = (value) => {
     updateAnnotations(
+      tokens,
       annotations,
       variable,
       value === null, // value is null means delete, so in that case update annotations with current value (to toggle it off)
       value,
-      selection,
+      span,
       setAnnotations,
       setOpen,
       codeHistory,
@@ -420,7 +448,7 @@ const NewCodePage = ({
     // }, {});
 
     for (let code of Object.keys(codeMap)) {
-      const singleSelection = selection === null || selection?.span[0] === selection?.span[1];
+      const singleSelection = span === null || span[0] === span[1];
       if (singleSelection && annotations[code]) continue;
 
       if (settings && settings.buttonMode === "all")
@@ -563,11 +591,12 @@ const getTextSnippet = (tokens, span, maxlength = 8) => {
 };
 
 const updateAnnotations = (
+  tokens,
   annotations,
   variable,
   deleteCurrent,
   value,
-  selection,
+  span,
   setAnnotations,
   setOpen,
   codeHistory,
@@ -578,14 +607,23 @@ const updateAnnotations = (
     return null;
   }
 
-  let rmAnnotation = { ...selection, variable };
+  const [from, to] = span;
+  const annotationPosition = {
+    index: tokens[from].index,
+    length: tokens[to].length + tokens[to].offset - tokens[from].offset,
+    span: [tokens[from].index, tokens[to].index],
+    section: tokens[from].section,
+    offset: tokens[from].offset,
+  };
+
+  let rmAnnotation = { ...annotationPosition, variable };
   if (deleteCurrent) {
     setAnnotations((state) => toggleSpanAnnotation({ ...state }, rmAnnotation, true));
     setOpen(false);
     return null;
   }
 
-  let newAnnotation = { ...selection, variable, value };
+  let newAnnotation = { ...annotationPosition, variable, value };
   setAnnotations((state) => {
     const newstate = toggleSpanAnnotation({ ...state }, rmAnnotation, true);
     return toggleSpanAnnotation(newstate, newAnnotation, false);

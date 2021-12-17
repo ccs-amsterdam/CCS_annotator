@@ -9,7 +9,7 @@ const AnnotateTable = ({ tokens, variableMap, annotations }) => {
 
   return (
     <Table
-      style={{ fontSize: "10px", maxHeight: "100%" }}
+      style={{ fontSize: "10px", maxHeight: "100%", borderRadius: "0px" }}
       fixed
       role="grid"
       arioa-labelledby="header"
@@ -48,6 +48,13 @@ const AnnotateTable = ({ tokens, variableMap, annotations }) => {
 const annotationRows = (tokens, variableMap, annotations) => {
   const rows = [];
   let i = 0;
+
+  const onClick = (span) => {
+    if (!span) return;
+    const token = tokens?.[span[0]];
+    if (token?.triggerCodePopup) token.triggerCodePopup(span);
+  };
+
   for (const annotation of annotations) {
     const text = annotation.text || "";
 
@@ -57,6 +64,7 @@ const annotationRows = (tokens, variableMap, annotations) => {
         variable={annotation.variable}
         variableMap={variableMap}
         annotation={annotation}
+        onClick={onClick}
         text={text}
       />
     );
@@ -66,7 +74,7 @@ const annotationRows = (tokens, variableMap, annotations) => {
   return rows;
 };
 
-const AnnotationRow = ({ variable, variableMap, annotation, text }) => {
+const AnnotationRow = ({ variable, variableMap, annotation, onClick, text }) => {
   if (!variableMap?.[annotation.variable]?.codeMap) return null;
 
   const codeMap = variableMap[variable].codeMap;
@@ -79,7 +87,11 @@ const AnnotationRow = ({ variable, variableMap, annotation, text }) => {
   const position = `${annotation.offset}-${annotation.offset + annotation.length}`;
 
   return (
-    <Table.Row className="annotations-tr">
+    <Table.Row
+      className="annotations-tr"
+      onClick={() => onClick(annotation.token_span)}
+      style={{ cursor: "pointer" }}
+    >
       <Table.Cell width={COLWIDTHS[0]}>
         <span title={variable}>{variable}</span>
       </Table.Cell>

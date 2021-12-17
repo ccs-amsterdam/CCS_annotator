@@ -12,6 +12,8 @@ const documentSettings = {
 };
 
 const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
+  const fullScreenNode = useSelector((state) => state.fullScreenNode);
+
   const [tokens, setTokens] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState(null);
@@ -98,15 +100,13 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
               settings={documentSettings}
               setReady={setTextReady}
               returnTokens={setTokens}
+              fullScreenNode={fullScreenNode}
             />
           </div>
         </div>
         <SettingsPopup settings={settings} setSettings={setSettings} />
       </div>
-      <div
-        {...menuSwipe}
-        style={{ height: `${100 - settings.splitHeight}%` }}
-      >
+      <div {...menuSwipe} style={{ height: `${100 - settings.splitHeight}%` }}>
         <QuestionForm
           unit={unit}
           tokens={tokens}
