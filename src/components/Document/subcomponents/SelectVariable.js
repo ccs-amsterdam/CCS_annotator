@@ -51,7 +51,9 @@ const SelectVariable = ({ variables, variable, setVariable, minHeight, editAll }
     <div
       style={{
         background: "#1277c469",
-        borderRadius: "10px",
+        borderBottomLeftRadius: "10px",
+        borderBottomRightRadius: "10px",
+        borderTop: "2px solid #2185d0",
         textAlign: "center",
       }}
     >
@@ -65,7 +67,7 @@ const SelectVariable = ({ variables, variable, setVariable, minHeight, editAll }
       <p
         style={{
           margin: "0",
-          padding: "3px",
+          padding: "2px",
         }}
       >
         {helpText}

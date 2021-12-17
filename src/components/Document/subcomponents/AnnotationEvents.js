@@ -319,7 +319,7 @@ const MouseEvents = ({
         setTokenSelection((state) => updateSelection(state, tokens, currentNode.index, false));
       } else
         setCurrentToken((state) => {
-          if (state.i === currentNode.index) return state;
+          if (state.i === currentNode.index || currentNode.index === null) return state;
           return { i: currentNode.index };
         });
     }

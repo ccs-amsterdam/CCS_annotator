@@ -38,11 +38,11 @@ const useCodeSelector = (
 ) => {
   const [open, setOpen] = useState(false);
   const [span, setSpan] = useState(null);
-  const [existing, setExisting] = useState([]);
   const [variable, setVariable] = useState(null);
   const [tokenRef, setTokenRef] = useState(null);
   const [tokenAnnotations, setTokenAnnotations] = useState({});
   const [editMode, setEditMode] = useState(false);
+  const [tmpCodeHistory, setTmpCodeHistory] = useState(codeHistory); // to not update during selection
 
   const [fullVariableMap, setFullVariableMap] = useState(null);
   const [variableMap, setVariableMap] = useState(null);
@@ -88,6 +88,11 @@ const useCodeSelector = (
     setEditMode(vmap?.[selectedVariable]?.editMode || selectedVariable === "EDIT ALL");
   }, [fullVariableMap, selectedVariable, setVariable, setVariableMap, setEditMode]);
 
+  useEffect(() => {
+    if (open) return;
+    setCodeHistory(tmpCodeHistory);
+  }, [tmpCodeHistory, open, setCodeHistory]);
+
   const triggerFunction = React.useCallback(
     (index, span) => {
       if (!tokens[index].ref) return;
@@ -116,7 +121,6 @@ const useCodeSelector = (
         tokens={tokens}
         variable={variable}
         setVariable={setVariable}
-        setExisting={setExisting}
         variableMap={variableMap}
         annotations={annotations}
         span={span}
@@ -129,7 +133,6 @@ const useCodeSelector = (
       <SelectVariablePage
         variable={variable}
         setVariable={setVariable}
-        setExisting={setExisting}
         variableMap={variableMap}
         annotations={annotations}
         span={span}
@@ -143,14 +146,14 @@ const useCodeSelector = (
       tokens={tokens}
       variable={variable}
       variableMap={variableMap}
-      existing={existing}
       settings={variableMap?.[variable]}
       codeHistory={codeHistory[variable] || []}
-      annotations={tokenAnnotations}
+      annotations={annotations}
+      tokenAnnotations={tokenAnnotations}
       setAnnotations={setAnnotations}
       span={span}
       setOpen={setOpen}
-      setCodeHistory={setCodeHistory}
+      setCodeHistory={setTmpCodeHistory}
     />
   );
 
@@ -229,38 +232,7 @@ const CodeSelectorPopup = React.memo(
   }
 );
 
-const SelectVariablePage = ({
-  variable,
-  setVariable,
-  setExisting,
-  annotations,
-  span,
-  setOpen,
-  variableMap,
-}) => {
-  const setVariableCallback = async (variable) => {
-    const annMap = {};
-
-    for (let i = span[0]; i <= span[1]; i++) {
-      if (annotations?.[i]) {
-        for (let id of Object.keys(annotations[i])) {
-          const a = annotations[i][id];
-          if (a.variable !== variable) continue;
-          const annId = a.span[0] + "_" + id;
-          annMap[annId] = { id, ...annotations[i][id] };
-        }
-      }
-    }
-
-    if (Object.keys(annMap).length > 0) {
-      setExisting(Object.values(annMap));
-    } else {
-      setExisting([]);
-    }
-
-    setVariable(variable);
-  };
-
+const SelectVariablePage = ({ variable, setVariable, annotations, span, setOpen, variableMap }) => {
   const getOptions = () => {
     let variables = Object.keys(variableMap);
     const variableColors = {};
@@ -288,7 +260,7 @@ const SelectVariablePage = ({
 
   const options = getOptions();
   if (options.length === 1) {
-    setVariableCallback(options[0].value);
+    setVariable(options[0].value);
   }
 
   return (
@@ -299,7 +271,7 @@ const SelectVariablePage = ({
         active={true}
         options={options}
         setOpen={setOpen}
-        callback={setVariableCallback}
+        onSelect={(value, ctrlKey) => setVariable(value)}
       />
     </div>
   );
@@ -309,17 +281,16 @@ const SelectAnnotationPage = ({
   tokens,
   variable,
   setVariable,
-  setExisting,
   annotations,
   span,
   setSpan,
   setOpen,
   variableMap,
 }) => {
-  const onButtonSelection = (value) => {
+  const onButtonSelection = (value, ctrlKey) => {
     setSpan(value.span);
     setVariable(value.variable);
-    setExisting(value.annotations);
+    //setExisting(value.annotations);
   };
 
   const getAnnotationOptions = () => {
@@ -344,14 +315,14 @@ const SelectAnnotationPage = ({
             label,
             colors: [color],
             value: {
-              annotations: [annotation],
+              //annotations: [annotation],
               variable: annotation.variable,
               span: annotation.span,
             },
           };
         } else {
           variableSpans[key].colors.push(color);
-          variableSpans[key].value.annotations.push(annotation);
+          //variableSpans[key].value.annotations.push(annotation);
         }
       }
     }
@@ -378,7 +349,7 @@ const SelectAnnotationPage = ({
         active={true}
         options={options}
         setOpen={setOpen}
-        callback={onButtonSelection}
+        onSelect={onButtonSelection}
       />
     </div>
   );
@@ -391,9 +362,9 @@ const NewCodePage = ({
   codeHistory,
   settings,
   annotations,
+  tokenAnnotations,
   setAnnotations,
   span,
-  existing,
   setOpen,
   setCodeHistory,
 }) => {
@@ -414,6 +385,23 @@ const NewCodePage = ({
     [textInputRef, setOpen, settings]
   );
 
+  const getExistingAnnotations = (variable) => {
+    const annMap = {};
+
+    for (let i = span[0]; i <= span[1]; i++) {
+      if (annotations?.[i]) {
+        for (let id of Object.keys(annotations[i])) {
+          const a = annotations[i][id];
+          if (a.variable !== variable) continue;
+          const annId = a.span[0] + "_" + id;
+          annMap[annId] = { id, ...annotations[i][id] };
+        }
+      }
+    }
+
+    return Object.keys(annMap).length > 0 ? Object.values(annMap) : [];
+  };
+
   useEffect(() => {
     window.addEventListener("keydown", onKeydown);
     return () => {
@@ -421,51 +409,41 @@ const NewCodePage = ({
     };
   });
 
-  const onSelect = (value) => {
-    updateAnnotations(
-      tokens,
-      annotations,
-      variable,
-      value === null, // value is null means delete, so in that case update annotations with current value (to toggle it off)
-      value,
-      span,
-      setAnnotations,
-      setOpen,
-      codeHistory,
-      setCodeHistory
-    );
+  const onSelect = (annotation, ctrlKey) => {
+    console.log(ctrlKey);
+    if (annotation === "CANCEL") {
+      setOpen(false);
+      return;
+    }
+    updateAnnotations(tokens, annotation, setAnnotations, codeHistory, setCodeHistory);
+
+    if (!variableMap?.[variable]?.multiple && !ctrlKey) setOpen(false);
   };
 
   const getOptions = () => {
+    const existing = getExistingAnnotations(variable);
+    console.log(existing);
     const buttonOptions = [];
     const dropdownOptions = [];
     const codeMap = variableMap?.[variable]?.codeMap;
 
-    // const existingValueCount = Object.values(existing).reduce((em, e) => {
-    //   if (!em[e.value]) em[e.value] = 0;
-    //   em[e.value]++;
-    //   return em;
-    // }, {});
-
     for (let code of Object.keys(codeMap)) {
       const singleSelection = span === null || span[0] === span[1];
-      if (singleSelection && annotations[code]) continue;
+      if (singleSelection && tokenAnnotations[code]) continue;
 
       if (settings && settings.buttonMode === "all")
-        buttonOptions.push({ key: code, label: code, value: code, color: getColor(code, codeMap) });
+        buttonOptions.push({
+          key: code,
+          label: code,
+          value: { variable, value: code, span, delete: false },
+          color: getColor(code, codeMap),
+        });
 
       let tree = codeMap[code].tree.join(" - ");
 
-      // let existingmessage = null;
-      // if (existingValueCount[code]) {
-      //   existingmessage = (
-      //     <span style={{ color: "darkred" }}>{`overwrites ${existingValueCount[code]}`}</span>
-      //   );
-      // }
-
       dropdownOptions.push({
         key: code,
-        value: code,
+        value: { variable, value: code, span, delete: false },
         text: code + " test" + tree,
         content: (
           <>
@@ -483,7 +461,12 @@ const NewCodePage = ({
       for (let code of codeHistory) {
         if (nRecent < 0) break;
         if (!codeMap[code]) continue;
-        buttonOptions.push({ key: code, label: code, value: code, color: getColor(code, codeMap) });
+        buttonOptions.push({
+          key: code,
+          label: code,
+          value: { variable, value: code, span, delete: false },
+          color: getColor(code, codeMap),
+        });
         nRecent--;
       }
     }
@@ -495,9 +478,10 @@ const NewCodePage = ({
         buttonOptions.push({
           box2: true,
           icon: "trash alternate",
+          tag: o.value,
           label: getTextSnippet(tokens, o.span),
           color: getColor(o.value, codeMap),
-          value: o,
+          value: { ...o, delete: true },
           textColor: "darkred",
         });
       }
@@ -510,7 +494,8 @@ const NewCodePage = ({
     // act automatically if button selection is the only mode, and there are no options or only 1
     if (settings.buttonMode === "all" && !settings.searchBox) {
       if (options.length === 0) return null;
-      if (options.length === 1 && existing.length === 0) onSelect(options[0].value);
+      const nExisting = options.filter((o) => !!o.box2);
+      if (options.length === 1 && nExisting === 0) onSelect(options[0].value);
     }
 
     return (
@@ -522,7 +507,7 @@ const NewCodePage = ({
           setAnnotations={setAnnotations}
           options={options}
           setOpen={setOpen}
-          callback={onSelect}
+          onSelect={onSelect}
         />
       </>
     );
@@ -535,7 +520,8 @@ const NewCodePage = ({
 
     // use searchBox if specified OR if settings are missing
     // also, if buttonmode is 'recent', always show search box
-    if (settings && !settings.searchBox && settings.buttonMode !== "recent") return null;
+    if (settings && !settings.searchBox && settings.buttonMode !== "recent")
+      return <div style={{ height: "25px" }} />;
 
     return (
       <Ref innerRef={textInputRef}>
@@ -545,14 +531,15 @@ const NewCodePage = ({
           style={{
             textAlign: "center",
             color: "black",
-            minWidth: "12em",
             width: "100%",
-            marginBottom: "10px",
+            height: "20px",
+            marginBottom: "5px",
+            overflow: "visible",
+            position: "relative",
           }}
           options={options}
           open={!focusOnButtons}
           search
-          compact
           selectOnNavigation={false}
           minCharacters={0}
           autoComplete={"on"}
@@ -561,7 +548,9 @@ const NewCodePage = ({
             if (d.searchQuery === "") setFocusOnButtons(true);
           }}
           onClose={() => setFocusOnButtons(true)}
-          onChange={(e, d) => onSelect(d.value)}
+          onChange={(e, d) => {
+            onSelect(d.value, e.ctrlKey);
+          }}
         />
       </Ref>
     );
@@ -590,51 +579,24 @@ const getTextSnippet = (tokens, span, maxlength = 8) => {
   return text.join("");
 };
 
-const updateAnnotations = (
-  tokens,
-  annotations,
-  variable,
-  deleteCurrent,
-  value,
-  span,
-  setAnnotations,
-  setOpen,
-  codeHistory,
-  setCodeHistory
-) => {
-  if (!annotations) {
-    setOpen(false);
-    return null;
-  }
+const updateAnnotations = (tokens, annotation, setAnnotations, codeHistory, setCodeHistory) => {
+  const [from, to] = annotation.span;
+  annotation.index = tokens[from].index;
+  annotation.length = tokens[to].length + tokens[to].offset - tokens[from].offset;
+  annotation.span = [tokens[from].index, tokens[to].index];
+  annotation.section = tokens[from].section;
+  annotation.offset = tokens[from].offset;
 
-  const [from, to] = span;
-  const annotationPosition = {
-    index: tokens[from].index,
-    length: tokens[to].length + tokens[to].offset - tokens[from].offset,
-    span: [tokens[from].index, tokens[to].index],
-    section: tokens[from].section,
-    offset: tokens[from].offset,
-  };
-
-  let rmAnnotation = { ...annotationPosition, variable };
-  if (deleteCurrent) {
-    setAnnotations((state) => toggleSpanAnnotation({ ...state }, rmAnnotation, true));
-    setOpen(false);
-    return null;
-  }
-
-  let newAnnotation = { ...annotationPosition, variable, value };
-  setAnnotations((state) => {
-    const newstate = toggleSpanAnnotation({ ...state }, rmAnnotation, true);
-    return toggleSpanAnnotation(newstate, newAnnotation, false);
-  });
+  setAnnotations((state) => toggleSpanAnnotation({ ...state }, annotation, annotation.delete));
   setCodeHistory((state) => {
     return {
       ...state,
-      [variable]: [value, ...codeHistory.filter((v) => v !== value)],
+      [annotation.variable]: [
+        annotation.value,
+        ...codeHistory.filter((v) => v !== annotation.value),
+      ],
     };
   });
-  setOpen(false);
 };
 
 export default useCodeSelector;

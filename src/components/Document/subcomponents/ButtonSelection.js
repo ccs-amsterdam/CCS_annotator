@@ -1,58 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, Icon, Ref } from "semantic-ui-react";
-import { toggleSpanAnnotation } from "library/annotations";
 
 import { moveDown, moveUp } from "library/refNavigation";
 
 const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
 
-const ButtonSelection = ({
-  id,
-  active,
-  options,
-  setOpen,
-  callback,
-  setAnnotations, // deletable is an array of annotatins that can be deleted
-}) => {
+const ButtonSelection = ({ id, active, options, onSelect }) => {
   const [selected, setSelected] = useState(0);
   const [allOptions, setAllOptions] = useState([]);
   const deleted = useRef({});
 
-  console.log(selected);
-
   useEffect(() => {
     // add cancel button and (most importantly) add refs used for navigation
-    let allOptions = [...options];
-    allOptions.push({
-      box2: true,
-      label: "CANCEL",
+    const cancelOption = {
+      cancel: true,
+      label: "CLOSE",
       color: "grey",
       value: "CANCEL",
       textColor: "white",
-    });
+    };
 
+    let allOptions = [...options, cancelOption];
     for (let option of allOptions) option.ref = React.createRef();
     setAllOptions(allOptions);
   }, [options, setAllOptions]);
-
-  const onClickDelete = React.useCallback(
-    (value) => {
-      if (value === "CANCEL") setOpen(false);
-      if (typeof value === "object") {
-        setAnnotations((state) => toggleSpanAnnotation({ ...state }, value, true));
-        setOpen(false);
-        return;
-      }
-    },
-    [setAnnotations, setOpen]
-  );
-
-  const onClickSelect = React.useCallback(
-    (value) => {
-      callback(value);
-    },
-    [callback]
-  );
 
   const onKeydown = React.useCallback(
     (event) => {
@@ -81,23 +52,16 @@ const ButtonSelection = ({
         return;
       }
 
-      // delete
-      if (event.keyCode === 46) callback(null);
-
       // space or enter
       if (event.keyCode === 32 || event.keyCode === 13) {
         event.preventDefault();
         event.stopPropagation();
 
         let value = allOptions[selected].value;
-        if (allOptions[selected].box2) {
-          onClickDelete(value);
-        } else {
-          onClickSelect(value);
-        }
+        onSelect(value, event.ctrlKey);
       }
     },
-    [selected, callback, allOptions, onClickDelete, onClickSelect]
+    [selected, allOptions, onSelect]
   );
 
   useEffect(() => {
@@ -111,7 +75,7 @@ const ButtonSelection = ({
     };
   }, [active, onKeydown]);
 
-  const button = (option, i, onClick) => {
+  const button = (option, i) => {
     const bcolorSelected = option.icon === "trash alternate" ? "darkred" : "black";
 
     return (
@@ -131,15 +95,14 @@ const ButtonSelection = ({
           compact
           size="mini"
           onMouseOver={() => setSelected(i)}
-          onClick={(e, d) => onClick(d.value)}
+          onClick={(e, d) => onSelect(d.value, e.ctrlKey)}
         >
-          {option.icon ? <Icon name={option.icon} /> : null}
           {option.tag ? (
             <span
               style={{
                 display: "inline-block",
                 float: "left",
-                background: "#00000070",
+                background: option.textColor,
                 color: "white",
                 borderRadius: "2px",
                 padding: "2px",
@@ -155,25 +118,34 @@ const ButtonSelection = ({
 
   const mapButtons = () => {
     let i = 0;
+    let cancelButton;
     const selectButtons = [];
     const deleteButtons = [];
     for (let option of allOptions) {
       if (deleted.current[option.value]) continue;
-      if (option.box2) {
-        deleteButtons.push(button(option, i, onClickDelete));
-      } else {
-        selectButtons.push(button(option, i, onClickSelect));
-      }
+
+      if (option.value === "CANCEL") cancelButton = button(option, i);
+      else if (option.value.delete) deleteButtons.push(button(option, i));
+      else selectButtons.push(button(option, i));
+
       i++;
     }
 
     return (
       <>
-        <div key={id + "1"} style={{ display: "flex", flexWrap: "wrap" }}>
+        <div key={id + "1"} style={{ display: "flex", flexWrap: "wrap", marginBottom: "10px" }}>
           {selectButtons}
         </div>
-        <div key={id + "2"} style={{ display: "flex", flexWrap: "wrap", marginTop: "10px" }}>
+        {deleteButtons.length > 0 ? (
+          <b>
+            <Icon name="trash alternate" /> Delete codes
+          </b>
+        ) : null}
+        <div key={id + "2"} style={{ display: "flex", flexWrap: "wrap" }}>
           {deleteButtons}
+        </div>
+        <div key={id + "3"} style={{ display: "flex", flexWrap: "wrap" }}>
+          {cancelButton}
         </div>
       </>
     );

@@ -152,6 +152,19 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
       </Form.Group>
 
       <Form.Group>{codeSelectorConditionalFields()}</Form.Group>
+      <Form.Group>
+        <Form.Field>
+          <Checkbox
+            label="Multiple"
+            checked={annotateForm.multiple}
+            onChange={(e, d) => setAnnotateForm({ ...annotateForm, multiple: d.checked })}
+          />
+          <Help
+            header="Select multiple codes"
+            texts={["Allows user to select (or delete) multiple codes before closing the popup"]}
+          />
+        </Form.Field>
+      </Form.Group>
 
       <Form.Group grouped style={{ display: annotateForm.singleCode ? "none" : "block" }}>
         <label>Code buttons</label>
