@@ -152,6 +152,7 @@ const useCodeSelector = (
       tokenAnnotations={tokenAnnotations}
       setAnnotations={setAnnotations}
       span={span}
+      editMode={editMode}
       setOpen={setOpen}
       setCodeHistory={setTmpCodeHistory}
     />
@@ -256,7 +257,7 @@ const SelectVariablePage = ({ variable, setVariable, annotations, span, setOpen,
     }));
   };
 
-  if (variable) return null;
+  if (variable || !span) return null;
 
   const options = getOptions();
   if (options.length === 1) {
@@ -303,7 +304,7 @@ const SelectAnnotationPage = ({
         const annotation = annotations[i][id];
         const codeMap = variableMap?.[annotation.variable]?.codeMap;
         if (!variableMap[annotation.variable]) continue;
-        if (!codeMap?.[annotation.value]) continue;
+        if (!codeMap?.[annotation.value] && annotation.value !== "EMPTY") continue;
 
         const span = annotation.span;
         const key = annotation.variable + ":" + span[0] + "-" + span[1];
@@ -332,12 +333,11 @@ const SelectAnnotationPage = ({
     });
   };
 
-  if (variable) return null;
+  if (variable || !span) return null;
 
   const options = getAnnotationOptions();
   if (options.length === 0) setOpen(false);
   if (options.length === 1) {
-    console.log(options);
     onButtonSelection(options[0].value);
   }
 
@@ -364,6 +364,7 @@ const NewCodePage = ({
   annotations,
   tokenAnnotations,
   setAnnotations,
+  editMode,
   span,
   setOpen,
   setCodeHistory,
@@ -410,19 +411,17 @@ const NewCodePage = ({
   });
 
   const onSelect = (annotation, ctrlKey) => {
-    console.log(ctrlKey);
     if (annotation === "CANCEL") {
       setOpen(false);
       return;
     }
-    updateAnnotations(tokens, annotation, setAnnotations, codeHistory, setCodeHistory);
+    updateAnnotations(tokens, annotation, setAnnotations, codeHistory, setCodeHistory, editMode);
 
     if (!variableMap?.[variable]?.multiple && !ctrlKey) setOpen(false);
   };
 
   const getOptions = () => {
     const existing = getExistingAnnotations(variable);
-    console.log(existing);
     const buttonOptions = [];
     const dropdownOptions = [];
     const codeMap = variableMap?.[variable]?.codeMap;
@@ -494,8 +493,8 @@ const NewCodePage = ({
     // act automatically if button selection is the only mode, and there are no options or only 1
     if (settings.buttonMode === "all" && !settings.searchBox) {
       if (options.length === 0) return null;
-      const nExisting = options.filter((o) => !!o.box2);
-      if (options.length === 1 && nExisting === 0) onSelect(options[0].value);
+      const nExisting = options.filter((o) => !!o.box2).length;
+      if (options.length === 1 && nExisting === 0) setTimeout(() => onSelect(options[0].value), 0);
     }
 
     return (
@@ -579,7 +578,14 @@ const getTextSnippet = (tokens, span, maxlength = 8) => {
   return text.join("");
 };
 
-const updateAnnotations = (tokens, annotation, setAnnotations, codeHistory, setCodeHistory) => {
+const updateAnnotations = (
+  tokens,
+  annotation,
+  setAnnotations,
+  codeHistory,
+  setCodeHistory,
+  editMode
+) => {
   const [from, to] = annotation.span;
   annotation.index = tokens[from].index;
   annotation.length = tokens[to].length + tokens[to].offset - tokens[from].offset;
@@ -587,7 +593,9 @@ const updateAnnotations = (tokens, annotation, setAnnotations, codeHistory, setC
   annotation.section = tokens[from].section;
   annotation.offset = tokens[from].offset;
 
-  setAnnotations((state) => toggleSpanAnnotation({ ...state }, annotation, annotation.delete));
+  setAnnotations((state) =>
+    toggleSpanAnnotation({ ...state }, annotation, annotation.delete, editMode)
+  );
   setCodeHistory((state) => {
     return {
       ...state,

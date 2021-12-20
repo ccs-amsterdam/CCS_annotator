@@ -36,7 +36,7 @@ export const AnnotationEvents = ({
       setHoldArrow(false);
       setHoldSpace(false);
     } else {
-      setTokenSelection((state) => (state.length === 0 ? state : []));
+      //setTokenSelection((state) => (state.length === 0 ? state : []));
     }
   }, [setHoldArrow, setHoldSpace, eventsBlocked, setTokenSelection]);
 

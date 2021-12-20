@@ -11,6 +11,7 @@ export const getColor = (annotationCode, codeMap) => {
     if (foldTo && codeMap[foldTo]) return codeMap[foldTo].color + "50";
     return codeMap[annotationCode].color + "50";
   } else {
+    if (annotationCode === "EMPTY") return "lightgrey";
     return "#ffffff50";
   }
 };

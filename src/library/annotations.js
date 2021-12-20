@@ -71,28 +71,38 @@ export const importSpanAnnotations = (annotationsArray, tokens, currentAnnotatio
   }
 
   for (let ann of annArray) {
-    currentAnnotations = toggleSpanAnnotation(currentAnnotations, ann, false);
+    currentAnnotations = toggleSpanAnnotation(currentAnnotations, ann, false, false);
   }
 
   return currentAnnotations;
 };
 
-export const toggleSpanAnnotation = (annotations, newAnnotation, rm) => {
+export const toggleSpanAnnotation = (annotations, newAnnotation, rm, keep_empty) => {
   // Add span annotations in a way that prevents double assignments of the same group to a token
   const id = createId(newAnnotation);
 
   for (let index = newAnnotation.span[0]; index <= newAnnotation.span[1]; index++) {
     // Check if there exists an annotation with the same variable+value at this position and if so delete it
     if (annotations[index]) {
-      console.log(id);
       if (annotations[index][id]) {
         // if an annotation with the same id exists, iterating over it's span to remove entirely
-        const span = annotations[index][id].span;
+        const old = annotations[index][id];
+        const span = old.span;
         for (let i = span[0]; i <= span[1]; i++) {
           // since we go from the span, we are actually certain the annotation exists at these indices
           // but we just double check for stability
           if (annotations[i]) {
             if (annotations[i][id]) {
+              if (
+                keep_empty &&
+                Object.values(annotations[i]).filter((a) => a.variable === old.variable).length ===
+                  1
+              ) {
+                annotations[i][createId({ ...old, value: "EMPTY" })] = {
+                  ...annotations[i][id],
+                  value: "EMPTY",
+                };
+              }
               delete annotations[i][id];
               if (Object.keys(annotations[i]).length === 0) {
                 // if there are no annotations for this position left, delete the entry
@@ -107,6 +117,8 @@ export const toggleSpanAnnotation = (annotations, newAnnotation, rm) => {
     if (!rm) {
       // add the annotation
       if (!annotations[index]) annotations[index] = {};
+      delete annotations[index][createId({ ...newAnnotation, value: "EMPTY" })];
+
       annotations[index][id] = {
         index: index,
         variable: newAnnotation.variable,

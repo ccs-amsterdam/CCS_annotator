@@ -107,7 +107,8 @@ const VariableMenu = ({
         <ChangeName variables={variables} setVariables={setVariables} index={index} />
         <Accordion>
           <Accordion.Title active={open} onClick={() => setOpen(!open)}>
-            <i>{open ? "Hide" : "Show"} settings</i> <Icon name="dropdown" />
+            <i style={{ color: "blue" }}>{open ? "Hide" : "Show"} settings</i>{" "}
+            <Icon name="dropdown" />
           </Accordion.Title>
           <Accordion.Content active={open}> {children}</Accordion.Content>
         </Accordion>

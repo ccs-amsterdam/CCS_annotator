@@ -14,10 +14,9 @@ const UserName = ({ force = false }) => {
   };
 
   const invalidEmail = (email) => {
-    return false;
-    //return !email.match(
-    //  /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    //);
+    return !email.match(
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    );
   };
 
   useEffect(() => {
@@ -31,7 +30,7 @@ const UserName = ({ force = false }) => {
       trigger={
         <Menu.Item
           icon={cookies.name == null ? "toggle off" : "toggle on"}
-          name={"User"}
+          name={"Email adress"}
           style={{ color: cookies.name == null ? "red" : "green" }}
         />
       }
@@ -39,12 +38,12 @@ const UserName = ({ force = false }) => {
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
     >
-      <Header icon="user" content="User name" />
+      <Header icon="user" content="Email adress" />
       <Modal.Content>
         <Form onSubmit={storeName}>
           <Form.Input
-            placeholder="username"
-            //name="email"
+            placeholder="email adress"
+            name="email"
             value={name}
             onChange={(e, d) => {
               if (d.value.length < 100) setName(d.value);
@@ -56,7 +55,7 @@ const UserName = ({ force = false }) => {
       </Modal.Content>
       <Modal.Actions>
         <Button primary disabled={invalidEmail(name)} onClick={storeName}>
-          {invalidEmail(name) ? "please enter a valid email adress" : "Set username"}
+          {invalidEmail(name) ? "please enter a valid email adress" : "Set email adress"}
         </Button>
       </Modal.Actions>
     </Modal>

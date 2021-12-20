@@ -111,7 +111,7 @@ const allowedAnnotations = (annotations, variableMap) => {
       const codeMap = variableMap[variable].codeMap;
       const code = annotations[id].value;
       if (!codeMap[code] || !codeMap[code].active || !codeMap[code].activeParent)
-        delete annotations[id];
+        if (!code === "EMPTY") delete annotations[id];
     }
   }
   return annotations;
