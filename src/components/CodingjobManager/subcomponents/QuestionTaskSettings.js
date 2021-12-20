@@ -111,7 +111,6 @@ const QuestionFormSettings = ({ questionForm, setQuestionForm, questions, unitSe
   return (
     <Form>
       <Form.Group grouped>
-        <br />
         <label>
           Question
           <Help

@@ -2,7 +2,17 @@ import { blockEvents } from "actions";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
-import { Menu, Segment, Button, Popup, Form, Input, Checkbox } from "semantic-ui-react";
+import {
+  Menu,
+  Segment,
+  Button,
+  Popup,
+  Form,
+  Input,
+  Checkbox,
+  Accordion,
+  Icon,
+} from "semantic-ui-react";
 
 const VariableMenu = ({
   children,
@@ -12,6 +22,7 @@ const VariableMenu = ({
   setIndex,
   newVariableDefaults,
 }) => {
+  const [open, setOpen] = useState(false);
   const onAdd = () => {
     const newVariables = {
       ...newVariableDefaults,
@@ -94,7 +105,12 @@ const VariableMenu = ({
           setIndex={setIndex}
         />
         <ChangeName variables={variables} setVariables={setVariables} index={index} />
-        {children}
+        <Accordion>
+          <Accordion.Title active={open} onClick={() => setOpen(!open)}>
+            <i>{open ? "Hide" : "Show"} settings</i> <Icon name="dropdown" />
+          </Accordion.Title>
+          <Accordion.Content active={open}> {children}</Accordion.Content>
+        </Accordion>
       </Segment>
     </div>
   );
