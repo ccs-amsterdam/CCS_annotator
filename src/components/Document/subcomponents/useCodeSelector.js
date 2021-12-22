@@ -272,7 +272,13 @@ const SelectVariablePage = ({ variable, setVariable, annotations, span, setOpen,
         active={true}
         options={options}
         setOpen={setOpen}
-        onSelect={(value, ctrlKey) => setVariable(value)}
+        onSelect={(value, ctrlKey) => {
+          if (value === "CANCEL") {
+            setOpen(false);
+            return;
+          }
+          setVariable(value);
+        }}
       />
     </div>
   );
@@ -289,6 +295,10 @@ const SelectAnnotationPage = ({
   variableMap,
 }) => {
   const onButtonSelection = (value, ctrlKey) => {
+    if (value === "CANCEL") {
+      setOpen(false);
+      return;
+    }
     setSpan(value.span);
     setVariable(value.variable);
     //setExisting(value.annotations);
@@ -308,7 +318,7 @@ const SelectAnnotationPage = ({
 
         const span = annotation.span;
         const key = annotation.variable + ":" + span[0] + "-" + span[1];
-        const label = getTextSnippet(tokens, span);
+        const label = '"' + getTextSnippet(tokens, span) + '"';
         const color = getColor(annotation.value, codeMap);
         if (!variableSpans[key]) {
           variableSpans[key] = {
@@ -420,11 +430,29 @@ const NewCodePage = ({
     if (!variableMap?.[variable]?.multiple && !ctrlKey) setOpen(false);
   };
 
+  const autoCode = (codeMap, existing) => {
+    const codes = Object.keys(codeMap);
+    if (codes.length !== 1) return null;
+
+    const value = codes[0];
+    const nonEmpty = existing.filter((e) => e.value !== "EMPTY");
+    if (nonEmpty.length === 0) {
+      // If there is only one option (which only happens if there is only 1 possible value and nothing that can be deleted), select it automatically
+      setTimeout(() => onSelect({ variable, span, value, delete: false }), 0);
+      setOpen(false);
+    }
+    if (editMode && nonEmpty.length === 1 && value === nonEmpty[0].value) {
+      setTimeout(() => onSelect({ variable, span, value, delete: true }), 0);
+      setOpen(false);
+    }
+  };
+
   const getOptions = () => {
     const existing = getExistingAnnotations(variable);
     const buttonOptions = [];
     const dropdownOptions = [];
     const codeMap = variableMap?.[variable]?.codeMap;
+    autoCode(codeMap, existing);
 
     for (let code of Object.keys(codeMap)) {
       const singleSelection = span === null || span[0] === span[1];
@@ -475,10 +503,8 @@ const NewCodePage = ({
         if (!codeMap[o.value]) continue;
 
         buttonOptions.push({
-          box2: true,
-          icon: "trash alternate",
           tag: o.value,
-          label: getTextSnippet(tokens, o.span),
+          label: '"' + getTextSnippet(tokens, o.span) + '"',
           color: getColor(o.value, codeMap),
           value: { ...o, delete: true },
           textColor: "darkred",
@@ -491,11 +517,27 @@ const NewCodePage = ({
 
   const asButtonSelection = (options) => {
     // act automatically if button selection is the only mode, and there are no options or only 1
-    if (settings.buttonMode === "all" && !settings.searchBox) {
-      if (options.length === 0) return null;
-      const nExisting = options.filter((o) => !!o.box2).length;
-      if (options.length === 1 && nExisting === 0) setTimeout(() => onSelect(options[0].value), 0);
-    }
+    // if (settings.buttonMode === "all" && !settings.searchBox) {
+    //   if (options.length === 0) return null;
+
+    //   if (options.length === 1) {
+    //     // If there is only one option (which only happens if there is only 1 possible value and nothing that can be deleted), select it automatically
+    //     setTimeout(() => onSelect(options[0].value), 0);
+    //     setOpen(false);
+    //   }
+    //   if (
+    //     editMode &&
+    //     options.length === 2 &&
+    //     (options[0].value.delete || options[1].value.delete)
+    //   ) {
+    //     // In editmode, if there is only 1 possible value, and it has already been selected, delete it automatically
+    //     // Basically this means that for binary variables, clicking in edit mode equals toggling
+    //     if (options[0].value.value === options[1].value.value) {
+    //       setTimeout(() => onSelect({ ...options[0].value, delete: true }), 0);
+    //       setOpen(false);
+    //     }
+    //   }
+    // }
 
     return (
       <>

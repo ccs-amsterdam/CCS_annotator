@@ -535,7 +535,6 @@ const getNode = (tokens, e) => {
       let position = e.touches[0];
       n = document.elementFromPoint(position.clientX, position.clientY);
     }
-
     if (n?.parentNode?.className === "item") {
       return [null, false];
     }

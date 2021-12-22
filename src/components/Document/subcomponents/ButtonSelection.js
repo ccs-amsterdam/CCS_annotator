@@ -76,7 +76,11 @@ const ButtonSelection = ({ id, active, options, onSelect }) => {
   }, [active, onKeydown]);
 
   const button = (option, i) => {
-    const bcolorSelected = option.icon === "trash alternate" ? "darkred" : "black";
+    const textColor = option.value.delete ? "#682c2c" : "black";
+    const tagColor = option.value.delete ? option.value : "white";
+    const tagBorderColor = option.color.slice(0, 7);
+    const borderColor = option.value.delete ? "darkred" : "black";
+    const bgColor = option.color;
 
     return (
       <Ref innerRef={option.ref}>
@@ -84,13 +88,13 @@ const ButtonSelection = ({ id, active, options, onSelect }) => {
           style={{
             flex: `1 1 auto`,
             padding: "4px 2px",
-            background: option.color,
-            color: option.textColor || "black",
+            background: bgColor,
+            color: textColor,
             border: "3px solid",
-            borderColor: i === selected ? bcolorSelected : "white",
+            borderColor: i === selected ? borderColor : "white",
             margin: "1px",
           }}
-          key={option.label}
+          key={option.label + "_" + i}
           value={option.value}
           compact
           size="mini"
@@ -102,11 +106,12 @@ const ButtonSelection = ({ id, active, options, onSelect }) => {
               style={{
                 display: "inline-block",
                 float: "left",
-                background: option.textColor,
-                color: "white",
-                borderRadius: "2px",
+                background: tagColor,
+                color: "black",
+                borderRadius: "0px",
+                border: `2px solid ${tagBorderColor}`,
                 padding: "2px",
-                marginRight: "4px",
+                margin: "-4px 4px -4px -2px",
               }}
             >{`${option.tag} `}</span>
           ) : null}
@@ -133,7 +138,7 @@ const ButtonSelection = ({ id, active, options, onSelect }) => {
 
     return (
       <>
-        <div key={id + "1"} style={{ display: "flex", flexWrap: "wrap", marginBottom: "10px" }}>
+        <div key={id + "_1"} style={{ display: "flex", flexWrap: "wrap", marginBottom: "10px" }}>
           {selectButtons}
         </div>
         {deleteButtons.length > 0 ? (
@@ -141,10 +146,10 @@ const ButtonSelection = ({ id, active, options, onSelect }) => {
             <Icon name="trash alternate" /> Delete codes
           </b>
         ) : null}
-        <div key={id + "2"} style={{ display: "flex", flexWrap: "wrap" }}>
+        <div key={id + "_2"} style={{ display: "flex", flexWrap: "wrap" }}>
           {deleteButtons}
         </div>
-        <div key={id + "3"} style={{ display: "flex", flexWrap: "wrap" }}>
+        <div key={id + "_3"} style={{ display: "flex", flexWrap: "wrap" }}>
           {cancelButton}
         </div>
       </>

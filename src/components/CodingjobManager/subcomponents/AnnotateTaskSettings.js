@@ -122,19 +122,34 @@ const AnnotateForm = ({ taskSettings, setTaskSettings, variableIndex }) => {
       );
     } else {
       return (
-        <Form.Field>
-          <Checkbox
-            label="Edit mode"
-            checked={annotateForm.editMode}
-            onChange={(e, d) => setAnnotateForm({ ...annotateForm, editMode: d.checked })}
-          />
-          <Help
-            header="Edit mode"
-            texts={[
-              "In edit mode you can not create new annotations, but only edit existing anntations",
-            ]}
-          />
-        </Form.Field>
+        <>
+          <Form.Field>
+            <Checkbox
+              label="Edit mode"
+              checked={annotateForm.editMode}
+              onChange={(e, d) => setAnnotateForm({ ...annotateForm, editMode: d.checked })}
+            />
+            <Help
+              header="Edit mode"
+              texts={[
+                "In edit mode you can not create new annotations, but only edit existing anntations",
+              ]}
+            />
+          </Form.Field>
+          <Form.Field>
+            <Checkbox
+              label="Only code "
+              checked={annotateForm.editMode}
+              onChange={(e, d) => setAnnotateForm({ ...annotateForm, editMode: d.checked })}
+            />
+            <Help
+              header="Edit mode"
+              texts={[
+                "In edit mode you can not create new annotations, but only edit existing anntations",
+              ]}
+            />
+          </Form.Field>
+        </>
       );
     }
   };

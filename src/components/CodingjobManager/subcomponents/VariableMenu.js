@@ -97,20 +97,23 @@ const VariableMenu = ({
         />
       </Menu>
       <Segment attached="bottom" style={{ padding: "1em" }}>
-        {importedCode()}
         <DeleteButton
           variables={variables}
           setVariables={setVariables}
           index={index}
           setIndex={setIndex}
         />
-        <ChangeName variables={variables} setVariables={setVariables} index={index} />
         <Accordion>
           <Accordion.Title active={open} onClick={() => setOpen(!open)}>
             <i style={{ color: "blue" }}>{open ? "Hide" : "Show"} settings</i>{" "}
             <Icon name="dropdown" />
           </Accordion.Title>
-          <Accordion.Content active={open}> {children}</Accordion.Content>
+          <Accordion.Content active={open}>
+            {" "}
+            {importedCode()}
+            <ChangeName variables={variables} setVariables={setVariables} index={index} />
+            {children}
+          </Accordion.Content>
         </Accordion>
       </Segment>
     </div>

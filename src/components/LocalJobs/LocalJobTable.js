@@ -37,7 +37,7 @@ const LocalJobTable = ({ jobKey, setJobKey }) => {
         last_modified: row.last_modified,
         last_modified_str: row.last_modified.toString().slice(0, 24),
         set: row.set,
-        progress: `${row.progressIndex || 0} / ${row.units.length}`,
+        progress: `${row.n_coded || 0} / ${row.units.length}`,
         title: row.title,
       });
     });

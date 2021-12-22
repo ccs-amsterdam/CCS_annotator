@@ -42,20 +42,22 @@ const QuestionForm = ({
     annotations[questionIndex].makes_irrelevant = answer.makes_irrelevant;
     unit.annotations = updateAnnotations(annotations[questionIndex], unit.annotations);
     processIrrelevantBranching(unit, questions, annotations, questionIndex);
-    unit.jobServer.postAnnotations(unit.unitId, unit.annotations);
+
+    // next (non-irrelevant) question in unit (null if no remaining)
+    let newQuestionIndex = null;
+    for (let i = questionIndex + 1; i < questions.length; i++) {
+      if (annotations[i].value === "IRRELEVANT") continue;
+      newQuestionIndex = i;
+      break;
+    }
+
+    const status = newQuestionIndex === null ? "DONE" : "IN_PROGRESS";
+    unit.jobServer.postAnnotations(unit.unitId, unit.annotations, status);
 
     setAnswerTransition(answer); // show given answer
     setTimeout(() => {
       // wait a little bit, so coder can see their answer and breathe
       setAnswerTransition(null);
-
-      // check if there is a non irrelevant question remaining
-      let newQuestionIndex = null;
-      for (let i = questionIndex + 1; i < questions.length; i++) {
-        if (annotations[i].value === "IRRELEVANT") continue;
-        newQuestionIndex = i;
-        break;
-      }
 
       // if none remain, go to next unit
       if (newQuestionIndex === null) {

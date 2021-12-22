@@ -43,7 +43,7 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
         <Button.Group fluid style={{ padding: "0", height: "40px" }}>
           <SettingsPopup settings={settings} setSettings={setSettings} />
           <UserManual codebook={codebook} />
-          <NextUnitButton setUnitIndex={setUnitIndex} />
+          <NextUnitButton unit={unit} annotations={annotations} setUnitIndex={setUnitIndex} />
         </Button.Group>
         <div style={{ height: "calc(100% - 40px", fontSize: `${settings.textSize}em` }}>
           <Document
@@ -87,29 +87,21 @@ const useAnnotations = (unit) => {
     }
     hasChanged.current = false;
     setAnnotations(unit.annotations || []);
-    if (!unit.annotations || unit.annotations.length === 0)
-      unit.jobServer.postAnnotations(unit.unitId, []);
+    // if (!unit.annotations || unit.annotations.length === 0)
+    //   unit.jobServer.postAnnotations(unit.unitId, [], "IN_PROGRESS");
   }, [unit, setAnnotations]);
 
   const onChangeAnnotations = React.useCallback(
     (newAnnotations) => {
       setAnnotations(newAnnotations);
 
-      const cleanAnnotations = newAnnotations.map((na) => {
-        return {
-          variable: na.variable,
-          value: na.value,
-          section: na.section,
-          offset: na.offset,
-          length: na.length,
-        };
-      });
+      const cleanAnnotations = getCleanAnnotations(newAnnotations);
       if (!hasChanged.current) {
         if (hash(cleanAnnotations) === hash(unit.annotations)) return;
         hasChanged.current = true;
       }
 
-      unit.jobServer.postAnnotations(unit.unitId, cleanAnnotations);
+      unit.jobServer.postAnnotations(unit.unitId, cleanAnnotations, "IN_PROGRESS");
     },
     [unit]
   );
@@ -117,11 +109,27 @@ const useAnnotations = (unit) => {
   return [annotations, onChangeAnnotations];
 };
 
-const NextUnitButton = ({ setUnitIndex }) => {
+const getCleanAnnotations = (annotations) => {
+  return annotations.map((na) => {
+    return {
+      variable: na.variable,
+      value: na.value,
+      section: na.section,
+      offset: na.offset,
+      length: na.length,
+    };
+  });
+};
+
+const NextUnitButton = ({ unit, annotations, setUnitIndex }) => {
   const [tempDisable, setTempDisable] = useState(false);
 
   const onNext = () => {
     if (tempDisable) return;
+
+    // write DONE status
+    unit.jobServer.postAnnotations(unit.unitId, getCleanAnnotations(annotations), "DONE");
+
     setTempDisable(true);
     setUnitIndex((state) => state + 1);
     setTimeout(() => {

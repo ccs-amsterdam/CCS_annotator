@@ -26,10 +26,12 @@ const defaultUnitSettings = {
 };
 
 const UnitSettings = ({ codingjob }) => {
-  const unitSettings = codingjob?.unitSettings || defaultUnitSettings;
+  const unitSettings = codingjob?.unitSettings;
   const setUnitSettings = (us) => {
     db.setCodingjobProp(codingjob, "unitSettings", us);
   };
+
+  if (!codingjob?.unitSettings) setUnitSettings(defaultUnitSettings);
 
   if (!unitSettings) return null;
   return (

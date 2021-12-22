@@ -4,8 +4,7 @@ import { Link, withRouter, useLocation } from "react-router-dom";
 
 import Reset from "./Reset";
 import Persist from "./Persist";
-import Amcat from "./Amcat";
-import UserName from "./UserName";
+import UserName from "./Login";
 
 // This is the index file of HeaderMenu, but importing via index
 // breaks. Probably due to the withRouter()
@@ -35,7 +34,6 @@ const HeaderMenu = ({ items, children }) => {
         {menuItems}
         <Menu.Menu position="right">
           <UserName />
-          <Amcat />
           <Persist />
           <Reset />
         </Menu.Menu>

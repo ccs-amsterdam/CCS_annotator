@@ -30,11 +30,17 @@ const AnnotateNavigation = ({
     showSelection(tokens, tokenSelection);
   }, [tokens, tokenSelection]);
 
+  useEffect(() => {
+    setCurrentToken({ i: null });
+    setTokenSelection([]);
+  }, [tokens]);
+
   return (
     <>
       <AnnotationPopup
         tokens={tokens}
         currentToken={currentToken}
+        setCurrentToken={setCurrentToken}
         annotations={annotations}
         variableMap={variableMap}
         fullScreenNode={fullScreenNode}
@@ -196,9 +202,17 @@ const showSelection = (tokens, selection) => {
 };
 
 const AnnotationPopup = React.memo(
-  ({ tokens, currentToken, annotations, variableMap, fullScreenNode, onlyFirst }) => {
+  ({
+    tokens,
+    currentToken,
+    setCurrentToken,
+    annotations,
+    variableMap,
+    fullScreenNode,
+    onlyFirst,
+  }) => {
     const [content, setContent] = useState(null);
-    const [refresh, setRefresh] = useState();
+    const [refresh, setRefresh] = useState(0);
 
     useEffect(() => {
       if (
@@ -207,6 +221,7 @@ const AnnotationPopup = React.memo(
         !variableMap
       ) {
         setContent(null);
+        setRefresh(0);
         return null;
       }
 
@@ -227,6 +242,7 @@ const AnnotationPopup = React.memo(
               backgroundColor: getColor(value, codeMap),
               padding: "0.3em",
             }}
+            onMouseOver={() => setCurrentToken({ i: null })}
           >
             <b>{variable}</b>
             {": " + value}
@@ -237,10 +253,16 @@ const AnnotationPopup = React.memo(
 
       setContent(<List>{list}</List>);
       setRefresh(0);
-    }, [tokens, currentToken, annotations, onlyFirst, variableMap, setRefresh]);
+    }, [tokens, currentToken, setCurrentToken, annotations, onlyFirst, variableMap, setRefresh]);
 
-    // ugly hack, but popup won't scroll along, so refresh position at intervalls if content is not null
-    if (content) setTimeout(() => setRefresh(refresh + 1), 50);
+    useEffect(() => {
+      // ugly hack, but popup won't scroll along, so refresh position at intervalls if content is not null
+      if (!content) return;
+      const timer = setTimeout(() => {
+        setRefresh(refresh + 1);
+      }, 200);
+      return () => clearTimeout(timer);
+    }, [refresh, content]);
 
     return (
       <Popup
@@ -249,7 +271,6 @@ const AnnotationPopup = React.memo(
         basic
         hoverable={false}
         position="top left"
-        mouseLeaveDelay={1}
         open={true}
         style={{
           margin: "0",

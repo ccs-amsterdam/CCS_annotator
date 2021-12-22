@@ -4,48 +4,53 @@ import { useLocation } from "react-router";
 import AnnotatorScreen from "components/Annotator/AnnotatorScreen";
 import { JobServerRemote, JobServerLocal } from "components/Annotator/JobServerClass";
 import { useCookies } from "react-cookie";
-import UserName from "components/HeaderMenu/UserName";
+import Login from "components/HeaderMenu/Login";
 
 import "components/Annotator/annotatorStyle.css";
+import newAmcatSession from "apis/amcat";
 
 const Annotator = () => {
   const location = useLocation();
   const [jobServer, setJobServer] = useState(null);
-  const [cookies] = useCookies(["name"]);
+  const [loginScreen, setLoginScreen] = useState(null);
+  const [cookies] = useCookies(["amcat"]);
 
   useEffect(() => {
     if (!cookies.name) return;
     if (location.search) {
       const queries = parseQueryString(location);
-      if (queries?.url) {
-        // QR codes generated in CSS Manager replace colon with %colon%
-        // cleaner solution would probably be url shorteners
-        queries.url = queries.url.replace("%colon%", ":").replace("%25colon%25", ":");
-        createRemoteJobServer(queries.url, cookies, setJobServer);
-      }
-      if (queries?.id) createLocalJobServer(queries.id, cookies, setJobServer);
+      if (queries?.url) createRemoteJobServer(queries.url, cookies, setJobServer, setLoginScreen);
+      if (queries.id) createLocalJobServer(queries.id, cookies, setJobServer, setLoginScreen);
     } else {
       setJobServer(null);
     }
   }, [location, cookies, setJobServer]);
 
-  //if (!JobServer) return <TaskSelector />;
-  if (!cookies.name) return <UserName force={true} />;
-  if (!jobServer) return null;
+  if (!jobServer) return loginScreen;
   return <AnnotatorScreen jobServer={jobServer} />;
 };
 
-const createLocalJobServer = async (id, cookies, setJobServer) => {
-  const us = new JobServerLocal(id, cookies.name);
+const createRemoteJobServer = async (url, cookies, setJobServer, setLoginScreen) => {
+  const u = new URL(url);
+  const amcat = newAmcatSession(u.origin, cookies?.amcat?.token);
+
+  try {
+    await amcat.getToken();
+  } catch (e) {
+    // if could not get token, assume it's because login failed
+    setLoginScreen(<Login host={u.origin} force={true} />);
+  }
+
+  const job_id = u.pathname.split("/").slice(-1)[0];
+  const us = new JobServerRemote(amcat, job_id);
   await us.init();
-  setJobServer(us);
+  if (us.success) setJobServer(us);
 };
 
-const createRemoteJobServer = async (url, cookies, setJobServer) => {
-  const us = new JobServerRemote(url, cookies.name);
+const createLocalJobServer = async (id, cookies, setJobServer) => {
+  const us = new JobServerLocal(id, cookies.email, cookies.token);
   await us.init();
-  console.log(us);
-  setJobServer(us);
+  if (us.success) setJobServer(us);
 };
 
 const parseQueryString = (location) => {

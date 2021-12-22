@@ -18,7 +18,7 @@ const AnnotatorScreen = ({ jobServer }) => {
   const location = useLocation();
 
   useEffect(() => {
-    setUnitIndex(jobServer.progressIndex);
+    setUnitIndex(jobServer.progress.n_coded);
   }, [jobServer, setUnitIndex]);
 
   useEffect(() => {
@@ -26,10 +26,13 @@ const AnnotatorScreen = ({ jobServer }) => {
     jobServer
       .getUnit(unitIndex)
       .then((unit) => {
+        console.log(unit);
         setPreparedUnit({
           jobServer,
           unitId: unit.id,
           ...unit.unit,
+          annotations: unit.annotation,
+          status: unit.status,
         });
       })
       .catch((e) => {
@@ -51,7 +54,6 @@ const AnnotatorScreen = ({ jobServer }) => {
     return <Task codebook={jobServer?.codebook} unit={preparedUnit} setUnitIndex={setUnitIndex} />;
   };
 
-  console.log(jobServer);
   return (
     <FullScreenFix handle={fsHandle}>
       <div
@@ -69,11 +71,11 @@ const AnnotatorScreen = ({ jobServer }) => {
         <div style={{ height: "45px", padding: "0", position: "relative" }}>
           <div style={{ width: "85%", paddingLeft: "7.5%" }}>
             <IndexController
-              n={jobServer?.rules.n}
+              n={jobServer?.progress.n_total}
               index={unitIndex}
               setIndex={setUnitIndex}
-              canGoBack={jobServer?.rules.canGoBack}
-              canGoForward={jobServer?.rules.canGoForward}
+              canGoBack={jobServer?.progress.seek_backwards}
+              canGoForward={jobServer?.progress.seek_forwards}
               quickKeyNext={jobServer?.codebook?.type === "annotate"}
             />
           </div>

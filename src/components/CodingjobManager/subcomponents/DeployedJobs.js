@@ -73,14 +73,17 @@ const deployedTableColumns = [
 ];
 
 const DeployedTable = ({ jobKey, setJobKey }) => {
-  const jobs = useLiveQuery(async () => {
-    let arr = await db.idb.deployedJobs.toArray();
-    arr.sort((a, b) => {
+  const [jobs, setJobs] = useState(null);
+  const jobsTable = useLiveQuery(() => db.idb.deployedJobs.toArray());
+
+  useEffect(() => {
+    if (!jobsTable) return;
+    jobsTable.sort((a, b) => {
       return b.created - a.created;
     });
-
-    return arr.map((row) => ({ ...row, created: row.created.toDateString() }));
-  });
+    setJobKey(null);
+    setJobs(jobsTable.map((row) => ({ ...row, created: row.created.toDateString() })));
+  }, [jobsTable, setJobKey]);
 
   useEffect(() => {
     if (!jobKey && jobs) {

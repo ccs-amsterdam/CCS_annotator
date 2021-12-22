@@ -12,7 +12,7 @@ import { getCodebook } from "library/codebook";
 import DeployedJobs from "./subcomponents/DeployedJobs";
 import { useCookies } from "react-cookie";
 import newAmcatSession from "apis/amcat";
-import { AmcatLogin } from "components/HeaderMenu/Amcat";
+import { LoginForm } from "components/HeaderMenu/Login";
 
 const DeployCodingjob = ({ codingjob }) => {
   const [codingjobPackage, setCodingjobPackage] = useState(null);
@@ -81,14 +81,14 @@ const DownloadButton = ({ codingjobPackage }) => {
     const cjSets = createCoderSets(codingjobPackage);
 
     const zip = new JSZip();
-    zip.file(`AmCAT_annotator_${codingjobPackage.title}.json`, JSON.stringify(codingjobPackage));
+    zip.file(`AmCAT_annotator_${title}.json`, JSON.stringify(codingjobPackage));
     for (let i = 0; i < cjSets.length; i++) {
-      const fname = `set_${cjSets[i].set}_units_${cjSets[i].units.length}_${codingjobPackage.title}.json`;
+      const fname = `set_${cjSets[i].set}_units_${cjSets[i].units.length}_${title}.json`;
       zip.file(fname, JSON.stringify(cjSets[i]));
     }
 
     const content = await zip.generateAsync({ type: "blob" });
-    saveAs(content, `AmCAT_annotator_${codingjobPackage.title}.zip`);
+    saveAs(content, `AmCAT_annotator_${title}.zip`);
 
     // codingjobPackage.title = title;
     // const json = [JSON.stringify(codingjobPackage)];
@@ -132,27 +132,33 @@ const DownloadButton = ({ codingjobPackage }) => {
 
 const AmcatDeploy = ({ codingjobPackage }) => {
   const [title, setTitle] = useState("");
-  const [cookies, setCookie, removeCookie] = useCookies(["amcat"]);
+  const [cookies, setCookie] = useCookies(["amcat"]);
 
   useEffect(() => {
     if (codingjobPackage?.title) setTitle(codingjobPackage.title);
   }, [codingjobPackage]);
 
   const deploy = async () => {
-    const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.email, cookies.amcat.token);
+    const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.token);
     try {
-      console.log(codingjobPackage);
       const id = await amcat.postCodingjob(codingjobPackage, title);
-      console.log(id);
       const url = `${amcat.host}/codingjob/${id.data.id}`;
       db.createDeployedJob(title, url);
     } catch (e) {
       console.log(e);
-      removeCookie("amcat");
+      setCookie("amcat", JSON.stringify({ ...cookies.amcat, token: null }), { path: "/" });
     }
   };
 
-  if (!cookies.amcat) return <AmcatLogin cookies={cookies} setCookie={setCookie} />;
+  if (!cookies?.amcat?.token)
+    return (
+      <LoginForm
+        cookies={cookies}
+        setCookies={setCookie}
+        setOpen={() => null}
+        setLoggedIn={() => null}
+      />
+    );
 
   return (
     <div>
@@ -178,7 +184,7 @@ const AmcatDeploy = ({ codingjobPackage }) => {
 const createCoderSets = (codingjobPackage) => {
   const unitSettings = codingjobPackage.provenance.unitSettings;
   const deploySettings = codingjobPackage.provenance.deploySettings;
-  const units = codingjobPackage.units;
+  const units = codingjobPackage.units.map((u) => u.unit); // remove unit data for backend (like 'gold')
 
   const nOverlap = Math.round((unitSettings.totalUnits * deploySettings.pctOverlap) / 100);
   //const n = totalSet - overlapSet
@@ -207,12 +213,20 @@ const createCodingjobPackage = async (
   setCodingjobPackage,
   includeDocuments = false
 ) => {
+  let sunits = await standardizeUnits(codingjob, units);
+  sunits = sunits.map((su) => {
+    return {
+      unit: su,
+      //gold: {}
+    };
+  });
+
   const cjpackage = {
     title: codingjob.name,
     provenance: { unitSettings: codingjob.unitSettings, deploySettings: codingjob.deploySettings },
     codebook: getCodebook(codingjob.taskSettings),
-    units: await standardizeUnits(codingjob, units),
-    rules: { authentication: "user" },
+    units: sunits,
+    rules: { ruleset: "crowdcoding" },
   };
 
   if (includeDocuments)

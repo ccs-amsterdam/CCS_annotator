@@ -157,8 +157,11 @@ class AnnotationDB {
   async getAllAnnotations(job_id) {
     return this.idb.localAnnotations.where("id").equals(job_id).toArray();
   }
-  async postAnnotations(job_id, unit_id, annotations) {
-    return this.idb.localAnnotations.put({ unit_id, id: job_id, annotations }, [job_id, unit_id]);
+  async postAnnotations(job_id, unit_id, annotations, status) {
+    return this.idb.localAnnotations.put({ unit_id, id: job_id, annotations, status }, [
+      job_id,
+      unit_id,
+    ]);
   }
 
   // CLEANUP

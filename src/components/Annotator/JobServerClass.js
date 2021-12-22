@@ -1,55 +1,35 @@
-import axios from "axios";
 import db from "apis/dexie";
 
 /**
  * Class for jobs hosted on a server
  */
 export class JobServerRemote {
-  constructor(url, coderName) {
-    this.url = url;
-    this.coderName = coderName;
+  constructor(amcat, job_id) {
+    this.amcat = amcat;
+    this.job_id = job_id;
     this.where = "remote";
-    this.codingjobID = "";
   }
 
   async init() {
-    // needs to be called in order to fetch codebook/rules
-    let response;
     try {
-      let url = new URL(this.url);
-      const urlsplit = url.pathname.split("/");
-      this.codingjobID = urlsplit[urlsplit.length - 1];
-      url = `${this.url}/codebook?id=${this.codingjobID}&user=${this.coderName}`;
-      response = await axios.get(url);
+      this.codebook = await this.amcat.getCodebook(this.job_id);
+      this.progress = await this.amcat.getProgress(this.job_id);
     } catch (e) {
+      console.log(e);
       this.success = false;
       return;
     }
     this.success = true;
-    this.codebook = response.data;
-
-    // this should come from rules
-    this.rules = { n: null, canGoBack: false, canGoForward: false };
-
-    // this should somehow be provided by amcat
-    this.progressIndex = 0;
-    console.log("whhhhad");
   }
 
   async getUnit(i) {
-    //
-    const response = await axios.get(
-      `${this.url}/unit?user=${this.coderName}&id=${this.codingjobID}`
-    );
-    console.log(response);
-    return response.data;
-    // data should be an object with url, id and unit, where unit is an object with at least text_fields,
-    // and if available annotations
+    const getNext = i >= this.progress.n_coded && !this.progress.seek_forwards;
+    this.progress.n_coded = Math.max(i, this.progress.n_coded);
+    return await this.amcat.getUnit(this.job_id, getNext ? null : i);
   }
 
-  postAnnotations(unit_id, data) {
-    console.log("posting annotations");
-    axios.post(`${this.url}/unit/${unit_id}/annotation?user=${this.coderName}`, data);
+  postAnnotations(unit_id, annotation, status) {
+    this.amcat.postAnnotation(this.job_id, unit_id, annotation, status);
   }
 }
 
@@ -64,7 +44,6 @@ export class JobServerLocal {
   }
 
   async init() {
-    // needs to be called in order to fetch codebook/rules
     let job = await db.idb.localJobs.get({ id: this.id });
     if (!job) {
       this.success = false;
@@ -72,37 +51,44 @@ export class JobServerLocal {
     }
 
     this.success = true;
-    this.units = job.units;
-    this.codebook = job.codebook;
     this.title = job.title;
+    this.units = job.units;
     this.set = job.set;
-    this.rules = { n: job.units.length, canGoBack: true, canGoForward: false };
 
-    this.progressIndex = job.progressIndex || 0;
+    this.codebook = job.codebook;
+    this.progress = {
+      n_total: job.units.length,
+      n_coded: job.n_coded || 0,
+      seek_backwards: true,
+      seek_forwards: false,
+    };
   }
 
   async getUnit(i) {
     if (i !== null) {
-      this.progressIndex = Math.max(i, this.progressIndex);
+      this.progress.n_coded = Math.max(i, this.progress.n_coded);
       // on get unit, also update progress.
       // progressindex is the index of the currently fetched unit.
       await db.idb.localJobs
         .where("id")
         .equals(this.id)
-        .modify({ progressIndex: Math.max(i, this.progressIndex), last_modified: new Date() });
+        .modify({ n_coded: Math.max(i, this.progress.n_coded), last_modified: new Date() });
     }
 
     const unit_id = this.units[i].unit_id;
     let annotations = await db.getUnitAnnotations(this.id, unit_id);
+    const status = annotations?.status;
     annotations = annotations?.annotations || [];
 
     return {
       id: unit_id,
-      unit: { ...this.units[i], annotations },
+      unit: { ...this.units[i] },
+      annotations,
+      status,
     };
   }
 
-  async postAnnotations(unit_id, data) {
-    db.postAnnotations(this.id, unit_id, data);
+  async postAnnotations(unit_id, annotation, status) {
+    db.postAnnotations(this.id, unit_id, annotation, status);
   }
 }
