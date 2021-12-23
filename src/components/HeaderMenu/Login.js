@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Menu, Header, Modal, Form, Button, Segment, Grid, Divider } from "semantic-ui-react";
+import { Menu, Header, Form, Button, Segment, Grid, Divider, Popup } from "semantic-ui-react";
 import { useCookies } from "react-cookie";
 import { blockEvents } from "actions";
 import { useDispatch } from "react-redux";
@@ -44,14 +44,18 @@ const Login = ({ host = null, force = false }) => {
   // };
 
   return (
-    <Modal
+    <Popup
       closeIcon={!force}
       open={open || force}
+      hoverable
+      flowing
+      on="click"
+      mouseLeaveDelay={1000}
       trigger={
         <Menu.Item
-          icon={loggedIn ? "toggle on" : "toggle off"}
+          icon={loggedIn ? "log out" : "sign in"}
           name={loggedIn ? "Sign out" : "Sign in"}
-          style={{ color: cookies?.login?.token == null ? "red" : "green" }}
+          style={{ color: "white" }}
         />
       }
       onClose={() => setOpen(false)}
@@ -64,7 +68,7 @@ const Login = ({ host = null, force = false }) => {
         setOpen={setOpen}
         host={host}
       />
-    </Modal>
+    </Popup>
   );
 };
 
@@ -101,15 +105,14 @@ const SignOut = ({ amcat, setLogout }) => {
   return (
     <>
       <Header icon="user" content="Sign out" />
-      <Modal.Content>
-        <Grid textAlign="center">
-          <Grid.Column>
-            <Button secondary onClick={setLogout}>
-              Sign out from <span style={{ color: "lightblue" }}>{amcat.email}</span>
-            </Button>
-          </Grid.Column>
-        </Grid>
-      </Modal.Content>
+
+      <Grid textAlign="center">
+        <Grid.Column>
+          <Button secondary onClick={setLogout}>
+            Sign out from <span style={{ color: "lightblue" }}>{amcat.email}</span>
+          </Button>
+        </Grid.Column>
+      </Grid>
     </>
   );
 };
@@ -143,76 +146,75 @@ const SignIn = ({ amcat, setLogin }) => {
   return (
     <>
       <Header icon="user" content="Register or sign in" />
-      <Modal.Content>
-        <Segment placeholder attached="bottom">
-          <Grid stackable textAlign="center">
-            <Grid.Row>
-              <Grid.Column>
-                <Form>
-                  <Form.Input
-                    placeholder="Host"
-                    name="host"
-                    label="Host"
-                    value={host}
-                    onChange={(e, d) => {
-                      if (d.value.length < 100) setHost(d.value);
-                    }}
-                    icon="home"
-                    iconPosition="left"
-                    autoFocus
-                  />
-                  <Form.Input
-                    placeholder="email adress"
-                    error={emailError ? "Please enter a valid email adress" : false}
-                    name="email"
-                    label="Email"
-                    icon="mail"
-                    iconPosition="left"
-                    value={email}
-                    onChange={(e, d) => {
-                      if (d.value.length < 100) setEmail(d.value);
-                    }}
-                  />
-                </Form>
-              </Grid.Column>
-            </Grid.Row>
-          </Grid>
-          <Divider />
-          <Grid columns={2} textAlign="center">
-            <Grid.Row verticalAlign="middle">
-              <Grid.Column>
-                <Form>
-                  <Button circular primary fluid style={{ width: "7em", height: "7em" }}>
-                    Send link by email
-                  </Button>
-                </Form>
-              </Grid.Column>
-              <Divider vertical>Or</Divider>
-              <Grid.Column>
-                <Form>
-                  <Form.Input
-                    placeholder="password"
-                    name="password"
-                    error={invalidPassword ? "Invalid password for this host & email" : false}
-                    label="Password"
-                    type="password"
-                    icon="lock"
-                    iconPosition="left"
-                    value={password}
-                    onChange={(e, d) => {
-                      setInvalidPassword(false);
-                      setPassword(d.value);
-                    }}
-                  />
-                  <Button disabled={password.length === 0} primary fluid onClick={passwordLogin}>
-                    Sign in
-                  </Button>
-                </Form>
-              </Grid.Column>
-            </Grid.Row>
-          </Grid>
-        </Segment>
-      </Modal.Content>
+
+      <Segment placeholder attached="bottom">
+        <Grid stackable textAlign="center">
+          <Grid.Row>
+            <Grid.Column>
+              <Form>
+                <Form.Input
+                  placeholder="Host"
+                  name="host"
+                  label="Host"
+                  value={host}
+                  onChange={(e, d) => {
+                    if (d.value.length < 100) setHost(d.value);
+                  }}
+                  icon="home"
+                  iconPosition="left"
+                  autoFocus
+                />
+                <Form.Input
+                  placeholder="email adress"
+                  error={emailError ? "Please enter a valid email adress" : false}
+                  name="email"
+                  label="Email"
+                  icon="mail"
+                  iconPosition="left"
+                  value={email}
+                  onChange={(e, d) => {
+                    if (d.value.length < 100) setEmail(d.value);
+                  }}
+                />
+              </Form>
+            </Grid.Column>
+          </Grid.Row>
+        </Grid>
+        <Divider />
+        <Grid columns={2} textAlign="center">
+          <Grid.Row verticalAlign="middle">
+            <Grid.Column>
+              <Form>
+                <Button circular primary fluid style={{ width: "7em", height: "7em" }}>
+                  Send link by email
+                </Button>
+              </Form>
+            </Grid.Column>
+            <Divider vertical>Or</Divider>
+            <Grid.Column>
+              <Form>
+                <Form.Input
+                  placeholder="password"
+                  name="password"
+                  error={invalidPassword ? "Invalid password for this host & email" : false}
+                  label="Password"
+                  type="password"
+                  icon="lock"
+                  iconPosition="left"
+                  value={password}
+                  onChange={(e, d) => {
+                    setInvalidPassword(false);
+                    setPassword(d.value);
+                  }}
+                />
+                <Button disabled={password.length === 0} primary fluid onClick={passwordLogin}>
+                  Sign in
+                </Button>
+              </Form>
+            </Grid.Column>
+          </Grid.Row>
+        </Grid>
+      </Segment>
     </>
   );
 };

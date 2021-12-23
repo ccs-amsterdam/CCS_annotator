@@ -28,8 +28,8 @@ const Reset = () => {
       <Header icon="power off" content="Reset Annotator Database" />
       <Modal.Content>
         <p>
-          This will remove all document and annotation data from your browser. Any annotations that
-          have not been saved/synchronized will be lost. Are you absolutely sure?
+          This will remove all documents and annotations from your browser. Anything that hasn't
+          been exported will be lost. Are you absolutely sure?
         </p>
       </Modal.Content>
       <Modal.Actions>

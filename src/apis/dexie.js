@@ -113,13 +113,6 @@ class AnnotationDB {
     return this.idb.documents.where("doc_uid").equals(document.doc_uid).modify({ tokens: tokens });
   }
 
-  // async writeAnnotations(document, annotations) {
-  //   return this.idb.documents
-  //     .where("doc_uid")
-  //     .equals(document.doc_uid)
-  //     .modify({ annotations: annotations });
-  // }
-
   // DEPLOYED JOBS
   async createDeployedJob(title, url) {
     const exists = await this.idb.deployedJobs.get({ url });
@@ -195,14 +188,6 @@ const updateImportedCodes = (codingjob, importedCodes, codes) => {
   }
   return importedCodes;
 };
-
-// const safeNewCode = (code, codeMap, parentMap, i) => {
-//   // for preventing overlapping code names
-//   if (!codeMap[code] && !parentMap[code]) return code;
-//   if (i > 2) code = code.slice(0, code.length - code.toString().length);
-//   code += " " + i;
-//   safeNewCode(code, codeMap, i + 1);
-// };
 
 const db = new AnnotationDB();
 export default db;
