@@ -16,36 +16,43 @@ const ManageCodingUnits = ({ codingjob }) => {
   return (
     <div>
       <Grid stackable celled="internally" columns={3}>
-        <Grid.Column verticalAlign="top" stretched width={6}>
+        <Grid.Column verticalAlign="top" stretched width={5}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Define Coding Units
           </Header>
           <UnitSettings codingjob={codingjob} />
           <br />
-          <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
-            Coding Unit Layout
-          </Header>
-          <UnitLayoutSettings codingjob={codingjob} units={units} />
         </Grid.Column>
 
-        <Grid.Column width={4}>
+        <Grid.Column width={5}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Select Units
           </Header>
 
           <SampleSettings codingjob={codingjob} units={units} />
         </Grid.Column>
-        <Grid.Column width={6} style={{ height: "80vh", overflow: "auto" }}>
+        <Grid.Column width={6} style={{ height: "80vh" }}>
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
-            Unit preview
+            Coding Unit Design
           </Header>
-          <Dimmer inverted active={loadingUnits === "awaiting_input" || loadingUnits === "loading"}>
-            Awaiting input
-            <Loader size="huge">
-              {loadingUnits === "awaiting_input" ? "Awaiting input" : "updating"}
-            </Loader>
-          </Dimmer>
-          <PreviewDocument units={units} codingjob={codingjob} codebook={{}} />
+          <div style={{ maxHeight: "50%", overflow: "auto" }}>
+            <UnitLayoutSettings codingjob={codingjob} units={units} />
+          </div>
+          <div style={{ position: "relative", paddingTop: "20px", overflow: "auto" }}>
+            <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
+              Unit preview
+            </Header>
+            <Dimmer
+              inverted
+              active={loadingUnits === "awaiting_input" || loadingUnits === "loading"}
+            >
+              Awaiting input
+              <Loader size="huge">
+                {loadingUnits === "awaiting_input" ? "Awaiting input" : "updating"}
+              </Loader>
+            </Dimmer>
+            <PreviewDocument units={units} codingjob={codingjob} codebook={{}} />
+          </div>
         </Grid.Column>
       </Grid>
     </div>

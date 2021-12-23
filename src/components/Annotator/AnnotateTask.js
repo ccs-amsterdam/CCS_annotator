@@ -15,7 +15,6 @@ import AnnotateTable from "./subcomponents/AnnotateTable";
 import Document from "components/Document/Document";
 import { useSelector } from "react-redux";
 import { useCookies } from "react-cookie";
-import hash from "object-hash";
 
 const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
   const fullScreenNode = useSelector((state) => state.fullScreenNode);
@@ -45,7 +44,7 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
           <UserManual codebook={codebook} />
           <NextUnitButton unit={unit} annotations={annotations} setUnitIndex={setUnitIndex} />
         </Button.Group>
-        <div style={{ height: "calc(100% - 40px", fontSize: `${settings.textSize}em` }}>
+        <div style={{ height: "calc(100% - 20px", fontSize: `${settings.textSize}em` }}>
           <Document
             unit={unit}
             settings={codebook?.settings}
@@ -67,7 +66,7 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
           paddingLeft: "10px",
         }}
       >
-        <div style={{ borderBottom: "1px solid", height: "calc(100% - 20px)", overflow: "auto" }}>
+        <div style={{ borderBottom: "1px solid", height: "calc(100%)", overflow: "auto" }}>
           <AnnotateTable tokens={tokens} variableMap={variableMap} annotations={annotations} />
         </div>
       </Grid.Column>
@@ -97,7 +96,7 @@ const useAnnotations = (unit) => {
 
       const cleanAnnotations = getCleanAnnotations(newAnnotations);
       if (!hasChanged.current) {
-        if (hash(cleanAnnotations) === hash(unit.annotations)) return;
+        if (JSON.stringify(cleanAnnotations) === JSON.stringify(unit.annotations)) return;
         hasChanged.current = true;
       }
 

@@ -76,14 +76,14 @@ export class JobServerLocal {
     }
 
     const unit_id = this.units[i].unit_id;
-    let annotations = await db.getUnitAnnotations(this.id, unit_id);
-    const status = annotations?.status;
-    annotations = annotations?.annotations || [];
+    let annotation = await db.getUnitAnnotations(this.id, unit_id);
+    const status = annotation?.status;
+    annotation = annotation?.annotations || [];
 
     return {
       id: unit_id,
       unit: { ...this.units[i] },
-      annotations,
+      annotation,
       status,
     };
   }

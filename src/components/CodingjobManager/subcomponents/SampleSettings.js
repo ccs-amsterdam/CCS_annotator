@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Icon, Form, Checkbox, Input, Header } from "semantic-ui-react";
+import { Icon, Form, Checkbox, Input, Header, Button } from "semantic-ui-react";
 import Help from "./Help";
 import db from "apis/dexie";
-import CheckboxTable from "./CheckboxTable";
+import FullDataTable from "./FullDataTable";
 
 const SampleSettings = ({ codingjob, units }) => {
   const unitSettings = codingjob?.unitSettings;
@@ -12,7 +12,7 @@ const SampleSettings = ({ codingjob, units }) => {
 
   const totalN = () => {
     if (!units) return null;
-    if (units.length === unitSettings.n) return null;
+    if (unitSettings?.annotationMix === 0) return null;
     return <Header>Total units = {units.length}</Header>;
   };
 
@@ -20,7 +20,7 @@ const SampleSettings = ({ codingjob, units }) => {
   return (
     <div style={{ verticalAlign: "top", float: "top", paddingLeft: "1em" }}>
       <SampleForm unitSettings={unitSettings} setUnitSettings={setUnitSettings} />
-      {totalN()}
+      <div style={{ height: "25px" }}>{totalN()}</div>
       <br />
       <SelectValidCodes codingjob={codingjob} units={units} />
     </div>
@@ -239,21 +239,11 @@ const SampleForm = React.memo(({ unitSettings, setUnitSettings }) => {
 });
 
 const validCodesColumns = [
-  {
-    Header: "Code",
-    accessor: "code",
-    headerClass: "ten wide",
-  },
-  {
-    Header: "N",
-    accessor: "N",
-    headerClass: "two wide",
-  },
-  {
-    Header: "Random",
-    accessor: "random",
-    headerClass: "three wide",
-  },
+  { name: "USE", width: 1 },
+  { name: "ONLY", width: 2 },
+  { name: "code" },
+  { name: "N" },
+  { name: "random" },
 ];
 
 const SelectValidCodes = ({ codingjob, units }) => {
@@ -310,16 +300,59 @@ const SelectValidCodes = ({ codingjob, units }) => {
   if (!validCodes || !annotation || !isAnnotation) return null;
   if (!validCodes[annotation]) return null;
 
+  const dataWithCheckbox = data.map((d, i) => {
+    d = { ...d };
+    d.USE = (
+      <Checkbox
+        checked={d.valid}
+        onClick={() => {
+          data[i].valid = !d.valid;
+          setValidCodes([...data]);
+        }}
+      />
+    );
+    d.ONLY = (
+      <Button
+        icon="hand point right"
+        style={{ padding: "0", background: "white" }}
+        onClick={() => {
+          setValidCodes(
+            data.map((v, j) => {
+              v.valid = j === i;
+              return v;
+            })
+          );
+        }}
+      />
+    );
+    return d;
+  });
+
+  const useAll = () => {
+    setValidCodes(
+      data.map((v) => {
+        v.valid = true;
+        return v;
+      })
+    );
+  };
+
   return (
     <Form>
       <Form.Group>
         <Icon name="setting" />
         <div>
-          <label>Select annotation codes</label>
+          <label>Annotations per code</label>
         </div>
       </Form.Group>
-
-      <CheckboxTable columns={validCodesColumns} data={data} setData={setValidCodes} />
+      <Button
+        primary
+        content="use all"
+        style={{ padding: "5px", marginBottom: "5px" }}
+        onClick={useAll}
+      />
+      <FullDataTable fullData={dataWithCheckbox} columns={validCodesColumns} />
+      {/* <CheckboxTable columns={validCodesColumns} data={data} setData={setValidCodes} /> */}
     </Form>
   );
 };

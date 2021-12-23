@@ -23,7 +23,7 @@ export const prepareDocumentBatch = (
 
   const preparedDocuments = documentList.reduce((result, document) => {
     if (document.document_id == null) return result;
-    const doc_uid = hash([document, job_id]); // codingjob included for doc_uid (unique id) hash
+    const doc_uid = hash([document, job_id, new Date()]); // bit overkill, sure
     if (!ids.has(doc_uid)) {
       ids.add(doc_uid);
 

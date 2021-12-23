@@ -49,6 +49,10 @@ class Amcat {
     const res = await this.api.get(path);
     return res.data;
   }
+  async getCodingjob(job_id) {
+    const res = await this.api.get(`/codingjob/${job_id}`);
+    return res.data;
+  }
 
   // POST
   postCodingjob(codingjobPackage, title) {

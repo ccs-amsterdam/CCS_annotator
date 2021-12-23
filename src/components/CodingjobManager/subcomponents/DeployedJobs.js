@@ -1,12 +1,19 @@
 import db from "apis/dexie";
-import SelectionTable from "./SelectionTable";
-import { useLiveQuery } from "dexie-react-hooks";
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router";
 import { Button, Grid, Header, Popup, TextArea } from "semantic-ui-react";
 import QRCode from "react-qr-code";
 import { useCookies } from "react-cookie";
 import newAmcatSession from "apis/amcat";
+import DataTable from "./DexieTable";
+import FullDataTable from "./FullDataTable";
+
+const dtColumns = [
+  { name: "id", width: 1 },
+  { name: "title" },
+  { name: "url" },
+  { name: "created" },
+];
 
 const DeployedJobs = () => {
   const history = useHistory();
@@ -37,7 +44,12 @@ const DeployedJobs = () => {
     <Grid centered container>
       <Grid.Row>
         <Grid.Column width={8}>
-          <DeployedTable jobKey={jobKey} setJobKey={setJobKey} />
+          <DataTable
+            table={"deployedJobs"}
+            columns={dtColumns}
+            setSelected={setJobKey}
+            reverse={true}
+          />
         </Grid.Column>
         <Grid.Column width={8}>
           <Button primary disabled={!jobKey} onClick={setJobUrlQuery}>
@@ -54,95 +66,15 @@ const DeployedJobs = () => {
   );
 };
 
-const deployedTableColumns = [
-  {
-    Header: "Title",
-    accessor: "title",
-    headerClass: "two wide",
-  },
-  {
-    Header: "URL",
-    accessor: "url",
-    headerClass: "four wide",
-  },
-  {
-    Header: "Created",
-    accessor: "created",
-    headerClass: "four wide",
-  },
-];
-
-const DeployedTable = ({ jobKey, setJobKey }) => {
-  const [jobs, setJobs] = useState(null);
-  const jobsTable = useLiveQuery(() => db.idb.deployedJobs.toArray());
-
-  useEffect(() => {
-    if (!jobsTable) return;
-    jobsTable.sort((a, b) => {
-      return b.created - a.created;
-    });
-    setJobKey(null);
-    setJobs(jobsTable.map((row) => ({ ...row, created: row.created.toDateString() })));
-  }, [jobsTable, setJobKey]);
-
-  useEffect(() => {
-    if (!jobKey && jobs) {
-      setJobKey(jobs.length > 0 ? { ...jobs[0], ROW_ID: "0" } : null);
-    }
-  }, [jobKey, jobs, setJobKey]);
-
-  return (
-    <SelectionTable
-      columns={deployedTableColumns}
-      data={jobs ? jobs : []}
-      selectedRow={jobKey}
-      setSelectedRow={setJobKey}
-      defaultSize={15}
-    />
-  );
-};
-
-const resultsTableColumns = [
-  {
-    Header: "document_id",
-    accessor: "document_id",
-    headerClass: "three wide",
-  },
-  {
-    Header: "unit_id",
-    accessor: "unit_id",
-    headerClass: "two wide",
-  },
-  {
-    Header: "Coder",
-    accessor: "coder",
-    headerClass: "three wide",
-  },
-  {
-    Header: "Variable",
-    accessor: "variable",
-    headerClass: "three wide",
-  },
-  {
-    Header: "Value",
-    accessor: "value",
-    headerClass: "three wide",
-  },
-  {
-    Header: "Offset",
-    accessor: "offset",
-    headerClass: "three wide",
-  },
-  {
-    Header: "Length",
-    accessor: "length",
-    headerClass: "three wide",
-  },
-  {
-    Header: "Text",
-    accessor: "text",
-    headerClass: "three wide",
-  },
+const rtColumns = [
+  { name: "document_id" },
+  { name: "unit_id" },
+  { name: "coder" },
+  { name: "variable" },
+  { name: "value" },
+  { name: "offset" },
+  { name: "length" },
+  { name: "text" },
 ];
 
 const ResultsTable = ({ jobKey }) => {
@@ -157,7 +89,7 @@ const ResultsTable = ({ jobKey }) => {
     getResultUrl(jobKey, amcat, setAnnotations);
   }, [jobKey, cookies, setAnnotations]);
 
-  return <SelectionTable columns={resultsTableColumns} data={annotations} />;
+  return <FullDataTable data={annotations} columns={rtColumns} />;
 };
 
 const getResultUrl = async (jobKey, amcat, setAnnotations) => {
@@ -167,7 +99,9 @@ const getResultUrl = async (jobKey, amcat, setAnnotations) => {
 
   if (!amcat) return;
   try {
-    const res = await amcat.api.get(jobKey.url);
+    const job_id = jobKey.url.split("/").slice(-1)[0];
+    const res = await amcat.getCodingjob(job_id);
+
     const annotations = res.data.units.reduce((arr, unit, i) => {
       if (unit.annotations) {
         for (let userAnnotations of unit.annotations) {

@@ -16,13 +16,13 @@ const useUnits = (codingjob) => {
     // if settings for preparing units change
     setLoading("loading");
     if (!codingjob?.unitSettings?.textUnit) return;
-    getUnitData(codingjob.job_id, setUnitData);
+    getUnitData(codingjob.id, setUnitData);
     //setLoading(false);
   }, [
     codingjob?.unitSettings?.textUnit,
     codingjob?.unitSettings?.unitSelection,
     codingjob?.unitSettings?.annotation,
-    codingjob.job_id,
+    codingjob.id,
     setUnitData,
   ]);
 
@@ -34,7 +34,7 @@ const useUnits = (codingjob) => {
     const timer = setTimeout(() => {
       setLoading((state) => (state === "loading" ? null : "loading"));
       getSample(codingjob, unitData, setSample, setLoading);
-    }, 1000);
+    }, 100);
     return () => clearTimeout(timer);
   }, [unitData, codingjob, setSample, setLoading]);
 

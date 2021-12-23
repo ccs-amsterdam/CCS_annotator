@@ -65,11 +65,6 @@ const Document = ({
     // check if same unit, to prevent annotations from spilling over due to race conditions
     if (safetyCheck.current.tokens !== preparedUnit.tokens) return;
 
-    // check if annotations changed since start.
-    //if (!safetyCheck.current.annotationsChanged) {
-    //  if (safetyCheck.current.annotations === hash(annotations)) return;
-    //  safetyCheck.current.annotationsChanged = true;
-    //}
     onChangeAnnotations(exportSpanAnnotations(annotations, preparedUnit.tokens, true));
   }, [preparedUnit.tokens, annotations, onChangeAnnotations]);
 

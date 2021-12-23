@@ -1,7 +1,6 @@
 import seedrandom from "seedrandom";
 
 export const drawRandom = (array, n, replace, seed, group) => {
-  //const random = seedrandom(seed + objectHash(array)); // too slow
   const random = seedrandom(seed);
 
   if (n == null || n === null) n = array.length;

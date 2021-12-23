@@ -80,7 +80,7 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
       <Input
         size="mini"
         value={fields[field].label}
-        style={{ padding: "0" }}
+        style={{ padding: "0", width: "10em" }}
         onChange={(e, d) => update(which, field, "label", d.value)}
       />
     );
@@ -196,7 +196,7 @@ const FieldSettingsTable = ({ fields, unitSettings, setUnitSettings }) => {
             label
           </Table.HeaderCell>
           <Table.HeaderCell key="size" width={3}>
-            text size
+            text size %
           </Table.HeaderCell>
           <Table.HeaderCell key="bold" width={1}>
             <Icon name="bold" />

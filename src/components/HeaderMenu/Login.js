@@ -3,7 +3,7 @@ import { Menu, Header, Form, Button, Segment, Grid, Divider, Popup } from "seman
 import { useCookies } from "react-cookie";
 import { blockEvents } from "actions";
 import { useDispatch } from "react-redux";
-import { getToken } from "apis/amcat";
+import newAmcatSession, { getToken } from "apis/amcat";
 
 const Login = ({ host = null, force = false }) => {
   const dispatch = useDispatch();
@@ -20,28 +20,9 @@ const Login = ({ host = null, force = false }) => {
 
   useEffect(() => {
     if (loggedIn) return;
+    if (!cookies?.amcat?.token) return;
     checkToken(cookies.amcat, setCookies, setLoggedIn);
   }, [cookies, loggedIn, setCookies, setLoggedIn]);
-
-  // const renderForm = () => {
-  //   const amcat = cookies.amcat || {
-  //     host: "http://localhost:5000",
-  //     email: "test@user.com",
-  //     token: null,
-  //   };
-  //   if (host) amcat.host = host;
-  //   const setLogin = (value) => {
-  //     setCookies("amcat", JSON.stringify(value), { path: "/" });
-  //     setLoggedIn(true);
-  //     setOpen(false);
-  //   };
-  //   const setLogout = () => {
-  //     setCookies("amcat", JSON.stringify({ ...amcat, token: null }), { path: "/" });
-  //     setLoggedIn(false);
-  //   };
-  //   if (amcat.token) return <SignOut amcat={amcat} setLogout={setLogout} />;
-  //   return <SignIn setOpen={setOpen} amcat={amcat} setLogin={setLogin} />;
-  // };
 
   return (
     <Popup
@@ -95,9 +76,15 @@ export const LoginForm = ({ cookies, setCookies, setLoggedIn, setOpen, host = nu
   return <SignIn setOpen={setOpen} amcat={amcat} setLogin={setLogin} />;
 };
 
-const checkToken = async (amcat) => {
-  if (!amcat?.token) {
-    return;
+const checkToken = async (amcat, setCookies, setLoggedIn) => {
+  const amcatconn = newAmcatSession(amcat?.host, amcat?.token);
+  try {
+    // maybe add check for specific user later. For now just check if can get token
+    await amcatconn.getToken();
+    setLoggedIn(true);
+  } catch (e) {
+    console.log(e);
+    setCookies("amcat", JSON.stringify({ ...amcat, token: null }), { path: "/" });
   }
 };
 

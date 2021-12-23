@@ -15,11 +15,13 @@ const CodingjobManager = () => {
   const [menuItem, setMenuItem] = useState("codingjobs");
   const [selectedCodingjob, setSelectedCodingjob] = useState(null);
 
+  console.log(selectedCodingjob);
+
   const codingjob = useLiveQuery(() => {
     // retrieve codingjob from Dexie whenever selectedCodingjob changes OR dexie is updated
     if (selectedCodingjob) {
       return db.idb.codingjobs
-        .get(selectedCodingjob.job_id)
+        .get(selectedCodingjob.id)
         .then((cj) => {
           return { ...cj, ROW_ID: selectedCodingjob.ROW_ID };
         })
@@ -30,16 +32,14 @@ const CodingjobManager = () => {
   }, [selectedCodingjob]);
 
   const nDocuments = useLiveQuery(() => {
-    if (!codingjob?.job_id) return 0;
-    return db.idb.documents.where("job_id").equals(codingjob.job_id).count();
+    if (!codingjob?.id) return 0;
+    return db.idb.documents.where("job_id").equals(codingjob.id).count();
   }, [codingjob]);
 
   const renderSwitch = (menuItem) => {
     switch (menuItem) {
       case "codingjobs":
-        return (
-          <CodingjobSelector codingjob={codingjob} setSelectedCodingjob={setSelectedCodingjob} />
-        );
+        return <CodingjobSelector setSelectedCodingjob={setSelectedCodingjob} />;
       case "documents":
         return <ManageDocuments codingjob={codingjob} />;
       case "units":
@@ -82,15 +82,15 @@ const CodingjobManager = () => {
               : null
           }
           active={menuItem === "units"}
-          completed={codingjob?.unitSettings?.n}
+          completed={!!codingjob?.unitSettings?.n}
           disabled={nDocuments === 0}
           onClick={(e, d) => setMenuItem("units")}
         />
         <Step
-          title="Task"
+          title="Codebook"
           description={codingjob?.taskSettings?.type || "Define the task"}
           active={menuItem === "task"}
-          completed={codingjob?.taskSettings?.type}
+          completed={!!codingjob?.taskSettings?.type}
           disabled={!codingjob?.unitSettings?.n}
           onClick={(e, d) => setMenuItem("task")}
         />

@@ -242,7 +242,7 @@ const InstructionInputField = ({ annotateForm, setAnnotateForm }) => {
   const dispatch = useDispatch(); // needed to block key events from preview window
 
   useEffect(() => {
-    if (!instruction) return;
+    if (instruction === null || instruction == null) return;
     if (annotateForm.instruction === instruction) return;
     const timer = setTimeout(() => {
       setAnnotateForm({ ...annotateForm, instruction });

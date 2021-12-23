@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Pagination, Table, Icon } from "semantic-ui-react";
+import PaginationTable from "./PaginationTable";
 import db from "apis/dexie";
 
 const PAGESIZE = 10;
@@ -8,6 +8,15 @@ const DocumentTable = ({ codingjob }) => {
   const [data, setData] = useState([]);
   const [pages, setPages] = useState(1);
   const [columns, setColumns] = useState([]);
+
+  const pageChange = async (activePage) => {
+    const offset = (activePage - 1) * PAGESIZE;
+    const newdata = await db.getJobDocuments(codingjob, offset, PAGESIZE);
+
+    const columns = getColumns(newdata);
+    setData(addTextColumns(newdata, columns));
+    setColumns(columns);
+  };
 
   useEffect(() => {
     if (!codingjob) {
@@ -18,120 +27,35 @@ const DocumentTable = ({ codingjob }) => {
     fetchFromDb(codingjob, PAGESIZE, setPages, setData, setColumns);
   }, [codingjob]);
 
-  const createHeaderRow = (data, columns) => {
-    return columns.map((colname, i) => {
-      return (
-        <Table.HeaderCell key={i} width={i === 0 ? 3 : null}>
-          <span title={colname}>{colname}</span>
-        </Table.HeaderCell>
-      );
-    });
-  };
+  return <PaginationTable data={data} pages={pages} columns={columns} pageChange={pageChange} />;
+};
 
-  const createBodyRows = (data) => {
-    return data.map((rowObj, i) => {
-      return <Table.Row key={i}>{createRowCells(rowObj)}</Table.Row>;
-    });
-  };
+const tokensToText = (tokens, section) => {
+  return tokens.reduce((text, token) => {
+    if (token.section === section) text = text + token.pre + token.token + token.post;
+    return text;
+  }, "");
+};
 
-  const tokensToText = (tokens, section) => {
-    return tokens.reduce((text, token) => {
-      if (token.section === section) text = text + token.pre + token.token + token.post;
-      return text;
-    }, "");
-  };
-
-  const createRowCells = (rowObj) => {
-    return columns.map((key, i) => {
-      let content = null;
-      if (key === "document_id") {
+const addTextColumns = (data, columns) => {
+  return data.map((rowObj) => {
+    return columns.reduce((newRowObj, col) => {
+      let content = rowObj[col.name];
+      if (col.name === "document_id") {
         content = rowObj.document_id;
       } else {
         if (rowObj.text_fields) {
-          content = rowObj.text_fields.find((tf) => tf.name === key);
+          content = rowObj.text_fields.find((tf) => tf.name === col.name);
           if (content) content = content.value;
         }
         if (!content && !rowObj.text_fields && rowObj.tokens) {
-          content = tokensToText(rowObj.tokens, key);
+          content = tokensToText(rowObj.tokens, col.name);
         }
       }
-
-      return (
-        <Table.Cell key={i}>
-          <span title={content}>{content}</span>
-        </Table.Cell>
-      );
-    });
-  };
-
-  const pageChange = async (event, data) => {
-    const offset = (data.activePage - 1) * PAGESIZE;
-    const newdata = await db.getJobDocuments(codingjob, offset, PAGESIZE);
-    setData(newdata);
-    setColumns(getColumns(newdata));
-  };
-
-  if (data.length < 1)
-    return (
-      <h3 style={{ marginTop: "5em", textAlign: "center" }}>
-        This codingjob does not yet have any documents
-      </h3>
-    );
-
-  return (
-    <Container style={{ marginTop: "2em" }}>
-      <Table
-        unstackable
-        selectable
-        fixed
-        compact
-        singleLine
-        size="small"
-        style={{ fontSize: "10px" }}
-      >
-        <Table.Header>
-          <Table.Row>{createHeaderRow(data, columns)}</Table.Row>
-        </Table.Header>
-        <Table.Body>{createBodyRows(data)}</Table.Body>
-        <Table.Footer>
-          <Table.Row>
-            <Table.HeaderCell colSpan={columns.length}>
-              {pages > 1 ? (
-                <Pagination
-                  size="mini"
-                  floated="right"
-                  boundaryRange={1}
-                  siblingRange={1}
-                  ellipsisItem={{
-                    content: <Icon name="ellipsis horizontal" />,
-                    icon: true,
-                  }}
-                  firstItem={{
-                    content: <Icon name="angle double left" />,
-                    icon: true,
-                  }}
-                  lastItem={{
-                    content: <Icon name="angle double right" />,
-                    icon: true,
-                  }}
-                  prevItem={{ content: <Icon name="angle left" />, icon: true }}
-                  nextItem={{
-                    content: <Icon name="angle right" />,
-                    icon: true,
-                  }}
-                  pointing
-                  secondary
-                  defaultActivePage={1}
-                  totalPages={pages}
-                  onPageChange={pageChange}
-                ></Pagination>
-              ) : null}
-            </Table.HeaderCell>
-          </Table.Row>
-        </Table.Footer>
-      </Table>
-    </Container>
-  );
+      newRowObj[col.name] = content;
+      return newRowObj;
+    }, {});
+  });
 };
 
 const fetchFromDb = async (codingjob, pageSize, setPages, setData, setColumns) => {
@@ -140,8 +64,11 @@ const fetchFromDb = async (codingjob, pageSize, setPages, setData, setColumns) =
   let newdata = [];
   if (n > 0) newdata = await db.getJobDocuments(codingjob, 0, pageSize);
 
-  setData(newdata);
-  setColumns(getColumns(newdata));
+  const columns = getColumns(newdata);
+  console.log(addTextColumns(newdata, columns));
+
+  setData(addTextColumns(newdata, columns));
+  setColumns(columns);
 };
 
 const getColumns = (newdata) => {
@@ -156,7 +83,7 @@ const getColumns = (newdata) => {
       return s;
     }, new Set());
   }
-  return ["document_id", ...newcolumns];
+  return ["document_id", ...newcolumns].map((name) => ({ name }));
 };
 
 export default DocumentTable;

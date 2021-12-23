@@ -68,6 +68,7 @@ const SelectVariable = ({ variables, variable, setVariable, minHeight, editAll }
         style={{
           margin: "0",
           padding: "2px",
+          minHeight: "24px",
         }}
       >
         {helpText}

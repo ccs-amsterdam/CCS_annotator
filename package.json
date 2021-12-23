@@ -32,7 +32,6 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
     "react-swipeable": "^6.2.0",
-    "react-table": "^7.6.3",
     "redux": "^4.0.5",
     "seedrandom": "^3.0.5",
     "semantic-ui-css": "^2.4.1",

@@ -131,19 +131,19 @@ const DownloadButton = ({ codingjobPackage }) => {
 };
 
 const AmcatDeploy = ({ codingjobPackage }) => {
-  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
   const [cookies, setCookie] = useCookies(["amcat"]);
 
   useEffect(() => {
-    if (codingjobPackage?.title) setTitle(codingjobPackage.title);
+    if (codingjobPackage?.name) setName(codingjobPackage.name);
   }, [codingjobPackage]);
 
   const deploy = async () => {
     const amcat = newAmcatSession(cookies.amcat.host, cookies.amcat.token);
     try {
-      const id = await amcat.postCodingjob(codingjobPackage, title);
+      const id = await amcat.postCodingjob(codingjobPackage, name);
       const url = `${amcat.host}/codingjob/${id.data.id}`;
-      db.createDeployedJob(title, url);
+      db.createDeployedJob(name, url);
     } catch (e) {
       console.log(e);
       setCookie("amcat", JSON.stringify({ ...cookies.amcat, token: null }), { path: "/" });
@@ -164,18 +164,18 @@ const AmcatDeploy = ({ codingjobPackage }) => {
     <div>
       <Form onSubmit={() => deploy()}>
         <Form.Input
-          placeholder="username"
-          value={title}
+          placeholder="Codingjob title"
+          value={name}
           maxLength={30}
-          onChange={(e, d) => setTitle(d.value)}
+          onChange={(e, d) => setName(d.value)}
           autoFocus
           style={{ width: "100%" }}
         />
       </Form>
       <br />
 
-      <Button fluid primary disabled={title.length < 5} onClick={() => deploy()}>
-        {title.length < 5 ? "please use 5 characters or more" : "Upload to AmCAT"}
+      <Button fluid primary disabled={name.length < 5} onClick={() => deploy()}>
+        {name.length < 5 ? "please use 5 characters or more" : "Upload to AmCAT"}
       </Button>
     </div>
   );
@@ -232,7 +232,7 @@ const createCodingjobPackage = async (
   if (includeDocuments)
     cjpackage.provenance.documents = await db.idb.documents
       .where("job_id")
-      .equals(codingjob.job_id)
+      .equals(codingjob.id)
       .toArray();
 
   setCodingjobPackage(cjpackage);

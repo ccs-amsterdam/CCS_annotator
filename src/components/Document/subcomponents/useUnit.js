@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { prepareDocument } from "library/createDocuments";
-import hash from "object-hash";
 
 const useUnit = (unit, safetyCheck, returnTokens, setCodeHistory) => {
   const [preparedUnit, setPreparedUnit] = useState({});
@@ -19,8 +18,8 @@ const useUnit = (unit, safetyCheck, returnTokens, setCodeHistory) => {
     const document = prepareDocument(unit);
     safetyCheck.current = {
       tokens: document.tokens,
-      annotationsChanged: false,
-      annotations: hash(document.annotations),
+      //annotationsChanged: false,
+      //annotations: hash(document.annotations),
     };
     setPreparedUnit({
       tokens: document.tokens,

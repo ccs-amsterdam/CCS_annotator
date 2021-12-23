@@ -18,7 +18,6 @@ const ManageDocuments = ({ codingjob }) => {
           <Header textAlign="center" style={{ background: "#1B1C1D", color: "white" }}>
             Document list
           </Header>
-
           <DocumentTable codingjob={codingjob} />
         </Grid.Column>
       </Grid>
