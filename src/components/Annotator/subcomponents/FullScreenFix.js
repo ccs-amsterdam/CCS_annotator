@@ -12,7 +12,7 @@ import { useDispatch } from "react-redux";
 const FullScreenFix = ({ handle, children }) => {
   return (
     <FullScreen handle={handle}>
-      <DOMNodeProvider>
+      <DOMNodeProvider style={{ height: "100%" }}>
         {(node) => {
           return children;
         }}

@@ -19,3 +19,13 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   border-radius: 4px;
 }
+
+.fullscreen {
+  height: 100%;
+  width: 100%;
+}
+
+.dom-node-provider {
+  height: 100%;
+  width: 100%;
+}
