@@ -10,7 +10,7 @@ const AnnotatorAPIClient = () => {
   const [host, jobId] = parseUrl(window.location.href);
   const [backend, loginForm] = useBackend(host);
   const jobServer = useJobServerBackend(backend, jobId);
-
+  console.log(backend);
   if (!backend)
     // If backend isn't connected, show login screen
     // If the url contained a host, this field is fixed

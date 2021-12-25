@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { FullScreen } from "react-full-screen";
-import { setFullScreenNode } from "actions";
-import { useDispatch } from "react-redux";
 
 // This is due to a bug in react-full-screen
 // https://github.com/Semantic-Org/Semantic-UI-React/issues/4191
@@ -9,29 +7,27 @@ import { useDispatch } from "react-redux";
 // It's basically the workaround provided by layershifter, but using redux
 // to make the ref available to the (very deeply nested) popup that needs it
 
-const FullScreenFix = ({ handle, children }) => {
+const FullScreenFix = ({ handle, children, setFullScreenNode }) => {
   return (
     <FullScreen handle={handle}>
-      <DOMNodeProvider style={{ height: "100%" }}>
+      <DOMNodeProvider setFullScreenNode={setFullScreenNode} style={{ height: "100%" }}>
         {(node) => {
           return children;
         }}
       </DOMNodeProvider>
-      ;
     </FullScreen>
   );
 };
 
-const DOMNodeProvider = ({ children }) => {
+const DOMNodeProvider = ({ children, setFullScreenNode }) => {
   const [node, setNode] = useState(null);
-  const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(setFullScreenNode(node));
+    setFullScreenNode(node);
     return () => {
-      dispatch(setFullScreenNode(null));
+      setFullScreenNode(null);
     };
-  }, [node, dispatch]);
+  }, [node, setFullScreenNode]);
 
   return (
     <div className="dom-node-provider" ref={setNode}>

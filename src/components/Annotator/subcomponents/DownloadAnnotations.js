@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import db from "apis/dexie";
 import { Button } from "semantic-ui-react";
 
 import { CSVDownloader } from "react-papaparse";
@@ -46,7 +45,8 @@ const formatAnnotateTaskResults = async (localJobServer, setData) => {
   }, {});
   console.log(unitMap);
 
-  const annotationsPerUnit = await db.getAllAnnotations(localJobServer.id);
+  const annotationsPerUnit = localJobServer.getAllAnnotations(); // this needs to be replaced by a method of the jobServer
+  //const annotationsPerUnit = await db.getAllAnnotations(localJobServer.id);
 
   const results = [];
   for (let unitAnnotations of annotationsPerUnit) {
@@ -80,7 +80,8 @@ const formatQuestionsTaskResults = async (localJobServer, setData) => {
     return obj;
   }, {});
 
-  const annotationsPerUnit = await db.getAllAnnotations(localJobServer.id);
+  const annotationsPerUnit = localJobServer.getAllAnnotations(); // The local jobserver needs this method
+
   for (let unitAnnotations of annotationsPerUnit) {
     const annotations = unitAnnotations.annotations;
     const unit = unitMap[unitAnnotations.unit_id];

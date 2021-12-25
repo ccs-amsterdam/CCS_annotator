@@ -8,7 +8,7 @@ const useBackend = (host) => {
   const [backend, setBackend] = useState(null);
 
   useEffect(() => {
-    if (backend?.host !== host) setBackend(null);
+    if (host && host !== backend?.host) setBackend(null);
     if (backend || !host || !cookies?.backend?.token) return;
     logIn(cookies, setCookies, setBackend);
   }, [cookies, backend, host, setCookies, setBackend]);

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router";
 import { Icon, Grid, Modal, Button, Header } from "semantic-ui-react";
 import { useFullScreenHandle } from "react-full-screen";
 
@@ -17,7 +16,7 @@ const Annotator = ({ jobServer }) => {
   const fsHandle = useFullScreenHandle();
   const [unitIndex, setUnitIndex] = useState(0);
   const [preparedUnit, setPreparedUnit] = useState(null);
-  const location = useLocation();
+  const [fullScreenNode, setFullScreenNode] = useState(null);
 
   useEffect(() => {
     setUnitIndex(jobServer.progress.n_coded);
@@ -53,11 +52,18 @@ const Annotator = ({ jobServer }) => {
 
   const renderTask = () => {
     if (unitIndex === null) return <Finished jobServer={jobServer} />;
-    return <Task codebook={jobServer?.codebook} unit={preparedUnit} setUnitIndex={setUnitIndex} />;
+    return (
+      <Task
+        codebook={jobServer?.codebook}
+        unit={preparedUnit}
+        setUnitIndex={setUnitIndex}
+        fullScreenNode={fullScreenNode}
+      />
+    );
   };
 
   return (
-    <FullScreenFix handle={fsHandle}>
+    <FullScreenFix handle={fsHandle} setFullScreenNode={setFullScreenNode}>
       <div
         style={{
           maxWidth,
@@ -69,7 +75,7 @@ const Annotator = ({ jobServer }) => {
           border: "1px solid white",
         }}
       >
-        <AskFullScreenModal location={location} handle={fsHandle} />
+        <AskFullScreenModal handle={fsHandle} />
         <div style={{ height: "45px", padding: "0", position: "relative" }}>
           <div style={{ width: "85%", paddingLeft: "7.5%" }}>
             <IndexController
@@ -123,11 +129,13 @@ const Finished = ({ jobServer }) => {
   }
 };
 
-const AskFullScreenModal = ({ location, handle }) => {
+const AskFullScreenModal = ({ handle }) => {
   let [askFullscreen, setAskFullscreen] = useState(true);
+
   useEffect(() => {
+    // this used to have location as dep
     setAskFullscreen(true);
-  }, [location, setAskFullscreen]);
+  }, [setAskFullscreen]);
 
   // Disable for now. Seems to not work in Apple devices
   //askFullscreen = false;
@@ -197,15 +205,29 @@ const FullScreenButton = ({ handle }) => {
 //   );
 // };
 
-const Task = ({ codebook, unit, setUnitIndex }) => {
+const Task = ({ codebook, unit, setUnitIndex, fullScreenNode }) => {
   if (!codebook || !unit) return null;
 
   const renderTaskPreview = (type) => {
     switch (type) {
       case "questions":
-        return <QuestionTask unit={unit} codebook={codebook} setUnitIndex={setUnitIndex} />;
+        return (
+          <QuestionTask
+            unit={unit}
+            codebook={codebook}
+            setUnitIndex={setUnitIndex}
+            fullScreenNode={fullScreenNode}
+          />
+        );
       case "annotate":
-        return <AnnotateTask unit={unit} codebook={codebook} setUnitIndex={setUnitIndex} />;
+        return (
+          <AnnotateTask
+            unit={unit}
+            codebook={codebook}
+            setUnitIndex={setUnitIndex}
+            fullScreenNode={fullScreenNode}
+          />
+        );
       default:
         return null;
     }

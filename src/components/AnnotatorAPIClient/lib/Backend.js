@@ -17,6 +17,9 @@ class Backend {
     });
   }
 
+  // add init that checks token and gets info like admin
+  // in usebackend.js -> login, then check by using init
+
   // GET
   async getToken() {
     const res = await this.api.get("/token");

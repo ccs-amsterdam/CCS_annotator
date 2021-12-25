@@ -16,8 +16,7 @@ import Document from "components/Document/Document";
 import { useSelector } from "react-redux";
 import { useCookies } from "react-cookie";
 
-const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
-  const fullScreenNode = useSelector((state) => state.fullScreenNode);
+const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents, fullScreenNode }) => {
   const [annotations, setAnnotations] = useAnnotations(unit);
   const [variableMap, setVariableMap] = useState(null);
   const [cookies, setCookie] = useCookies(["annotateTaskSettings"]);

@@ -11,9 +11,8 @@ const documentSettings = {
   centerVertical: true,
 };
 
-const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents }) => {
-  const fullScreenNode = useSelector((state) => state.fullScreenNode);
-
+const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents, fullScreenNode }) => {
+  console.log(fullScreenNode);
   const [tokens, setTokens] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [questions, setQuestions] = useState(null);
