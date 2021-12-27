@@ -1,12 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Button } from "semantic-ui-react";
 
 const SelectVariable = ({ variables, variable, setVariable, minHeight, editAll }) => {
-  let variableNames = [];
-  if (variables != null && variables?.length > 0) {
-    variableNames = variables.map((v) => v.name);
-    if (editAll) variableNames.push("EDIT ALL");
-  }
+  const variableNames = useMemo(() => {
+    let variableNames = [];
+    if (variables != null && variables?.length > 0) {
+      variableNames = variables.map((v) => v.name);
+      if (editAll) variableNames.push("EDIT ALL");
+    }
+    return variableNames;
+  }, [variables, editAll]);
 
   const onKeyDown = (e) => {
     let move = 0;
@@ -37,11 +40,13 @@ const SelectVariable = ({ variables, variable, setVariable, minHeight, editAll }
     };
   });
 
-  if (variable === null) setVariable(variableNames[0]);
-  if (!variables || variables.length === 0) {
-    setVariable(null);
-    return null;
-  }
+  useEffect(() => {
+    if (variable === null) setVariable(variableNames[0]);
+    if (!variables || variables.length === 0) {
+      setVariable(null);
+      return null;
+    }
+  }, [variable, variables, setVariable, variableNames]);
 
   const variableObj = variables.find((v) => v.name === variable);
   let helpText = variableObj?.instruction;

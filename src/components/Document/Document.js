@@ -61,10 +61,8 @@ const Document = ({
 
   useEffect(() => {
     if (!annotations || !onChangeAnnotations) return;
-
     // check if same unit, to prevent annotations from spilling over due to race conditions
     if (safetyCheck.current.tokens !== preparedUnit.tokens) return;
-
     onChangeAnnotations(exportSpanAnnotations(annotations, preparedUnit.tokens, true));
   }, [preparedUnit.tokens, annotations, onChangeAnnotations]);
 

@@ -13,7 +13,6 @@ import {
 } from "semantic-ui-react";
 import AnnotateTable from "./subcomponents/AnnotateTable";
 import Document from "components/Document/Document";
-import { useSelector } from "react-redux";
 import { useCookies } from "react-cookie";
 
 const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents, fullScreenNode }) => {
@@ -39,8 +38,8 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents, fullScreenNod
     >
       <Grid.Column width={10} style={{ paddingRight: "0em", paddingTop: "0", height: "100%" }}>
         <Button.Group fluid style={{ padding: "0", height: "40px" }}>
-          <SettingsPopup settings={settings} setSettings={setSettings} />
-          <UserManual codebook={codebook} />
+          <SettingsPopup settings={settings} setSettings={setSettings} fullScreenNode={fullScreenNode} />
+          <UserManual fullScreenNode={fullScreenNode} />
           <NextUnitButton unit={unit} annotations={annotations} setUnitIndex={setUnitIndex} />
         </Button.Group>
         <div style={{ height: "calc(100% - 20px", fontSize: `${settings.textSize}em` }}>
@@ -76,14 +75,16 @@ const AnnotateTask = ({ unit, codebook, setUnitIndex, blockEvents, fullScreenNod
 const useAnnotations = (unit) => {
   // simple hook for onChangeAnnotations that posts to server and returns state
   const [annotations, setAnnotations] = useState([]);
-  const hasChanged = useRef(false);
+  const safeWrite = useRef(null);
+  //const hasChanged = useRef(false);
 
   useEffect(() => {
     if (!unit) {
       setAnnotations([]);
       return;
     }
-    hasChanged.current = false;
+    safeWrite.current = unit.unitId;
+    //hasChanged.current = false;
     setAnnotations(unit.annotations || []);
     // if (!unit.annotations || unit.annotations.length === 0)
     //   unit.jobServer.postAnnotations(unit.unitId, [], "IN_PROGRESS");
@@ -91,20 +92,27 @@ const useAnnotations = (unit) => {
 
   const onChangeAnnotations = React.useCallback(
     (newAnnotations) => {
+      if (unit.unitId !== safeWrite.current) return;
       setAnnotations(newAnnotations);
-
       const cleanAnnotations = getCleanAnnotations(newAnnotations);
-      if (!hasChanged.current) {
-        if (JSON.stringify(cleanAnnotations) === JSON.stringify(unit.annotations)) return;
-        hasChanged.current = true;
-      }
-
+      if (!annotationsHaveChanged(unit.annotations, cleanAnnotations)) return;
       unit.jobServer.postAnnotations(unit.unitId, cleanAnnotations, "IN_PROGRESS");
     },
     [unit]
   );
 
   return [annotations, onChangeAnnotations];
+};
+
+const annotationsHaveChanged = (old, current) => {
+  if (old.length !== current.length) return true;
+  const compareOn = ["variable", "value", "section", "offset", "length"];
+  for (let i = 0; i < old.length; i++) {
+    for (let field of compareOn) {
+      if (old[i]?.[field] !== current[i]?.[field]) return true;
+    }
+  }
+  return false;
 };
 
 const getCleanAnnotations = (annotations) => {
@@ -156,8 +164,7 @@ const NextUnitButton = ({ unit, annotations, setUnitIndex }) => {
   );
 };
 
-const UserManual = () => {
-  const fullScreenNode = useSelector((state) => state.fullScreenNode);
+const UserManual = ({fullScreenNode}) => {
 
   const [open, setOpen] = useState(false);
   return (
@@ -297,8 +304,7 @@ const UserManual = () => {
   );
 };
 
-const SettingsPopup = ({ settings, setSettings }) => {
-  const fullScreenNode = useSelector((state) => state.fullScreenNode);
+const SettingsPopup = ({ settings, setSettings, fullScreenNode }) => {
 
   return (
     <Popup

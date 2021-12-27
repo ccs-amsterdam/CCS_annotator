@@ -8,11 +8,11 @@ const useUnit = (unit, safetyCheck, returnTokens, setCodeHistory) => {
   useEffect(() => {
     if (!unit?.text && !unit.text_fields && !unit.tokens) return null;
 
-    // !!!!!!!!!!!!!!!!! this needs to happen only when annotation is new. So when status='new' or something.
     if (!unit.annotations) unit.annotations = [];
-    if (unit.importedAnnotations)
+    if (unit.importedAnnotations && !unit.status) {
+      // only if status is new (which currently is just no status)
       unit.annotations = unit.annotations.concat(unit.importedAnnotations);
-
+    }
     initializeCodeHistory(unit.annotations, setCodeHistory);
 
     const document = prepareDocument(unit);

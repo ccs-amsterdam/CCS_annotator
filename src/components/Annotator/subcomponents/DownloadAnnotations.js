@@ -3,25 +3,25 @@ import { Button } from "semantic-ui-react";
 
 import { CSVDownloader } from "react-papaparse";
 
-const DownloadAnnotations = ({ localJobServer }) => {
+const DownloadAnnotations = ({ jobServer }) => {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    switch (localJobServer.codebook.type) {
+    switch (jobServer.codebook.type) {
       case "annotate":
-        formatAnnotateTaskResults(localJobServer, setData);
+        formatAnnotateTaskResults(jobServer, setData);
         break;
       case "questions":
-        formatQuestionsTaskResults(localJobServer, setData);
+        formatQuestionsTaskResults(jobServer, setData);
         break;
       default:
         return null;
     }
-  }, [localJobServer]);
+  }, [jobServer]);
 
   return (
     <CSVDownloader
-      filename={`CSSannotator_${localJobServer.title}_${localJobServer.set}_${localJobServer.coderName}.json`}
+      filename={`CSSannotator_${jobServer.title}_${jobServer.set}_${jobServer.coderName}.json`}
       data={data}
       style={{ cursor: "pointer" }}
     >
@@ -37,16 +37,16 @@ const DownloadAnnotations = ({ localJobServer }) => {
   );
 };
 
-const formatAnnotateTaskResults = async (localJobServer, setData) => {
+const formatAnnotateTaskResults = async (jobServer, setData) => {
   // annotate results are returned in long format
-  const unitMap = localJobServer.units.reduce((obj, unit) => {
+  const unitMap = jobServer.units.reduce((obj, unit) => {
     obj[unit.unit_id] = unit;
     return obj;
   }, {});
   console.log(unitMap);
 
-  const annotationsPerUnit = localJobServer.getAllAnnotations(); // this needs to be replaced by a method of the jobServer
-  //const annotationsPerUnit = await db.getAllAnnotations(localJobServer.id);
+  const annotationsPerUnit = jobServer.getAllAnnotations(); // this needs to be replaced by a method of the jobServer
+  //const annotationsPerUnit = await db.getAllAnnotations(jobServer.id);
 
   const results = [];
   for (let unitAnnotations of annotationsPerUnit) {
@@ -65,22 +65,22 @@ const formatAnnotateTaskResults = async (localJobServer, setData) => {
   setData(results);
 };
 
-const formatQuestionsTaskResults = async (localJobServer, setData) => {
+const formatQuestionsTaskResults = async (jobServer, setData) => {
   // questions results are returned in wide format
   const results = [];
 
   // variables of annotations are formatted as Q[question index]_[question name]
   // question index starts at 1, and spaces in question name are replaced with underscores
-  const variables = localJobServer.codebook.questions.map(
+  const variables = jobServer.codebook.questions.map(
     (question, i) => `Q${i + 1}_${question.name.replace(" ", "_")}`
   );
 
-  const unitMap = localJobServer.units.reduce((obj, unit) => {
+  const unitMap = jobServer.units.reduce((obj, unit) => {
     obj[unit.unit_id] = unit;
     return obj;
   }, {});
 
-  const annotationsPerUnit = localJobServer.getAllAnnotations(); // The local jobserver needs this method
+  const annotationsPerUnit = jobServer.getAllAnnotations(); // The local jobserver needs this method
 
   for (let unitAnnotations of annotationsPerUnit) {
     const annotations = unitAnnotations.annotations;

@@ -1,107 +1,106 @@
 import React, { useState, useEffect } from "react";
-import { Icon, Grid, Modal, Button, Header } from "semantic-ui-react";
-import { useFullScreenHandle } from "react-full-screen";
-
+import { Icon, Grid, Header } from "semantic-ui-react";
 import DownloadAnnotations from "./subcomponents/DownloadAnnotations";
-
-import FullScreenFix from "./subcomponents/FullScreenFix";
 import IndexController from "./subcomponents/IndexController";
-
-import QuestionTask from "components/Annotator/QuestionTask";
-import AnnotateTask from "components/Annotator/AnnotateTask";
-
+import Task from "./subcomponents/Task";
+import FullScreenWindow from "./subcomponents/FullScreenWindow";
 import "components/Annotator/annotatorStyle.css";
 
+/**
+ * Render an annotator for the provided jobServer class
+ *
+ * @param {*} jobServer  A jobServer class
+ */
 const Annotator = ({ jobServer }) => {
-  const fsHandle = useFullScreenHandle();
-  const [unitIndex, setUnitIndex] = useState(0);
+  const [unitIndex, setUnitIndex] = useState(-1);
   const [preparedUnit, setPreparedUnit] = useState(null);
-  const [fullScreenNode, setFullScreenNode] = useState(null);
 
   useEffect(() => {
+    // on start (or jobserver changes), unitIndex based on progress
     setUnitIndex(jobServer.progress.n_coded);
   }, [jobServer, setUnitIndex]);
 
   useEffect(() => {
+    // When unitIndex changes, get the unit
     if (!jobServer) return;
-    jobServer
-      .getUnit(unitIndex)
-      .then((unit) => {
-        console.log(unit);
-        setPreparedUnit({
-          jobServer,
-          unitId: unit.id,
-          ...unit.unit,
-          annotations: unit.annotation,
-          status: unit.status,
-        });
-      })
-      .catch((e) => {
-        if (e.response?.status === 404) setUnitIndex(null);
-        setPreparedUnit(null);
-        console.log(e);
-      });
+    getUnit(jobServer, unitIndex, setPreparedUnit, setUnitIndex);
   }, [unitIndex, jobServer, setUnitIndex, setPreparedUnit]);
 
-  let maxWidth = "100%";
-  let maxHeight = "100%";
-  if (jobServer?.codebook?.type) {
-    if (jobServer?.codebook.type === "questions") [maxWidth, maxHeight] = ["800px", "1000px"];
-    if (jobServer?.codebook.type === "annotate") [maxWidth, maxHeight] = ["2000px", "2000px"];
-  }
-
-  const renderTask = () => {
+  const content = (fullScreenNode) => {
+    if (unitIndex < 0) return null;
     if (unitIndex === null) return <Finished jobServer={jobServer} />;
-    return (
-      <Task
-        codebook={jobServer?.codebook}
-        unit={preparedUnit}
-        setUnitIndex={setUnitIndex}
-        fullScreenNode={fullScreenNode}
-      />
-    );
+    return <Task unit={preparedUnit} setUnitIndex={setUnitIndex} fullScreenNode={fullScreenNode} />;
   };
 
+  const [maxHeight, maxWidth] = getWindowSize(jobServer);
+
   return (
-    <FullScreenFix handle={fsHandle} setFullScreenNode={setFullScreenNode}>
-      <div
-        style={{
-          maxWidth,
-          maxHeight,
-          background: "white",
-          margin: "0 auto",
-          padding: "0",
-          height: "100%",
-          border: "1px solid white",
-        }}
-      >
-        <AskFullScreenModal handle={fsHandle} />
-        <div style={{ height: "45px", padding: "0", position: "relative" }}>
-          <div style={{ width: "85%", paddingLeft: "7.5%" }}>
-            <IndexController
-              n={jobServer?.progress.n_total}
-              index={unitIndex}
-              setIndex={setUnitIndex}
-              canGoBack={jobServer?.progress.seek_backwards}
-              canGoForward={jobServer?.progress.seek_forwards}
-              quickKeyNext={jobServer?.codebook?.type === "annotate"}
-            />
+    <FullScreenWindow>
+      {(fullScreenNode, fullScreenButton) => (
+        // FullScreenWindow passes on the fullScreenNode needed to mount popups, and a fullScreenButton to handle on/off
+        <div
+          style={{
+            maxWidth,
+            maxHeight,
+            background: "white",
+            margin: "0 auto",
+            padding: "0",
+            height: "100%",
+            border: "1px solid white",
+          }}
+        >
+          <div style={{ height: "45px", padding: "0", position: "relative" }}>
+            <div style={{ width: "85%", paddingLeft: "7.5%" }}>
+              <IndexController
+                n={jobServer?.progress.n_total}
+                index={unitIndex}
+                setIndex={setUnitIndex}
+                canGoBack={jobServer?.progress.seek_backwards}
+                canGoForward={jobServer?.progress.seek_forwards}
+              />
+            </div>
+            <div>{fullScreenButton}</div>
           </div>
-          <div>
-            <FullScreenButton handle={fsHandle} />
-            {/* <BackButton /> */}
-          </div>
+          <div style={{ height: "calc(100% - 45px)", padding: "0" }}>{content(fullScreenNode)}</div>
         </div>
-        <div style={{ height: "calc(100% - 45px)", padding: "0" }}>{renderTask()}</div>
-      </div>
-    </FullScreenFix>
+      )}
+    </FullScreenWindow>
   );
+};
+
+const getUnit = async (jobServer, unitIndex, setPreparedUnit, setUnitIndex) => {
+  if (unitIndex < 0) return;
+  try {
+    const unit = await jobServer.getUnit(unitIndex);
+    setPreparedUnit({
+      jobServer,
+      unitId: unit.id,
+      ...unit.unit,
+      annotations: unit.annotation,
+      status: unit.status,
+    });
+  } catch (e) {
+    if (e.response?.status === 404) setUnitIndex(null);
+    setPreparedUnit(null);
+    console.log(e);
+  }
+};
+
+const getWindowSize = (jobServer) => {
+  switch (jobServer?.codebook?.type) {
+    case "questions":
+      return ["800px", "1000px"];
+    case "annotate":
+      return ["2000px", "2000px"];
+    default:
+      return ["100%", "100%"];
+  }
 };
 
 const Finished = ({ jobServer }) => {
   if (!jobServer) return null;
 
-  if (jobServer.where === "remote") {
+  if (!jobServer.getAllAnnotations) {
     return (
       <Grid container centered verticalAlign="middle" style={{ margin: "0", padding: "0" }}>
         <Grid.Row style={{ marginTop: "40%" }}>
@@ -121,120 +120,12 @@ const Finished = ({ jobServer }) => {
           <Grid.Column width={8}>
             <Header>You finished the codingjob!</Header>
             <p>Please download your results and send them to whoever gave you this job. </p>
-            <DownloadAnnotations localJobServer={jobServer} />
+            <DownloadAnnotations jobServer={jobServer} />
           </Grid.Column>
         </Grid.Row>
       </Grid>
     );
   }
-};
-
-const AskFullScreenModal = ({ handle }) => {
-  let [askFullscreen, setAskFullscreen] = useState(true);
-
-  useEffect(() => {
-    // this used to have location as dep
-    setAskFullscreen(true);
-  }, [setAskFullscreen]);
-
-  // Disable for now. Seems to not work in Apple devices
-  //askFullscreen = false;
-
-  return (
-    <Modal open={askFullscreen}>
-      <Modal.Header>Fullscreen mode</Modal.Header>
-      <Modal.Content>
-        <p>
-          We recommend working in fullscreen, especially on mobile devices. You can always change
-          this with the button in the top-right corner. For some devices fullscreen might not work.
-        </p>
-        <div style={{ display: "flex", height: "30%" }}>
-          <Button
-            primary
-            size="massive"
-            onClick={() => {
-              if (!handle.active) handle.enter();
-              setAskFullscreen(false);
-            }}
-            style={{ flex: "1 1 auto" }}
-          >
-            Fullscreen
-          </Button>
-          <Button
-            secondary
-            size="massive"
-            onClick={() => {
-              if (handle.active) handle.exit();
-              setAskFullscreen(false);
-            }}
-            style={{ flex: "1 1 auto" }}
-          >
-            Windowed
-          </Button>
-        </div>
-      </Modal.Content>
-    </Modal>
-  );
-};
-
-const FullScreenButton = ({ handle }) => {
-  return (
-    <Icon.Group
-      size="big"
-      style={{ paddingRight: "3px", position: "absolute", top: "0px", right: 0 }}
-    >
-      <Icon
-        link
-        name={handle.active ? "window close" : "expand"}
-        onClick={() => {
-          handle.active ? handle.exit() : handle.enter();
-        }}
-      />
-    </Icon.Group>
-  );
-};
-
-// const BackButton = () => {
-//   // pretty useless, given that every browser has one
-//   const history = useHistory();
-//   return (
-//     <Icon.Group size="big" style={{ padding: "3px", position: "absolute", top: "0px", right: 0 }}>
-//       <Icon link name="window close" onClick={() => history.goBack()} />
-//       <Icon corner="top right" />
-//     </Icon.Group>
-//   );
-// };
-
-const Task = ({ codebook, unit, setUnitIndex, fullScreenNode }) => {
-  if (!codebook || !unit) return null;
-
-  const renderTaskPreview = (type) => {
-    switch (type) {
-      case "questions":
-        return (
-          <QuestionTask
-            unit={unit}
-            codebook={codebook}
-            setUnitIndex={setUnitIndex}
-            fullScreenNode={fullScreenNode}
-          />
-        );
-      case "annotate":
-        return (
-          <AnnotateTask
-            unit={unit}
-            codebook={codebook}
-            setUnitIndex={setUnitIndex}
-            fullScreenNode={fullScreenNode}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  if (!codebook?.type) return null;
-  return renderTaskPreview(codebook.type);
 };
 
 export default Annotator;

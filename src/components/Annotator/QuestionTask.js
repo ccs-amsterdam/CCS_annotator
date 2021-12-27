@@ -5,7 +5,6 @@ import { useSwipeable } from "react-swipeable";
 import { codeBookEdgesToMap, getCodeTreeArray } from "library/codebook";
 import { Form, Icon, Input, Popup } from "semantic-ui-react";
 import { useCookies } from "react-cookie";
-import { useSelector } from "react-redux";
 
 const documentSettings = {
   centerVertical: true,
@@ -103,7 +102,7 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents, fullScreenNod
             />
           </div>
         </div>
-        <SettingsPopup settings={settings} setSettings={setSettings} />
+        <SettingsPopup settings={settings} setSettings={setSettings} fullScreenNode={fullScreenNode}/>
       </div>
       <div {...menuSwipe} style={{ height: `${100 - settings.splitHeight}%` }}>
         <QuestionForm
@@ -121,8 +120,7 @@ const QuestionTask = ({ unit, codebook, setUnitIndex, blockEvents, fullScreenNod
   );
 };
 
-const SettingsPopup = ({ settings, setSettings }) => {
-  const fullScreenNode = useSelector((state) => state.fullScreenNode);
+const SettingsPopup = ({ settings, setSettings, fullScreenNode }) => {
   return (
     <Popup
       on="click"
@@ -187,7 +185,7 @@ const prepareQuestions = (codebook) => {
     let cta = getCodeTreeArray(codeMap);
     cta = addRequiredFor([...cta]);
     const [options, swipeOptions] = getOptions(cta);
-    return { ...question, options, swipeOptions }; // note that it's important that this deep copies question
+    return { ...question, options, swipeOptions }; // it's important that this deep copies question
   });
 };
 

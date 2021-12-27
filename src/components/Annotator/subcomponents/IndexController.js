@@ -1,14 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Loader, Pagination, Segment } from "semantic-ui-react";
 
-const IndexController = ({
-  n,
-  index,
-  setIndex,
-  canGoForward = true,
-  canGoBack = true,
-  quickKeyNext = false,
-}) => {
+const IndexController = ({ n, index, setIndex, canGoForward = true, canGoBack = true }) => {
   const reached = useRef(0); // if canGoBack but not canGoForward, can still go forward after going back
   const canMove = useRef(false);
 
@@ -16,46 +9,11 @@ const IndexController = ({
   const [activePage, setActivePage] = useState(1);
   const [delayedActivePage, setDelayedActivePage] = useState(1);
 
-  // const onKeyDown = (e) => {
-  //   if (e.ctrlKey && e.keyCode === 13) {
-  //     e.preventDefault();
-  //     if (!canGoForward && !quickKeyNext) return;
-  //     if (e.repeat) {
-  //       setDelayedActivePage((current) => {
-  //         if (canGoForward || current < reached.current)
-  //           return current < n + 1 ? current + 1 : current;
-  //         return current;
-  //       });
-  //     } else {
-  //       setActivePage((current) => {
-  //         if (quickKeyNext || canGoForward || current < reached.current)
-  //           return current < n + 1 ? current + 1 : current;
-  //         return current;
-  //       });
-  //     }
-  //   }
-  //   if (e.ctrlKey && e.keyCode === 8) {
-  //     e.preventDefault();
-  //     if (!canGoBack) return;
-  //     if (e.repeat) {
-  //       setDelayedActivePage((current) => (current > 1 ? current - 1 : current));
-  //     } else {
-  //       setActivePage((current) => (current > 1 ? current - 1 : current));
-  //     }
-  //   }
-  // };
-
   useEffect(() => {
+    if (index < 0) return;
     if (index !== null) setActivePage(Math.min(index + 1, n + 1));
     if (index === null) setActivePage(n + 1);
   }, [index, n, setActivePage]);
-
-  // useEffect(() => {
-  //   if (quickKeyNext || canGoForward || canGoBack) window.addEventListener("keydown", onKeyDown);
-  //   return () => {
-  //     window.removeEventListener("keydown", onKeyDown);
-  //   };
-  // });
 
   useEffect(() => {
     reached.current = 0;

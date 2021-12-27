@@ -136,6 +136,7 @@ const renderSection = (layout, paragraph_nr, paragraphs, section) => {
         <>
           {layout.label ? (
             <span
+              key={section + paragraph_nr + "label"}
               style={{
                 color: "grey",
                 fontWeight: "bold",
@@ -145,7 +146,8 @@ const renderSection = (layout, paragraph_nr, paragraphs, section) => {
               {layout.label}
             </span>
           ) : null}
-          <p
+          <span
+            key={section + paragraph_nr}
             className="noselect"
             style={{
               fontSize: `${layout.size != null ? layout.size : 1}em`,
@@ -153,10 +155,9 @@ const renderSection = (layout, paragraph_nr, paragraphs, section) => {
               fontStyle: layout.italic ? "italic" : "normal",
               textAlign: layout.justify ? "justify" : "left",
             }}
-            key={section + paragraph_nr}
           >
             {paragraphs}
-          </p>
+          </span>
         </>
       );
     }
@@ -174,7 +175,7 @@ const renderSection = (layout, paragraph_nr, paragraphs, section) => {
 const renderParagraph = (layout, paragraph_nr, sentences, end) => {
   if (!layout?.paragraphs)
     return (
-      <span>
+      <span key={"par" + paragraph_nr}>
         <span>{sentences}</span>
       </span>
     );
@@ -212,7 +213,7 @@ const renderToken = (token, codingUnit) => {
   return (
     <>
       <span
-        key={token.index}
+        key={"token" + token.index}
         ref={token.ref}
         className={codingUnit ? "token codingUnit" : "token"}
         tokenindex={token.arrayIndex}
