@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Icon, Form, Radio, Input } from "semantic-ui-react";
 
 import db from "apis/dexie";
+import Help from "./Help";
 
 const defaultDeploySettings = {
   medium: null,
@@ -78,8 +79,22 @@ const DeployForm = ({ codingjob, deploySettings, setDeploySettings }) => {
           <label>Divide jobs</label>
         </Form.Group>
         <Form.Group>
-          <Form.Field width={5}>
-            <label>Coders</label>
+          <Form.Field width={4}>
+            <label>
+              Coders
+              {delayed.nCoders > 1 && codingjob?.unitSettings?.ordered ? (
+                <Help
+                  header="Using multiple coders shuffles data"
+                  type="warn"
+                  texts={[
+                    `You disabled 'shuffle' in the sample settings, but if more than 1 coder is assigned, 
+                     the data will still be shuffled. Otherwise only the overlap items would be random, and 
+                     they could be identifiable by breaking a pattern`,
+                  ]}
+                />
+              ) : null}
+            </label>
+
             <Input
               size="mini"
               type="number"
@@ -89,8 +104,19 @@ const DeployForm = ({ codingjob, deploySettings, setDeploySettings }) => {
             />
           </Form.Field>
 
-          <Form.Field width={7}>
-            <label>Overlap</label>
+          <Form.Field width={4}>
+            <label>
+              Overlap
+              {delayed.pctOverlap === "0" ? (
+                <Help
+                  header="Are you sure?"
+                  type="warn"
+                  texts={[
+                    `I mean, we're not being judgmental, but reviewer 2 is going to ask for that intercoder reliability`,
+                  ]}
+                />
+              ) : null}
+            </label>
             <Input
               size="mini"
               type="number"
@@ -118,7 +144,9 @@ const DeployForm = ({ codingjob, deploySettings, setDeploySettings }) => {
               onChange={(e, d) => setDelayed((state) => ({ ...state, pctOfUnits: d.value }))}
             />
           </Form.Field> */}
-          <CoderDistribution totalUnits={totalUnits} settings={delayed} />
+          <Form.Field width={8}>
+            <CoderDistribution totalUnits={totalUnits} settings={delayed} />
+          </Form.Field>
         </Form.Group>
       </>
     );
@@ -171,10 +199,10 @@ const CoderDistribution = ({ totalUnits, settings }) => {
   const avgPerCoder = overlapSet + unitSet / settings.nCoders;
 
   return (
-    <p style={{ textAlign: "center", color: "blue" }}>
-      Avg. units per coder:{" "}
+    <div style={{ textAlign: "center", color: "blue" }}>
+      Avg. units per coder <br />
       <b style={{ fontSize: "1.3em" }}>{Math.round(avgPerCoder * 100) / 100}</b>
-    </p>
+    </div>
   );
 };
 
