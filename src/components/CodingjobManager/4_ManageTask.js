@@ -7,7 +7,7 @@ import { getCodebook } from "library/codebookManagement";
 import { useSelector } from "react-redux";
 
 // imported from annotator
-import { AnnotateTask, QuestionTask, IndexController } from "react-ccs-annotator";
+import { AnnotateTask, QuestionTask, IndexController } from "ccs-annotator-client";
 
 const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false

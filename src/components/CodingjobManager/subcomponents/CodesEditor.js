@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button, Icon, Table, Popup, Modal, TextArea, Dropdown, Label } from "semantic-ui-react";
-import { codeBookEdgesToMap, getCodeTreeArray } from "react-ccs-annotator";
+import { codeBookEdgesToMap, getCodeTreeArray } from "ccs-annotator-client";
 import EditCodePopup from "./EditCodePopup";
 import { textToCodes, ctaToText } from "library/codebookManagement";
 import { blockEvents } from "actions";

@@ -1,7 +1,6 @@
 import db from "apis/dexie";
 import React, { useState, useEffect } from "react";
-import { useHistory } from "react-router";
-import { Button, Grid, Header, Popup, TextArea } from "semantic-ui-react";
+import { Button, Grid, Header, Popup } from "semantic-ui-react";
 import QRCode from "react-qr-code";
 import { useCookies } from "react-cookie";
 import newAmcatSession from "apis/amcat";
@@ -16,23 +15,20 @@ const dtColumns = [
 ];
 
 const DeployedJobs = () => {
-  const history = useHistory();
   const [jobKey, setJobKey] = useState(null);
-
-  const setJobUrlQuery = async () => {
-    // set task.url as url query to open job in annotator
-    history.push("/annotator?url=" + jobKey.url);
-  };
 
   const linkAndQr = () => {
     if (jobKey == null) return <div style={{ height: "6em" }} />;
-    const url = "https://ccs-amsterdam.github.io/CCS_annotator/#/annotator?url=" + jobKey?.url;
+    const url =
+      "https://ccs-amsterdam.github.io/CCS_annotator_client/#/annotator?url=" + jobKey?.url;
     const qrUrl =
-      "https://ccs-amsterdam.github.io/CCS_annotator/#/annotator?url=" +
+      "https://ccs-amsterdam.github.io/CCS_annotator_client/#/annotator?url=" +
       jobKey?.url.replace(":", "%colon%");
     return (
       <div style={{ height: "6em" }}>
-        <TextArea value={url} style={{ width: "100%", height: "4em", fontSize: "10px" }} />
+        <h3>
+          <a href={url}>Open coding job</a>
+        </h3>
         <Popup on="click" hoverable trigger={<Button>Show QR code</Button>}>
           <QRCode value={encodeURI(qrUrl)} size={256} />
         </Popup>
@@ -52,9 +48,6 @@ const DeployedJobs = () => {
           />
         </Grid.Column>
         <Grid.Column width={8}>
-          <Button primary disabled={!jobKey} onClick={setJobUrlQuery}>
-            Open selected codingjob
-          </Button>
           <br />
           <br />
           {linkAndQr()}

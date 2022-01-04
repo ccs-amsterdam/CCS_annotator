@@ -1,6 +1,6 @@
 import Dexie from "dexie";
 import { prepareDocumentBatch } from "library/prepareDocumentBatch";
-import { standardizeCodes } from "react-ccs-annotator";
+import { standardizeCodes } from "ccs-annotator-client";
 
 const dbName = "CSSannotator_V1";
 const idbStores = {

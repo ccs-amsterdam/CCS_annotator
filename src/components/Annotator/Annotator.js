@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router";
 
-import Annotator from "react-ccs-annotator";
+import Annotator from "ccs-annotator-client";
 import { JobServerRemote, JobServerLocal } from "components/Annotator/JobServerClass";
 import { useCookies } from "react-cookie";
 import Login from "components/HeaderMenu/Login";

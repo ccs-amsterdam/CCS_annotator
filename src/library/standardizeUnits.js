@@ -1,7 +1,7 @@
 import { selectTokens } from "./selectTokens";
 import hash from "object-hash";
 import db from "apis/dexie";
-import { exportSpanAnnotations } from "react-ccs-annotator";
+import { exportSpanAnnotations } from "ccs-annotator-client";
 
 // Transform an item as its created in codingjob manager into a simpler
 // standardized item format. This is used when codingjobs are deployed,

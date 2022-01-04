@@ -1,4 +1,4 @@
-import { standardizeCodes } from "react-ccs-annotator";
+import { standardizeCodes } from "ccs-annotator-client";
 
 /**
  * Transform the taskSettings into the codebook. The difference is that taskSettings also contains information that's only relevant in the manager. The codebook contains only the information relevant for the annotator

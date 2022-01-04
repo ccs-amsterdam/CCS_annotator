@@ -5,7 +5,7 @@ import UnitSettings from "./subcomponents/UnitSettings";
 import useUnits from "components/CodingjobManager/subcomponents/useUnits";
 import { standardizeUnits } from "library/standardizeUnits";
 import SampleSettings from "./subcomponents/SampleSettings";
-import { IndexController, Document } from "react-ccs-annotator";
+import { IndexController, Document } from "ccs-annotator-client";
 import UnitLayoutSettings from "./subcomponents/UnitLayoutSettings";
 
 const ManageCodingUnits = ({ codingjob }) => {

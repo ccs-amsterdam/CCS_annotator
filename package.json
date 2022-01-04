@@ -16,7 +16,7 @@
     "jszip": "^3.7.1",
     "object-hash": "^2.1.1",
     "react": "^17.0.1",
-    "react-ccs-annotator": "^0.1.12",
+    "ccs-annotator-client": "^0.1.1",
     "react-cookie": "^4.1.1",
     "react-csv-reader": "^3.3.0",
     "react-dom": "^17.0.1",

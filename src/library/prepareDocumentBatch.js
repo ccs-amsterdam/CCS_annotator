@@ -1,5 +1,5 @@
 import hash from "object-hash";
-import { prepareDocument } from "react-ccs-annotator";
+import { prepareDocument } from "ccs-annotator-client";
 
 /**
  * Prepares a batch of documents. Returns [documents, codes], where codes contains the annotation codes used in the documents
