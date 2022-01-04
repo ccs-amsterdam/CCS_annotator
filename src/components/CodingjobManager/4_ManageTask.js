@@ -3,13 +3,11 @@ import TaskSettings from "./subcomponents/TaskSettings";
 import { Grid, Header } from "semantic-ui-react";
 import useUnits from "components/CodingjobManager/subcomponents/useUnits";
 import { standardizeUnits } from "library/standardizeUnits";
-import { getCodebook } from "library/codebook";
+import { getCodebook } from "library/codebookManagement";
 import { useSelector } from "react-redux";
 
 // imported from annotator
-import IndexController from "components/Annotator/subcomponents/IndexController";
-import AnnotateTask from "components/Annotator/AnnotateTask";
-import QuestionTask from "components/Annotator/QuestionTask";
+import { AnnotateTask, QuestionTask, IndexController } from "react-ccs-annotator";
 
 const ManageTask = ({ codingjob }) => {
   // When a new codingjob is loaded, set codingjobLoaded ref to false
@@ -51,6 +49,7 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
     setCodebook(getCodebook(codingjob.taskSettings));
   }, [codingjob.taskSettings]);
 
+  console.log(standardizedUnit);
   useEffect(() => {
     if (!units || index === null) {
       setStandardizedUnit(null);
@@ -58,6 +57,7 @@ const PreviewTask = React.memo(({ codingjob, units }) => {
     }
     if (index >= units.length) return null;
     standardizeUnits(codingjob, [units[index]]).then((singleUnitArray) => {
+      console.log(singleUnitArray);
       const previewUnit = singleUnitArray[0];
       previewUnit.jobServer = {
         postAnnotations: (unit_id, data) => console.log(`PREVIEW: POST ${data.length} annotations`),

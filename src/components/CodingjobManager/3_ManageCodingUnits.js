@@ -2,11 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Grid, Header, Dimmer, Loader } from "semantic-ui-react";
 
 import UnitSettings from "./subcomponents/UnitSettings";
-import Document from "components/Document/Document";
 import useUnits from "components/CodingjobManager/subcomponents/useUnits";
 import { standardizeUnits } from "library/standardizeUnits";
 import SampleSettings from "./subcomponents/SampleSettings";
-import IndexController from "components/Annotator/subcomponents/IndexController";
+import { IndexController, Document } from "react-ccs-annotator";
 import UnitLayoutSettings from "./subcomponents/UnitLayoutSettings";
 
 const ManageCodingUnits = ({ codingjob }) => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router";
 
-import AnnotatorScreen from "components/Annotator/AnnotatorScreen";
+import Annotator from "react-ccs-annotator";
 import { JobServerRemote, JobServerLocal } from "components/Annotator/JobServerClass";
 import { useCookies } from "react-cookie";
 import Login from "components/HeaderMenu/Login";
@@ -9,14 +9,13 @@ import Login from "components/HeaderMenu/Login";
 import "components/Annotator/annotatorStyle.css";
 import newAmcatSession from "apis/amcat";
 
-const Annotator = () => {
+const AnnotatorLocal = () => {
   const location = useLocation();
   const [jobServer, setJobServer] = useState(null);
   const [loginScreen, setLoginScreen] = useState(null);
   const [cookies] = useCookies(["amcat"]);
 
   useEffect(() => {
-    if (!cookies.name) return;
     if (location.search) {
       const queries = parseQueryString(location);
       if (queries?.url) createRemoteJobServer(queries.url, cookies, setJobServer, setLoginScreen);
@@ -27,7 +26,7 @@ const Annotator = () => {
   }, [location, cookies, setJobServer]);
 
   if (!jobServer) return loginScreen;
-  return <AnnotatorScreen jobServer={jobServer} />;
+  return <Annotator jobServer={jobServer} />;
 };
 
 const createRemoteJobServer = async (url, cookies, setJobServer, setLoginScreen) => {
@@ -48,7 +47,7 @@ const createRemoteJobServer = async (url, cookies, setJobServer, setLoginScreen)
 };
 
 const createLocalJobServer = async (id, cookies, setJobServer) => {
-  const us = new JobServerLocal(id, cookies.email, cookies.token);
+  const us = new JobServerLocal(id, cookies?.email, cookies?.token);
   await us.init();
   if (us.success) setJobServer(us);
 };
@@ -63,4 +62,4 @@ const parseQueryString = (location) => {
   }, {});
 };
 
-export default Annotator;
+export default AnnotatorLocal;

@@ -7,7 +7,7 @@ import AmcatDeploy from "./subcomponents/AmcatDeploy";
 
 import db from "apis/dexie";
 import { standardizeUnits } from "library/standardizeUnits";
-import { getCodebook } from "library/codebook";
+import { getCodebook } from "library/codebookManagement";
 import DeployedJobs from "./subcomponents/DeployedJobs";
 
 const DeployCodingjob = ({ codingjob }) => {

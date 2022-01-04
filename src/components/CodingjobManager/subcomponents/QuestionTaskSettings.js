@@ -4,7 +4,7 @@ import { Form, Radio, TextArea, Grid, Dropdown } from "semantic-ui-react";
 
 import Help from "./Help";
 import CodesEditor from "./CodesEditor";
-import { standardizeCodes } from "library/codebook";
+import { standardizeCodes } from "react-ccs-annotator";
 import VariableMenu from "./VariableMenu";
 
 const questionDefaultSettings = {

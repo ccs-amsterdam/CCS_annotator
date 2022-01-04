@@ -1,8 +1,7 @@
 import { selectTokens } from "./selectTokens";
 import hash from "object-hash";
 import db from "apis/dexie";
-import { exportSpanAnnotations } from "./annotations";
-import { tokensRowToColumn } from "./tokens";
+import { exportSpanAnnotations } from "react-ccs-annotator";
 
 // Transform an item as its created in codingjob manager into a simpler
 // standardized item format. This is used when codingjobs are deployed,
@@ -140,4 +139,27 @@ const unparseTokens = (tokens) => {
     text_fields.push(text_field);
   }
   return text_fields;
+};
+
+/**
+ * Check if tokens are in row format
+ *  {doc_id: 1, token_id: 1}, {doc_id: 2, token_id: 2}
+ * and if so, change to column format
+ *  [{doc_id: [1,1,1,1,...]},{token_id: [1,2,3,4,etc.]}]
+ *
+ * row format is easier to work with, but column format is more efficient
+ * @param {} tokens
+ */
+export const tokensRowToColumn = (tokens) => {
+  if (!Array.isArray(tokens)) return tokens;
+
+  const tokensObj = {};
+  for (let token of tokens) {
+    for (let column of Object.keys(token)) {
+      if (!tokensObj[column]) tokensObj[column] = [];
+      tokensObj[column].push(token[column]);
+    }
+  }
+
+  return tokensObj;
 };
